@@ -12,6 +12,7 @@ import (
 	"github.com/Jaryq-Lab/notify-bot/internal/scheduler"
 	"github.com/Jaryq-Lab/notify-bot/internal/telegram"
 	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
 )
 
 func main() {
@@ -32,12 +33,26 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	handler := telegram.NewHandler(cfg)
-	tg, err := bot.New(cfg.BotToken, bot.WithDefaultHandler(handler.Handle))
+	var handler *telegram.Handler
+	tg, err := bot.New(cfg.BotToken,
+		bot.WithSkipGetMe(),
+		bot.WithDefaultHandler(func(ctx context.Context, b *bot.Bot, update *models.Update) {
+			if handler != nil {
+				handler.Handle(ctx, b, update)
+			}
+		}),
+	)
 	if err != nil {
 		slog.Error("telegram bot", "err", err)
 		os.Exit(1)
 	}
+
+	me, err := tg.GetMe(ctx)
+	if err != nil {
+		slog.Error("telegram getMe", "err", err)
+		os.Exit(1)
+	}
+	handler = telegram.NewHandler(cfg, me.ID, me.Username)
 
 	runner := scheduler.New(tg, cfg.NotifyChatID, loc, cfg.MeetLink)
 	slog.Info("notify-bot started",
