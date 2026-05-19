@@ -114,13 +114,13 @@ func (r *Runner) sendOnce(ctx context.Context, now time.Time, kind, text string)
 }
 
 func commitsMessage() string {
-	return `📋 *18:30 — сдаём день*
+	return `📋 **18:30 — сдаём день**
 
 Слежу. Закинь коммиты на бранчи и отчитайся техлиду. Не тяни хвост — вижу всё.`
 }
 
 func meetMessage(url string) string {
-	return `📞 *10:15 — созвон*
+	return `📞 **10:15 — созвон**
 
 Скоро мит. Лапы на клавиатуру — я смотрю:
 ` + url

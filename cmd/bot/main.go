@@ -52,7 +52,7 @@ func main() {
 		slog.Error("telegram getMe", "err", err)
 		os.Exit(1)
 	}
-	handler = telegram.NewHandler(cfg, me.ID, me.Username)
+	handler = telegram.NewHandler(cfg, loc, me.ID, me.Username)
 
 	runner := scheduler.New(tg, cfg.NotifyChatID, loc, cfg.MeetLink)
 	slog.Info("notify-bot started",
