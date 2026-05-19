@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
-	"sync"
 
 	"github.com/Jaryq-Lab/notify-bot/internal/config"
 	"github.com/Jaryq-Lab/notify-bot/internal/neuro"
@@ -16,7 +15,6 @@ import (
 type Handler struct {
 	cfg   config.Config
 	neuro *neuro.Client
-	seen  sync.Map
 }
 
 func NewHandler(cfg config.Config) *Handler {
@@ -33,42 +31,47 @@ func (h *Handler) Handle(ctx context.Context, b *bot.Bot, update *models.Update)
 	}
 	from := update.Message.From
 	text := replyText(update)
+	isPrivate := update.Message.Chat.Type == models.ChatTypePrivate
 
-	if cmd, ok := parseCommand(text); ok && h.cfg.IsDeveloper(from.Username) {
-		switch cmd {
-		case "/test":
-			h.sendPlain(ctx, b, update.Message.Chat.ID, "мяу. злой лид-кот на посту — слежу 🐈‍⬛")
-			return
-		case "/chatid":
-			chat := update.Message.Chat
-			h.sendPlain(ctx, b, chat.ID, fmt.Sprintf(
-				"chat_id: %d\ntype: %s\ntitle: %s\n\nДля NOTIFY_CHAT_ID в .env — этот id, если type supergroup/group.\n\n— злой лид-кот 👁",
-				chat.ID, chat.Type, chatTitle(&chat),
-			))
+	if cmd, ok := parseCommand(text); ok {
+		if h.mayRunCommand(from.Username, isPrivate) {
+			switch cmd {
+			case "/test":
+				h.sendPlain(ctx, b, update.Message.Chat.ID, "мяу. злой лид-кот на посту — слежу 🐈‍⬛")
+				return
+			case "/chatid":
+				chat := update.Message.Chat
+				h.sendPlain(ctx, b, chat.ID, fmt.Sprintf(
+					"chat_id: %d\ntype: %s\ntitle: %s\n\nДля NOTIFY_CHAT_ID в .env — этот id, если type supergroup/group.\n\n— злой лид-кот 👁",
+					chat.ID, chat.Type, chatTitle(&chat),
+				))
+				return
+			}
+		}
+		if isPrivate {
 			return
 		}
 	}
 
-	// В группе оповещений молчим — только шлём по расписанию.
-	if update.Message.Chat.Type != models.ChatTypePrivate {
+	// В группе на обычные сообщения не отвечаем — только по расписанию.
+	if !isPrivate {
 		return
 	}
 
 	switch {
 	case h.cfg.IsDeveloper(from.Username):
-		h.replyDeveloper(ctx, b, update.Message.Chat.ID, from.ID, text)
+		_ = text
+		h.send(ctx, b, update.Message.Chat.ID, devBusyText())
 	default:
 		h.replyNonDeveloper(ctx, b, update.Message.Chat.ID, text)
 	}
 }
 
-func (h *Handler) replyDeveloper(ctx context.Context, b *bot.Bot, chatID, userID int64, text string) {
-	if _, seen := h.seen.LoadOrStore(userID, struct{}{}); !seen {
-		h.send(ctx, b, chatID, devWelcomeText())
-		return
+func (h *Handler) mayRunCommand(username string, isPrivate bool) bool {
+	if isPrivate {
+		return h.cfg.IsOwner(username)
 	}
-	_ = text
-	h.send(ctx, b, chatID, devBusyText())
+	return h.cfg.IsDeveloper(username)
 }
 
 func (h *Handler) replyNonDeveloper(ctx context.Context, b *bot.Bot, chatID int64, text string) {
@@ -133,20 +136,6 @@ func replyText(update *models.Update) string {
 		return update.Message.Caption
 	}
 	return ""
-}
-
-func devWelcomeText() string {
-	return `🐈‍⬛ *Злой лид-кот следит за тобой.*
-
-По расписанию:
-• *Пн–Пт 18:30* — сдай день: коммиты на бранчи + отчёт техлиду
-• *Пн / Ср / Пт 10:15* — зову на мит
-• К каждому напоминанию — моё злое котофото
-
-В личку болтать не буду — слежу и рычу в группу.
-
-/test — я на посту (мяу)
-/chatid — id чата для NOTIFY_CHAT_ID`
 }
 
 func devBusyText() string {

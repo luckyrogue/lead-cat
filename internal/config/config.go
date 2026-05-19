@@ -8,12 +8,13 @@ import (
 )
 
 type Config struct {
-	BotToken          string
-	NotifyChatID      int64
-	MeetLink          string
-	Timezone          string
+	BotToken           string
+	NotifyChatID       int64
+	MeetLink           string
+	Timezone           string
+	OwnerUsername      string
 	DeveloperUsernames map[string]struct{}
-	GeminiAPIKey      string
+	GeminiAPIKey       string
 }
 
 func Load() (Config, error) {
@@ -45,6 +46,12 @@ func Load() (Config, error) {
 		return cfg, fmt.Errorf("DEVELOPER_USERNAMES is required (username через запятую, без @)")
 	}
 	cfg.DeveloperUsernames = devs
+
+	owner := normalizeUsername(os.Getenv("BOT_OWNER_USERNAME"))
+	if owner == "" {
+		return cfg, fmt.Errorf("BOT_OWNER_USERNAME is required (твой @username без @, для команд в личке)")
+	}
+	cfg.OwnerUsername = owner
 
 	return cfg, nil
 }
@@ -85,4 +92,8 @@ func (c Config) IsDeveloper(username string) bool {
 	}
 	_, ok := c.DeveloperUsernames[name]
 	return ok
+}
+
+func (c Config) IsOwner(username string) bool {
+	return normalizeUsername(username) == c.OwnerUsername
 }
