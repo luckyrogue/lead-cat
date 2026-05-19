@@ -1,0 +1,42 @@
+name: _deploy
+
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        type: string
+        required: true
+        description: "Тег образа (sha или v*)"
+    secrets:
+      DOKPLOY_WEBHOOK:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: deploy / dokploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: production
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Trigger Dokploy webhook
+        env:
+          WEBHOOK: ${{ secrets.DOKPLOY_WEBHOOK }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          if [ -z "$WEBHOOK" ]; then
+            echo "::error::DOKPLOY_WEBHOOK secret is not set"
+            exit 1
+          fi
+          OWNER_LC=$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')
+          IMAGE="ghcr.io/${OWNER_LC}/notify-bot"
+          echo "Deploying ${IMAGE}:${IMAGE_TAG}"
+          curl -fsSL -X POST "$WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d "{\"image\":\"${IMAGE}\",\"tag\":\"${IMAGE_TAG}\"}"

@@ -10,7 +10,6 @@ import (
 	"time"
 )
 
-// Поисковые запросы в духе https://www.reddit.com/r/cat/comments/147gxx4/angry_cats/
 var catSearches = []string{
 	"angry cats",
 	"angry cat",
@@ -65,10 +64,10 @@ type redditChild struct {
 }
 
 type redditPost struct {
-	Title       string `json:"title"`
-	URL         string `json:"url"`
-	IsGallery   bool   `json:"is_gallery"`
-	MediaMeta   map[string]struct {
+	Title     string `json:"title"`
+	URL       string `json:"url"`
+	IsGallery bool   `json:"is_gallery"`
+	MediaMeta map[string]struct {
 		Status string `json:"status"`
 		S      struct {
 			U string `json:"u"`
@@ -217,7 +216,6 @@ func unescapeReddit(s string) string {
 	return strings.ReplaceAll(s, "&amp;", "&")
 }
 
-// запасные картинки, если Reddit недоступен
 var fallbackURLs = []string{
 	"https://i.imgur.com/8nLFCVP.jpeg",
 	"https://i.imgur.com/Cxagv.jpg",
