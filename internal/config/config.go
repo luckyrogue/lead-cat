@@ -8,17 +8,20 @@ import (
 )
 
 type Config struct {
-	BotToken     string
-	NotifyChatID int64
-	MeetLink     string
-	Timezone     string
+	BotToken          string
+	NotifyChatID      int64
+	MeetLink          string
+	Timezone          string
+	DeveloperUsernames map[string]struct{}
+	GeminiAPIKey      string
 }
 
 func Load() (Config, error) {
 	cfg := Config{
-		BotToken: os.Getenv("BOT_TOKEN"),
-		MeetLink: strings.TrimSpace(os.Getenv("MEET_LINK")),
-		Timezone: envOr("TZ", "Asia/Almaty"),
+		BotToken:     os.Getenv("BOT_TOKEN"),
+		MeetLink:     strings.TrimSpace(os.Getenv("MEET_LINK")),
+		Timezone:     envOr("TZ", "Asia/Almaty"),
+		GeminiAPIKey: strings.TrimSpace(os.Getenv("GEMINI_API_KEY")),
 	}
 
 	if cfg.BotToken == "" {
@@ -34,7 +37,38 @@ func Load() (Config, error) {
 	}
 	cfg.NotifyChatID = chatID
 
+	devs, err := parseDeveloperUsernames(os.Getenv("DEVELOPER_USERNAMES"))
+	if err != nil {
+		return cfg, err
+	}
+	if len(devs) == 0 {
+		return cfg, fmt.Errorf("DEVELOPER_USERNAMES is required (username через запятую, без @)")
+	}
+	cfg.DeveloperUsernames = devs
+
 	return cfg, nil
+}
+
+func parseDeveloperUsernames(raw string) (map[string]struct{}, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return nil, nil
+	}
+	out := make(map[string]struct{})
+	for _, part := range strings.Split(raw, ",") {
+		name := normalizeUsername(part)
+		if name == "" {
+			continue
+		}
+		out[name] = struct{}{}
+	}
+	return out, nil
+}
+
+func normalizeUsername(s string) string {
+	s = strings.TrimSpace(s)
+	s = strings.TrimPrefix(s, "@")
+	return strings.ToLower(s)
 }
 
 func envOr(key, fallback string) string {
@@ -42,4 +76,13 @@ func envOr(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func (c Config) IsDeveloper(username string) bool {
+	name := normalizeUsername(username)
+	if name == "" {
+		return false
+	}
+	_, ok := c.DeveloperUsernames[name]
+	return ok
 }

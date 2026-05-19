@@ -53,7 +53,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      - name: Build (& push if enabled)
+      - name: Build
         uses: docker/build-push-action@v7
         with:
           context: .

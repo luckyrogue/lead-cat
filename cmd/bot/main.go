@@ -10,6 +10,7 @@ import (
 
 	"github.com/Jaryq-Lab/notify-bot/internal/config"
 	"github.com/Jaryq-Lab/notify-bot/internal/scheduler"
+	"github.com/Jaryq-Lab/notify-bot/internal/telegram"
 	"github.com/go-telegram/bot"
 )
 
@@ -31,7 +32,8 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	tg, err := bot.New(cfg.BotToken)
+	handler := telegram.NewHandler(cfg)
+	tg, err := bot.New(cfg.BotToken, bot.WithDefaultHandler(handler.Handle))
 	if err != nil {
 		slog.Error("telegram bot", "err", err)
 		os.Exit(1)
@@ -41,9 +43,12 @@ func main() {
 	slog.Info("notify-bot started",
 		"chat_id", cfg.NotifyChatID,
 		"tz", cfg.Timezone,
+		"developers", len(cfg.DeveloperUsernames),
+		"gemini", cfg.GeminiAPIKey != "",
 		"commits", "Пн–Пт 18:30",
 		"meet", "Пн/Ср/Пт 10:15",
 	)
 
-	runner.Start(ctx)
+	go runner.Start(ctx)
+	tg.Start(ctx)
 }
