@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"strconv"
 	"strings"
+	"unicode/utf16"
 
 	"github.com/Jaryq-Lab/notify-bot/internal/config"
 	"github.com/Jaryq-Lab/notify-bot/internal/neuro"
@@ -52,13 +53,13 @@ func (h *Handler) Handle(ctx context.Context, b *bot.Bot, update *models.Update)
 			if h.mayRunCommand(from.Username, isPrivate) {
 				switch cmd {
 				case "/test":
-					h.sendPlain(ctx, b, update.Message.Chat.ID, "мяу. злой лид-кот на посту — слежу 🐈‍⬛")
+					h.sendPlain(ctx, b, update.Message, "мяу. злой лид-кот на посту — слежу 🐈‍⬛")
 					return
 				case "/chatid":
 					chat := update.Message.Chat
-					h.sendPlain(ctx, b, chat.ID, fmt.Sprintf(
-						"chat_id: %d\ntype: %s\ntitle: %s\n\nДля NOTIFY_CHAT_ID в .env — этот id, если type supergroup/group.\n\n— злой лид-кот 👁",
-						chat.ID, chat.Type, chatTitle(&chat),
+					h.sendPlain(ctx, b, update.Message, fmt.Sprintf(
+						"chat_id: %d\ntype: %s\ntitle: %s\nthread_id: %d\n\nДля NOTIFY_CHAT_ID в .env — этот id, если type supergroup/group.\n\n— злой лид-кот 👁",
+						chat.ID, chat.Type, chatTitle(&chat), update.Message.MessageThreadID,
 					))
 					return
 				}
@@ -73,13 +74,11 @@ func (h *Handler) Handle(ctx context.Context, b *bot.Bot, update *models.Update)
 		return
 	}
 
-	chatID := update.Message.Chat.ID
 	switch {
 	case h.cfg.IsDeveloper(from.Username):
-		_ = text
-		h.send(ctx, b, chatID, devBusyText())
+		h.send(ctx, b, update.Message, devBusyText())
 	default:
-		h.replyNonDeveloper(ctx, b, chatID, text)
+		h.replyNonDeveloper(ctx, b, update.Message, text)
 	}
 }
 
@@ -105,7 +104,7 @@ func (h *Handler) isAddressedToBot(msg *models.Message) bool {
 				return true
 			}
 		case models.MessageEntityTypeMention:
-			if h.botUsername != "" && strings.EqualFold(entityText(body, e), "@"+h.botUsername) {
+			if h.botUsername != "" && strings.EqualFold(strings.TrimPrefix(entityTextUTF16(body, e), "@"), h.botUsername) {
 				return true
 			}
 		}
@@ -117,13 +116,30 @@ func (h *Handler) isAddressedToBot(msg *models.Message) bool {
 	return false
 }
 
-func entityText(text string, e models.MessageEntity) string {
-	runes := []rune(text)
+func entityTextUTF16(text string, e models.MessageEntity) string {
+	u16 := utf16.Encode([]rune(text))
 	end := e.Offset + e.Length
-	if e.Offset < 0 || end > len(runes) {
+	if e.Offset < 0 || end > len(u16) {
 		return ""
 	}
-	return string(runes[e.Offset:end])
+	return string(utf16.Decode(u16[e.Offset:end]))
+}
+
+func stripBotMention(text, botUsername string) string {
+	if botUsername == "" {
+		return strings.TrimSpace(text)
+	}
+	lower := strings.ToLower(text)
+	needle := "@" + botUsername
+	for {
+		i := strings.Index(lower, needle)
+		if i < 0 {
+			break
+		}
+		text = text[:i] + text[i+len(needle):]
+		lower = strings.ToLower(text)
+	}
+	return strings.TrimSpace(text)
 }
 
 func normalizeUsername(s string) string {
@@ -133,23 +149,23 @@ func normalizeUsername(s string) string {
 }
 
 func (h *Handler) cmdLeave(ctx context.Context, b *bot.Bot, update *models.Update, isPrivate bool, text string) {
-	replyChatID := update.Message.Chat.ID
+	msg := update.Message
 	targetChatID, err := h.leaveTargetChatID(update, isPrivate, text)
 	if err != nil {
-		h.sendPlain(ctx, b, replyChatID, err.Error())
+		h.sendPlain(ctx, b, msg, err.Error())
 		return
 	}
 
 	wasNotify := targetChatID == h.cfg.NotifyChatID
 	if !isPrivate {
-		h.sendPlain(ctx, b, replyChatID, "Ухожу. Больше не слежу за этим чатом. 🐈‍⬛")
+		h.sendPlain(ctx, b, msg, "Ухожу. Больше не слежу за этим чатом. 🐈‍⬛")
 	}
 
 	ok, err := b.LeaveChat(ctx, &bot.LeaveChatParams{ChatID: targetChatID})
 	if err != nil {
 		slog.Error("leave chat", "chat_id", targetChatID, "err", err)
 		if isPrivate {
-			h.sendPlain(ctx, b, replyChatID, "Не вышел: "+err.Error())
+			h.sendPlain(ctx, b, msg, leaveChatErrorText(err))
 		}
 		return
 	}
@@ -161,28 +177,54 @@ func (h *Handler) cmdLeave(ctx context.Context, b *bot.Bot, update *models.Updat
 		return
 	}
 
-	msg := fmt.Sprintf("Вышел из чата %d. Мур.", targetChatID)
+	reply := fmt.Sprintf("Вышел из чата %d. Мур.", targetChatID)
 	if wasNotify {
-		msg += "\n\nЭто был NOTIFY_CHAT_ID — оповещения сюда больше не придут."
+		reply += "\n\nЭто был NOTIFY_CHAT_ID — оповещения сюда больше не придут."
 	}
-	h.sendPlain(ctx, b, replyChatID, msg)
+	h.sendPlain(ctx, b, msg, reply)
 }
 
 func (h *Handler) leaveTargetChatID(update *models.Update, isPrivate bool, text string) (int64, error) {
 	if !isPrivate {
-		return update.Message.Chat.ID, nil
+		chat := update.Message.Chat
+		switch chat.Type {
+		case models.ChatTypeGroup, models.ChatTypeSupergroup:
+			return chat.ID, nil
+		default:
+			return 0, fmt.Errorf("выйти можно только из группы — вызови /leave в группе")
+		}
 	}
 
 	args := commandArgs(text)
-	if args == "" {
-		return h.cfg.NotifyChatID, nil
+	targetID := h.cfg.NotifyChatID
+	if args != "" {
+		id, err := strconv.ParseInt(args, 10, 64)
+		if err != nil {
+			return 0, fmt.Errorf("использование: /leave -1001234567890\nid группы — через /chatid в группе")
+		}
+		targetID = id
 	}
 
-	id, err := strconv.ParseInt(args, 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("использование: /leave [chat_id]\nбез id — выйду из NOTIFY_CHAT_ID")
+	if !isGroupChatID(targetID) {
+		return 0, fmt.Errorf(
+			"это не id группы (нужно отрицательное число).\n\n" +
+				"в группе: /chatid\n" +
+				"в личке: /leave -100…",
+		)
 	}
-	return id, nil
+	return targetID, nil
+}
+
+func isGroupChatID(id int64) bool {
+	return id < 0
+}
+
+func leaveChatErrorText(err error) string {
+	msg := err.Error()
+	if strings.Contains(msg, "private chats") {
+		return "Не вышел: указан личный чат, а не группа.\n\nВ группе: /leave\nВ личке: /leave -100… (id из /chatid)"
+	}
+	return "Не вышел: " + msg
 }
 
 func commandArgs(text string) string {
@@ -200,38 +242,57 @@ func (h *Handler) mayRunCommand(username string, isPrivate bool) bool {
 	return h.cfg.IsDeveloper(username)
 }
 
-func (h *Handler) replyNonDeveloper(ctx context.Context, b *bot.Bot, chatID int64, text string) {
-	if h.neuro == nil || text == "" {
-		h.send(ctx, b, chatID, nonDevStaticText())
+func (h *Handler) replyNonDeveloper(ctx context.Context, b *bot.Bot, msg *models.Message, text string) {
+	question := stripBotMention(text, h.botUsername)
+	if question == "" {
+		question = text
+	}
+
+	if h.neuro == nil || question == "" {
+		h.send(ctx, b, msg, nonDevStaticText())
 		return
 	}
 
-	answer, err := h.neuro.Ask(ctx, text)
+	answer, err := h.neuro.Ask(ctx, question)
 	if err != nil {
 		slog.Error("gemini", "err", err)
-		h.send(ctx, b, chatID, nonDevStaticText()+"\n\n_Сейчас рыкнуть не могу — мур позже._")
+		h.send(ctx, b, msg, nonDevStaticText()+"\n\n_Сейчас рыкнуть не могу — мур позже._")
 		return
 	}
 
-	h.send(ctx, b, chatID, answer)
+	h.sendPlain(ctx, b, msg, answer)
 }
 
-func (h *Handler) send(ctx context.Context, b *bot.Bot, chatID int64, text string) {
-	if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:    chatID,
-		Text:      text,
-		ParseMode: models.ParseModeMarkdown,
-	}); err != nil {
-		slog.Error("send reply", "chat_id", chatID, "err", err)
-	}
+func (h *Handler) send(ctx context.Context, b *bot.Bot, msg *models.Message, text string) {
+	h.sendMessage(ctx, b, msg, text, true)
 }
 
-func (h *Handler) sendPlain(ctx context.Context, b *bot.Bot, chatID int64, text string) {
-	if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: chatID,
+func (h *Handler) sendPlain(ctx context.Context, b *bot.Bot, msg *models.Message, text string) {
+	h.sendMessage(ctx, b, msg, text, false)
+}
+
+func (h *Handler) sendMessage(ctx context.Context, b *bot.Bot, msg *models.Message, text string, markdown bool) {
+	params := &bot.SendMessageParams{
+		ChatID: msg.Chat.ID,
 		Text:   text,
-	}); err != nil {
-		slog.Error("send reply", "chat_id", chatID, "err", err)
+	}
+	if msg.MessageThreadID != 0 {
+		params.MessageThreadID = msg.MessageThreadID
+	}
+	if markdown {
+		params.ParseMode = models.ParseModeMarkdown
+	}
+
+	if _, err := b.SendMessage(ctx, params); err != nil && markdown {
+		params.ParseMode = ""
+		_, err = b.SendMessage(ctx, params)
+	}
+	if err != nil {
+		slog.Error("send reply",
+			"chat_id", msg.Chat.ID,
+			"thread_id", msg.MessageThreadID,
+			"err", err,
+		)
 	}
 }
 
