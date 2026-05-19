@@ -6,25 +6,48 @@ import (
 	"log/slog"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf16"
 
+	"github.com/Jaryq-Lab/notify-bot/internal/commitsreport"
 	"github.com/Jaryq-Lab/notify-bot/internal/config"
+	"github.com/Jaryq-Lab/notify-bot/internal/github"
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 )
 
 type Handler struct {
 	cfg         config.Config
+	loc         *time.Location
+	report      *commitsreport.Builder
 	botID       int64
 	botUsername string
 }
 
-func NewHandler(cfg config.Config, botID int64, botUsername string) *Handler {
-	return &Handler{
+func NewHandler(cfg config.Config, loc *time.Location, botID int64, botUsername string) *Handler {
+	if loc == nil {
+		loc = time.UTC
+	}
+	h := &Handler{
 		cfg:         cfg,
+		loc:         loc,
 		botID:       botID,
 		botUsername: normalizeUsername(botUsername),
 	}
+	if cfg.CommitsReportEnabled() {
+		mappings := make([]commitsreport.DevMapping, 0, len(cfg.DeveloperList()))
+		for _, tg := range cfg.DeveloperList() {
+			mappings = append(mappings, commitsreport.DevMapping{
+				Telegram: tg,
+				GitHub:   cfg.GitHubLogin(tg),
+			})
+		}
+		h.report = &commitsreport.Builder{
+			GH:       github.NewClient(cfg.GitHubToken, cfg.GitHubOrg),
+			Mappings: commitsreport.SortMappings(mappings),
+		}
+	}
+	return h
 }
 
 func (h *Handler) Handle(ctx context.Context, b *bot.Bot, update *models.Update) {
@@ -49,11 +72,12 @@ func (h *Handler) Handle(ctx context.Context, b *bot.Bot, update *models.Update)
 					h.sendPlain(ctx, b, update.Message, "мяу. злой лид-кот на посту — слежу 🐈‍⬛")
 					return
 				case "/chatid":
-					chat := update.Message.Chat
-					h.sendPlain(ctx, b, update.Message, fmt.Sprintf(
-						"chat_id: %d\ntype: %s\ntitle: %s\nthread_id: %d\n\nДля NOTIFY_CHAT_ID в .env — этот id, если type supergroup/group.\n\n— злой лид-кот 👁",
-						chat.ID, chat.Type, chatTitle(&chat), update.Message.MessageThreadID,
-					))
+					h.cmdChatID(ctx, b, update, isPrivate)
+					return
+				case "/report":
+					if isPrivate && h.cfg.IsOwner(from.Username) {
+						h.cmdReport(ctx, b, update.Message)
+					}
 					return
 				}
 			}
@@ -122,6 +146,33 @@ func normalizeUsername(s string) string {
 	s = strings.TrimSpace(s)
 	s = strings.TrimPrefix(s, "@")
 	return strings.ToLower(s)
+}
+
+func (h *Handler) cmdChatID(ctx context.Context, b *bot.Bot, update *models.Update, isPrivate bool) {
+	chat := update.Message.Chat
+	text := fmt.Sprintf(
+		"chat_id: %d\ntype: %s\ntitle: %s\nthread_id: %d",
+		chat.ID, chat.Type, chatTitle(&chat), update.Message.MessageThreadID,
+	)
+	if isPrivate && update.Message.From != nil {
+		text += fmt.Sprintf("\nuser_id: %d\n\nДля BOT_OWNER_USER_ID — этот user_id.", update.Message.From.ID)
+	}
+	text += "\n\nДля NOTIFY_CHAT_ID в .env — chat_id группы (отрицательный).\n\n— злой лид-кот 👁"
+	h.sendPlain(ctx, b, update.Message, text)
+}
+
+func (h *Handler) cmdReport(ctx context.Context, b *bot.Bot, msg *models.Message) {
+	if h.report == nil {
+		h.sendPlain(ctx, b, msg, "Отчёт выключен: нужны GITHUB_TOKEN, GITHUB_ORG и BOT_OWNER_USER_ID.")
+		return
+	}
+	text, err := h.report.Daily(ctx, time.Now(), h.loc)
+	if err != nil {
+		slog.Error("report command", "err", err)
+		h.sendPlain(ctx, b, msg, "Не собрал отчёт: "+err.Error())
+		return
+	}
+	h.sendPlain(ctx, b, msg, text)
 }
 
 func (h *Handler) cmdLeave(ctx context.Context, b *bot.Bot, update *models.Update, isPrivate bool, text string) {

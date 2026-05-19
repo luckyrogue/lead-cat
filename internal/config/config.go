@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -13,7 +14,11 @@ type Config struct {
 	MeetLink           string
 	Timezone           string
 	OwnerUsername      string
+	OwnerTelegramID    int64
 	DeveloperUsernames map[string]struct{}
+	TelegramToGitHub   map[string]string
+	GitHubToken        string
+	GitHubOrg          string
 }
 
 func Load() (Config, error) {
@@ -51,7 +56,60 @@ func Load() (Config, error) {
 	}
 	cfg.OwnerUsername = owner
 
+	if v := strings.TrimSpace(os.Getenv("BOT_OWNER_USER_ID")); v != "" {
+		id, err := strconv.ParseInt(v, 10, 64)
+		if err != nil || id <= 0 {
+			return cfg, fmt.Errorf("BOT_OWNER_USER_ID must be a positive telegram user id")
+		}
+		cfg.OwnerTelegramID = id
+	}
+
+	cfg.GitHubToken = strings.TrimSpace(os.Getenv("GITHUB_TOKEN"))
+	cfg.GitHubOrg = envOr("GITHUB_ORG", "Jaryq-Lab")
+	cfg.TelegramToGitHub = parseTelegramGitHubMap(os.Getenv("GITHUB_LOGINS"))
+
 	return cfg, nil
+}
+
+func parseTelegramGitHubMap(raw string) map[string]string {
+	out := make(map[string]string)
+	for _, part := range strings.Split(raw, ",") {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		tg, gh, ok := strings.Cut(part, ":")
+		if !ok {
+			continue
+		}
+		tg = normalizeUsername(tg)
+		gh = strings.TrimSpace(gh)
+		if tg != "" && gh != "" {
+			out[tg] = gh
+		}
+	}
+	return out
+}
+
+func (c Config) DeveloperList() []string {
+	out := make([]string, 0, len(c.DeveloperUsernames))
+	for u := range c.DeveloperUsernames {
+		out = append(out, u)
+	}
+	sort.Strings(out)
+	return out
+}
+
+func (c Config) GitHubLogin(telegramUsername string) string {
+	tg := normalizeUsername(telegramUsername)
+	if gh, ok := c.TelegramToGitHub[tg]; ok {
+		return gh
+	}
+	return tg
+}
+
+func (c Config) CommitsReportEnabled() bool {
+	return c.GitHubToken != "" && c.GitHubOrg != "" && c.OwnerTelegramID > 0
 }
 
 func parseDeveloperUsernames(raw string) (map[string]struct{}, error) {
