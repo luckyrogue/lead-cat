@@ -37,13 +37,13 @@ func (h *Handler) Handle(ctx context.Context, b *bot.Bot, update *models.Update)
 	if cmd, ok := parseCommand(text); ok && h.cfg.IsDeveloper(from.Username) {
 		switch cmd {
 		case "/test":
-			h.sendPlain(ctx, b, update.Message.Chat.ID, "мяу")
+			h.sendPlain(ctx, b, update.Message.Chat.ID, "мяу. злой лид-кот на посту — слежу 🐈‍⬛")
 			return
 		case "/chatid":
 			chat := update.Message.Chat
 			h.sendPlain(ctx, b, chat.ID, fmt.Sprintf(
-				"chat_id: %d\ntype: %s\ntitle: %s\n\nДля NOTIFY_CHAT_ID группы — этот id (если type supergroup/group).",
-				chat.ID, chat.Type, chatTitle(chat),
+				"chat_id: %d\ntype: %s\ntitle: %s\n\nДля NOTIFY_CHAT_ID в .env — этот id, если type supergroup/group.\n\n— злой лид-кот 👁",
+				chat.ID, chat.Type, chatTitle(&chat),
 			))
 			return
 		}
@@ -80,11 +80,11 @@ func (h *Handler) replyNonDeveloper(ctx context.Context, b *bot.Bot, chatID int6
 	answer, err := h.neuro.Ask(ctx, text)
 	if err != nil {
 		slog.Error("gemini", "err", err)
-		h.send(ctx, b, chatID, nonDevStaticText()+"\n\n_Нейрока сейчас недоступна._")
+		h.send(ctx, b, chatID, nonDevStaticText()+"\n\n_Сейчас рыкнуть не могу — мур позже._")
 		return
 	}
 
-	h.send(ctx, b, chatID, nonDevNeuroText(answer))
+	h.send(ctx, b, chatID, answer)
 }
 
 func (h *Handler) send(ctx context.Context, b *bot.Bot, chatID int64, text string) {
@@ -136,34 +136,27 @@ func replyText(update *models.Update) string {
 }
 
 func devWelcomeText() string {
-	return `👋 *Привет, разработчик!*
+	return `🐈‍⬛ *Злой лид-кот следит за тобой.*
 
-Я notify-бот. Работаю по расписанию:
-• *Пн–Пт 18:30* — сдать день техлиду (коммиты на бранчи)
-• *Пн / Ср / Пт 10:15* — ссылка на мит
-• К каждому оповещению — случайный злой кот 🐈‍⬛
+По расписанию:
+• *Пн–Пт 18:30* — сдай день: коммиты на бранчи + отчёт техлиду
+• *Пн / Ср / Пт 10:15* — зову на мит
+• К каждому напоминанию — моё злое котофото
 
-Дальше болтать не буду — просто шлю в группу.
+В личку болтать не буду — слежу и рычу в группу.
 
-Проверка: /test → мяу
-Узнать id чата: /chatid`
+/test — я на посту (мяу)
+/chatid — id чата для NOTIFY_CHAT_ID`
 }
 
 func devBusyText() string {
-	return `Я не для долгих разговоров — *делаю оповещения* по расписанию.
+	return `Не отвлекай — *слежу и рычу в группу* по расписанию.
 
-Всё ок, работаю 🤖`
+Глаз на тебе. 👁`
 }
 
 func nonDevStaticText() string {
-	return `🚫 *Ты не разработчик* — notify-бот с тобой не общается.
+	return `🚫 *Ты не из стаи* — за тобой не слежу. В личку не болтаю.
 
-Вопросы и болтовня → *Нейрока* (Gemini). Попроси админа включить ` + "`GEMINI_API_KEY`" + `.`
-}
-
-func nonDevNeuroText(answer string) string {
-	return `🚫 *Notify-бот* с не-разработчиками не разговаривает.
-
-🤖 *Нейрока:*
-` + answer
+Мур.`
 }
