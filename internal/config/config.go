@@ -14,15 +14,13 @@ type Config struct {
 	Timezone           string
 	OwnerUsername      string
 	DeveloperUsernames map[string]struct{}
-	GeminiAPIKey       string
 }
 
 func Load() (Config, error) {
 	cfg := Config{
 		BotToken:     os.Getenv("BOT_TOKEN"),
 		MeetLink:     strings.TrimSpace(os.Getenv("MEET_LINK")),
-		Timezone:     envOr("TZ", "Asia/Almaty"),
-		GeminiAPIKey: strings.TrimSpace(os.Getenv("GEMINI_API_KEY")),
+		Timezone: envOr("TZ", "Asia/Almaty"),
 	}
 
 	if cfg.BotToken == "" {

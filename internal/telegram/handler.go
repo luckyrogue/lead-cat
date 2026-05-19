@@ -6,44 +6,24 @@ import (
 	"log/slog"
 	"strconv"
 	"strings"
-	"sync"
-	"time"
 	"unicode/utf16"
 
 	"github.com/Jaryq-Lab/notify-bot/internal/config"
-	"github.com/Jaryq-Lab/notify-bot/internal/neuro"
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 )
 
-const devGroupGeminiDailyLimit = 2
-
 type Handler struct {
 	cfg         config.Config
-	neuro       *neuro.Client
-	loc         *time.Location
 	botID       int64
 	botUsername string
-
-	devGeminiMu     sync.Mutex
-	devGeminiPerDay map[string]int // "userID:YYYY-MM-DD" → count
 }
 
-func NewHandler(cfg config.Config, loc *time.Location, botID int64, botUsername string) *Handler {
-	var nc *neuro.Client
-	if cfg.GeminiAPIKey != "" {
-		nc = neuro.NewClient(cfg.GeminiAPIKey)
-	}
-	if loc == nil {
-		loc = time.UTC
-	}
+func NewHandler(cfg config.Config, botID int64, botUsername string) *Handler {
 	return &Handler{
-		cfg:             cfg,
-		neuro:           nc,
-		loc:             loc,
-		botID:           botID,
-		botUsername:     normalizeUsername(botUsername),
-		devGeminiPerDay: make(map[string]int),
+		cfg:         cfg,
+		botID:       botID,
+		botUsername: normalizeUsername(botUsername),
 	}
 }
 
@@ -92,29 +72,7 @@ func (h *Handler) Handle(ctx context.Context, b *bot.Bot, update *models.Update)
 		h.send(ctx, b, msg, nonDevStaticText())
 		return
 	}
-
-	if isPrivate {
-		if h.cfg.IsOwner(from.Username) {
-			h.replyWithGemini(ctx, b, msg, text)
-		} else {
-			h.send(ctx, b, msg, devBusyText())
-		}
-		return
-	}
-
-	// Группа, обращение к боту
-	if h.cfg.IsOwner(from.Username) {
-		h.replyWithGemini(ctx, b, msg, text)
-		return
-	}
-
-	if h.devGroupGeminiCount(from.ID) >= devGroupGeminiDailyLimit {
-		h.send(ctx, b, msg, devGeminiLimitText())
-		return
-	}
-	if h.replyWithGemini(ctx, b, msg, text) {
-		h.recordDevGroupGemini(from.ID)
-	}
+	h.send(ctx, b, msg, devBusyText())
 }
 
 func (h *Handler) isAddressedToBot(msg *models.Message) bool {
@@ -158,23 +116,6 @@ func entityTextUTF16(text string, e models.MessageEntity) string {
 		return ""
 	}
 	return string(utf16.Decode(u16[e.Offset:end]))
-}
-
-func stripBotMention(text, botUsername string) string {
-	if botUsername == "" {
-		return strings.TrimSpace(text)
-	}
-	lower := strings.ToLower(text)
-	needle := "@" + botUsername
-	for {
-		i := strings.Index(lower, needle)
-		if i < 0 {
-			break
-		}
-		text = text[:i] + text[i+len(needle):]
-		lower = strings.ToLower(text)
-	}
-	return strings.TrimSpace(text)
 }
 
 func normalizeUsername(s string) string {
@@ -277,62 +218,6 @@ func (h *Handler) mayRunCommand(username string, isPrivate bool) bool {
 	return h.cfg.IsDeveloper(username)
 }
 
-func (h *Handler) replyWithGemini(ctx context.Context, b *bot.Bot, msg *models.Message, text string) bool {
-	question := stripBotMention(text, h.botUsername)
-	if question == "" {
-		question = text
-	}
-
-	if h.neuro == nil || question == "" {
-		h.sendPlain(ctx, b, msg, "Мур. Сейчас рыкнуть не могу.")
-		return false
-	}
-
-	answer, err := h.neuro.Ask(ctx, question)
-	if err != nil {
-		slog.Error("gemini", "err", err)
-		h.sendPlain(ctx, b, msg, "Сейчас рыкнуть не могу — мур позже.")
-		return false
-	}
-
-	h.sendPlain(ctx, b, msg, answer)
-	return true
-}
-
-func (h *Handler) devGeminiDayKey(userID int64) string {
-	return fmt.Sprintf("%d:%s", userID, time.Now().In(h.loc).Format("2006-01-02"))
-}
-
-func (h *Handler) devGroupGeminiCount(userID int64) int {
-	h.devGeminiMu.Lock()
-	defer h.devGeminiMu.Unlock()
-	return h.devGeminiPerDay[h.devGeminiDayKey(userID)]
-}
-
-func (h *Handler) recordDevGroupGemini(userID int64) {
-	h.devGeminiMu.Lock()
-	defer h.devGeminiMu.Unlock()
-	key := h.devGeminiDayKey(userID)
-	h.devGeminiPerDay[key]++
-	h.pruneDevGeminiCountsLocked()
-}
-
-func (h *Handler) pruneDevGeminiCountsLocked() {
-	today := time.Now().In(h.loc).Format("2006-01-02")
-	for k := range h.devGeminiPerDay {
-		if !strings.HasSuffix(k, ":"+today) {
-			delete(h.devGeminiPerDay, k)
-		}
-	}
-}
-
-func devGeminiLimitText() string {
-	return fmt.Sprintf(
-		"Лимит на сегодня — *%d ответа*. Завтра снова.\n\nМур.",
-		devGroupGeminiDailyLimit,
-	)
-}
-
 func (h *Handler) send(ctx context.Context, b *bot.Bot, msg *models.Message, text string) {
 	h.sendMessage(ctx, b, msg, text, true)
 }
@@ -397,13 +282,13 @@ func replyText(update *models.Update) string {
 }
 
 func devBusyText() string {
-	return `Не отвлекай — **слежу и рычу в группу** по расписанию.
+	return `Не отвлекай — *слежу и рычу в группу* по расписанию.
 
 Глаз на тебе. 👁`
 }
 
 func nonDevStaticText() string {
-	return `🚫 **Ты не из стаи** — за тобой не слежу. В личку не болтаю.
+	return `🚫 *Ты не из стаи* — за тобой не слежу. В личку не болтаю.
 
 Мур.`
 }
