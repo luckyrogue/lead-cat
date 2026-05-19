@@ -283,7 +283,8 @@ func (h *Handler) sendMessage(ctx context.Context, b *bot.Bot, msg *models.Messa
 		params.ParseMode = models.ParseModeMarkdown
 	}
 
-	if _, err := b.SendMessage(ctx, params); err != nil && markdown {
+	_, err := b.SendMessage(ctx, params)
+	if err != nil && markdown {
 		params.ParseMode = ""
 		_, err = b.SendMessage(ctx, params)
 	}
