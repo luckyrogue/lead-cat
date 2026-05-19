@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"strings"
 	"sync"
@@ -13,9 +14,9 @@ import (
 )
 
 type Handler struct {
-	cfg    config.Config
-	neuro  *neuro.Client
-	seen   sync.Map // userID -> struct{} — уже получил приветствие
+	cfg   config.Config
+	neuro *neuro.Client
+	seen  sync.Map
 }
 
 func NewHandler(cfg config.Config) *Handler {
@@ -33,11 +34,19 @@ func (h *Handler) Handle(ctx context.Context, b *bot.Bot, update *models.Update)
 	from := update.Message.From
 	text := replyText(update)
 
-	if isTestCommand(text) {
-		if h.cfg.IsDeveloper(from.Username) {
+	if cmd, ok := parseCommand(text); ok && h.cfg.IsDeveloper(from.Username) {
+		switch cmd {
+		case "/test":
 			h.sendPlain(ctx, b, update.Message.Chat.ID, "мяу")
+			return
+		case "/chatid":
+			chat := update.Message.Chat
+			h.sendPlain(ctx, b, chat.ID, fmt.Sprintf(
+				"chat_id: %d\ntype: %s\ntitle: %s\n\nДля NOTIFY_CHAT_ID группы — этот id (если type supergroup/group).",
+				chat.ID, chat.Type, chatTitle(chat),
+			))
+			return
 		}
-		return
 	}
 
 	// В группе оповещений молчим — только шлём по расписанию.
@@ -97,10 +106,23 @@ func (h *Handler) sendPlain(ctx context.Context, b *bot.Bot, chatID int64, text 
 	}
 }
 
-func isTestCommand(text string) bool {
-	cmd, _, _ := strings.Cut(strings.TrimSpace(text), " ")
-	cmd = strings.SplitN(cmd, "@", 2)[0]
-	return cmd == "/test"
+func parseCommand(text string) (cmd string, ok bool) {
+	part, _, _ := strings.Cut(strings.TrimSpace(text), " ")
+	if part == "" || !strings.HasPrefix(part, "/") {
+		return "", false
+	}
+	part = strings.SplitN(part, "@", 2)[0]
+	return part, true
+}
+
+func chatTitle(chat *models.Chat) string {
+	if chat.Title != "" {
+		return chat.Title
+	}
+	if chat.Username != "" {
+		return "@" + chat.Username
+	}
+	return "—"
 }
 
 func replyText(update *models.Update) string {
@@ -123,7 +145,8 @@ func devWelcomeText() string {
 
 Дальше болтать не буду — просто шлю в группу.
 
-Проверка: /test → мяу`
+Проверка: /test → мяу
+Узнать id чата: /chatid`
 }
 
 func devBusyText() string {
