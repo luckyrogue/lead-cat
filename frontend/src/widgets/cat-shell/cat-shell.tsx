@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useWorkspaceId } from "@/shared/hooks/use-workspace-id";
@@ -29,22 +30,31 @@ export function CatShell({ children }: { children: ReactNode }) {
       </header>
       <nav className="flex gap-1 overflow-x-auto px-2 py-2">
         {nav.map((item) => {
-          const search =
-            item.needsWorkspace && workspaceId ? { workspaceId } : undefined;
+          const needsWorkspace = item.needsWorkspace;
+          const blocked = needsWorkspace && !workspaceId;
+          const linkClass = cn(
+            buttonVariants({ variant: "ghost", size: "sm" }),
+            "rounded-full whitespace-nowrap",
+            blocked && "cursor-not-allowed opacity-50"
+          );
+
           return (
             <Link
               key={item.to}
               to={item.to}
-              {...(search ? { search } : {})}
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "sm" }),
-                "rounded-full whitespace-nowrap"
-              )}
+              search={needsWorkspace ? { workspaceId } : undefined}
+              className={linkClass}
               activeProps={{
                 className: cn(
                   buttonVariants({ variant: "default", size: "sm" }),
                   "rounded-full"
                 ),
+              }}
+              onClick={(e) => {
+                if (blocked) {
+                  e.preventDefault();
+                  toast.info("Сначала открой логово из списка на вкладке «Логова»");
+                }
               }}
             >
               {item.label}

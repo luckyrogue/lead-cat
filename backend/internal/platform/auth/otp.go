@@ -9,17 +9,19 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 )
 
 const otpTTL = 10 * time.Minute
 
 type OTP struct {
-	rdb *redis.Client
-	log bool
+	rdb      *redis.Client
+	log      *zap.Logger
+	logCodes bool
 }
 
-func NewOTP(rdb *redis.Client, logToStdout bool) *OTP {
-	return &OTP{rdb: rdb, log: logToStdout}
+func NewOTP(rdb *redis.Client, log *zap.Logger, logCodes bool) *OTP {
+	return &OTP{rdb: rdb, log: log, logCodes: logCodes}
 }
 
 func (o *OTP) Send(ctx context.Context, channel, dest string) (string, error) {
@@ -35,8 +37,16 @@ func (o *OTP) Send(ctx context.Context, channel, dest string) (string, error) {
 	if err := o.rdb.Set(ctx, key, code, otpTTL).Err(); err != nil {
 		return "", err
 	}
-	if o.log {
-		fmt.Printf("[auth-otp] %s %s code=%s\n", channel, dest, code)
+	if o.logCodes {
+		if o.log != nil {
+			o.log.Info("auth OTP (local dev — no email/SMS)",
+				zap.String("channel", channel),
+				zap.String("dest", dest),
+				zap.String("code", code),
+			)
+		} else {
+			fmt.Printf("[auth-otp] %s %s code=%s\n", channel, dest, code)
+		}
 	}
 	return code, nil
 }

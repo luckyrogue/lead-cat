@@ -17,8 +17,6 @@ Or step by step: `make help`
 
 | Doc | Topic |
 |-----|--------|
-| [PLAN.md](PLAN.md) | Implementation status |
-| [DEPLOY.md](DEPLOY.md) | Production entry |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design |
 | [docs/DEPLOY-DOKPLOY.md](docs/DEPLOY-DOKPLOY.md) | Dokploy |
 | [docs/AUTH.md](docs/AUTH.md) | Login (OTP, passkey, GitHub/GitLab) |

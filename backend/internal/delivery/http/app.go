@@ -54,7 +54,7 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 		return nil, err
 	}
 	sessStore := platformauth.NewSessionStore(rdb)
-	otpSvc := platformauth.NewOTP(rdb, cfg.AuthOTPLog)
+	otpSvc := platformauth.NewOTP(rdb, log, cfg.AuthOTPLog)
 	wan, err := webauthnsvc.NewService(cfg.WebAuthnRPID, cfg.WebAuthnRPOrigin, store, sessStore)
 	if err != nil {
 		return nil, err
@@ -69,12 +69,13 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	}, store, sessStore)
 
 	authH := &handlers.AuthAPI{
-		Store:    store,
-		JWT:      jwtSvc,
-		OTP:      otpSvc,
-		WebAuthn: wan,
-		OAuth:    oauthSvc,
-		Webapp:   cfg.WebappURL,
+		Store:        store,
+		JWT:          jwtSvc,
+		OTP:          otpSvc,
+		WebAuthn:     wan,
+		OAuth:        oauthSvc,
+		Webapp:       cfg.WebappURL,
+		OTPLogExpose: cfg.AuthOTPLog,
 	}
 	authMW := middleware.NewAuth(cfg, jwtSvc, store, log)
 

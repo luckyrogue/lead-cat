@@ -14,12 +14,13 @@ import (
 )
 
 type AuthAPI struct {
-	Store    *postgres.Store
-	JWT      *platformauth.JWT
-	OTP      *platformauth.OTP
-	WebAuthn *webauthnsvc.Service
-	OAuth    *oauth.Service
-	Webapp   string
+	Store        *postgres.Store
+	JWT          *platformauth.JWT
+	OTP          *platformauth.OTP
+	WebAuthn     *webauthnsvc.Service
+	OAuth        *oauth.Service
+	Webapp       string
+	OTPLogExpose bool
 }
 
 func (h *AuthAPI) tokenResponse(c *fiber.Ctx, u postgres.User) error {
@@ -45,6 +46,7 @@ func (h *AuthAPI) Config(c *fiber.Ctx) error {
 		"passkey_enabled":  h.WebAuthn != nil,
 		"email_enabled":    true,
 		"phone_enabled":    true,
+		"dev_otp":          h.OTPLogExpose,
 	})
 }
 
@@ -55,10 +57,15 @@ func (h *AuthAPI) SendEmailCode(c *fiber.Ctx) error {
 	if err := c.BodyParser(&body); err != nil || body.Email == "" {
 		return fiber.NewError(fiber.StatusBadRequest, "email required")
 	}
-	if _, err := h.OTP.Send(c.Context(), "email", body.Email); err != nil {
+	code, err := h.OTP.Send(c.Context(), "email", body.Email)
+	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "send failed")
 	}
-	return c.JSON(fiber.Map{"ok": true})
+	resp := fiber.Map{"ok": true}
+	if h.OTPLogExpose {
+		resp["dev_code"] = code
+	}
+	return c.JSON(resp)
 }
 
 func (h *AuthAPI) VerifyEmailCode(c *fiber.Ctx) error {
@@ -88,10 +95,15 @@ func (h *AuthAPI) SendPhoneCode(c *fiber.Ctx) error {
 	if err := c.BodyParser(&body); err != nil || body.Phone == "" {
 		return fiber.NewError(fiber.StatusBadRequest, "phone required")
 	}
-	if _, err := h.OTP.Send(c.Context(), "phone", body.Phone); err != nil {
+	code, err := h.OTP.Send(c.Context(), "phone", body.Phone)
+	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "send failed")
 	}
-	return c.JSON(fiber.Map{"ok": true})
+	resp := fiber.Map{"ok": true}
+	if h.OTPLogExpose {
+		resp["dev_code"] = code
+	}
+	return c.JSON(resp)
 }
 
 func (h *AuthAPI) VerifyPhoneCode(c *fiber.Ctx) error {

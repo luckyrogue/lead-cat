@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { setStoredWorkspaceId } from "@/shared/hooks/use-workspace-id";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,7 @@ import { createWorkspace, fetchWorkspaces } from "@/entities/workspace/api";
 
 export function WorkspacesPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const { data, isLoading } = useQuery({
     queryKey: ["workspaces"],
     queryFn: fetchWorkspaces,
@@ -18,14 +20,22 @@ export function WorkspacesPage() {
   const [slug, setSlug] = useState("");
   const create = useMutation({
     mutationFn: () => createWorkspace(name, slug),
-    onSuccess: () => {
+    onSuccess: (ws) => {
       qc.invalidateQueries({ queryKey: ["workspaces"] });
       setName("");
       setSlug("");
+      setStoredWorkspaceId(ws.id);
       toast.success("Логово создано");
+      navigate({ to: "/dashboard", search: { workspaceId: ws.id } });
     },
     onError: () => toast.error("Не удалось создать логово"),
   });
+
+  useEffect(() => {
+    if (data?.length === 1) {
+      setStoredWorkspaceId(data[0].id);
+    }
+  }, [data]);
 
   if (isLoading) {
     return (
@@ -46,6 +56,7 @@ export function WorkspacesPage() {
             <Link
               to="/dashboard"
               search={{ workspaceId: w.id }}
+              onClick={() => setStoredWorkspaceId(w.id)}
               className="block rounded-2xl border border-border bg-card p-3 shadow-sm transition-colors hover:bg-muted/50"
             >
               {w.name} <span className="text-xs text-muted-foreground">/{w.slug}</span>

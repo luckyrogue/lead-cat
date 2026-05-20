@@ -17,7 +17,10 @@ type AuthConfig = {
   passkey_enabled: boolean;
   email_enabled: boolean;
   phone_enabled: boolean;
+  dev_otp?: boolean;
 };
+
+type SendCodeResponse = { ok: boolean; dev_code?: string };
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -56,15 +59,19 @@ export function LoginPage() {
 
   const sendCode = useMutation({
     mutationFn: async () => {
-      if (tab === "email") {
-        await api.post("/auth/email/send-code", { email });
-      } else {
-        await api.post("/auth/phone/send-code", { phone });
-      }
+      const path = tab === "email" ? "/auth/email/send-code" : "/auth/phone/send-code";
+      const body = tab === "email" ? { email } : { phone };
+      const { data } = await api.post<SendCodeResponse>(path, body);
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setStep("code");
-      toast.success("Код отправлен");
+      if (data.dev_code) {
+        setCode(data.dev_code);
+        toast.success(`Код для dev: ${data.dev_code}`, { duration: 120_000 });
+      } else {
+        toast.success("Код отправлен");
+      }
     },
     onError: () => toast.error("Не удалось отправить код"),
   });
@@ -112,6 +119,12 @@ export function LoginPage() {
     <div className="mx-auto max-w-md space-y-4 p-6">
       <h1 className="text-2xl font-bold">Войти в Lead Cat</h1>
       <p className="text-sm text-muted-foreground">Email, телефон, passkey или GitHub / GitLab</p>
+      {config?.dev_otp && (
+        <p className="rounded-lg border border-border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+          Локальный режим: после «Получить код» код появится в уведомлении и подставится в поле (письма/SMS
+          нет).
+        </p>
+      )}
 
       <Tabs
         value={tab}
