@@ -1,0 +1,19 @@
+---
+description: Native auth (JWT, OTP, passkey, OAuth)
+globs:
+  - backend/internal/delivery/http/middleware/auth.go
+  - backend/internal/delivery/http/handlers/auth.go
+  - backend/internal/platform/auth/**
+  - backend/internal/infrastructure/auth/**
+  - frontend/src/features/auth/**
+  - frontend/src/features/auth-link-telegram/**
+  - frontend/src/shared/auth/**
+alwaysApply: false
+---
+
+# Auth
+
+- No Authentik/OIDC. API validates **HS256 JWT** (`JWT_SECRET`).
+- Login: email/phone OTP, WebAuthn passkey, GitHub/GitLab OAuth — see `docs/AUTH.md`.
+- Workspace VCS tokens ≠ login OAuth (encrypted in Postgres).
+- Dev: `AUTH_DEV_MODE=true` — Bearer `dev` or custom sub for smoke.

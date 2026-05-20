@@ -1,0 +1,10 @@
+---
+description: goose SQL migrations
+globs: "{backend/migrations/**,backend/cmd/migrate/**}"
+alwaysApply: false
+---
+
+# Migrations
+
+- Tool: pressly/goose v3 via `backend/cmd/migrate`
+- No silent auto-migrate in prod unless `AUTO_MIGRATE=true`

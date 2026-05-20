@@ -35,7 +35,7 @@ jobs:
             exit 1
           fi
           OWNER_LC=$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')
-          IMAGE="ghcr.io/${OWNER_LC}/notify-bot"
+          IMAGE="ghcr.io/${OWNER_LC}/lead-cat"
           echo "Deploying ${IMAGE}:${IMAGE_TAG}"
           curl -fsSL -X POST "$WEBHOOK" \
             -H "Content-Type: application/json" \

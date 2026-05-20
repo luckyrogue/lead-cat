@@ -5,3 +5,9 @@
 !.env.example
 *.md
 notify-bot.db
+frontend/node_modules
+frontend/dist
+docker-compose.yml
+.cursor
+agent-transcripts
+scripts

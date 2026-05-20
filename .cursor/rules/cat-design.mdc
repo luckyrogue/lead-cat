@@ -1,0 +1,9 @@
+---
+description: Cat UI theme (mandatory)
+globs: "frontend/**"
+alwaysApply: false
+---
+
+# Cat design
+
+Use cat tokens from `frontend/src/shared/theme/cat-tokens.css`. Evil cats are part of the product identity — see `docs/DESIGN-CATS.md`.

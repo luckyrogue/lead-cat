@@ -1,0 +1,46 @@
+# Secrets & local env
+.env
+.env.*
+!.env.example
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.tanstack/
+frontend/.nitro/
+frontend/.output/
+frontend/.vinxi/
+frontend/.wrangler/
+frontend/__unconfig*/
+frontend/*.local
+frontend/count.txt
+frontend/todos.json
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.out
+backend/bin/
+backend/tmp/
+/server
+/migrate
+/lead-cat
+
+# Tooling & OS
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+*.swp
+*~
+
+# Debug / temp
+tmp/
+.temp/

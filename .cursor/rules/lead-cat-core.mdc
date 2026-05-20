@@ -1,0 +1,14 @@
+---
+description: Lead Cat core product and Alpha constraints
+alwaysApply: true
+---
+
+# Lead Cat core
+
+- SaaS multi-tenant; one platform `BOT_TOKEN`; workspace config in Postgres only.
+- Alpha deploy: Dokploy with Postgres + Redis + app (no external IdP).
+- Auth: native JWT (`JWT_SECRET`); login via `/login` — see `lead-cat-auth.mdc`.
+- Scenarios: n8n-like JSON (nodes/edges); asynq on Redis; no Temporal.
+- UI: cat design mandatory — see `cat-design.mdc`.
+- KISS / DRY / SOLID; Clean Architecture in Go (`backend/`); lite FSD in `frontend/`.
+- Update `docs/*` when changing API, nodes, or env.

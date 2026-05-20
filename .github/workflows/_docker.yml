@@ -35,7 +35,7 @@ jobs:
       - name: Image metadata
         id: meta
         run: |
-          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/notify-bot"
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/lead-cat"
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             TAG="${GITHUB_REF_NAME}"
           else
@@ -63,5 +63,7 @@ jobs:
           tags: |
             ${{ env.IMAGE }}:${{ steps.meta.outputs.tag }}
             ${{ env.IMAGE }}:latest
+          build-args: |
+            VITE_AUTH_DEV_MODE=false
           cache-from: type=gha
           cache-to: type=gha,mode=max

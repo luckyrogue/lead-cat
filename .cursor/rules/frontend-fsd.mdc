@@ -1,0 +1,14 @@
+---
+description: Mini App lite FSD
+globs: "frontend/**"
+alwaysApply: false
+---
+
+# Frontend FSD
+
+Import direction: `app` → `routes` → `widgets` → `features` → `entities` → `shared`.
+Routes in `src/routes/` are thin; page UI lives in `features/` (files: kebab-case, e.g. `login-page.tsx`).
+Auth: JWT in `localStorage` + axios Bearer; `/login` page; `VITE_AUTH_DEV_MODE` for local skip.
+Route tree: `@tanstack/router-plugin` → `src/routeTree.gen.ts` (do not hand-edit).
+pnpm only; UI from `@/components/ui/*` (Button, Input, Select, Tabs, Label, Spinner, Sonner).
+Cat colors via CSS vars `--cat-*` / shadcn `--primary` in `app/app.css`.

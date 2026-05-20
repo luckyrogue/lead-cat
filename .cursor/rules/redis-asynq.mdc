@@ -1,0 +1,10 @@
+---
+description: Redis and asynq queues
+globs: "{backend/internal/infrastructure/queue/**,backend/internal/platform/**}"
+alwaysApply: false
+---
+
+# Redis / asynq
+
+- Queues in `internal/infrastructure/queue/asynq`.
+- Scenario runs enqueued from API; worker in `cmd/server`.

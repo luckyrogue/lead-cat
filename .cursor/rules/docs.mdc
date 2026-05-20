@@ -1,0 +1,10 @@
+---
+description: Documentation sync
+globs: "{docs/**,*.md,PLAN.md}"
+alwaysApply: false
+---
+
+# Docs
+
+When changing API, env, auth, deploy, or scenario nodes — update the matching file under `docs/`.
+Keep `PLAN.md` checkboxes in sync for completed phases.

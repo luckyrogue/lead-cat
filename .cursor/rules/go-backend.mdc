@@ -1,0 +1,11 @@
+---
+description: Go Clean Architecture conventions
+globs: "backend/**/*.go"
+alwaysApply: false
+---
+
+# Go backend
+
+- Layers: `domain` (no fiber/pgx imports) → `application` → `infrastructure` / `delivery` / `platform`.
+- SQL only in `infrastructure/persistence/postgres`.
+- Run/tests from `backend/`: `go test ./...`, `go run ./cmd/server`.

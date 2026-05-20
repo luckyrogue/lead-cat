@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+:root {
+  --cat-bg: #fff8f0;
+  --cat-primary: #e87b35;
+  --cat-secondary: #5b6b7a;
+  --cat-muted: #f5ebe0;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: var(--cat-bg);
+  --foreground: #2d2a26;
+  --primary: var(--cat-primary);
+  --primary-foreground: #ffffff;
+  --secondary: var(--cat-muted);
+  --secondary-foreground: var(--cat-secondary);
+  --muted: var(--cat-muted);
+  --muted-foreground: var(--cat-secondary);
+  --accent: var(--cat-muted);
+  --accent-foreground: #2d2a26;
+  --destructive: #dc2626;
+  --border: #f5d0b8;
+  --input: #f5d0b8;
+  --ring: var(--cat-primary);
+  --popover: #ffffff;
+  --popover-foreground: #2d2a26;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Inter", system-ui, sans-serif;
+  min-height: 100vh;
+  background-image: radial-gradient(circle at 1px 1px, rgba(232, 123, 53, 0.08) 1px, transparent 0);
+  background-size: 24px 24px;
+}

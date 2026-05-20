@@ -1,0 +1,119 @@
+package config
+
+import (
+	"fmt"
+	"os"
+	"strings"
+	"time"
+)
+
+type Config struct {
+	BotToken            string
+	DatabaseURL         string
+	RedisURL            string
+	MasterEncryptionKey string
+	HTTPAddr            string
+	WebappURL           string
+	LogLevel            string
+	LogFormat           string
+	AutoMigrate         bool
+	StaticDir           string
+
+	AuthDevMode  bool
+	AuthDevSub   string
+	AuthDevEmail string
+
+	JWTSecret string
+	JWTIssuer string
+	JWTTTL    time.Duration
+
+	AuthOTPLog bool
+
+	WebAuthnRPID     string
+	WebAuthnRPOrigin string
+
+	GitHubOAuthClientID     string
+	GitHubOAuthClientSecret string
+	GitLabOAuthClientID     string
+	GitLabOAuthClientSecret string
+	GitLabOAuthBaseURL      string
+
+	CORSAllowedOrigins string
+}
+
+func Load() (Config, error) {
+	cfg := Config{
+		BotToken:            strings.TrimSpace(os.Getenv("BOT_TOKEN")),
+		DatabaseURL:         strings.TrimSpace(os.Getenv("DATABASE_URL")),
+		RedisURL:            envOr("REDIS_URL", "redis://localhost:6379/0"),
+		MasterEncryptionKey: strings.TrimSpace(os.Getenv("MASTER_ENCRYPTION_KEY")),
+		HTTPAddr:            envOr("HTTP_ADDR", ":8080"),
+		WebappURL:           strings.TrimSpace(os.Getenv("WEBAPP_URL")),
+		LogLevel:            envOr("LOG_LEVEL", "info"),
+		LogFormat:           envOr("LOG_FORMAT", "json"),
+		StaticDir:           envOr("STATIC_DIR", "frontend/dist"),
+		AuthDevSub:          envOr("AUTH_DEV_USER_SUB", "dev-user"),
+		AuthDevEmail:        envOr("AUTH_DEV_EMAIL", "dev@lead.cat"),
+		JWTSecret:           strings.TrimSpace(os.Getenv("JWT_SECRET")),
+		JWTIssuer:           envOr("JWT_ISSUER", "lead-cat"),
+		WebAuthnRPID:        strings.TrimSpace(os.Getenv("WEBAUTHN_RP_ID")),
+		WebAuthnRPOrigin:    strings.TrimSpace(os.Getenv("WEBAUTHN_RP_ORIGIN")),
+		GitHubOAuthClientID: strings.TrimSpace(os.Getenv("GITHUB_OAUTH_CLIENT_ID")),
+		GitHubOAuthClientSecret: strings.TrimSpace(os.Getenv("GITHUB_OAUTH_CLIENT_SECRET")),
+		GitLabOAuthClientID:     strings.TrimSpace(os.Getenv("GITLAB_OAUTH_CLIENT_ID")),
+		GitLabOAuthClientSecret: strings.TrimSpace(os.Getenv("GITLAB_OAUTH_CLIENT_SECRET")),
+		GitLabOAuthBaseURL:      envOr("GITLAB_OAUTH_BASE_URL", "https://gitlab.com"),
+		CORSAllowedOrigins:      envOr("CORS_ALLOWED_ORIGINS", ""),
+	}
+	if cfg.CORSAllowedOrigins == "" && cfg.WebappURL != "" {
+		cfg.CORSAllowedOrigins = cfg.WebappURL
+	}
+	if cfg.CORSAllowedOrigins == "" {
+		cfg.CORSAllowedOrigins = "http://localhost:3000,http://localhost:8080"
+	}
+	if cfg.WebAuthnRPOrigin == "" {
+		cfg.WebAuthnRPOrigin = cfg.WebappURL
+	}
+	if cfg.WebAuthnRPOrigin == "" {
+		cfg.WebAuthnRPOrigin = "http://localhost:8080"
+	}
+	cfg.AutoMigrate = strings.EqualFold(os.Getenv("AUTO_MIGRATE"), "true")
+	cfg.AuthDevMode = strings.EqualFold(os.Getenv("AUTH_DEV_MODE"), "true")
+	cfg.AuthOTPLog = strings.EqualFold(os.Getenv("AUTH_OTP_LOG"), "true") || cfg.AuthDevMode
+
+	ttlHours := 168
+	if v := strings.TrimSpace(os.Getenv("JWT_TTL_HOURS")); v != "" {
+		if _, err := fmt.Sscanf(v, "%d", &ttlHours); err != nil {
+			return cfg, fmt.Errorf("invalid JWT_TTL_HOURS")
+		}
+	}
+	cfg.JWTTTL = time.Duration(ttlHours) * time.Hour
+
+	if cfg.BotToken == "" {
+		if cfg.AuthDevMode {
+			cfg.BotToken = "000000000:AAFakeDevTokenForLocalOnly"
+		} else {
+			return cfg, fmt.Errorf("BOT_TOKEN is required")
+		}
+	}
+	if cfg.DatabaseURL == "" {
+		return cfg, fmt.Errorf("DATABASE_URL is required")
+	}
+	if len(cfg.MasterEncryptionKey) < 16 {
+		return cfg, fmt.Errorf("MASTER_ENCRYPTION_KEY must be at least 16 characters")
+	}
+	if !cfg.AuthDevMode && len(cfg.JWTSecret) < 16 {
+		return cfg, fmt.Errorf("JWT_SECRET must be at least 16 characters unless AUTH_DEV_MODE=true")
+	}
+	if cfg.JWTSecret == "" {
+		cfg.JWTSecret = cfg.MasterEncryptionKey
+	}
+	return cfg, nil
+}
+
+func envOr(key, fallback string) string {
+	if v := strings.TrimSpace(os.Getenv(key)); v != "" {
+		return v
+	}
+	return fallback
+}
