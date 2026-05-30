@@ -13,7 +13,7 @@ jobs:
         working-directory: backend
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:18-alpine
         env:
           POSTGRES_USER: notify
           POSTGRES_PASSWORD: notify
@@ -26,7 +26,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       redis:
-        image: redis:7-alpine
+        image: redis:8-alpine
         ports:
           - 6379:6379
         options: >-
@@ -66,7 +66,7 @@ jobs:
           MASTER_ENCRYPTION_KEY: "smoke-test-key-32bytes!!"
           HTTP_ADDR: ":8080"
 
-      - run: bash ../scripts/smoke.sh
+      - run: go test -tags=smoke -count=1 ./test/smoke/...
         env:
           SMOKE_BASE_URL: http://localhost:8080
           SMOKE_TOKEN: Bearer smoke-owner
