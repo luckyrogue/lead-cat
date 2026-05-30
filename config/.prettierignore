@@ -1,0 +1,6 @@
+# gitignore-style, matched anywhere (prettier runs from frontend/ via pnpm).
+**/node_modules/
+**/dist/
+**/*.gen.ts
+pnpm-lock.yaml
+package-lock.json

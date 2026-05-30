@@ -1,10 +1,10 @@
 .PHONY: help setup deps up down ps migrate migrate-down migrate-status \
-	backend backend-watch frontend dev test lint typecheck build smoke docker-build clean
+	backend backend-watch frontend dev test lint fmt fmt-check typecheck build smoke docker-build clean
 
 ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 BACKEND := $(ROOT)backend
 FRONTEND := $(ROOT)frontend
-COMPOSE := docker compose -f docker-compose.yml
+COMPOSE := docker compose -f deploy/docker-compose.yml
 GO := env -u GOROOT go
 PNPM := pnpm
 
@@ -14,7 +14,7 @@ help:
 	@grep -E '^[a-zA-Z0-9_.-]+:.*##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
 setup:
-	@test -f .env || cp .env.example .env
+	@test -f .env || cp deploy/.env.example .env
 	@echo "Edit .env (BOT_TOKEN, MASTER_ENCRYPTION_KEY) then: make migrate && make dev"
 	@$(MAKE) up
 	@cd $(FRONTEND) && $(PNPM) install
@@ -62,7 +62,16 @@ test:
 	@cd $(BACKEND) && $(GO) test -count=1 ./...
 
 lint:
-	@cd $(BACKEND) && $(GO) vet ./...
+	@command -v golangci-lint >/dev/null || (echo "install: brew install golangci-lint" && exit 1)
+	@cd $(BACKEND) && golangci-lint run --config $(ROOT)config/.golangci.yml ./...
+
+fmt:
+	@cd $(FRONTEND) && $(PNPM) run format
+	@command -v golangci-lint >/dev/null && (cd $(BACKEND) && golangci-lint fmt --config $(ROOT)config/.golangci.yml) || true
+
+fmt-check:
+	@cd $(FRONTEND) && $(PNPM) run format:check
+	@command -v golangci-lint >/dev/null && (cd $(BACKEND) && golangci-lint fmt --diff --config $(ROOT)config/.golangci.yml) || true
 
 typecheck:
 	@cd $(FRONTEND) && $(PNPM) typecheck
@@ -72,13 +81,14 @@ build:
 	@cd $(FRONTEND) && $(PNPM) build
 
 smoke:
-	@set -a && . ./.env && set +a && bash scripts/smoke.sh
+	@cd $(BACKEND) && $(GO) test -tags=smoke -count=1 ./test/smoke/...
 
 coverage:
-	@bash scripts/check-middleware-coverage.sh
+	@cd $(BACKEND) && $(GO) test -cover -count=1 \
+		./internal/delivery/http/middleware/... ./internal/domain/scenario/...
 
 docker-build:
-	docker build -t lead-cat:local --build-arg VITE_AUTH_DEV_MODE=false .
+	docker build -t lead-cat:local -f deploy/Dockerfile --build-arg VITE_AUTH_DEV_MODE=false .
 
 clean:
 	rm -rf $(BACKEND)/bin $(FRONTEND)/dist

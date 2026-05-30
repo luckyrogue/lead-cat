@@ -44,3 +44,10 @@ Thumbs.db
 # Debug / temp
 tmp/
 .temp/
+
+# Node modules
+node_modules/
+
+# Agent tooling (local / regenerated from skills-lock.json)
+.agents/
+.claude/
