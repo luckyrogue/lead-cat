@@ -97,9 +97,10 @@ type Meeting struct {
 }
 
 type BotUser struct {
-	ID         uuid.UUID `json:"id"`
-	TelegramID int64     `json:"telegram_id"`
-	FullName   string    `json:"full_name"`
-	Email      string    `json:"email"`
-	Role       string    `json:"role"`
+	ID              uuid.UUID `json:"id"`
+	TelegramID      int64     `json:"telegram_id"`
+	FullName        string    `json:"full_name"`
+	Email           string    `json:"email"`
+	Role            string    `json:"role"`
+	ReminderMinutes string    `json:"reminder_minutes"`
 }
