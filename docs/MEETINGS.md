@@ -42,6 +42,7 @@ Create meeting (fields, meeting types, recurrence, naming standard), view meetin
 
 > **Increment 1 (done):** meeting CRUD over REST (`/api/workspaces/:id/meetings`, `/employees`) backed by a stubbed `CalendarService`. Real Google Calendar adapter, recurrence series, conflict detection, free-slot checker, notifications, and bot registration remain planned (below).
 > **Increment 2 (done):** real Google Calendar adapter — per-workspace encrypted service-account creds + domain-wide delegation, Meet link via `conferenceData`. Provider is selected per workspace; `CALENDAR_STUB=true` forces the stub (local/CI). Configure via `PATCH /api/workspaces/:id/integrations` (`google_sa_json`, `google_subject`, `google_calendar_id`); a workspace without creds returns **400 "google not configured"** on meeting create.
+> **Bot registration (done):** `/start` FSM (ФИО → corporate email → OTP) creates a global `bot_users` record (Telegram ID ↔ email ↔ name + role). Admins bootstrapped via `BOT_ADMIN_TELEGRAM_IDS`. FSM state in Redis; OTP reuses the email auth service. Requires the bot polling (real `BOT_TOKEN`, non-dev). Per-participant notifications (§5) will join `email → bot_users.telegram_id`.
 
 To be implemented within the existing clean-architecture layout:
 
