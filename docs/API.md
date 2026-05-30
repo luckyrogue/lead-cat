@@ -43,5 +43,10 @@ Base: `/api` — requires `Authorization: Bearer <JWT>` unless noted.
 - `DELETE /api/workspaces/:id/scenarios/:sid`
 - `POST /api/workspaces/:id/scenarios/:sid/run`
 - `GET /api/workspaces/:id/scenarios/:sid/runs`
+- `GET /api/workspaces/:id/employees`
+- `GET /api/workspaces/:id/meetings`
+- `POST /api/workspaces/:id/meetings`
+- `GET /api/workspaces/:id/meetings/:mid`
+- `DELETE /api/workspaces/:id/meetings/:mid`
 
 Errors: `{ "error": "code", "message": "кошачий текст" }`

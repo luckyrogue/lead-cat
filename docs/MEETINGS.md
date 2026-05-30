@@ -40,6 +40,8 @@ Create meeting (fields, meeting types, recurrence, naming standard), view meetin
 
 ## Backend (planned)
 
+> **Increment 1 (done):** meeting CRUD over REST (`/api/workspaces/:id/meetings`, `/employees`) backed by a stubbed `CalendarService`. Real Google Calendar adapter, recurrence series, conflict detection, free-slot checker, notifications, and bot registration remain planned (below).
+
 To be implemented within the existing clean-architecture layout:
 
 - **Google Calendar / Meet adapter** under `backend/internal/infrastructure/` (service-account auth, event CRUD, Meet link generation).
