@@ -1,9 +1,8 @@
-# Secrets & local env
+
 .env
 .env.*
 !.env.example
 
-# Frontend
 frontend/node_modules/
 frontend/dist/
 frontend/dist-ssr/
@@ -17,7 +16,6 @@ frontend/*.local
 frontend/count.txt
 frontend/todos.json
 
-# Go
 *.exe
 *.exe~
 *.dll
@@ -32,7 +30,6 @@ backend/tmp/
 /migrate
 /lead-cat
 
-# Tooling & OS
 .DS_Store
 Thumbs.db
 *.log
@@ -41,13 +38,10 @@ Thumbs.db
 *.swp
 *~
 
-# Debug / temp
 tmp/
 .temp/
 
-# Node modules
 node_modules/
 
-# Agent tooling (local / regenerated from skills-lock.json)
 .agents/
 .claude/
