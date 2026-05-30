@@ -61,10 +61,17 @@ func (s *Scheduler) tick(ctx context.Context) {
 				if err != nil || !claimed {
 					continue
 				}
-				_, _ = s.bot.SendMessage(ctx, &bot.SendMessageParams{
+				// Claim is durable; if the send fails the reminder is lost
+				// (best-effort) — log so a systematically broken bot is visible.
+				if _, err := s.bot.SendMessage(ctx, &bot.SendMessageParams{
 					ChatID: tg,
 					Text:   message(m.Name, m.MeetLink, off),
-				})
+				}); err != nil {
+					s.log.Warn("send reminder",
+						zap.Int64("telegram_id", tg),
+						zap.String("meeting_id", m.ID.String()),
+						zap.Error(err))
+				}
 			}
 		}
 	}
