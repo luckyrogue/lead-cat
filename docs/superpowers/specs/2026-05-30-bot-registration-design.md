@@ -19,9 +19,11 @@ A Telegram bot `/start` registration flow (FSM): collect ФИО + corporate emai
 ## Data (new goose migration)
 
 `bot_users`:
+
 - `id UUID PK`, `telegram_id BIGINT NOT NULL UNIQUE`, `full_name TEXT NOT NULL`, `email TEXT NOT NULL UNIQUE`, `role TEXT NOT NULL DEFAULT 'user'`, `created_at TIMESTAMPTZ NOT NULL DEFAULT now()`.
 
 Store methods:
+
 - `GetBotUserByTelegramID(ctx, telegramID int64) (BotUser, error)`
 - `GetBotUserByEmail(ctx, email string) (BotUser, error)`
 - `CreateBotUser(ctx, telegramID int64, fullName, email, role string) (BotUser, error)`
@@ -31,6 +33,7 @@ Store methods:
 States: `awaiting_name → awaiting_email → awaiting_otp → done`.
 
 Service depends on injected interfaces:
+
 ```go
 type userStore interface {
     GetBotUserByTelegramID(ctx, telegramID int64) (postgres.BotUser, error)
@@ -49,6 +52,7 @@ type sessions interface { // Redis-backed; key botreg:<tgID>
 ```
 
 Flow:
+
 - **Start(tgID):** if `GetBotUserByTelegramID` finds a user → reply "welcome back" (menu), no state. Else set `awaiting_name`, reply asking for ФИО.
 - **OnText(tgID, text):** dispatch on current state:
   - `awaiting_name` → store `full_name = text`; set `awaiting_email`; reply ask email.
@@ -59,6 +63,7 @@ Flow:
 ## Telegram wiring
 
 `MultiHandler.Handle`:
+
 - On `/start` → `Registrar.Start(tgID)` → send reply.
 - On non-command text → if `sessions.Get` returns an active state → `Registrar.OnText(tgID, text)` → send reply. Otherwise current behavior (ignore non-commands).
 

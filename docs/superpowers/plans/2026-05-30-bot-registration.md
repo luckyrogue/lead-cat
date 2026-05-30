@@ -15,6 +15,7 @@
 ### Task 1: Migration — bot_users table
 
 **Files:**
+
 - Create: `backend/migrations/20260530140000_bot_users.sql`
 
 - [ ] **Step 1: Write the migration**
@@ -51,6 +52,7 @@ git commit -m "feat(bot): bot_users table"
 ### Task 2: Model + repository
 
 **Files:**
+
 - Modify: `backend/internal/infrastructure/persistence/postgres/models.go` (append `BotUser`)
 - Create: `backend/internal/infrastructure/persistence/postgres/bot_user_repo.go`
 
@@ -59,6 +61,7 @@ git commit -m "feat(bot): bot_users table"
 - [ ] **Step 1: Append the model**
 
 Append to `backend/internal/infrastructure/persistence/postgres/models.go`:
+
 ```go
 type BotUser struct {
 	ID         uuid.UUID `json:"id"`
@@ -72,6 +75,7 @@ type BotUser struct {
 - [ ] **Step 2: Write the repository**
 
 `backend/internal/infrastructure/persistence/postgres/bot_user_repo.go`:
+
 ```go
 package postgres
 
@@ -112,6 +116,7 @@ func (s *Store) CreateBotUser(ctx context.Context, telegramID int64, fullName, e
 - [ ] **Step 3: Build + commit**
 
 Run: `cd backend && env -u GOROOT go build ./...` → builds.
+
 ```bash
 git add backend/internal/infrastructure/persistence/postgres/models.go backend/internal/infrastructure/persistence/postgres/bot_user_repo.go
 git commit -m "feat(bot): bot_users model + repository"
@@ -122,11 +127,13 @@ git commit -m "feat(bot): bot_users model + repository"
 ### Task 3: Config — BOT_ADMIN_TELEGRAM_IDS
 
 **Files:**
+
 - Modify: `backend/internal/platform/config/config.go`
 
 - [ ] **Step 1: Add the field**
 
 In the `Config` struct (after `CalendarStub bool`), add:
+
 ```go
 	BotAdminTelegramIDs []int64
 ```
@@ -134,6 +141,7 @@ In the `Config` struct (after `CalendarStub bool`), add:
 - [ ] **Step 2: Parse it in Load()**
 
 In `config.go`, after the line `cfg.CalendarStub = strings.EqualFold(os.Getenv("CALENDAR_STUB"), "true")`, add:
+
 ```go
 	for _, p := range strings.Split(os.Getenv("BOT_ADMIN_TELEGRAM_IDS"), ",") {
 		p = strings.TrimSpace(p)
@@ -153,6 +161,7 @@ Check the import block of `config.go`. If `"strconv"` is not present, add it.
 - [ ] **Step 4: Build + commit**
 
 Run: `cd backend && env -u GOROOT go build ./...` → builds.
+
 ```bash
 git add backend/internal/platform/config/config.go
 git commit -m "feat(bot): BOT_ADMIN_TELEGRAM_IDS config"
@@ -163,12 +172,14 @@ git commit -m "feat(bot): BOT_ADMIN_TELEGRAM_IDS config"
 ### Task 4: Registration FSM service (TDD core)
 
 **Files:**
+
 - Create: `backend/internal/platform/botreg/service.go`
 - Test: `backend/internal/platform/botreg/service_test.go`
 
 - [ ] **Step 1: Write the failing test**
 
 `backend/internal/platform/botreg/service_test.go`:
+
 ```go
 package botreg
 
@@ -336,6 +347,7 @@ Expected: FAIL — `New`, `Service`, `State` undefined.
 - [ ] **Step 3: Write the service**
 
 `backend/internal/platform/botreg/service.go`:
+
 ```go
 // Package botreg drives the Telegram /start registration FSM: ФИО -> email ->
 // OTP -> create bot_users. It depends on small interfaces so the flow is
@@ -474,11 +486,13 @@ git commit -m "feat(bot): registration FSM service (name/email/OTP)"
 ### Task 5: Redis-backed session store
 
 **Files:**
+
 - Create: `backend/internal/platform/botreg/redis_sessions.go`
 
 - [ ] **Step 1: Write the Redis sessions store**
 
 `backend/internal/platform/botreg/redis_sessions.go`:
+
 ```go
 package botreg
 
@@ -536,6 +550,7 @@ func (r *RedisSessions) Del(ctx context.Context, telegramID int64) error {
 - [ ] **Step 2: Build + commit**
 
 Run: `cd backend && env -u GOROOT go build ./...` → builds (`*RedisSessions` satisfies the `botreg.sessions` interface).
+
 ```bash
 git add backend/internal/platform/botreg/redis_sessions.go
 git commit -m "feat(bot): redis-backed registration sessions"
@@ -546,12 +561,14 @@ git commit -m "feat(bot): redis-backed registration sessions"
 ### Task 6: Wire registration into the bot handler
 
 **Files:**
+
 - Modify: `backend/internal/infrastructure/telegram/multitenant.go` (Registrar field + routing)
 - Modify: `backend/cmd/server/main.go` (build deps + new NewMultiHandler args)
 
 - [ ] **Step 1: Add the Registrar to MultiHandler**
 
 In `multitenant.go`, add imports `"github.com/redis/go-redis/v9"`, `platformauth "github.com/Jaryq-Lab/notify-bot/internal/platform/auth"`, and `"github.com/Jaryq-Lab/notify-bot/internal/platform/botreg"`. Change the struct + constructor:
+
 ```go
 type MultiHandler struct {
 	store     *postgres.Store
@@ -575,6 +592,7 @@ func NewMultiHandler(store *postgres.Store, cipher *crypto.TokenCipher, b *bot.B
 - [ ] **Step 2: Route /start and free-text in Handle**
 
 In `multitenant.go` `Handle`, replace the command-parse block:
+
 ```go
 	cmd, ok := parseCommand(text)
 	if !ok {
@@ -582,7 +600,9 @@ In `multitenant.go` `Handle`, replace the command-parse block:
 	}
 	switch cmd {
 ```
+
 with:
+
 ```go
 	cmd, ok := parseCommand(text)
 	if !ok {
@@ -599,18 +619,23 @@ with:
 			h.reply(ctx, b, update.Message, h.registrar.Start(ctx, from.ID))
 		}
 ```
+
 (Keep the existing `/chatid`, `/test`, `/report` cases after the new `/start` case.)
 
 - [ ] **Step 3: Update the call site in cmd/server**
 
 In `backend/cmd/server/main.go`, find the line:
+
 ```go
 		tgHandler = telegram.NewMultiHandler(store, cipher, tg, logger)
 ```
+
 and replace with:
+
 ```go
 		tgHandler = telegram.NewMultiHandler(store, cipher, tg, rdb, cfg.BotAdminTelegramIDs, cfg.AuthOTPLog, logger)
 ```
+
 (`rdb`, `cfg`, `logger` are all already in scope there.)
 
 - [ ] **Step 4: Build, vet, test**
@@ -630,12 +655,14 @@ git commit -m "feat(bot): wire /start registration into the telegram handler"
 ### Task 7: Docs + env example
 
 **Files:**
+
 - Modify: `deploy/.env.example` (add `BOT_ADMIN_TELEGRAM_IDS=`)
 - Modify: `docs/MEETINGS.md` (note bot registration)
 
 - [ ] **Step 1: Add the env var**
 
 Append to `deploy/.env.example` (near the bot/auth flags):
+
 ```
 BOT_ADMIN_TELEGRAM_IDS=
 ```
@@ -643,6 +670,7 @@ BOT_ADMIN_TELEGRAM_IDS=
 - [ ] **Step 2: Update `docs/MEETINGS.md`**
 
 In the Backend section, after the existing increment notes, add:
+
 ```markdown
 > **Bot registration (done):** `/start` FSM (ФИО → corporate email → OTP) creates a global `bot_users` record (Telegram ID ↔ email ↔ name + role). Admins bootstrapped via `BOT_ADMIN_TELEGRAM_IDS`. FSM state in Redis; OTP reuses the email auth service. Requires the bot to be polling (real `BOT_TOKEN`, non-dev). Per-participant notifications (§5) will join `email → bot_users.telegram_id`.
 ```
@@ -650,6 +678,7 @@ In the Backend section, after the existing increment notes, add:
 - [ ] **Step 3: Format and commit**
 
 Run `make fmt-check` (run `make fmt` if docs reflow; stage only these two).
+
 ```bash
 git add deploy/.env.example docs/MEETINGS.md
 git commit -m "docs(bot): document /start registration + BOT_ADMIN_TELEGRAM_IDS"
