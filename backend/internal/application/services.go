@@ -18,9 +18,10 @@ import (
 )
 
 type Services struct {
-	Store  *postgres.Store
-	Cipher *crypto.TokenCipher
-	Queue  *asynqqueue.Client
+	Store    *postgres.Store
+	Cipher   *crypto.TokenCipher
+	Queue    *asynqqueue.Client
+	Calendar CalendarService
 }
 
 func (s *Services) GetMe(ctx context.Context, authSub string) (postgres.User, error) {
