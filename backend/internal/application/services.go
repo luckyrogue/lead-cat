@@ -21,7 +21,7 @@ type Services struct {
 	Store    *postgres.Store
 	Cipher   *crypto.TokenCipher
 	Queue    *asynqqueue.Client
-	Calendar CalendarService
+	Calendar CalendarProvider
 }
 
 func (s *Services) GetMe(ctx context.Context, authSub string) (postgres.User, error) {

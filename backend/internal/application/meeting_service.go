@@ -88,7 +88,11 @@ func (s *Services) CreateMeeting(ctx context.Context, workspaceID, organizerID u
 			emails = append(emails, p.Email)
 		}
 	}
-	cal, err := s.Calendar.CreateEvent(ctx, CalendarEvent{
+	calSvc, err := s.Calendar.For(ctx, workspaceID)
+	if err != nil {
+		return postgres.Meeting{}, err
+	}
+	cal, err := calSvc.CreateEvent(ctx, CalendarEvent{
 		Title: name, Description: in.Description,
 		Start: startsAt, End: endsAt, AttendeeEmails: emails,
 	})
@@ -130,7 +134,9 @@ func (s *Services) CancelMeeting(ctx context.Context, workspaceID, userID, id uu
 		return ErrForbidden
 	}
 	if m.GoogleEventID != "" {
-		_ = s.Calendar.DeleteEvent(ctx, m.GoogleEventID) // best-effort; real adapter increment will log/retry
+		if calSvc, ferr := s.Calendar.For(ctx, workspaceID); ferr == nil {
+			_ = calSvc.DeleteEvent(ctx, m.GoogleEventID) // best-effort
+		}
 	}
 	return s.Store.CancelMeeting(ctx, workspaceID, id)
 }

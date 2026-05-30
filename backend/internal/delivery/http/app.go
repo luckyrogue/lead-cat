@@ -18,6 +18,7 @@ import (
 	"github.com/Jaryq-Lab/notify-bot/internal/delivery/http/middleware"
 	oauthsvc "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/auth/oauth"
 	webauthnsvc "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/auth/webauthn"
+	calendargoogle "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/google"
 	calendarstub "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/stub"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/crypto"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
@@ -81,8 +82,15 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	}
 	authMW := middleware.NewAuth(cfg, jwtSvc, store, log)
 
+	var calProvider application.CalendarProvider
+	if cfg.CalendarStub {
+		calProvider = calendarstub.NewProvider()
+	} else {
+		calProvider = calendargoogle.NewProvider(store, cipher)
+	}
+
 	api := &handlers.API{
-		App:     &application.Services{Store: store, Cipher: cipher, Queue: queue, Calendar: calendarstub.New()},
+		App:     &application.Services{Store: store, Cipher: cipher, Queue: queue, Calendar: calProvider},
 		Bot:     tg,
 		RDB:     rdb,
 		Log:     log,
