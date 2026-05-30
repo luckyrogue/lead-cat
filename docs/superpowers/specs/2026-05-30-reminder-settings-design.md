@@ -20,6 +20,7 @@ Let a registered bot user configure their reminder intervals via `/settings` wit
 ```sql
 ALTER TABLE bot_users ADD COLUMN IF NOT EXISTS reminder_minutes TEXT NOT NULL DEFAULT '15';
 ```
+
 - Model: `BotUser` gains `ReminderMinutes string` (raw CSV). `GetBotUserByTelegramID` adds the column to its SELECT/Scan.
 - Store: `SetReminderMinutes(ctx, telegramID int64, csv string) error`.
 
@@ -28,12 +29,14 @@ ALTER TABLE bot_users ADD COLUMN IF NOT EXISTS reminder_minutes TEXT NOT NULL DE
 Intervals (minutes ↔ label): `10→10м, 15→15м, 30→30м, 60→1ч, 120→2ч, 1440→1день`. Callback data: `rem:<minutes>` (e.g. `rem:15`).
 
 Pure helpers (unit-tested, no IO):
+
 - `parse(csv string) []int` — split, trim, drop empties/non-numeric, dedupe, sort ascending.
 - `format(mins []int) string` — back to CSV (canonical: sorted, comma-joined).
 - `toggle(cur []int, v int) []int` — add v if absent, remove if present.
 - `render(mins []int) (text string, keyboard [][]Button)` — one button per interval, prefixed with `✓ ` when enabled; `Button{Text, Data}`.
 
 Service (injected `store` interface with `GetBotUserByTelegramID` + `SetReminderMinutes`):
+
 - `Settings(ctx, telegramID) (text, keyboard, error)` — load `reminder_minutes`, `render(parse(...))`.
 - `Toggle(ctx, telegramID, v int) (text, keyboard, error)` — load → `toggle` → `SetReminderMinutes(format(...))` → `render`.
 

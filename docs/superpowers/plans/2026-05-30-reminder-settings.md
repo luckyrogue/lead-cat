@@ -15,6 +15,7 @@
 ### Task 1: Migration — reminder_minutes column
 
 **Files:**
+
 - Create: `backend/migrations/20260530150000_reminder_minutes.sql`
 
 - [ ] **Step 1: Write the migration**
@@ -44,12 +45,14 @@ git commit -m "feat(bot): reminder_minutes column on bot_users"
 ### Task 2: Model + repository — reminder_minutes
 
 **Files:**
+
 - Modify: `backend/internal/infrastructure/persistence/postgres/models.go` (`BotUser` field)
 - Modify: `backend/internal/infrastructure/persistence/postgres/bot_user_repo.go` (cols + scans + setter)
 
 - [ ] **Step 1: Add the model field**
 
 In `models.go`, add to the `BotUser` struct (after `Role`):
+
 ```go
 	ReminderMinutes string `json:"reminder_minutes"`
 ```
@@ -57,6 +60,7 @@ In `models.go`, add to the `BotUser` struct (after `Role`):
 - [ ] **Step 2: Include the column in reads + add the setter**
 
 In `bot_user_repo.go`, replace the whole file with (adds `reminder_minutes` to `botUserCols`, scans it in all three queries, and adds `SetReminderMinutes`):
+
 ```go
 package postgres
 
@@ -96,6 +100,7 @@ func (s *Store) SetReminderMinutes(ctx context.Context, telegramID int64, csv st
 	return err
 }
 ```
+
 (Note: the `uuid` import is intentionally gone — the file no longer references it; `BotUser.ID` is declared in models.go.)
 
 - [ ] **Step 3: Build + test (existing botreg tests still pass)**
@@ -115,6 +120,7 @@ git commit -m "feat(bot): persist reminder_minutes (read + set)"
 ### Task 3: botsettings package (pure helpers + service, TDD)
 
 **Files:**
+
 - Create: `backend/internal/platform/botsettings/settings.go`
 - Create: `backend/internal/platform/botsettings/service.go`
 - Test: `backend/internal/platform/botsettings/settings_test.go`
@@ -122,6 +128,7 @@ git commit -m "feat(bot): persist reminder_minutes (read + set)"
 - [ ] **Step 1: Write the failing test**
 
 `backend/internal/platform/botsettings/settings_test.go`:
+
 ```go
 package botsettings
 
@@ -241,6 +248,7 @@ Expected: FAIL — `parse`/`render`/`New`/`Button` undefined.
 - [ ] **Step 3: Write the pure helpers**
 
 `backend/internal/platform/botsettings/settings.go`:
+
 ```go
 // Package botsettings renders and updates a bot user's reminder intervals.
 // The pure helpers (parse/format/toggle/render) have no IO and are unit-tested.
@@ -338,6 +346,7 @@ func render(mins []int) (string, [][]Button) {
 - [ ] **Step 4: Write the service**
 
 `backend/internal/platform/botsettings/service.go`:
+
 ```go
 package botsettings
 
@@ -398,11 +407,13 @@ git commit -m "feat(bot): reminder settings service (parse/toggle/render)"
 ### Task 4: Wire /settings + callback handling into the bot
 
 **Files:**
+
 - Modify: `backend/internal/infrastructure/telegram/multitenant.go`
 
 - [ ] **Step 1: Add the settings service to MultiHandler**
 
 In `multitenant.go`, add imports `"strconv"` and `"github.com/Jaryq-Lab/notify-bot/internal/platform/botsettings"`. Add a field + build it in the constructor:
+
 ```go
 type MultiHandler struct {
 	store     *postgres.Store
@@ -412,18 +423,22 @@ type MultiHandler struct {
 	log       *zap.Logger
 }
 ```
+
 In `NewMultiHandler`, after building `registrar`, add `settings := botsettings.New(store)` and set `settings: settings` in the returned struct literal.
 
 - [ ] **Step 2: Handle callback queries + /settings in Handle**
 
 At the very top of `Handle` (before the `if update.Message == nil` check), add:
+
 ```go
 	if update.CallbackQuery != nil {
 		h.handleCallback(ctx, b, update.CallbackQuery)
 		return
 	}
 ```
+
 Then add a `/settings` case to the command `switch` (alongside `/start` etc.):
+
 ```go
 	case "/settings":
 		if isPrivate {
@@ -445,6 +460,7 @@ Then add a `/settings` case to the command `switch` (alongside `/start` etc.):
 - [ ] **Step 3: Add the callback handler + keyboard mapper**
 
 Append these functions to `multitenant.go`:
+
 ```go
 func (h *MultiHandler) handleCallback(ctx context.Context, b *bot.Bot, cq *models.CallbackQuery) {
 	if strings.HasPrefix(cq.Data, "rem:") {
@@ -493,11 +509,13 @@ git commit -m "feat(bot): /settings inline keyboard + reminder toggle callbacks"
 ### Task 5: Docs
 
 **Files:**
+
 - Modify: `docs/MEETINGS.md`
 
 - [ ] **Step 1: Update `docs/MEETINGS.md`**
 
 In the Backend section, after the bot-registration note, add:
+
 ```markdown
 > **Reminder settings (done):** `/settings` shows an inline keyboard (10м/15м/30м/1ч/2ч/1день); tapping toggles the interval and saves it to `bot_users.reminder_minutes` (CSV, default `15`, empty = off). The reminder **engine** that sends them (§5b-2) is the next increment.
 ```
@@ -505,6 +523,7 @@ In the Backend section, after the bot-registration note, add:
 - [ ] **Step 2: Format and commit**
 
 Run `make fmt-check` (run `make fmt` if it reflows docs; stage only this file).
+
 ```bash
 git add docs/MEETINGS.md
 git commit -m "docs(bot): document /settings reminder configuration"
