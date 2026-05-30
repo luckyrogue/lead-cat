@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"errors"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
@@ -58,11 +60,12 @@ func (a *API) CreateMeeting(c *fiber.Ctx) error {
 }
 
 func (a *API) GetMeeting(c *fiber.Ctx) error {
+	wid := c.Locals("workspace_id").(uuid.UUID)
 	mid, err := uuid.Parse(c.Params("mid"))
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid meeting id")
 	}
-	m, err := a.App.GetMeeting(c.Context(), mid)
+	m, err := a.App.GetMeeting(c.Context(), wid, mid)
 	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, copy.APIError("not_found"))
 	}
@@ -70,11 +73,16 @@ func (a *API) GetMeeting(c *fiber.Ctx) error {
 }
 
 func (a *API) DeleteMeeting(c *fiber.Ctx) error {
+	wid := c.Locals("workspace_id").(uuid.UUID)
+	uid, _ := c.Locals("user_id").(uuid.UUID)
 	mid, err := uuid.Parse(c.Params("mid"))
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid meeting id")
 	}
-	if err := a.App.CancelMeeting(c.Context(), mid); err != nil {
+	if err := a.App.CancelMeeting(c.Context(), wid, uid, mid); err != nil {
+		if errors.Is(err, application.ErrForbidden) {
+			return fiber.NewError(fiber.StatusForbidden, copy.APIError("forbidden"))
+		}
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 	return c.SendStatus(fiber.StatusNoContent)

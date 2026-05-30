@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -10,6 +11,9 @@ import (
 	"github.com/Jaryq-Lab/notify-bot/internal/domain/meeting"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
 )
+
+// ErrForbidden is returned when a caller may not act on a meeting.
+var ErrForbidden = errors.New("forbidden")
 
 // CreateMeetingInput is the transport-level payload (strings as received over HTTP).
 type CreateMeetingInput struct {
@@ -40,8 +44,8 @@ func (s *Services) ListMeetings(ctx context.Context, workspaceID, userID uuid.UU
 	return s.Store.ListMeetingsByOrganizer(ctx, workspaceID, userID)
 }
 
-func (s *Services) GetMeeting(ctx context.Context, id uuid.UUID) (postgres.Meeting, error) {
-	m, err := s.Store.GetMeeting(ctx, id)
+func (s *Services) GetMeeting(ctx context.Context, workspaceID, id uuid.UUID) (postgres.Meeting, error) {
+	m, err := s.Store.GetMeeting(ctx, workspaceID, id)
 	if err != nil {
 		return m, err
 	}
@@ -111,15 +115,24 @@ func (s *Services) CreateMeeting(ctx context.Context, workspaceID, organizerID u
 	return m, nil
 }
 
-func (s *Services) CancelMeeting(ctx context.Context, id uuid.UUID) error {
-	m, err := s.Store.GetMeeting(ctx, id)
+func (s *Services) CancelMeeting(ctx context.Context, workspaceID, userID, id uuid.UUID) error {
+	m, err := s.Store.GetMeeting(ctx, workspaceID, id)
 	if err != nil {
 		return err
 	}
-	if m.GoogleEventID != "" {
-		_ = s.Calendar.DeleteEvent(ctx, m.GoogleEventID)
+	w, err := s.Store.GetWorkspace(ctx, workspaceID)
+	if err != nil {
+		return err
 	}
-	return s.Store.CancelMeeting(ctx, id)
+	isOwner := w.OwnerUserID != nil && *w.OwnerUserID == userID
+	isOrganizer := m.OrganizerUserID != nil && *m.OrganizerUserID == userID
+	if !isOwner && !isOrganizer {
+		return ErrForbidden
+	}
+	if m.GoogleEventID != "" {
+		_ = s.Calendar.DeleteEvent(ctx, m.GoogleEventID) // best-effort; real adapter increment will log/retry
+	}
+	return s.Store.CancelMeeting(ctx, workspaceID, id)
 }
 
 func orDefault(v, def string) string {

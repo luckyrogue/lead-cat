@@ -87,13 +87,14 @@ func (s *Store) queryMeetings(ctx context.Context, sql string, args ...any) ([]M
 	return out, rows.Err()
 }
 
-func (s *Store) GetMeeting(ctx context.Context, id uuid.UUID) (Meeting, error) {
-	row := s.pool.QueryRow(ctx, `SELECT `+meetingCols+` FROM meetings WHERE id = $1`, id)
+func (s *Store) GetMeeting(ctx context.Context, workspaceID, id uuid.UUID) (Meeting, error) {
+	row := s.pool.QueryRow(ctx, `SELECT `+meetingCols+` FROM meetings WHERE id = $1 AND workspace_id = $2`, id, workspaceID)
 	return scanMeeting(row)
 }
 
-func (s *Store) CancelMeeting(ctx context.Context, id uuid.UUID) error {
+func (s *Store) CancelMeeting(ctx context.Context, workspaceID, id uuid.UUID) error {
 	_, err := s.pool.Exec(ctx, `
-		UPDATE meetings SET status = 'cancelled', updated_at = now() WHERE id = $1`, id)
+		UPDATE meetings SET status = 'cancelled', updated_at = now()
+		WHERE id = $1 AND workspace_id = $2 AND status = 'scheduled'`, id, workspaceID)
 	return err
 }
