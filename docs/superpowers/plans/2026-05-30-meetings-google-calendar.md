@@ -15,6 +15,7 @@
 ### Task 1: Migration — workspace Google config columns
 
 **Files:**
+
 - Create: `backend/migrations/20260530130000_meetings_google.sql`
 
 - [ ] **Step 1: Write the migration**
@@ -48,6 +49,7 @@ git commit -m "feat(meetings): workspace google calendar config columns"
 ### Task 2: Store — Get/SetGoogleConfig
 
 **Files:**
+
 - Create: `backend/internal/infrastructure/persistence/postgres/google_config_repo.go`
 
 (No DB unit test — the package has no DB harness; covered manually/by build.)
@@ -55,6 +57,7 @@ git commit -m "feat(meetings): workspace google calendar config columns"
 - [ ] **Step 1: Write the repo**
 
 `backend/internal/infrastructure/persistence/postgres/google_config_repo.go`:
+
 ```go
 package postgres
 
@@ -100,11 +103,13 @@ git commit -m "feat(meetings): store get/set workspace google config"
 ### Task 3: Config — CALENDAR_STUB flag
 
 **Files:**
+
 - Modify: `backend/internal/platform/config/config.go` (add field + load)
 
 - [ ] **Step 1: Add the field**
 
 In `config.go`, add to the `Config` struct (next to `AutoMigrate bool`):
+
 ```go
 	CalendarStub bool
 ```
@@ -112,6 +117,7 @@ In `config.go`, add to the `Config` struct (next to `AutoMigrate bool`):
 - [ ] **Step 2: Load it**
 
 In `config.go` `Load()`, next to `cfg.AutoMigrate = strings.EqualFold(...)`, add:
+
 ```go
 	cfg.CalendarStub = strings.EqualFold(os.Getenv("CALENDAR_STUB"), "true")
 ```
@@ -119,6 +125,7 @@ In `config.go` `Load()`, next to `cfg.AutoMigrate = strings.EqualFold(...)`, add
 - [ ] **Step 3: Build and commit**
 
 Run: `cd backend && env -u GOROOT go build ./...` → builds.
+
 ```bash
 git add backend/internal/platform/config/config.go
 git commit -m "feat(meetings): CALENDAR_STUB config flag"
@@ -129,11 +136,13 @@ git commit -m "feat(meetings): CALENDAR_STUB config flag"
 ### Task 4: Application — CalendarProvider port + ErrGoogleNotConfigured (additive)
 
 **Files:**
+
 - Modify: `backend/internal/application/calendar.go` (append; do NOT change Services yet)
 
 - [ ] **Step 1: Append the port + error**
 
 Append to `backend/internal/application/calendar.go`. Add `"errors"` and `"github.com/google/uuid"` to its imports, then add:
+
 ```go
 // ErrGoogleNotConfigured is returned when a workspace has no Google credentials.
 var ErrGoogleNotConfigured = errors.New("google not configured")
@@ -161,12 +170,14 @@ git commit -m "feat(meetings): CalendarProvider port + ErrGoogleNotConfigured"
 ### Task 5: Stub provider
 
 **Files:**
+
 - Create: `backend/internal/infrastructure/calendar/stub/provider.go`
 - Test: `backend/internal/infrastructure/calendar/stub/provider_test.go`
 
 - [ ] **Step 1: Write the failing test**
 
 `backend/internal/infrastructure/calendar/stub/provider_test.go`:
+
 ```go
 package stub
 
@@ -196,6 +207,7 @@ Expected: FAIL — `NewProvider` undefined.
 - [ ] **Step 3: Write the provider**
 
 `backend/internal/infrastructure/calendar/stub/provider.go`:
+
 ```go
 package stub
 
@@ -235,6 +247,7 @@ git commit -m "feat(meetings): stub calendar provider"
 ### Task 6: Google adapter + provider
 
 **Files:**
+
 - Create: `backend/internal/infrastructure/calendar/google/adapter.go`
 - Create: `backend/internal/infrastructure/calendar/google/provider.go`
 - Test: `backend/internal/infrastructure/calendar/google/adapter_test.go`
@@ -242,14 +255,17 @@ git commit -m "feat(meetings): stub calendar provider"
 - [ ] **Step 1: Add the dependency**
 
 Run:
+
 ```bash
 cd backend && env -u GOROOT go get google.golang.org/api/calendar/v3 google.golang.org/api/option
 ```
+
 Expected: go.mod/go.sum updated, no error.
 
 - [ ] **Step 2: Write the failing test (pure buildEvent)**
 
 `backend/internal/infrastructure/calendar/google/adapter_test.go`:
+
 ```go
 package google
 
@@ -299,6 +315,7 @@ Expected: FAIL — `buildEvent` undefined.
 - [ ] **Step 4: Write the adapter**
 
 `backend/internal/infrastructure/calendar/google/adapter.go`:
+
 ```go
 // Package google is the real Google Calendar adapter. It impersonates a
 // workspace's configured subject (domain-wide delegation) and creates events
@@ -376,6 +393,7 @@ Expected: PASS.
 - [ ] **Step 6: Write the provider**
 
 `backend/internal/infrastructure/calendar/google/provider.go`:
+
 ```go
 package google
 
@@ -448,6 +466,7 @@ git commit -m "feat(meetings): real Google Calendar adapter + per-workspace prov
 ### Task 7: Flip Services to CalendarProvider + wire selection
 
 **Files:**
+
 - Modify: `backend/internal/application/services.go` (Calendar field type)
 - Modify: `backend/internal/application/meeting_service.go` (resolve per workspace)
 - Modify: `backend/internal/delivery/http/app.go` (select provider by flag)
@@ -457,14 +476,17 @@ This task changes the `Calendar` field type and all its uses together so the bui
 - [ ] **Step 1: Change the Services field type**
 
 In `backend/internal/application/services.go`, change the `Calendar` field:
+
 ```go
 	Calendar CalendarProvider
 ```
+
 (was `Calendar CalendarService`).
 
 - [ ] **Step 2: Resolve the calendar per workspace in CreateMeeting**
 
 In `backend/internal/application/meeting_service.go`, inside `CreateMeeting`, replace the existing calendar call block:
+
 ```go
 	cal, err := s.Calendar.CreateEvent(ctx, CalendarEvent{
 		Title: name, Description: in.Description,
@@ -474,7 +496,9 @@ In `backend/internal/application/meeting_service.go`, inside `CreateMeeting`, re
 		return postgres.Meeting{}, fmt.Errorf("calendar: %w", err)
 	}
 ```
+
 with:
+
 ```go
 	calSvc, err := s.Calendar.For(ctx, workspaceID)
 	if err != nil {
@@ -488,17 +512,21 @@ with:
 		return postgres.Meeting{}, fmt.Errorf("calendar: %w", err)
 	}
 ```
+
 Note: returning `err` directly (not wrapped) preserves `ErrGoogleNotConfigured`; the CreateMeeting HTTP handler already maps any service error to HTTP 400, so an unconfigured workspace yields `400 "google not configured"`.
 
 - [ ] **Step 3: Resolve the calendar per workspace in CancelMeeting**
 
 In `meeting_service.go`, inside `CancelMeeting`, replace:
+
 ```go
 	if m.GoogleEventID != "" {
 		_ = s.Calendar.DeleteEvent(ctx, m.GoogleEventID) // best-effort; real adapter increment will log/retry
 	}
 ```
+
 with:
+
 ```go
 	if m.GoogleEventID != "" {
 		if calSvc, ferr := s.Calendar.For(ctx, workspaceID); ferr == nil {
@@ -510,10 +538,13 @@ with:
 - [ ] **Step 4: Wire provider selection in app.go**
 
 In `backend/internal/delivery/http/app.go`, add the google import alongside the existing `calendarstub` import (line ~21):
+
 ```go
 	calendargoogle "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/google"
 ```
+
 Then, just before the `api := &handlers.API{...}` literal, add:
+
 ```go
 	var calProvider application.CalendarProvider
 	if cfg.CalendarStub {
@@ -522,7 +553,9 @@ Then, just before the `api := &handlers.API{...}` literal, add:
 		calProvider = calendargoogle.NewProvider(store, cipher)
 	}
 ```
+
 And change the `App:` line to use it:
+
 ```go
 		App:     &application.Services{Store: store, Cipher: cipher, Queue: queue, Calendar: calProvider},
 ```
@@ -544,6 +577,7 @@ git commit -m "feat(meetings): select calendar provider per workspace (stub|goog
 ### Task 8: Config endpoint — set/read Google config via integrations
 
 **Files:**
+
 - Modify: `backend/internal/application/services.go` (add `SetGoogleConfig`, extend `IntegrationsView` + `GetIntegrations`)
 - Modify: `backend/internal/delivery/http/handlers/handlers.go` (extend `PatchIntegrations` body)
 
@@ -552,6 +586,7 @@ git commit -m "feat(meetings): select calendar provider per workspace (stub|goog
 In `backend/internal/application/services.go`:
 
 (a) Extend the `IntegrationsView` struct with three fields:
+
 ```go
 	HasGoogle        bool   `json:"has_google"`
 	GoogleSubject    string `json:"google_subject"`
@@ -559,6 +594,7 @@ In `backend/internal/application/services.go`:
 ```
 
 (b) In `GetIntegrations`, before the `return IntegrationsView{...}`, load the google config and include it. Replace the final `return IntegrationsView{...}, nil` with:
+
 ```go
 	encG, subjectG, calIDG, _ := s.Store.GetGoogleConfig(ctx, workspaceID)
 	return IntegrationsView{
@@ -575,6 +611,7 @@ In `backend/internal/application/services.go`:
 ```
 
 (c) Add a new method (next to `PatchIntegrations`):
+
 ```go
 // SetGoogleConfig encrypts and stores per-workspace Google credentials. An empty
 // saJSON keeps the existing key (so subject/calendar can be updated alone).
@@ -603,12 +640,15 @@ func (s *Services) SetGoogleConfig(ctx context.Context, workspaceID uuid.UUID, s
 - [ ] **Step 2: Extend the PatchIntegrations handler**
 
 In `backend/internal/delivery/http/handlers/handlers.go`, in `PatchIntegrations`, add the three fields to the `body` struct:
+
 ```go
 		GoogleSAJSON     string `json:"google_sa_json"`
 		GoogleSubject    string `json:"google_subject"`
 		GoogleCalendarID string `json:"google_calendar_id"`
 ```
+
 Then, after the existing `a.App.PatchIntegrations(...)` call succeeds (before `return c.SendStatus(...)`), add:
+
 ```go
 	if body.GoogleSAJSON != "" || body.GoogleSubject != "" || body.GoogleCalendarID != "" {
 		if err := a.App.SetGoogleConfig(c.Context(), id, body.GoogleSAJSON, body.GoogleSubject, body.GoogleCalendarID); err != nil {
@@ -634,12 +674,14 @@ git commit -m "feat(meetings): set/read per-workspace google config via integrat
 ### Task 9: Stub flag for local/CI + verify smoke
 
 **Files:**
+
 - Modify: `deploy/.env.example` (add `CALENDAR_STUB=true`)
 - Modify: `.github/workflows/_smoke.yml` (add `CALENDAR_STUB: "true"` to the server step env)
 
 - [ ] **Step 1: Add to `deploy/.env.example`**
 
 Append a line under the existing flags (e.g., after `AUTO_MIGRATE=true`):
+
 ```
 CALENDAR_STUB=true
 ```
@@ -647,13 +689,15 @@ CALENDAR_STUB=true
 - [ ] **Step 2: Add to the smoke workflow**
 
 In `.github/workflows/_smoke.yml`, in the "start server" step's `env:` block (which already has `AUTH_DEV_MODE`, `AUTO_MIGRATE`, etc.), add:
+
 ```yaml
-          CALENDAR_STUB: "true"
+CALENDAR_STUB: "true"
 ```
 
 - [ ] **Step 3: Verify smoke locally**
 
 From repo root, ensure `.env` has `CALENDAR_STUB=true` (copy from deploy/.env.example or export it), start DB + server, then run the meetings smoke:
+
 ```bash
 make up
 set -a && . ./.env && set +a
@@ -662,6 +706,7 @@ CALENDAR_STUB=true bash -c 'cd backend && env -u GOROOT go run ./cmd/server' &
 cd backend && SMOKE_BASE_URL=http://localhost:8080 SMOKE_TOKEN="Bearer smoke-owner" SMOKE_TOKEN_B="Bearer smoke-stranger" \
   env -u GOROOT go test -tags=smoke -count=1 -run TestSmokeMeetings ./test/smoke/...
 ```
+
 Expected: `TestSmokeMeetings` PASSES (stub provider active because `CALENDAR_STUB=true`). Stop the server afterward.
 
 - [ ] **Step 4: Commit**
@@ -676,12 +721,14 @@ git commit -m "chore(meetings): default CALENDAR_STUB=true for local + CI smoke"
 ### Task 10: Docs
 
 **Files:**
+
 - Modify: `docs/MEETINGS.md` (update backend status + Google config)
 - Modify: `docs/REQUIREMENTS.md` (note Google env/config now wired)
 
 - [ ] **Step 1: Update `docs/MEETINGS.md`**
 
 In the "Backend" section, update the increment note to add:
+
 ```markdown
 > **Increment 2 (done):** real Google Calendar adapter (per-workspace encrypted service-account creds + domain-wide delegation, Meet link via conferenceData). Selected per workspace; `CALENDAR_STUB=true` forces the stub for local/CI. Configure via `PATCH /api/workspaces/:id/integrations` (`google_sa_json`, `google_subject`, `google_calendar_id`); a workspace without creds returns 400 on meeting create.
 ```
@@ -689,6 +736,7 @@ In the "Backend" section, update the increment note to add:
 - [ ] **Step 2: Update `docs/REQUIREMENTS.md`**
 
 In §5 (Meetings), under the backend bullet, append:
+
 ```markdown
 - **Google (per-workspace):** encrypted service-account JSON + subject (domain-wide delegation) + calendar id, set via the integrations endpoint. `CALENDAR_STUB=true` uses the stub (local/CI).
 ```
@@ -696,6 +744,7 @@ In §5 (Meetings), under the backend bullet, append:
 - [ ] **Step 3: Format and commit**
 
 Run `make fmt-check` (run `make fmt` first if docs reflow, then stage only these two docs).
+
 ```bash
 git add docs/MEETINGS.md docs/REQUIREMENTS.md
 git commit -m "docs(meetings): document increment-2 google calendar adapter"
