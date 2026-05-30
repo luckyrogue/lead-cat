@@ -17,6 +17,7 @@ type Config struct {
 	LogLevel            string
 	LogFormat           string
 	AutoMigrate         bool
+	CalendarStub        bool
 	StaticDir           string
 
 	AuthDevMode  bool
@@ -78,6 +79,7 @@ func Load() (Config, error) {
 		cfg.WebAuthnRPOrigin = "http://localhost:8080"
 	}
 	cfg.AutoMigrate = strings.EqualFold(os.Getenv("AUTO_MIGRATE"), "true")
+	cfg.CalendarStub = strings.EqualFold(os.Getenv("CALENDAR_STUB"), "true")
 	cfg.AuthDevMode = strings.EqualFold(os.Getenv("AUTH_DEV_MODE"), "true")
 	cfg.AuthOTPLog = strings.EqualFold(os.Getenv("AUTH_OTP_LOG"), "true") || cfg.AuthDevMode
 

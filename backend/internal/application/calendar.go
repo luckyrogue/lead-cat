@@ -2,7 +2,10 @@ package application
 
 import (
 	"context"
+	"errors"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // CalendarEvent is a calendar event to create (transport-agnostic).
@@ -25,4 +28,12 @@ type CalendarResult struct {
 type CalendarService interface {
 	CreateEvent(ctx context.Context, e CalendarEvent) (CalendarResult, error)
 	DeleteEvent(ctx context.Context, eventID string) error
+}
+
+// ErrGoogleNotConfigured is returned when a workspace has no Google credentials.
+var ErrGoogleNotConfigured = errors.New("google not configured")
+
+// CalendarProvider resolves the CalendarService to use for a given workspace.
+type CalendarProvider interface {
+	For(ctx context.Context, workspaceID uuid.UUID) (CalendarService, error)
 }
