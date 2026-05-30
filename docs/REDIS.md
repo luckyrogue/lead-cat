@@ -16,8 +16,8 @@
 
 ## Failures
 
-| Symptom | Action |
-|---------|--------|
-| health redis down | check Redis service, `REDIS_URL` |
+| Symptom              | Action                                              |
+| -------------------- | --------------------------------------------------- |
+| health redis down    | check Redis service, `REDIS_URL`                    |
 | duplicate cron fires | verify single scheduler leader; scale app carefully |
-| stuck runs | inspect asynq pending; re-run Test run |
+| stuck runs           | inspect asynq pending; re-run Test run              |

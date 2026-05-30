@@ -12,22 +12,22 @@ Create Redis 7 → `REDIS_URL=redis://:password@host:6379/0`.
 
 CI builds and pushes the image; Dokploy only pulls from registry.
 
-| Item | Value |
-|------|--------|
-| Registry | `ghcr.io/<github-owner>/lead-cat` |
-| Tag | commit SHA on `main`, or `v*` on release tag (webhook sends this tag) |
-| Port | `8080` |
-| Health | `GET /api/health` (also in image `HEALTHCHECK`) |
-| Entrypoint | `/app/lead-cat` (migrations on start when `AUTO_MIGRATE=true`) |
+| Item       | Value                                                                 |
+| ---------- | --------------------------------------------------------------------- |
+| Registry   | `ghcr.io/<github-owner>/lead-cat`                                     |
+| Tag        | commit SHA on `main`, or `v*` on release tag (webhook sends this tag) |
+| Port       | `8080`                                                                |
+| Health     | `GET /api/health` (also in image `HEALTHCHECK`)                       |
+| Entrypoint | `/app/lead-cat` (migrations on start when `AUTO_MIGRATE=true`)        |
 
 **GHCR access:** make the package public, or add a registry credential in Dokploy (read packages).
 
-**Do not build on Dokploy** — set deploy type to *Docker image* and point at the GHCR image above.
+**Do not build on Dokploy** — set deploy type to _Docker image_ and point at the GHCR image above.
 
 ### GitHub Actions checklist
 
-| Type | Name |
-|------|------|
+| Type   | Name              |
+| ------ | ----------------- |
 | Secret | `DOKPLOY_WEBHOOK` |
 
 Mini App is built into the image with `VITE_AUTH_DEV_MODE=false`. Auth is native JWT — no separate OIDC issuer in CI.

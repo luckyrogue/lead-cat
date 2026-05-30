@@ -35,3 +35,16 @@ Run state persisted in `scenario_runs` / `scenario_run_steps`.
 ## VCS
 
 - **Login OAuth** (GitHub/GitLab for sign-in) ≠ **workspace VCS token** (encrypted in Postgres for commits API).
+
+## Meetings (Google Meet) — in development
+
+Additive Telegram Mini App for scheduling Google Meet meetings. Frontend (`frontend/src/features/tma`, `shared/tma`) is implemented on **mock data**; backend is **planned** per [NEW-FEATURES.md](NEW-FEATURES.md):
+
+```
+frontend TMA (tabs: home/meetings/checker/auto/profile)  ──▶  [planned] meetings API
+                                                                │
+[planned] domain/meeting + infrastructure/google (Calendar/Meet, service account)
+[planned] employee directory seeded from embedded CSV at deploy
+```
+
+Reuses the same monolith, Postgres, and Telegram wiring. See [MEETINGS.md](MEETINGS.md).

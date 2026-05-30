@@ -4,29 +4,29 @@ Lead Cat uses **native auth** (no Authentik): email/phone OTP, WebAuthn passkey,
 
 ## Methods
 
-| Method | Endpoints | Notes |
-|--------|-----------|--------|
-| Email OTP | `POST /api/auth/email/send-code`, `POST /api/auth/email/verify` | Code in Redis 10 min; logged to stdout if `AUTH_OTP_LOG=true` |
-| Phone OTP | `POST /api/auth/phone/send-code`, `POST /api/auth/phone/verify` | Same as email; wire SMS provider for production |
-| Passkey | `POST /api/auth/passkey/login/begin`, `.../finish` | WebAuthn discoverable login |
-| Passkey register | `POST /api/auth/passkey/register/begin`, `.../finish` | Requires logged-in user |
-| GitHub / GitLab | `GET /api/auth/oauth/{github\|gitlab}` | Redirect flow → `/login?access_token=...` |
+| Method           | Endpoints                                                       | Notes                                                         |
+| ---------------- | --------------------------------------------------------------- | ------------------------------------------------------------- |
+| Email OTP        | `POST /api/auth/email/send-code`, `POST /api/auth/email/verify` | Code in Redis 10 min; logged to stdout if `AUTH_OTP_LOG=true` |
+| Phone OTP        | `POST /api/auth/phone/send-code`, `POST /api/auth/phone/verify` | Same as email; wire SMS provider for production               |
+| Passkey          | `POST /api/auth/passkey/login/begin`, `.../finish`              | WebAuthn discoverable login                                   |
+| Passkey register | `POST /api/auth/passkey/register/begin`, `.../finish`           | Requires logged-in user                                       |
+| GitHub / GitLab  | `GET /api/auth/oauth/{github\|gitlab}`                          | Redirect flow → `/login?access_token=...`                     |
 
 Public config: `GET /api/auth/config` → which providers are enabled.
 
 ## Environment
 
-| Variable | Purpose |
-|----------|---------|
-| `JWT_SECRET` | HS256 signing key (min 16 chars; required unless `AUTH_DEV_MODE`) |
-| `JWT_ISSUER` | Claim `iss` (default `lead-cat`) |
-| `JWT_TTL_HOURS` | Token lifetime (default 168) |
-| `AUTH_DEV_MODE` | Accept `Bearer dev` or any Bearer as `auth_sub` (local/CI) |
-| `AUTH_OTP_LOG` | Print OTP codes to server logs |
-| `WEBAUTHN_RP_ID` | Relying party ID (hostname, e.g. `localhost`) |
-| `WEBAUTHN_RP_ORIGIN` | Full origin (e.g. `http://localhost:3000`) |
-| `GITHUB_OAUTH_*` / `GITLAB_OAUTH_*` | OAuth app credentials |
-| `WEBAPP_URL` | OAuth redirect target base (`/login` callback) |
+| Variable                            | Purpose                                                           |
+| ----------------------------------- | ----------------------------------------------------------------- |
+| `JWT_SECRET`                        | HS256 signing key (min 16 chars; required unless `AUTH_DEV_MODE`) |
+| `JWT_ISSUER`                        | Claim `iss` (default `lead-cat`)                                  |
+| `JWT_TTL_HOURS`                     | Token lifetime (default 168)                                      |
+| `AUTH_DEV_MODE`                     | Accept `Bearer dev` or any Bearer as `auth_sub` (local/CI)        |
+| `AUTH_OTP_LOG`                      | Print OTP codes to server logs                                    |
+| `WEBAUTHN_RP_ID`                    | Relying party ID (hostname, e.g. `localhost`)                     |
+| `WEBAUTHN_RP_ORIGIN`                | Full origin (e.g. `http://localhost:3000`)                        |
+| `GITHUB_OAUTH_*` / `GITLAB_OAUTH_*` | OAuth app credentials                                             |
+| `WEBAPP_URL`                        | OAuth redirect target base (`/login` callback)                    |
 
 OAuth callback URL to register in GitHub/GitLab:
 

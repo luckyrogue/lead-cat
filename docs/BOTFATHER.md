@@ -8,9 +8,9 @@
 
 ## Commands
 
-| Command | Who |
-|---------|-----|
-| `/test` | developer in linked group |
-| `/chatid` | developer |
+| Command   | Who                         |
+| --------- | --------------------------- |
+| `/test`   | developer in linked group   |
+| `/chatid` | developer                   |
 | `/report` | developer (preview commits) |
-| `/leave` | developer |
+| `/leave`  | developer                   |

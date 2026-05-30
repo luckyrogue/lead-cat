@@ -2,17 +2,28 @@
 
 ## Tokens (`frontend/src/shared/theme/cat-tokens.css`)
 
-| Token | Value |
-|-------|-------|
-| `--cat-bg` | `#FFF8F0` |
-| `--cat-primary` | `#E87B35` |
+| Token             | Value     |
+| ----------------- | --------- |
+| `--cat-bg`        | `#FFF8F0` |
+| `--cat-primary`   | `#E87B35` |
 | `--cat-secondary` | `#5B6B7A` |
+
+Display font: **Baloo 2** (`--font-display`). Body: **Inter** (`--font-body`).
+
+## TMA shell (redesign)
+
+Main app at `/` uses the Telegram Mini App layout:
+
+- `widgets/tma-shell/` — `TgBar`, `TabBar` + FAB, `Sheet`, `Overlay`, toast, language dropdown
+- `features/tma/` — Home, Meetings, Checker, Auto, Profile, create wizard (mock data until API)
+- `shared/tma/` — palette, i18n (ru/kk/en), mock meetings/scenarios
+
+Legacy admin routes (`/workspaces`, `/scenarios`, `/team`, …) keep `CatShell`.
 
 ## Components
 
-- `CatShell` — header logo, paw nav, paw-pattern background
-- shadcn overrides via CSS variables
-- SVG assets in `shared/assets/cats/`
+- shadcn overrides via CSS variables in `app/app.css`
+- Cat primitives in `shared/ui/cat/` (`CatBtn`, `CatCard`, `CatIcon`, `Paw`, …)
 
 ## Copy
 
@@ -22,7 +33,8 @@
 
 ## Sign-off checklist
 
-- [ ] All routes use CatShell
-- [ ] Primary buttons use `--cat-primary`
-- [ ] Scenario builder has cat node labels
-- [ ] TMA header colors match palette
+- [x] Main route uses TMA shell + cat tokens
+- [x] Primary accent `#E87B35`, paw pattern background
+- [x] Tab bar + create FAB
+- [ ] Wire meetings/checker to backend API
+- [ ] TMA header colors match Telegram theme params
