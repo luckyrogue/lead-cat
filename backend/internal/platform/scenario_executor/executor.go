@@ -93,9 +93,7 @@ func (e *Executor) Run(ctx context.Context, runID, scenarioID uuid.UUID, trigger
 			continue
 		}
 		if strings.HasPrefix(node.Type, "trigger.") {
-			for _, next := range adj[id] {
-				queue = append(queue, next)
-			}
+			queue = append(queue, adj[id]...)
 			continue
 		}
 		t0 := time.Now()
@@ -106,9 +104,7 @@ func (e *Executor) Run(ctx context.Context, runID, scenarioID uuid.UUID, trigger
 			return e.finishRun(ctx, runID, "failed", err.Error())
 		}
 		_ = e.store.AddRunStep(ctx, runID, id, node.Type, "success", json.RawMessage(`{}`), int(time.Since(t0).Milliseconds()), "")
-		for _, next := range adj[id] {
-			queue = append(queue, next)
-		}
+		queue = append(queue, adj[id]...)
 	}
 	finishStatus = "success"
 	return e.finishRun(ctx, runID, "success", "")
