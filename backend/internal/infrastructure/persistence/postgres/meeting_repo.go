@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -97,4 +98,24 @@ func (s *Store) CancelMeeting(ctx context.Context, workspaceID, id uuid.UUID) er
 		UPDATE meetings SET status = 'cancelled', updated_at = now()
 		WHERE id = $1 AND workspace_id = $2 AND status = 'scheduled'`, id, workspaceID)
 	return err
+}
+
+func (s *Store) ListUpcomingMeetings(ctx context.Context, until time.Time) ([]Meeting, error) {
+	return s.queryMeetings(ctx, `
+		SELECT `+meetingCols+` FROM meetings
+		WHERE status = 'scheduled' AND starts_at > now() AND starts_at <= $1
+		ORDER BY starts_at`, until)
+}
+
+// TryClaimReminder atomically records that (meeting, telegram, offset) is being
+// reminded. Returns true if this call claimed it (caller should send), false if
+// it was already claimed.
+func (s *Store) TryClaimReminder(ctx context.Context, meetingID uuid.UUID, telegramID int64, offset int) (bool, error) {
+	ct, err := s.pool.Exec(ctx, `
+		INSERT INTO meeting_reminders (meeting_id, telegram_id, offset_minutes)
+		VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, meetingID, telegramID, offset)
+	if err != nil {
+		return false, err
+	}
+	return ct.RowsAffected() == 1, nil
 }

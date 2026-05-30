@@ -47,3 +47,17 @@ func (s *Store) OwnerTelegramID(ctx context.Context, workspaceID uuid.UUID) (int
 	}
 	return *tid, nil
 }
+
+// GetUserTelegramID returns the platform user's linked Telegram id. ok is false
+// when the user exists but has not linked Telegram.
+func (s *Store) GetUserTelegramID(ctx context.Context, userID uuid.UUID) (int64, bool, error) {
+	var tg *int64
+	err := s.pool.QueryRow(ctx, `SELECT telegram_id FROM platform_users WHERE id = $1`, userID).Scan(&tg)
+	if err != nil {
+		return 0, false, err
+	}
+	if tg == nil {
+		return 0, false, nil
+	}
+	return *tg, true, nil
+}
