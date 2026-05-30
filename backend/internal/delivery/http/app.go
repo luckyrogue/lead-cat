@@ -18,6 +18,7 @@ import (
 	"github.com/Jaryq-Lab/notify-bot/internal/delivery/http/middleware"
 	oauthsvc "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/auth/oauth"
 	webauthnsvc "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/auth/webauthn"
+	calendarstub "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/stub"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/crypto"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
 	asynqqueue "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/queue/asynq"
@@ -81,7 +82,7 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	authMW := middleware.NewAuth(cfg, jwtSvc, store, log)
 
 	api := &handlers.API{
-		App:     &application.Services{Store: store, Cipher: cipher, Queue: queue},
+		App:     &application.Services{Store: store, Cipher: cipher, Queue: queue, Calendar: calendarstub.New()},
 		Bot:     tg,
 		RDB:     rdb,
 		Log:     log,
@@ -130,6 +131,11 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	ws.Delete("/scenarios/:sid", api.DeleteScenario)
 	ws.Post("/scenarios/:sid/run", api.RunScenario)
 	ws.Get("/scenarios/:sid/runs", api.ListRuns)
+	ws.Get("/employees", api.ListEmployees)
+	ws.Get("/meetings", api.ListMeetings)
+	ws.Post("/meetings", api.CreateMeeting)
+	ws.Get("/meetings/:mid", api.GetMeeting)
+	ws.Delete("/meetings/:mid", api.DeleteMeeting)
 
 	if stat, err := os.Stat(cfg.StaticDir); err == nil && stat.IsDir() {
 		app.Static("/", cfg.StaticDir, fiber.Static{
