@@ -85,16 +85,21 @@ func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (st
 		return "Теперь корпоративную почту:", true
 
 	case stepEmail:
-		if _, perr := mail.ParseAddress(text); perr != nil {
+		addr, perr := mail.ParseAddress(text)
+		if perr != nil {
 			return "Не похоже на email. Попробуй ещё раз:", true
 		}
-		if _, gerr := s.users.GetBotUserByEmail(ctx, text); gerr == nil {
+		// Normalize so "Ivan@Corp.kz" and "ivan@corp.kz" can't become two
+		// accounts (the bot_users.email UNIQUE constraint is case-sensitive),
+		// and strip any display-name form.
+		email := strings.ToLower(strings.TrimSpace(addr.Address))
+		if _, gerr := s.users.GetBotUserByEmail(ctx, email); gerr == nil {
 			return "Эта почта уже привязана к другому аккаунту.", true
 		}
-		if _, serr := s.otp.Send(ctx, "email", text); serr != nil {
+		if _, serr := s.otp.Send(ctx, "email", email); serr != nil {
 			return "Не смог отправить код, попробуй позже.", true
 		}
-		st.Email = text
+		st.Email = email
 		st.Step = stepOTP
 		_ = s.sessions.Set(ctx, telegramID, *st)
 		return "Отправил код на почту. Введи его:", true

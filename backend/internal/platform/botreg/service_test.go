@@ -152,3 +152,18 @@ func TestNoSessionIgnored(t *testing.T) {
 		t.Fatal("text with no active session must be ignored (ok=false)")
 	}
 }
+
+func TestEmailNormalized(t *testing.T) {
+	svc, users, otp, _ := newSvc()
+	ctx := context.Background()
+	svc.Start(ctx, 11)
+	svc.OnText(ctx, 11, "Name Here")
+	svc.OnText(ctx, 11, "  Ivan@Corp.KZ ")
+	if len(otp.sent) != 1 || otp.sent[0] != "ivan@corp.kz" {
+		t.Fatalf("otp dest not normalized: %+v", otp.sent)
+	}
+	svc.OnText(ctx, 11, "1234")
+	if len(users.created) != 1 || users.created[0].Email != "ivan@corp.kz" {
+		t.Fatalf("email not normalized on create: %+v", users.created)
+	}
+}
