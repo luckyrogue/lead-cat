@@ -23,6 +23,7 @@ import (
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/telegram"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/config"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/observability/log"
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/reminder_scheduler"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/scenario_executor"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/scenario_scheduler"
 )
@@ -120,6 +121,9 @@ func main() {
 
 	sched := scenario_scheduler.New(store, queueClient, rdb, logger)
 	go sched.Run(ctx)
+
+	remSched := reminder_scheduler.New(store, tg, rdb, logger)
+	go remSched.Run(ctx)
 
 	app, err := deliveryhttp.NewApp(cfg, store, cipher, queueClient, rdb, tg, logger)
 	if err != nil {
