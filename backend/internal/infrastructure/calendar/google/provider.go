@@ -2,6 +2,9 @@ package google
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"sync"
 
 	"github.com/google/uuid"
 	googleoauth "golang.org/x/oauth2/google"
@@ -14,10 +17,13 @@ import (
 )
 
 // Provider builds a per-workspace Google Calendar client from the workspace's
-// encrypted service-account credentials.
+// encrypted service-account credentials. Built adapters are cached, keyed by a
+// hash of the encrypted creds + subject + calendar id, so changing any of them
+// transparently yields a fresh client (no explicit invalidation needed).
 type Provider struct {
 	store  *postgres.Store
 	cipher *crypto.TokenCipher
+	cache  sync.Map // key string -> *adapter
 }
 
 func NewProvider(store *postgres.Store, cipher *crypto.TokenCipher) *Provider {
@@ -32,6 +38,16 @@ func (p *Provider) For(ctx context.Context, workspaceID uuid.UUID) (application.
 	if len(enc) == 0 || subject == "" {
 		return nil, application.ErrGoogleNotConfigured
 	}
+	if calendarID == "" {
+		calendarID = "primary"
+	}
+
+	sum := sha256.Sum256(enc)
+	key := workspaceID.String() + "|" + subject + "|" + calendarID + "|" + hex.EncodeToString(sum[:])
+	if v, ok := p.cache.Load(key); ok {
+		return v.(*adapter), nil
+	}
+
 	saJSON, err := p.cipher.Decrypt(enc)
 	if err != nil {
 		return nil, err
@@ -45,8 +61,7 @@ func (p *Provider) For(ctx context.Context, workspaceID uuid.UUID) (application.
 	if err != nil {
 		return nil, err
 	}
-	if calendarID == "" {
-		calendarID = "primary"
-	}
-	return &adapter{svc: svc, calendarID: calendarID}, nil
+	a := &adapter{svc: svc, calendarID: calendarID}
+	p.cache.Store(key, a)
+	return a, nil
 }
