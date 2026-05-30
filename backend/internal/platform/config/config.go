@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -40,6 +41,8 @@ type Config struct {
 	GitLabOAuthBaseURL      string
 
 	CORSAllowedOrigins string
+
+	BotAdminTelegramIDs []int64
 }
 
 func Load() (Config, error) {
@@ -80,6 +83,15 @@ func Load() (Config, error) {
 	}
 	cfg.AutoMigrate = strings.EqualFold(os.Getenv("AUTO_MIGRATE"), "true")
 	cfg.CalendarStub = strings.EqualFold(os.Getenv("CALENDAR_STUB"), "true")
+	for _, p := range strings.Split(os.Getenv("BOT_ADMIN_TELEGRAM_IDS"), ",") {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			continue
+		}
+		if id, err := strconv.ParseInt(p, 10, 64); err == nil {
+			cfg.BotAdminTelegramIDs = append(cfg.BotAdminTelegramIDs, id)
+		}
+	}
 	cfg.AuthDevMode = strings.EqualFold(os.Getenv("AUTH_DEV_MODE"), "true")
 	cfg.AuthOTPLog = strings.EqualFold(os.Getenv("AUTH_OTP_LOG"), "true") || cfg.AuthDevMode
 
