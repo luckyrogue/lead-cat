@@ -64,11 +64,11 @@ func (s *Services) CreateMeeting(ctx context.Context, workspaceID, organizerID u
 	}
 	startsAt, err := time.ParseInLocation("2006-01-02 15:04", in.Date+" "+in.Start, loc)
 	if err != nil {
-		return postgres.Meeting{}, fmt.Errorf("bad start time: %w", err)
+		return postgres.Meeting{}, fmt.Errorf("%w: bad start time", ErrInvalidInput)
 	}
 	endsAt, err := time.ParseInLocation("2006-01-02 15:04", in.Date+" "+in.End, loc)
 	if err != nil {
-		return postgres.Meeting{}, fmt.Errorf("bad end time: %w", err)
+		return postgres.Meeting{}, fmt.Errorf("%w: bad end time", ErrInvalidInput)
 	}
 
 	rec := meeting.Recurrence(orDefault(in.Recurrence, string(meeting.Once)))
@@ -77,7 +77,7 @@ func (s *Services) CreateMeeting(ctx context.Context, workspaceID, organizerID u
 		StartsAt: startsAt, EndsAt: endsAt, Recurrence: rec, Description: in.Description,
 	}
 	if err := dom.Validate(); err != nil {
-		return postgres.Meeting{}, err
+		return postgres.Meeting{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
 	}
 
 	name := meeting.GenerateName(in.Dept, in.Type, in.Host, startsAt, rec)

@@ -33,6 +33,10 @@ type CalendarService interface {
 // ErrGoogleNotConfigured is returned when a workspace has no Google credentials.
 var ErrGoogleNotConfigured = errors.New("google not configured")
 
+// ErrInvalidInput marks client-side input errors (bad fields or times) so the
+// HTTP layer can map them to 400 instead of 500.
+var ErrInvalidInput = errors.New("invalid input")
+
 // CalendarProvider resolves the CalendarService to use for a given workspace.
 type CalendarProvider interface {
 	For(ctx context.Context, workspaceID uuid.UUID) (CalendarService, error)
