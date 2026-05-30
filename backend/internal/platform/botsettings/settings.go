@@ -26,6 +26,9 @@ var Intervals = []Interval{
 	{10, "10м"}, {15, "15м"}, {30, "30м"}, {60, "1ч"}, {120, "2ч"}, {1440, "1день"},
 }
 
+// Parse exposes the reminder-minutes CSV parser for other packages.
+func Parse(csv string) []int { return parse(csv) }
+
 func parse(csv string) []int {
 	var out []int
 	for _, p := range strings.Split(csv, ",") {
