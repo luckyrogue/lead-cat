@@ -170,10 +170,19 @@ func (a *API) PatchIntegrations(c *fiber.Ctx) error {
 		VCSToken     string `json:"vcs_token"`
 		MeetLink     string `json:"meet_link"`
 		TZ           string `json:"tz"`
+
+		GoogleSAJSON     string `json:"google_sa_json"`
+		GoogleSubject    string `json:"google_subject"`
+		GoogleCalendarID string `json:"google_calendar_id"`
 	}
 	_ = c.BodyParser(&body)
 	if err := a.App.PatchIntegrations(c.Context(), id, body.VCSProvider, body.VCSNamespace, body.VCSBaseURL, body.VCSToken, body.MeetLink, body.TZ); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	if body.GoogleSAJSON != "" || body.GoogleSubject != "" || body.GoogleCalendarID != "" {
+		if err := a.App.SetGoogleConfig(c.Context(), id, body.GoogleSAJSON, body.GoogleSubject, body.GoogleCalendarID); err != nil {
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
 	}
 	return c.SendStatus(fiber.StatusNoContent)
 }

@@ -67,6 +67,10 @@ type IntegrationsView struct {
 	HasVCSToken  bool   `json:"has_vcs_token"`
 	MeetLink     string `json:"meet_link"`
 	TZ           string `json:"tz"`
+
+	HasGoogle        bool   `json:"has_google"`
+	GoogleSubject    string `json:"google_subject"`
+	GoogleCalendarID string `json:"google_calendar_id"`
 }
 
 func (s *Services) GetIntegrations(ctx context.Context, workspaceID uuid.UUID) (IntegrationsView, error) {
@@ -78,13 +82,17 @@ func (s *Services) GetIntegrations(ctx context.Context, workspaceID uuid.UUID) (
 	if w.VCSBaseURL != nil {
 		base = *w.VCSBaseURL
 	}
+	encG, subjectG, calIDG, _ := s.Store.GetGoogleConfig(ctx, workspaceID)
 	return IntegrationsView{
-		VCSProvider:  w.VCSProvider,
-		VCSNamespace: w.VCSNamespace,
-		VCSBaseURL:   base,
-		HasVCSToken:  w.HasVCSToken,
-		MeetLink:     w.MeetLink,
-		TZ:           w.TZ,
+		VCSProvider:      w.VCSProvider,
+		VCSNamespace:     w.VCSNamespace,
+		VCSBaseURL:       base,
+		HasVCSToken:      w.HasVCSToken,
+		MeetLink:         w.MeetLink,
+		TZ:               w.TZ,
+		HasGoogle:        len(encG) > 0 && subjectG != "",
+		GoogleSubject:    subjectG,
+		GoogleCalendarID: calIDG,
 	}, nil
 }
 
@@ -121,6 +129,29 @@ func (s *Services) PatchIntegrations(ctx context.Context, workspaceID uuid.UUID,
 		return s.Store.UpdateWorkspace(ctx, workspaceID, meetLink, tz)
 	}
 	return nil
+}
+
+// SetGoogleConfig encrypts and stores per-workspace Google credentials. An empty
+// saJSON keeps the existing key (so subject/calendar can be updated alone).
+func (s *Services) SetGoogleConfig(ctx context.Context, workspaceID uuid.UUID, saJSON, subject, calendarID string) error {
+	var enc []byte
+	if saJSON != "" {
+		e, err := s.Cipher.Encrypt(saJSON)
+		if err != nil {
+			return err
+		}
+		enc = e
+	} else {
+		e, _, _, err := s.Store.GetGoogleConfig(ctx, workspaceID)
+		if err != nil {
+			return err
+		}
+		enc = e
+	}
+	if calendarID == "" {
+		calendarID = "primary"
+	}
+	return s.Store.SetGoogleConfig(ctx, workspaceID, enc, subject, calendarID)
 }
 
 func (s *Services) VerifyIntegrations(ctx context.Context, workspaceID uuid.UUID) error {
