@@ -65,6 +65,7 @@ jobs:
           REDIS_URL: redis://localhost:6379/0
           MASTER_ENCRYPTION_KEY: "smoke-test-key-32bytes!!"
           HTTP_ADDR: ":8080"
+          CALENDAR_STUB: "true"
 
       - run: go test -tags=smoke -count=1 ./test/smoke/...
         env:
