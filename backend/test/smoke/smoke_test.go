@@ -141,3 +141,40 @@ func TestSmoke(t *testing.T) {
 
 	t.Logf("Lead Cat smoke OK (workspace %s, scenario %s)", wid, sid)
 }
+
+func TestSmokeMeetings(t *testing.T) {
+	// workspace
+	slug := "smoke-mtg-" + strconv.FormatInt(time.Now().UnixNano(), 10)
+	ws := must(t, http.MethodPost, "/api/workspaces", token,
+		fmt.Sprintf(`{"name":"Smoke Meetings","slug":%q}`, slug))
+	wid := firstID(t, ws)
+
+	// create meeting (participant by email; stub calendar returns a Meet link)
+	body := `{"dept":"Разработка","type":"Планёрка","host":"Иванов А.А.",` +
+		`"date":"2025-06-02","start":"10:00","end":"11:00","recurrence":"weekly",` +
+		`"participants":[{"email":"a@example.com"}]}`
+	created := must(t, http.MethodPost, "/api/workspaces/"+wid+"/meetings", token, body)
+	if !strings.Contains(created, `"meet_link":"https://meet.google.com/`) {
+		t.Fatalf("no meet link in created meeting: %s", created)
+	}
+	mid := firstID(t, created)
+
+	// list (owner sees it)
+	list := must(t, http.MethodGet, "/api/workspaces/"+wid+"/meetings", token, "")
+	if !strings.Contains(list, mid) {
+		t.Fatalf("created meeting not in list: %s", list)
+	}
+
+	// get
+	got := must(t, http.MethodGet, "/api/workspaces/"+wid+"/meetings/"+mid, token, "")
+	if !strings.Contains(got, `"name":"Разработка | Планёрка | Иванов А.А. | 2025-06-02 | Еженедельно"`) {
+		t.Fatalf("unexpected meeting name: %s", got)
+	}
+
+	// cancel
+	if code, _ := do(t, http.MethodDelete, "/api/workspaces/"+wid+"/meetings/"+mid, token, ""); code != http.StatusNoContent {
+		t.Fatalf("delete: want 204, got %d", code)
+	}
+
+	t.Logf("meetings smoke OK (workspace %s, meeting %s)", wid, mid)
+}
