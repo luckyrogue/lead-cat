@@ -15,6 +15,7 @@
 ### Task 1: Migration — meeting_reminders dedup table
 
 **Files:**
+
 - Create: `backend/migrations/20260530160000_meeting_reminders.sql`
 
 - [ ] **Step 1: Write the migration**
@@ -50,6 +51,7 @@ git commit -m "feat(reminders): meeting_reminders dedup table"
 ### Task 2: Store — upcoming meetings, claim, organizer TG
 
 **Files:**
+
 - Modify: `backend/internal/infrastructure/persistence/postgres/meeting_repo.go` (add 2 methods + `time` import)
 - Modify: `backend/internal/infrastructure/persistence/postgres/user_repo.go` (add `GetUserTelegramID`)
 
@@ -58,6 +60,7 @@ git commit -m "feat(reminders): meeting_reminders dedup table"
 - [ ] **Step 1: Add upcoming-meetings + claim to meeting_repo.go**
 
 In `meeting_repo.go`, change the import block from `import ( "context"; "github.com/google/uuid" )` to also import `"time"`:
+
 ```go
 import (
 	"context"
@@ -66,7 +69,9 @@ import (
 	"github.com/google/uuid"
 )
 ```
+
 Then append these two methods (they reuse the existing `meetingCols` const and `queryMeetings` helper):
+
 ```go
 func (s *Store) ListUpcomingMeetings(ctx context.Context, until time.Time) ([]Meeting, error) {
 	return s.queryMeetings(ctx, `
@@ -92,6 +97,7 @@ func (s *Store) TryClaimReminder(ctx context.Context, meetingID uuid.UUID, teleg
 - [ ] **Step 2: Add GetUserTelegramID to user_repo.go**
 
 Append to `backend/internal/infrastructure/persistence/postgres/user_repo.go` (it already imports `context` and `github.com/google/uuid`):
+
 ```go
 // GetUserTelegramID returns the platform user's linked Telegram id. ok is false
 // when the user exists but has not linked Telegram.
@@ -125,6 +131,7 @@ git commit -m "feat(reminders): store upcoming meetings, claim, organizer TG id"
 ### Task 3: Pure helpers + export botsettings.Parse (TDD)
 
 **Files:**
+
 - Modify: `backend/internal/platform/botsettings/settings.go` (export `Parse`)
 - Create: `backend/internal/platform/reminder_scheduler/reminder.go`
 - Test: `backend/internal/platform/reminder_scheduler/reminder_test.go`
@@ -132,6 +139,7 @@ git commit -m "feat(reminders): store upcoming meetings, claim, organizer TG id"
 - [ ] **Step 1: Export Parse from botsettings**
 
 In `backend/internal/platform/botsettings/settings.go`, add (below the unexported `parse`):
+
 ```go
 // Parse exposes the reminder-minutes CSV parser for other packages.
 func Parse(csv string) []int { return parse(csv) }
@@ -140,6 +148,7 @@ func Parse(csv string) []int { return parse(csv) }
 - [ ] **Step 2: Write the failing test**
 
 `backend/internal/platform/reminder_scheduler/reminder_test.go`:
+
 ```go
 package reminder_scheduler
 
@@ -207,6 +216,7 @@ Expected: FAIL — `dueOffsets`/`offsetLabel`/`message` undefined.
 - [ ] **Step 4: Write the helpers**
 
 `backend/internal/platform/reminder_scheduler/reminder.go`:
+
 ```go
 // Package reminder_scheduler sends Telegram reminders for upcoming meetings.
 package reminder_scheduler
@@ -275,12 +285,14 @@ git commit -m "feat(reminders): pure due/label/message helpers + botsettings.Par
 ### Task 4: Scheduler + wiring
 
 **Files:**
+
 - Create: `backend/internal/platform/reminder_scheduler/scheduler.go`
 - Modify: `backend/cmd/server/main.go` (start the scheduler)
 
 - [ ] **Step 1: Write the scheduler**
 
 `backend/internal/platform/reminder_scheduler/scheduler.go`:
+
 ```go
 package reminder_scheduler
 
@@ -387,16 +399,21 @@ func (s *Scheduler) recipients(ctx context.Context, m postgres.Meeting) map[int6
 - [ ] **Step 2: Start it in cmd/server**
 
 In `backend/cmd/server/main.go`, find:
+
 ```go
 	sched := scenario_scheduler.New(store, queueClient, rdb, logger)
 	go sched.Run(ctx)
 ```
+
 and add immediately after:
+
 ```go
 	remSched := reminder_scheduler.New(store, tg, rdb, logger)
 	go remSched.Run(ctx)
 ```
+
 Add the import to main.go's import block:
+
 ```go
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/reminder_scheduler"
 ```
@@ -418,11 +435,13 @@ git commit -m "feat(reminders): meeting reminder scheduler (participants + organ
 ### Task 5: Docs
 
 **Files:**
+
 - Modify: `docs/MEETINGS.md`
 
 - [ ] **Step 1: Update `docs/MEETINGS.md`**
 
 In the Backend section, after the "Reminder settings (done)" note, add:
+
 ```markdown
 > **Reminder engine (done):** a 1-minute scheduler (Redis leader lock) DMs upcoming-meeting reminders — registered participants by their `/settings` intervals, plus the organizer (linked Telegram) at a 15-minute default. Durable dedup via `meeting_reminders` (one DM per meeting/user/offset). Best-effort send; needs the bot polling.
 ```
@@ -430,6 +449,7 @@ In the Backend section, after the "Reminder settings (done)" note, add:
 - [ ] **Step 2: Format and commit**
 
 Run `make fmt-check` (run `make fmt` if it reflows docs; stage only this file).
+
 ```bash
 git add docs/MEETINGS.md
 git commit -m "docs(reminders): document the reminder engine"

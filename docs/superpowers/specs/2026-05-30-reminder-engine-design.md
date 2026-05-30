@@ -28,6 +28,7 @@ CREATE TABLE meeting_reminders (
 ```
 
 Store methods:
+
 - `ListUpcomingMeetings(ctx, until time.Time) ([]Meeting, error)` — `status='scheduled' AND starts_at > now() AND starts_at <= until`, ordered by `starts_at`.
 - `TryClaimReminder(ctx, meetingID uuid.UUID, telegramID int64, offset int) (bool, error)` — `INSERT INTO meeting_reminders ... ON CONFLICT DO NOTHING`; returns `true` if a row was inserted (claim → send), `false` on conflict (already sent).
 - `GetUserTelegramID(ctx, userID uuid.UUID) (int64, bool, error)` — the organizer's linked Telegram id; `bool=false` when not linked (skip).
