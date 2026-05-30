@@ -7,25 +7,32 @@ import (
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"github.com/Jaryq-Lab/notify-bot/internal/cats"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/crypto"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	platformauth "github.com/Jaryq-Lab/notify-bot/internal/platform/auth"
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/botreg"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/scenario_executor"
 )
 
 type MultiHandler struct {
-	store    *postgres.Store
-	executor *scenario_executor.Executor
-	log      *zap.Logger
+	store     *postgres.Store
+	executor  *scenario_executor.Executor
+	registrar *botreg.Service
+	log       *zap.Logger
 }
 
-func NewMultiHandler(store *postgres.Store, cipher *crypto.TokenCipher, b *bot.Bot, log *zap.Logger) *MultiHandler {
+func NewMultiHandler(store *postgres.Store, cipher *crypto.TokenCipher, b *bot.Bot, rdb *redis.Client, adminIDs []int64, otpLog bool, log *zap.Logger) *MultiHandler {
+	otp := platformauth.NewOTP(rdb, log, otpLog)
+	registrar := botreg.New(store, otp, botreg.NewRedisSessions(rdb), adminIDs)
 	return &MultiHandler{
-		store:    store,
-		executor: scenario_executor.New(store, cipher, b, log),
-		log:      log,
+		store:     store,
+		executor:  scenario_executor.New(store, cipher, b, log),
+		registrar: registrar,
+		log:       log,
 	}
 }
 
@@ -41,9 +48,18 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 
 	cmd, ok := parseCommand(text)
 	if !ok {
+		if isPrivate {
+			if reply, handled := h.registrar.OnText(ctx, from.ID, text); handled {
+				h.reply(ctx, b, update.Message, reply)
+			}
+		}
 		return
 	}
 	switch cmd {
+	case "/start":
+		if isPrivate {
+			h.reply(ctx, b, update.Message, h.registrar.Start(ctx, from.ID))
+		}
 	case "/chatid":
 		_ = h.store.UpsertPendingChat(ctx, from.ID, chatID, update.Message.Chat.Title)
 		h.reply(ctx, b, update.Message, fmt.Sprintf("Логово id: %d — скопируй в админку 🐾", chatID))

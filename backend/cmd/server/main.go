@@ -94,7 +94,7 @@ func main() {
 			logger.Fatal("telegram getMe", zap.Error(err))
 		}
 		botUsername = me.Username
-		tgHandler = telegram.NewMultiHandler(store, cipher, tg, logger)
+		tgHandler = telegram.NewMultiHandler(store, cipher, tg, rdb, cfg.BotAdminTelegramIDs, cfg.AuthOTPLog, logger)
 	}
 	exec := scenario_executor.New(store, cipher, tg, logger)
 
