@@ -1,6 +1,10 @@
+# Pinned so the compose project name stays "lead-cat" regardless of this
+# file's directory (it lives under infrastructure/).
+name: lead-cat
+
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_USER: notify
       POSTGRES_PASSWORD: notify
@@ -16,7 +20,7 @@ services:
       retries: 5
 
   redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     ports:
       - "6379:6379"
     healthcheck:

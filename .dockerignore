@@ -7,7 +7,9 @@
 notify-bot.db
 frontend/node_modules
 frontend/dist
-docker-compose.yml
+deploy
+config
 .cursor
+.agents
+.claude
 agent-transcripts
-scripts

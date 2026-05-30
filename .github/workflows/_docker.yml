@@ -57,7 +57,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: Dockerfile
+          file: deploy/Dockerfile
           push: ${{ inputs.push }}
           load: ${{ !inputs.push }}
           tags: |
