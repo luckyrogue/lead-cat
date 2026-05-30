@@ -8,11 +8,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/auth"
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/google/uuid"
+
+	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/auth"
 )
 
 type Service struct {

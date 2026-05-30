@@ -18,7 +18,7 @@ func (stubVCS) ListCommits(_ context.Context, _ string, _, _ time.Time, _ *time.
 
 func TestBuilderDaily(t *testing.T) {
 	b := &Builder{
-		VCS: stubVCS{},
+		VCS:      stubVCS{},
 		Mappings: []DevMapping{{Telegram: "dev", VCSLogin: "octocat"}},
 	}
 	loc := time.UTC

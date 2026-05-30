@@ -7,20 +7,21 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
+	"github.com/google/uuid"
+	"go.uber.org/zap"
+
 	"github.com/Jaryq-Lab/notify-bot/internal/cats"
 	"github.com/Jaryq-Lab/notify-bot/internal/domain/scenario"
 	domainvcs "github.com/Jaryq-Lab/notify-bot/internal/domain/vcs"
+	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/crypto"
+	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
 	ghvcs "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/vcs/github"
 	glvcs "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/vcs/gitlab"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/commitsreport"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/observability/log"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/observability/metrics"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/crypto"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
-	"github.com/go-telegram/bot"
-	"github.com/go-telegram/bot/models"
-	"github.com/google/uuid"
-	"go.uber.org/zap"
 )
 
 type Executor struct {

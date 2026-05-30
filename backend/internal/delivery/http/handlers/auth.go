@@ -5,12 +5,13 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/auth/oauth"
 	webauthnsvc "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/auth/webauthn"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
 	platformauth "github.com/Jaryq-Lab/notify-bot/internal/platform/auth"
-	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 )
 
 type AuthAPI struct {
@@ -41,12 +42,12 @@ func (h *AuthAPI) tokenResponse(c *fiber.Ctx, u postgres.User) error {
 
 func (h *AuthAPI) Config(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
-		"github_enabled":   h.OAuth != nil && h.OAuth.GitHubEnabled(),
-		"gitlab_enabled":   h.OAuth != nil && h.OAuth.GitLabEnabled(),
-		"passkey_enabled":  h.WebAuthn != nil,
-		"email_enabled":    true,
-		"phone_enabled":    true,
-		"dev_otp":          h.OTPLogExpose,
+		"github_enabled":  h.OAuth != nil && h.OAuth.GitHubEnabled(),
+		"gitlab_enabled":  h.OAuth != nil && h.OAuth.GitLabEnabled(),
+		"passkey_enabled": h.WebAuthn != nil,
+		"email_enabled":   true,
+		"phone_enabled":   true,
+		"dev_otp":         h.OTPLogExpose,
 	})
 }
 

@@ -1,8 +1,9 @@
 package middleware
 
 import (
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/observability/log"
 	"github.com/gofiber/fiber/v2"
+
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/observability/log"
 )
 
 func RequestContext() fiber.Handler {

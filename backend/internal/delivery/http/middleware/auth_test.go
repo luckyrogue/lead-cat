@@ -7,12 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
-	platformauth "github.com/Jaryq-Lab/notify-bot/internal/platform/auth"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/config"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+
+	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	platformauth "github.com/Jaryq-Lab/notify-bot/internal/platform/auth"
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/config"
 )
 
 type stubAuthStore struct {

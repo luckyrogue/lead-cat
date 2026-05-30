@@ -5,9 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/telegram"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/copy"
 	"github.com/go-telegram/bot"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -15,6 +12,10 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/valyala/fasthttp/fasthttpadaptor"
 	"go.uber.org/zap"
+
+	"github.com/Jaryq-Lab/notify-bot/internal/application"
+	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/telegram"
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/copy"
 )
 
 type API struct {

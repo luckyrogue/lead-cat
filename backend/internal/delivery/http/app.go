@@ -4,6 +4,15 @@ import (
 	"os"
 	"strings"
 
+	"github.com/go-telegram/bot"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
+	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
+
 	"github.com/Jaryq-Lab/notify-bot/internal/application"
 	"github.com/Jaryq-Lab/notify-bot/internal/delivery/http/handlers"
 	"github.com/Jaryq-Lab/notify-bot/internal/delivery/http/middleware"
@@ -15,14 +24,6 @@ import (
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/telegram"
 	platformauth "github.com/Jaryq-Lab/notify-bot/internal/platform/auth"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/config"
-	"github.com/go-telegram/bot"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/gofiber/fiber/v2/middleware/requestid"
-	"github.com/redis/go-redis/v9"
-	"go.uber.org/zap"
 )
 
 func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher, queue *asynqqueue.Client, rdb *redis.Client, tg *bot.Bot, log *zap.Logger) (*fiber.App, error) {

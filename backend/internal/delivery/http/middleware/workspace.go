@@ -3,10 +3,11 @@ package middleware
 import (
 	"context"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/copy"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/observability/log"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/copy"
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/observability/log"
 )
 
 type workspaceAccessChecker interface {

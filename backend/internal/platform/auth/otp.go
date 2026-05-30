@@ -96,7 +96,7 @@ func randomCode(n int) (string, error) {
 	return b.String(), nil
 }
 
-func SubEmail(email string) string  { return "email:" + strings.ToLower(strings.TrimSpace(email)) }
-func SubPhone(phone string) string  { return "phone:" + normalizeDest("phone", phone) }
-func SubGitHub(id int64) string     { return fmt.Sprintf("github:%d", id) }
-func SubGitLab(id int64) string     { return fmt.Sprintf("gitlab:%d", id) }
+func SubEmail(email string) string { return "email:" + strings.ToLower(strings.TrimSpace(email)) }
+func SubPhone(phone string) string { return "phone:" + normalizeDest("phone", phone) }
+func SubGitHub(id int64) string    { return fmt.Sprintf("github:%d", id) }
+func SubGitLab(id int64) string    { return fmt.Sprintf("gitlab:%d", id) }

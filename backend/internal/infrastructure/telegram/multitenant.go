@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
+	"go.uber.org/zap"
+
 	"github.com/Jaryq-Lab/notify-bot/internal/cats"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/crypto"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/scenario_executor"
-	"github.com/go-telegram/bot"
-	"github.com/go-telegram/bot/models"
-	"go.uber.org/zap"
 )
 
 type MultiHandler struct {

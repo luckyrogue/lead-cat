@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 	"github.com/google/uuid"
+
+	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
 )
 
 // SyncChatMembers imports chat administrators into workspace_members.

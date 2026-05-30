@@ -18,9 +18,9 @@ type Commit struct {
 }
 
 type Client struct {
-	token  string
-	http   *http.Client
-	org    string
+	token string
+	http  *http.Client
+	org   string
 }
 
 func NewClient(token, org string) *Client {

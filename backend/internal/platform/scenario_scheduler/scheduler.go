@@ -5,23 +5,24 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/domain/scenario"
-	asynqqueue "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/queue/asynq"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/observability/metrics"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
+
+	"github.com/Jaryq-Lab/notify-bot/internal/domain/scenario"
+	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	asynqqueue "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/queue/asynq"
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/observability/metrics"
 )
 
 const lockKey = "leadcat:scheduler:leader"
 
 type Scheduler struct {
-	store  *postgres.Store
-	queue  *asynqqueue.Client
-	rdb    *redis.Client
-	log    *zap.Logger
-	sent   map[string]struct{}
+	store *postgres.Store
+	queue *asynqqueue.Client
+	rdb   *redis.Client
+	log   *zap.Logger
+	sent  map[string]struct{}
 }
 
 func New(store *postgres.Store, queue *asynqqueue.Client, rdb *redis.Client, log *zap.Logger) *Scheduler {

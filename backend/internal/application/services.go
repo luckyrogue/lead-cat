@@ -6,14 +6,15 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/uuid"
+
 	"github.com/Jaryq-Lab/notify-bot/internal/domain/scenario"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/crypto"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	asynqqueue "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/queue/asynq"
 	ghvcs "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/vcs/github"
 	glvcs "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/vcs/gitlab"
-	asynqqueue "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/queue/asynq"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/scenario_scheduler"
-	"github.com/google/uuid"
 )
 
 type Services struct {

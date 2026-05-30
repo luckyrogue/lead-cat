@@ -10,11 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
-	platformauth "github.com/Jaryq-Lab/notify-bot/internal/platform/auth"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 	"golang.org/x/oauth2/gitlab"
+
+	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	platformauth "github.com/Jaryq-Lab/notify-bot/internal/platform/auth"
 )
 
 type Config struct {

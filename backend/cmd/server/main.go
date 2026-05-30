@@ -6,15 +6,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	deliveryhttp "github.com/Jaryq-Lab/notify-bot/internal/delivery/http"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/crypto"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
-	asynqqueue "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/queue/asynq"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/telegram"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/config"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/observability/log"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/scenario_executor"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/scenario_scheduler"
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 	"github.com/google/uuid"
@@ -24,6 +15,16 @@ import (
 	"github.com/pressly/goose/v3"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
+
+	deliveryhttp "github.com/Jaryq-Lab/notify-bot/internal/delivery/http"
+	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/crypto"
+	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	asynqqueue "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/queue/asynq"
+	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/telegram"
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/config"
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/observability/log"
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/scenario_executor"
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/scenario_scheduler"
 )
 
 func main() {
@@ -68,13 +69,19 @@ func main() {
 	defer queueClient.Close()
 
 	var tgHandler *telegram.MultiHandler
-	tg, err := bot.New(cfg.BotToken,
+	botOpts := []bot.Option{
 		bot.WithDefaultHandler(func(c context.Context, b *bot.Bot, u *models.Update) {
 			if tgHandler != nil {
 				tgHandler.Handle(c, b, u)
 			}
 		}),
-	)
+	}
+	// In AUTH_DEV_MODE the bot token may be empty (API-only local dev); bot.New
+	// otherwise calls getMe on init and fails. Polling stays disabled below.
+	if cfg.AuthDevMode {
+		botOpts = append(botOpts, bot.WithSkipGetMe())
+	}
+	tg, err := bot.New(cfg.BotToken, botOpts...)
 	if err != nil {
 		logger.Fatal("telegram", zap.Error(err))
 	}

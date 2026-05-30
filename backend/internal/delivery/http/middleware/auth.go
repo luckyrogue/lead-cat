@@ -4,14 +4,15 @@ import (
 	"context"
 	"strings"
 
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+	"go.uber.org/zap"
+
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/auth"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/config"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/copy"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/observability/log"
-	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
-	"go.uber.org/zap"
 )
 
 type ctxKey string
