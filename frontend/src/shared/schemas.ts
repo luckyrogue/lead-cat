@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod"
 
 export const workspaceSchema = z.object({
   id: z.string().uuid(),
@@ -9,7 +9,7 @@ export const workspaceSchema = z.object({
   tz: z.string(),
   vcs_provider: z.string(),
   has_vcs_token: z.boolean().optional(),
-});
+})
 
 export const scenarioSchema = z.object({
   id: z.string().uuid(),
@@ -17,7 +17,7 @@ export const scenarioSchema = z.object({
   name: z.string(),
   enabled: z.boolean(),
   definition: z.record(z.string(), z.unknown()),
-});
+})
 
-export type Workspace = z.infer<typeof workspaceSchema>;
-export type Scenario = z.infer<typeof scenarioSchema>;
+export type Workspace = z.infer<typeof workspaceSchema>
+export type Scenario = z.infer<typeof scenarioSchema>

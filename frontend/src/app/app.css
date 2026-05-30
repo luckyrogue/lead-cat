@@ -1,11 +1,6 @@
 @import "tailwindcss";
-
-:root {
-  --cat-bg: #fff8f0;
-  --cat-primary: #e87b35;
-  --cat-secondary: #5b6b7a;
-  --cat-muted: #f5ebe0;
-}
+@import "../shared/theme/cat-tokens.css";
+@import "../shared/theme/cat-animations.css";
 
 @theme inline {
   --color-background: var(--background);
@@ -31,6 +26,10 @@
 
 :root {
   --radius: 0.75rem;
+  --cat-bg: #fff8f0;
+  --cat-primary: #e87b35;
+  --cat-secondary: #5b6b7a;
+  --cat-muted: #f5ebe0;
   --background: var(--cat-bg);
   --foreground: #2d2a26;
   --primary: var(--cat-primary);
@@ -50,10 +49,36 @@
 }
 
 body {
-  background: var(--background);
+  background: var(--cat-bg);
   color: var(--foreground);
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: var(--font-body);
   min-height: 100vh;
-  background-image: radial-gradient(circle at 1px 1px, rgba(232, 123, 53, 0.08) 1px, transparent 0);
-  background-size: 24px 24px;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.tma-mode {
+  background: #e8e2da;
+  background-image: radial-gradient(circle at 30% 20%, #efe9e0, #ded6cb);
+}
+
+.dark body.tma-mode {
+  background: #0b0f14;
+  background-image: radial-gradient(circle at 30% 20%, #141a21, #0a0d11);
+}
+
+button {
+  font-family: inherit;
+}
+
+input,
+textarea {
+  font-family: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #bcb2a4;
 }

@@ -1,0 +1,55 @@
+.lc-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.lc-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.lc-screen {
+  animation: lc-screen-in 0.34s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes lc-screen-in {
+  from {
+    transform: translateY(10px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes lc-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes lc-pop {
+  0% {
+    transform: scale(0.3);
+  }
+  70% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes lc-burst {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty)))
+      scale(1) rotate(var(--rot));
+    opacity: 0;
+  }
+}
