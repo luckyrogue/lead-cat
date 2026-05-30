@@ -124,6 +124,7 @@ Additive feature; full spec in [NEW-FEATURES.md](NEW-FEATURES.md) (ТЗ), summar
 
 - **Frontend (done, mock-backed):** Telegram Mini App (`frontend/src/features/tma`) — tabs home/meetings/checker/auto/profile; create-meeting wizard; free-slot checker; ru/kk/en i18n; cat design.
 - **Backend (planned):** Google Calendar/Meet via one corporate **service account**; users bound by **Telegram ID + corporate email** (auto-register on `/start`); employee directory from an **embedded CSV** at deploy; meeting CRUD, recurrence, time-conflict detection, reminders. Base TZ **UTC+5 (Almaty)**. Roles: User / Main Administrator.
+  - **Google (per-workspace):** encrypted service-account JSON + subject (domain-wide delegation) + calendar id, set via `PATCH /api/workspaces/:id/integrations`. `CALENDAR_STUB=true` uses the stub (local/CI); without creds, meeting create returns 400.
 - **New prerequisites (planned, when backend lands):** Google service-account credentials + employees CSV — to be added to `deploy/.env.example` and §1–2 above.
 
 ---
