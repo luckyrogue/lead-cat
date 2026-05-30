@@ -29,10 +29,12 @@ The `CalendarService` interface is defined by `application` (the port); concrete
 ## Data model (new goose migration, all workspace-scoped)
 
 **employees**
+
 - `id uuid pk`, `workspace_id uuid fk`, `full_name text`, `email text`, `dept text`, `has_telegram bool`, `created_at timestamptz`
 - unique `(workspace_id, email)`
 
 **meetings**
+
 - `id uuid pk`, `workspace_id uuid fk`, `organizer_user_id uuid fk`
 - `dept text`, `type text`, `host text`
 - `starts_at timestamptz`, `ends_at timestamptz`
@@ -43,6 +45,7 @@ The `CalendarService` interface is defined by `application` (the port); concrete
 - `created_at timestamptz`, `updated_at timestamptz`
 
 **meeting_participants**
+
 - `meeting_id uuid fk`, `employee_id uuid null fk`, `email text` (event guests)
 
 Times stored as `timestamptz` (UTC); display timezone Almaty (UTC+5) per ТЗ.

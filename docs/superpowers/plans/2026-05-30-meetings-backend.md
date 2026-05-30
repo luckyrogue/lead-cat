@@ -15,6 +15,7 @@
 ### Task 1: Migration — meetings, employees, participants tables
 
 **Files:**
+
 - Create: `backend/migrations/20260530120000_meetings.sql`
 
 - [ ] **Step 1: Write the migration**
@@ -87,6 +88,7 @@ git commit -m "feat(meetings): add meetings/employees/participants tables"
 ### Task 2: Domain — meeting input, recurrence enum, validation
 
 **Files:**
+
 - Create: `backend/internal/domain/meeting/meeting.go`
 - Create: `backend/internal/domain/meeting/validate.go`
 - Test: `backend/internal/domain/meeting/validate_test.go`
@@ -94,6 +96,7 @@ git commit -m "feat(meetings): add meetings/employees/participants tables"
 - [ ] **Step 1: Write the failing test**
 
 `backend/internal/domain/meeting/validate_test.go`:
+
 ```go
 package meeting
 
@@ -153,6 +156,7 @@ Expected: FAIL — package does not compile (`Input`, `Once` undefined).
 - [ ] **Step 3: Write the domain types**
 
 `backend/internal/domain/meeting/meeting.go`:
+
 ```go
 // Package meeting holds the meeting domain: types, recurrence rules,
 // validation, and the meeting-name standard. No persistence or transport here.
@@ -203,6 +207,7 @@ type Input struct {
 - [ ] **Step 4: Write the validation**
 
 `backend/internal/domain/meeting/validate.go`:
+
 ```go
 package meeting
 
@@ -249,12 +254,14 @@ git commit -m "feat(meetings): domain input + recurrence + validation"
 ### Task 3: Domain — meeting name standard
 
 **Files:**
+
 - Create: `backend/internal/domain/meeting/naming.go`
 - Test: `backend/internal/domain/meeting/naming_test.go`
 
 - [ ] **Step 1: Write the failing test**
 
 `backend/internal/domain/meeting/naming_test.go`:
+
 ```go
 package meeting
 
@@ -290,6 +297,7 @@ Expected: FAIL — `GenerateName` undefined.
 - [ ] **Step 3: Write the implementation**
 
 `backend/internal/domain/meeting/naming.go`:
+
 ```go
 package meeting
 
@@ -329,6 +337,7 @@ git commit -m "feat(meetings): meeting name standard"
 ### Task 4: Calendar port + stub adapter
 
 **Files:**
+
 - Create: `backend/internal/application/calendar.go`
 - Create: `backend/internal/infrastructure/calendar/stub/stub.go`
 - Test: `backend/internal/infrastructure/calendar/stub/stub_test.go`
@@ -336,6 +345,7 @@ git commit -m "feat(meetings): meeting name standard"
 - [ ] **Step 1: Write the port**
 
 `backend/internal/application/calendar.go`:
+
 ```go
 package application
 
@@ -370,6 +380,7 @@ type CalendarService interface {
 - [ ] **Step 2: Write the failing stub test**
 
 `backend/internal/infrastructure/calendar/stub/stub_test.go`:
+
 ```go
 package stub
 
@@ -400,6 +411,7 @@ Expected: FAIL — `New` undefined.
 - [ ] **Step 4: Write the stub**
 
 `backend/internal/infrastructure/calendar/stub/stub.go`:
+
 ```go
 // Package stub is a no-network CalendarService used locally and in tests until
 // the real Google Calendar adapter lands. It fabricates event IDs and Meet links.
@@ -445,6 +457,7 @@ git commit -m "feat(meetings): CalendarService port + stub adapter"
 ### Task 5: Postgres models + repositories
 
 **Files:**
+
 - Modify: `backend/internal/infrastructure/persistence/postgres/models.go` (append types)
 - Create: `backend/internal/infrastructure/persistence/postgres/meeting_repo.go`
 - Create: `backend/internal/infrastructure/persistence/postgres/employee_repo.go`
@@ -454,6 +467,7 @@ git commit -m "feat(meetings): CalendarService port + stub adapter"
 - [ ] **Step 1: Append models**
 
 Append to `backend/internal/infrastructure/persistence/postgres/models.go`:
+
 ```go
 type Employee struct {
 	ID          uuid.UUID `json:"id"`
@@ -491,6 +505,7 @@ type Meeting struct {
 - [ ] **Step 2: Write the employee repository**
 
 `backend/internal/infrastructure/persistence/postgres/employee_repo.go`:
+
 ```go
 package postgres
 
@@ -534,6 +549,7 @@ func (s *Store) CreateEmployee(ctx context.Context, workspaceID uuid.UUID, fullN
 - [ ] **Step 3: Write the meeting repository**
 
 `backend/internal/infrastructure/persistence/postgres/meeting_repo.go`:
+
 ```go
 package postgres
 
@@ -653,12 +669,14 @@ git commit -m "feat(meetings): postgres models + meeting/employee repositories"
 ### Task 6: Application service — meetings
 
 **Files:**
+
 - Modify: `backend/internal/application/services.go:20-24` (add `Calendar` field)
 - Create: `backend/internal/application/meeting_service.go`
 
 - [ ] **Step 1: Add the Calendar port to Services**
 
 Modify the `Services` struct in `backend/internal/application/services.go` (lines 20-24) to:
+
 ```go
 type Services struct {
 	Store    *postgres.Store
@@ -671,6 +689,7 @@ type Services struct {
 - [ ] **Step 2: Write the meeting service**
 
 `backend/internal/application/meeting_service.go`:
+
 ```go
 package application
 
@@ -821,12 +840,14 @@ git commit -m "feat(meetings): application service (create/list/get/cancel)"
 ### Task 7: HTTP handlers + route wiring + stub injection
 
 **Files:**
+
 - Create: `backend/internal/delivery/http/handlers/meetings.go`
 - Modify: `backend/internal/delivery/http/app.go:83-90` (inject Calendar stub) and `:126-132` (routes)
 
 - [ ] **Step 1: Write the handlers**
 
 `backend/internal/delivery/http/handlers/meetings.go`:
+
 ```go
 package handlers
 
@@ -914,10 +935,13 @@ func (a *API) DeleteMeeting(c *fiber.Ctx) error {
 - [ ] **Step 2: Inject the stub Calendar adapter**
 
 In `backend/internal/delivery/http/app.go`, add the import (with the other infrastructure imports near line 19-24):
+
 ```go
 	calendarstub "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/stub"
 ```
+
 Then change the `api.App` construction (lines 83-90) so `Services` includes the Calendar:
+
 ```go
 	api := &handlers.API{
 		App:     &application.Services{Store: store, Cipher: cipher, Queue: queue, Calendar: calendarstub.New()},
@@ -932,6 +956,7 @@ Then change the `api.App` construction (lines 83-90) so `Services` includes the 
 - [ ] **Step 3: Register routes**
 
 In `backend/internal/delivery/http/app.go`, after the scenario routes (line 132, `ws.Get("/scenarios/:sid/runs", api.ListRuns)`) add:
+
 ```go
 	ws.Get("/employees", api.ListEmployees)
 	ws.Get("/meetings", api.ListMeetings)
@@ -957,11 +982,13 @@ git commit -m "feat(meetings): REST handlers + routes + stub calendar wiring"
 ### Task 8: End-to-end smoke coverage
 
 **Files:**
+
 - Modify: `backend/test/smoke/smoke_test.go` (append a meetings sub-test)
 
 - [ ] **Step 1: Append the meetings E2E test**
 
 Add this function to `backend/test/smoke/smoke_test.go` (same `package smoke`, build tag already `//go:build smoke`):
+
 ```go
 func TestSmokeMeetings(t *testing.T) {
 	// workspace
@@ -1024,12 +1051,14 @@ git commit -m "test(meetings): E2E smoke coverage for meeting CRUD"
 ### Task 9: Docs — update API + MEETINGS status
 
 **Files:**
+
 - Modify: `docs/API.md` (add meeting endpoints under the workspace group)
 - Modify: `docs/MEETINGS.md` (mark increment-1 backend as done)
 
 - [ ] **Step 1: Add endpoints to `docs/API.md`**
 
 Under the workspace endpoint list, add:
+
 ```markdown
 - `GET /api/workspaces/:id/employees`
 - `GET /api/workspaces/:id/meetings`
@@ -1041,6 +1070,7 @@ Under the workspace endpoint list, add:
 - [ ] **Step 2: Update `docs/MEETINGS.md` Backend section**
 
 Change the "Backend (planned)" heading note to record that increment 1 (meeting CRUD over REST + stubbed calendar) is implemented, Google adapter still pending. Add one line:
+
 ```markdown
 > Increment 1 (done): meeting CRUD over REST (`/api/workspaces/:id/meetings`, `/employees`) with a stubbed `CalendarService`. Real Google Calendar adapter, recurrence series, conflict detection, checker, notifications, and bot registration remain planned.
 ```
@@ -1048,6 +1078,7 @@ Change the "Backend (planned)" heading note to record that increment 1 (meeting 
 - [ ] **Step 3: Format docs and commit**
 
 Run: `make fmt-check` (expected: green; if docs reflow, run `make fmt` first)
+
 ```bash
 git add docs/API.md docs/MEETINGS.md
 git commit -m "docs(meetings): document increment-1 REST endpoints"
