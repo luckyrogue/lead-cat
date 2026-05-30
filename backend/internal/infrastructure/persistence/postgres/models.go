@@ -63,3 +63,35 @@ type PendingChat struct {
 	ChatID         int64
 	ChatTitle      string
 }
+
+type Employee struct {
+	ID          uuid.UUID `json:"id"`
+	WorkspaceID uuid.UUID `json:"workspace_id"`
+	FullName    string    `json:"full_name"`
+	Email       string    `json:"email"`
+	Dept        string    `json:"dept"`
+	HasTelegram bool      `json:"has_telegram"`
+}
+
+type MeetingParticipant struct {
+	EmployeeID *uuid.UUID `json:"employee_id,omitempty"`
+	Email      string     `json:"email"`
+}
+
+type Meeting struct {
+	ID              uuid.UUID            `json:"id"`
+	WorkspaceID     uuid.UUID            `json:"workspace_id"`
+	OrganizerUserID *uuid.UUID           `json:"organizer_user_id,omitempty"`
+	Dept            string               `json:"dept"`
+	Type            string               `json:"type"`
+	Host            string               `json:"host"`
+	StartsAt        time.Time            `json:"starts_at"`
+	EndsAt          time.Time            `json:"ends_at"`
+	Recurrence      string               `json:"recurrence"`
+	Name            string               `json:"name"`
+	Description     string               `json:"description"`
+	GoogleEventID   string               `json:"google_event_id"`
+	MeetLink        string               `json:"meet_link"`
+	Status          string               `json:"status"`
+	Participants    []MeetingParticipant `json:"participants"`
+}
