@@ -3,6 +3,7 @@ package telegram
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/go-telegram/bot"
@@ -15,6 +16,7 @@ import (
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
 	platformauth "github.com/Jaryq-Lab/notify-bot/internal/platform/auth"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/botreg"
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/botsettings"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/scenario_executor"
 )
 
@@ -22,21 +24,28 @@ type MultiHandler struct {
 	store     *postgres.Store
 	executor  *scenario_executor.Executor
 	registrar *botreg.Service
+	settings  *botsettings.Service
 	log       *zap.Logger
 }
 
 func NewMultiHandler(store *postgres.Store, cipher *crypto.TokenCipher, b *bot.Bot, rdb *redis.Client, adminIDs []int64, otpLog bool, log *zap.Logger) *MultiHandler {
 	otp := platformauth.NewOTP(rdb, log, otpLog)
 	registrar := botreg.New(store, otp, botreg.NewRedisSessions(rdb), adminIDs)
+	settings := botsettings.New(store)
 	return &MultiHandler{
 		store:     store,
 		executor:  scenario_executor.New(store, cipher, b, log),
 		registrar: registrar,
+		settings:  settings,
 		log:       log,
 	}
 }
 
 func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Update) {
+	if update.CallbackQuery != nil {
+		h.handleCallback(ctx, b, update.CallbackQuery)
+		return
+	}
 	if update.Message == nil || update.Message.From == nil {
 		return
 	}
@@ -93,7 +102,51 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 		if err := h.executor.SendCommitsReport(ctx, ws); err != nil {
 			h.reply(ctx, b, update.Message, "Кот не смог собрать отчёт: "+err.Error())
 		}
+	case "/settings":
+		if isPrivate {
+			if _, err := h.store.GetBotUserByTelegramID(ctx, from.ID); err != nil {
+				h.reply(ctx, b, update.Message, "Сначала зарегистрируйся: /start")
+				return
+			}
+			text, kb, serr := h.settings.Settings(ctx, from.ID)
+			if serr == nil {
+				_, _ = b.SendMessage(ctx, &bot.SendMessageParams{
+					ChatID:      chatID,
+					Text:        text,
+					ReplyMarkup: toInlineMarkup(kb),
+				})
+			}
+		}
 	}
+}
+
+func (h *MultiHandler) handleCallback(ctx context.Context, b *bot.Bot, cq *models.CallbackQuery) {
+	if strings.HasPrefix(cq.Data, "rem:") {
+		if v, err := strconv.Atoi(strings.TrimPrefix(cq.Data, "rem:")); err == nil {
+			text, kb, serr := h.settings.Toggle(ctx, cq.From.ID, v)
+			if serr == nil && cq.Message.Message != nil {
+				_, _ = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+					ChatID:      cq.Message.Message.Chat.ID,
+					MessageID:   cq.Message.Message.ID,
+					Text:        text,
+					ReplyMarkup: toInlineMarkup(kb),
+				})
+			}
+		}
+	}
+	_, _ = b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{CallbackQueryID: cq.ID})
+}
+
+func toInlineMarkup(rows [][]botsettings.Button) models.InlineKeyboardMarkup {
+	out := make([][]models.InlineKeyboardButton, 0, len(rows))
+	for _, r := range rows {
+		row := make([]models.InlineKeyboardButton, 0, len(r))
+		for _, btn := range r {
+			row = append(row, models.InlineKeyboardButton{Text: btn.Text, CallbackData: btn.Data})
+		}
+		out = append(out, row)
+	}
+	return models.InlineKeyboardMarkup{InlineKeyboard: out}
 }
 
 func (h *MultiHandler) reply(ctx context.Context, b *bot.Bot, msg *models.Message, text string) {
