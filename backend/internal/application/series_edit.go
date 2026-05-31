@@ -1,8 +1,12 @@
 package application
 
 import (
+	"context"
 	"fmt"
 	"time"
+
+	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"github.com/Jaryq-Lab/notify-bot/internal/domain/meeting"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
@@ -59,4 +63,71 @@ func applySeriesUpdate(cur postgres.Meeting, in SeriesUpdateInput, loc *time.Loc
 	out.StartsAt, out.EndsAt = startsAt, endsAt
 	out.Name = meeting.GenerateName(dept, typ, host, startLocal, rec)
 	return out, nil
+}
+
+// UpdateSeries applies a series-wide edit to the picked occurrence and all later
+// ones (organizer or owner only): validates per occurrence, persists atomically,
+// patches Google best-effort, and enqueues one change notification. Returns the
+// number of occurrences updated.
+func (s *Services) UpdateSeries(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, in SeriesUpdateInput) (int, error) {
+	picked, err := s.Store.GetMeeting(ctx, workspaceID, meetingID)
+	if err != nil {
+		return 0, err
+	}
+	w, err := s.Store.GetWorkspace(ctx, workspaceID)
+	if err != nil {
+		return 0, err
+	}
+	if !ownerOrOrganizer(w, picked.OrganizerUserID, userID) {
+		return 0, ErrForbidden
+	}
+	if picked.SeriesID == nil {
+		return 0, fmt.Errorf("%w: not a series", ErrInvalidInput)
+	}
+	loc, err := time.LoadLocation(orDefault(w.TZ, "Asia/Almaty"))
+	if err != nil {
+		return 0, fmt.Errorf("bad timezone: %w", err)
+	}
+	occs, err := s.Store.ListSeriesOccurrences(ctx, workspaceID, *picked.SeriesID, picked.StartsAt)
+	if err != nil {
+		return 0, err
+	}
+	rows := make([]postgres.Meeting, 0, len(occs))
+	for _, oc := range occs {
+		upd, err := applySeriesUpdate(oc, in, loc)
+		if err != nil {
+			return 0, err
+		}
+		rows = append(rows, upd)
+	}
+	if err := s.Store.UpdateMeetingsTx(ctx, workspaceID, rows); err != nil {
+		return 0, err
+	}
+	// Google best-effort: DB is the source of truth; a failed patch is reconciled
+	// by re-editing (series patches are not reversible, so we don't compensate).
+	if calSvc, ferr := s.Calendar.For(ctx, workspaceID); ferr != nil {
+		if s.Log != nil {
+			s.Log.Warn("series update calendar provider", zap.String("workspace_id", workspaceID.String()), zap.Error(ferr))
+		}
+	} else {
+		for _, m := range rows {
+			if m.GoogleEventID == "" {
+				continue
+			}
+			if err := calSvc.UpdateEvent(ctx, m.GoogleEventID, CalendarEvent{
+				Title: m.Name, Description: m.Description, Start: m.StartsAt, End: m.EndsAt,
+			}); err != nil && s.Log != nil {
+				s.Log.Warn("series update event", zap.String("event_id", m.GoogleEventID), zap.Error(err))
+			}
+		}
+	}
+	if s.Queue != nil {
+		if err := s.Queue.EnqueueMeetingUpdated(ctx, workspaceID, meetingID); err != nil && s.Log != nil {
+			s.Log.Warn("enqueue meeting updated",
+				zap.String("workspace_id", workspaceID.String()),
+				zap.String("meeting_id", meetingID.String()),
+				zap.Error(err))
+		}
+	}
+	return len(rows), nil
 }
