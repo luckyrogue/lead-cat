@@ -10,6 +10,16 @@ import (
 const meetingCols = `id, workspace_id, organizer_user_id, dept, type, host,
 	starts_at, ends_at, recurrence, name, description, google_event_id, meet_link, status`
 
+// meetingColsM is meetingCols qualified with the `m` alias for joins.
+const meetingColsM = `m.id, m.workspace_id, m.organizer_user_id, m.dept, m.type, m.host,
+	m.starts_at, m.ends_at, m.recurrence, m.name, m.description, m.google_event_id, m.meet_link, m.status`
+
+// MeetingWithTZ is a meeting plus its workspace timezone (for bot rendering).
+type MeetingWithTZ struct {
+	Meeting
+	TZ string
+}
+
 func scanMeeting(row interface {
 	Scan(dest ...any) error
 }) (Meeting, error) {
@@ -91,6 +101,43 @@ func (s *Store) queryMeetings(ctx context.Context, sql string, args ...any) ([]M
 func (s *Store) GetMeeting(ctx context.Context, workspaceID, id uuid.UUID) (Meeting, error) {
 	row := s.pool.QueryRow(ctx, `SELECT `+meetingCols+` FROM meetings WHERE id = $1 AND workspace_id = $2`, id, workspaceID)
 	return scanMeeting(row)
+}
+
+// UpdateMeeting overwrites the editable fields of a scheduled meeting.
+func (s *Store) UpdateMeeting(ctx context.Context, workspaceID, id uuid.UUID, m Meeting) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE meetings SET dept=$3, type=$4, host=$5, starts_at=$6, ends_at=$7,
+			recurrence=$8, name=$9, description=$10, updated_at=now()
+		WHERE id=$1 AND workspace_id=$2 AND status='scheduled'`,
+		id, workspaceID, m.Dept, m.Type, m.Host, m.StartsAt, m.EndsAt, m.Recurrence, m.Name, m.Description)
+	return err
+}
+
+// ListMeetingsByOrganizerTelegram returns the upcoming scheduled meetings
+// organized by the platform user linked to telegramID, each with its workspace TZ.
+func (s *Store) ListMeetingsByOrganizerTelegram(ctx context.Context, telegramID int64) ([]MeetingWithTZ, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT `+meetingColsM+`, w.tz
+		FROM meetings m
+		JOIN platform_users pu ON pu.id = m.organizer_user_id
+		JOIN workspaces w ON w.id = m.workspace_id
+		WHERE pu.telegram_id = $1 AND m.status = 'scheduled' AND m.starts_at > now()
+		ORDER BY m.starts_at`, telegramID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []MeetingWithTZ
+	for rows.Next() {
+		var mt MeetingWithTZ
+		if err := rows.Scan(&mt.ID, &mt.WorkspaceID, &mt.OrganizerUserID, &mt.Dept, &mt.Type, &mt.Host,
+			&mt.StartsAt, &mt.EndsAt, &mt.Recurrence, &mt.Name, &mt.Description, &mt.GoogleEventID, &mt.MeetLink, &mt.Status,
+			&mt.TZ); err != nil {
+			return nil, err
+		}
+		out = append(out, mt)
+	}
+	return out, rows.Err()
 }
 
 func (s *Store) CancelMeeting(ctx context.Context, workspaceID, id uuid.UUID) error {
