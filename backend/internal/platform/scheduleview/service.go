@@ -69,13 +69,13 @@ func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Re
 		if perr != nil {
 			return Reply{Text: perr.Error() + "\nПопробуй ещё раз:"}, true
 		}
-		return s.list(ctx, st, d, d.AddDate(0, 0, 1), text), true
+		return s.list(ctx, st, d, d.AddDate(0, 0, 1), text, false), true
 	case awaitRange:
 		from, to, perr := parseRange(text, almaty())
 		if perr != nil {
 			return Reply{Text: perr.Error() + "\nПопробуй ещё раз:"}, true
 		}
-		return s.list(ctx, st, from, to, text), true
+		return s.list(ctx, st, from, to, text, false), true
 	}
 	return Reply{}, false
 }
@@ -153,16 +153,16 @@ func (s *Service) period(ctx context.Context, telegramID int64, kind string) Rep
 	if !ok {
 		return Reply{}
 	}
-	return s.list(ctx, st, from, to, periodLabel(kind))
+	return s.list(ctx, st, from, to, periodLabel(kind), true)
 }
 
-func (s *Service) list(ctx context.Context, st *State, from, to time.Time, period string) Reply {
+func (s *Service) list(ctx context.Context, st *State, from, to time.Time, period string, edit bool) Reply {
 	ms, err := s.backend.EmployeeSchedule(ctx, st.EmployeeEmail, from, to)
 	if err != nil {
 		return Reply{Text: "Не удалось получить расписание, попробуй позже."}
 	}
 	text := scheduleText(st.EmployeeEmail, period, ms, time.Now(), almaty())
-	return Reply{Text: text, Keyboard: [][]Button{{{Text: "⬅ Периоды", Data: "sched:periods"}}}}
+	return Reply{Text: text, Keyboard: [][]Button{{{Text: "⬅ Периоды", Data: "sched:periods"}}}, Edit: edit}
 }
 
 func periodReply(email string, edit bool) Reply {

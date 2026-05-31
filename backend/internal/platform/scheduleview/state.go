@@ -5,7 +5,7 @@ type State struct {
 	Step          string   `json:"step"`
 	EmployeeEmail string   `json:"employee_email,omitempty"`
 	AwaitingKind  string   `json:"awaiting_kind,omitempty"` // search | date | range
-	Cands         []string `json:"cands,omitempty"`         // candidate emails (index → email)
+	Cands         []string `json:"cands,omitempty"`         // candidate emails (index → email); read-only flow, a stale index at worst shows another public schedule
 }
 
 const (

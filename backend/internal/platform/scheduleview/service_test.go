@@ -33,10 +33,14 @@ func (f *fakeBackend) EmployeeSchedule(_ context.Context, email string, from, to
 
 type memSessions struct{ m map[int64]*State }
 
-func newMemSessions() *memSessions { return &memSessions{m: map[int64]*State{}} }
+func newMemSessions() *memSessions                                     { return &memSessions{m: map[int64]*State{}} }
 func (s *memSessions) Get(_ context.Context, tg int64) (*State, error) { return s.m[tg], nil }
-func (s *memSessions) Set(_ context.Context, tg int64, st State) error { c := st; s.m[tg] = &c; return nil }
-func (s *memSessions) Del(_ context.Context, tg int64) error          { delete(s.m, tg); return nil }
+func (s *memSessions) Set(_ context.Context, tg int64, st State) error {
+	c := st
+	s.m[tg] = &c
+	return nil
+}
+func (s *memSessions) Del(_ context.Context, tg int64) error { delete(s.m, tg); return nil }
 
 func TestScheduleFlow_PickAndToday(t *testing.T) {
 	ctx := context.Background()
@@ -99,5 +103,55 @@ func TestScheduleFlow_BadDate(t *testing.T) {
 	svc.OnCallback(ctx, tg, "sched:d:date")
 	if r, ok := svc.OnText(ctx, tg, "nope"); !ok || !strings.Contains(r.Text, "дата") {
 		t.Fatalf("expected date error, got %+v ok=%v", r, ok)
+	}
+}
+
+func TestScheduleFlow_NoResults(t *testing.T) {
+	ctx := context.Background()
+	svc := New(&fakeBackend{}, newMemSessions())
+	const tg = int64(73)
+	svc.Start(ctx, tg)
+	if r, ok := svc.OnText(ctx, tg, "zzz"); !ok || !strings.Contains(r.Text, "Ничего не найдено") {
+		t.Fatalf("expected no-results, got %+v ok=%v", r, ok)
+	}
+}
+
+func TestScheduleFlow_BadIndex(t *testing.T) {
+	ctx := context.Background()
+	be := &fakeBackend{employees: []postgres.Employee{{FullName: "Иван", Email: "ivan@corp.kz"}}}
+	svc := New(be, newMemSessions())
+	const tg = int64(74)
+	svc.Start(ctx, tg)
+	svc.OnText(ctx, tg, "иван")
+	if r, _ := svc.OnCallback(ctx, tg, "sched:pick:99"); !strings.Contains(r.Text, "Не найдено") {
+		t.Fatalf("expected not-found for OOB index, got %+v", r)
+	}
+}
+
+func TestScheduleFlow_SessionExpired(t *testing.T) {
+	ctx := context.Background()
+	svc := New(&fakeBackend{}, newMemSessions())
+	const tg = int64(75)
+	for _, data := range []string{"sched:pick:0", "sched:d:today", "sched:periods"} {
+		if r, ok := svc.OnCallback(ctx, tg, data); !ok || !strings.Contains(r.Text, "истекла") {
+			t.Fatalf("%s: expected session-expired, got %+v ok=%v", data, r, ok)
+		}
+	}
+}
+
+func TestScheduleFlow_Range(t *testing.T) {
+	ctx := context.Background()
+	be := &fakeBackend{}
+	svc := New(be, newMemSessions())
+	const tg = int64(76)
+	svc.Start(ctx, tg)
+	svc.OnText(ctx, tg, "bob@corp.kz")
+	svc.OnCallback(ctx, tg, "sched:pick:0")
+	svc.OnCallback(ctx, tg, "sched:d:range")
+	if r, ok := svc.OnText(ctx, tg, "2026-06-01..2026-06-03"); !ok || !strings.Contains(r.Text, "Расписание") {
+		t.Fatalf("range list: %+v ok=%v", r, ok)
+	}
+	if be.gotEmail != "bob@corp.kz" || !be.gotTo.After(be.gotFrom) {
+		t.Fatalf("range query: email=%q from=%v to=%v", be.gotEmail, be.gotFrom, be.gotTo)
 	}
 }
