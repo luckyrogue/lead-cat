@@ -15,16 +15,19 @@ import (
 
 	"github.com/Jaryq-Lab/notify-bot/internal/application"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/telegram"
+	platformauth "github.com/Jaryq-Lab/notify-bot/internal/platform/auth"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/copy"
 )
 
 type API struct {
-	App     *application.Services
-	Bot     *bot.Bot
-	RDB     *redis.Client
-	Log     *zap.Logger
-	TMA     *telegram.InitDataValidator
-	Version string
+	App         *application.Services
+	Bot         *bot.Bot
+	RDB         *redis.Client
+	Log         *zap.Logger
+	TMA         *telegram.InitDataValidator
+	TMAToken    *platformauth.TMAToken
+	AuthDevMode bool
+	Version     string
 }
 
 func (a *API) Health(c *fiber.Ctx) error {
