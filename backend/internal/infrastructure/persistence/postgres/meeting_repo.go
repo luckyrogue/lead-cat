@@ -2,15 +2,21 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
 )
 
+// ErrMeetingNotEditable means the meeting does not exist in the workspace or is
+// not in the 'scheduled' state (e.g. already cancelled).
+var ErrMeetingNotEditable = errors.New("meeting not found or not editable")
+
 const meetingCols = `id, workspace_id, organizer_user_id, dept, type, host,
 	starts_at, ends_at, recurrence, name, description, google_event_id, meet_link, status`
 
 // meetingColsM is meetingCols qualified with the `m` alias for joins.
+// Keep its columns (and the ListMeetingsByOrganizerTelegram scan order) in sync with meetingCols.
 const meetingColsM = `m.id, m.workspace_id, m.organizer_user_id, m.dept, m.type, m.host,
 	m.starts_at, m.ends_at, m.recurrence, m.name, m.description, m.google_event_id, m.meet_link, m.status`
 
@@ -105,12 +111,18 @@ func (s *Store) GetMeeting(ctx context.Context, workspaceID, id uuid.UUID) (Meet
 
 // UpdateMeeting overwrites the editable fields of a scheduled meeting.
 func (s *Store) UpdateMeeting(ctx context.Context, workspaceID, id uuid.UUID, m Meeting) error {
-	_, err := s.pool.Exec(ctx, `
+	ct, err := s.pool.Exec(ctx, `
 		UPDATE meetings SET dept=$3, type=$4, host=$5, starts_at=$6, ends_at=$7,
 			recurrence=$8, name=$9, description=$10, updated_at=now()
 		WHERE id=$1 AND workspace_id=$2 AND status='scheduled'`,
 		id, workspaceID, m.Dept, m.Type, m.Host, m.StartsAt, m.EndsAt, m.Recurrence, m.Name, m.Description)
-	return err
+	if err != nil {
+		return err
+	}
+	if ct.RowsAffected() == 0 {
+		return ErrMeetingNotEditable
+	}
+	return nil
 }
 
 // ListMeetingsByOrganizerTelegram returns the upcoming scheduled meetings
