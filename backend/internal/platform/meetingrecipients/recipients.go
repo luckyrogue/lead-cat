@@ -5,6 +5,7 @@ package meetingrecipients
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 
@@ -21,20 +22,20 @@ type Store interface {
 // Recipient is one notification target.
 type Recipient struct {
 	TelegramID      int64
-	ReminderMinutes string // from bot_users; empty for the organizer
+	ReminderMinutes string // populated only when resolved via bot_users (participant path)
 	IsOrganizer     bool
 }
 
 // Resolve returns the meeting's recipients: registered participants (skipping
 // those without a bot_users record) plus the organizer when linked and not
 // already a participant. Order: participants first, organizer last.
-func Resolve(ctx context.Context, store Store, m postgres.Meeting) []Recipient {
+func Resolve(ctx context.Context, store Store, m postgres.Meeting) ([]Recipient, error) {
 	var out []Recipient
 	seen := map[int64]bool{}
 
 	parts, err := store.ListParticipants(ctx, m.ID)
 	if err != nil {
-		return out
+		return nil, fmt.Errorf("list participants: %w", err)
 	}
 	for _, p := range parts {
 		if p.Email == "" {
@@ -59,5 +60,5 @@ func Resolve(ctx context.Context, store Store, m postgres.Meeting) []Recipient {
 			}
 		}
 	}
-	return out
+	return out, nil
 }

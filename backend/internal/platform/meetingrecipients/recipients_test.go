@@ -12,12 +12,16 @@ import (
 
 type fakeStore struct {
 	parts     []postgres.MeetingParticipant
+	partsErr  error
 	byEmail   map[string]postgres.BotUser
 	orgTG     int64
 	orgLinked bool
 }
 
 func (f *fakeStore) ListParticipants(_ context.Context, _ uuid.UUID) ([]postgres.MeetingParticipant, error) {
+	if f.partsErr != nil {
+		return nil, f.partsErr
+	}
 	return f.parts, nil
 }
 func (f *fakeStore) GetBotUserByEmail(_ context.Context, email string) (postgres.BotUser, error) {
@@ -46,7 +50,10 @@ func TestResolve(t *testing.T) {
 	}
 	m := postgres.Meeting{ID: uuid.New(), OrganizerUserID: &org}
 
-	got := Resolve(context.Background(), f, m)
+	got, err := Resolve(context.Background(), f, m)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if len(got) != 2 {
 		t.Fatalf("want 2 recipients, got %d: %+v", len(got), got)
 	}
@@ -67,11 +74,25 @@ func TestResolveOrganizerAlsoParticipant(t *testing.T) {
 	}
 	m := postgres.Meeting{ID: uuid.New(), OrganizerUserID: &org}
 
-	got := Resolve(context.Background(), f, m)
+	got, err := Resolve(context.Background(), f, m)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if len(got) != 1 {
 		t.Fatalf("organizer who is a participant must not duplicate; got %d: %+v", len(got), got)
 	}
 	if got[0].IsOrganizer {
 		t.Fatalf("existing participant entry should win (not organizer): %+v", got[0])
+	}
+}
+
+func TestResolveListParticipantsError(t *testing.T) {
+	f := &fakeStore{partsErr: errors.New("db down")}
+	got, err := Resolve(context.Background(), f, postgres.Meeting{ID: uuid.New()})
+	if err == nil {
+		t.Fatal("want error when ListParticipants fails")
+	}
+	if got != nil {
+		t.Fatalf("want nil recipients on error, got %+v", got)
 	}
 }
