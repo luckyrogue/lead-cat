@@ -76,8 +76,8 @@ func (s *Services) FreeSlots(ctx, workspaceID uuid.UUID, emails []string,
     from, to time.Time, durMins int) ([]FreeSlot, error)
 ```
 
-- `MeetingConflicts`: one repo query (overlap predicate over the email set), map rows → `Conflict`, resolve `PersonName` via the employee directory / organizer (best-effort).
-- `FreeSlots`: load each participant's scheduled meetings across `[from,to)` once, then per weekday build the 09:00–18:00 window (in workspace TZ), collect every participant's busy spans for that day, and call `meeting.FreeSlots(busy, winStart, winEnd, dur)`. Concatenate chronologically. Empty result is valid (§4.8.6).
+- `MeetingConflicts`: one repo query returning plain overlapping `[]Meeting` (participants loaded). **Attribution is done in Go**: for each meeting, intersect its participant emails (and the organizer's email) with the query email set to determine which person(s) it conflicts; build one `Conflict` per (person, meeting). `PersonName` resolved via the employee directory (best-effort, falls back to email); the organizer's email is resolved via the existing user lookup.
+- `FreeSlots`: load the participants' scheduled meetings across `[from,to)` once (same repo query). For free-slot math only the **union of busy spans** matters, so no per-person attribution is needed — every returned meeting's span is busy for the group. Then per weekday build the 09:00–18:00 window (in workspace TZ), collect the busy spans for that day, and call `meeting.FreeSlots(busy, winStart, winEnd, dur)`. Concatenate chronologically. Empty result is valid (§4.8.6).
 - Working-hours constants (`workStart = 9h`, `workEnd = 18h`) live in `application` (single source).
 
 ### 3. `infrastructure/persistence/postgres`
@@ -86,14 +86,14 @@ One new query, generalizing `ListScheduleForEmail` to a **set of emails** + a **
 
 ```go
 // ListMeetingsOverlapping returns scheduled meetings overlapping [from,to) where any
-// of emails is a participant or the organizer. Each row carries the matched email.
+// of emails is a participant or the organizer. Participants are loaded on each row.
 func (s *Store) ListMeetingsOverlapping(ctx, workspaceID uuid.UUID, emails []string,
-    from, to time.Time) ([]MeetingWithEmail, error)
+    from, to time.Time) ([]Meeting, error)
 ```
 
 - Reuses the participant/organizer join shape from `ListScheduleForEmail` (lines ~241–249), swapping `mp.email = $1` for `= ANY($emails)` and the `starts_at` BETWEEN filter for the half-open overlap predicate `starts_at < to AND ends_at > from`.
 - Scoped by `workspace_id`, `status = 'scheduled'`.
-- `MeetingWithEmail` wraps `Meeting` + the matched `Email` so the application layer can attribute conflicts/busy spans per participant. (For §4.8 the matched email is what matters; for §4.7 the meeting name + email.)
+- Returns **plain `[]Meeting`** (with participants populated, as elsewhere) — no per-row email wrapper. The application layer derives which queried person each meeting concerns, in Go (see §2). This keeps the repo returning the same shape as the other meeting queries.
 
 ### 4. Bot — §4.7 in `/edit` (`internal/platform/meetingedit`)
 
@@ -173,7 +173,7 @@ POST /workspaces/:id/meetings/free-slots  → api.FreeSlots
 
 ## Data flow
 
-**§4.7 (edit):** `/edit` datetime set → `meetingedit.Service` → `Services.MeetingConflicts` → `Store.ListMeetingsOverlapping` → `meeting.Overlaps` filter + name resolve → warning or silent apply.
+**§4.7 (edit):** `/edit` datetime set → `meetingedit.Service` → `Services.MeetingConflicts` → `Store.ListMeetingsOverlapping` → in-Go per-person attribution + name resolve → warning or silent apply.
 
 **§4.8 (checker):** `/checker` collects {emails, range, dur} → `Services.FreeSlots` → `Store.ListMeetingsOverlapping` (per range) → per-weekday `meeting.FreeSlots` → list.
 
