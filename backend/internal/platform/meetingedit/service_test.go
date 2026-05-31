@@ -13,20 +13,20 @@ import (
 )
 
 type fakeBackend struct {
-	meetings       []postgres.MeetingWithTZ
-	updateErr      error
-	gotIn          application.UpdateMeetingInput
-	gotWS          uuid.UUID
-	gotUser        uuid.UUID
-	gotMID         uuid.UUID
-	applied        postgres.Meeting
-	participants   []postgres.MeetingParticipant
-	employees      []postgres.Employee
-	addErr         error
-	addedEmail     string
-	removedEmail   string
-	updatedSeries  int
-	seriesIn       application.SeriesUpdateInput
+	meetings      []postgres.MeetingWithTZ
+	updateErr     error
+	gotIn         application.UpdateMeetingInput
+	gotWS         uuid.UUID
+	gotUser       uuid.UUID
+	gotMID        uuid.UUID
+	applied       postgres.Meeting
+	participants  []postgres.MeetingParticipant
+	employees     []postgres.Employee
+	addErr        error
+	addedEmail    string
+	removedEmail  string
+	updatedSeries int
+	seriesIn      application.SeriesUpdateInput
 }
 
 func (f *fakeBackend) ListEditableMeetings(_ context.Context, _ int64) ([]postgres.MeetingWithTZ, error) {
