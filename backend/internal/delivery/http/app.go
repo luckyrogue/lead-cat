@@ -134,6 +134,8 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	ws.Post("/meetings", api.CreateMeeting)
 	ws.Get("/meetings/:mid", api.GetMeeting)
 	ws.Delete("/meetings/:mid", api.DeleteMeeting)
+	ws.Post("/meetings/conflicts", api.MeetingConflicts)
+	ws.Post("/meetings/free-slots", api.FreeSlots)
 
 	if stat, err := os.Stat(cfg.StaticDir); err == nil && stat.IsDir() {
 		app.Static("/", cfg.StaticDir, fiber.Static{
