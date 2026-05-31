@@ -10,6 +10,7 @@ import (
 
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/botsettings"
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/meetingrecipients"
 )
 
 const lockKey = "leadcat:reminders:leader"
@@ -78,29 +79,20 @@ func (s *Scheduler) tick(ctx context.Context) {
 }
 
 // recipients maps telegram_id -> reminder offsets: registered participants use
-// their own settings; the organizer (if linked and not already a participant)
-// uses the default.
+// their own settings; the organizer uses the default. Resolution is delegated to
+// the shared meetingrecipients helper.
 func (s *Scheduler) recipients(ctx context.Context, m postgres.Meeting) map[int64][]int {
 	out := map[int64][]int{}
-	parts, err := s.store.ListParticipants(ctx, m.ID)
+	recs, err := meetingrecipients.Resolve(ctx, s.store, m)
 	if err != nil {
+		s.log.Warn("resolve recipients", zap.String("meeting_id", m.ID.String()), zap.Error(err))
 		return out
 	}
-	for _, p := range parts {
-		if p.Email == "" {
-			continue
-		}
-		u, err := s.store.GetBotUserByEmail(ctx, p.Email)
-		if err != nil {
-			continue
-		}
-		out[u.TelegramID] = botsettings.Parse(u.ReminderMinutes)
-	}
-	if m.OrganizerUserID != nil {
-		if tg, linked, err := s.store.GetUserTelegramID(ctx, *m.OrganizerUserID); err == nil && linked {
-			if _, exists := out[tg]; !exists {
-				out[tg] = defaultOrganizerOffsets
-			}
+	for _, r := range recs {
+		if r.IsOrganizer {
+			out[r.TelegramID] = defaultOrganizerOffsets
+		} else {
+			out[r.TelegramID] = botsettings.Parse(r.ReminderMinutes)
 		}
 	}
 	return out
