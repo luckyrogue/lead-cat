@@ -20,6 +20,7 @@ import (
 type Backend interface {
 	ListEditableMeetings(ctx context.Context, telegramID int64) ([]postgres.MeetingWithTZ, error)
 	UpdateMeeting(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, in application.UpdateMeetingInput) (postgres.Meeting, error)
+	UpdateSeries(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, in application.SeriesUpdateInput) (int, error)
 	ListParticipants(ctx context.Context, meetingID uuid.UUID) ([]postgres.MeetingParticipant, error)
 	SearchEmployees(ctx context.Context, workspaceID uuid.UUID, query string) ([]postgres.Employee, error)
 	AddParticipant(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, email string) error
@@ -84,6 +85,10 @@ func (s *Service) OnCallback(ctx context.Context, telegramID int64, data string)
 		return s.premConfirm(ctx, telegramID), true
 	case strings.HasPrefix(data, "medit:prem:"):
 		return s.prem(ctx, telegramID, strings.TrimPrefix(data, "medit:prem:")), true
+	case data == "medit:scope:one":
+		return s.setScope(ctx, telegramID, "one"), true
+	case data == "medit:scope:series":
+		return s.setScope(ctx, telegramID, "series"), true
 	}
 	return Reply{}, false
 }
@@ -100,13 +105,22 @@ func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Re
 		return s.searchParticipant(ctx, telegramID, st, text), true
 	}
 	if st.AwaitingField == "datetime" {
-		d, start, end, perr := parseDateTime(text)
-		if perr != nil {
-			return Reply{Text: perr.Error() + "\nПопробуй ещё раз:"}, true
+		if st.Scope == "series" {
+			start, end, perr := parseTimeRange(text)
+			if perr != nil {
+				return Reply{Text: perr.Error() + "\nПопробуй ещё раз:"}, true
+			}
+			st.Overrides["start"] = start
+			st.Overrides["end"] = end
+		} else {
+			d, start, end, perr := parseDateTime(text)
+			if perr != nil {
+				return Reply{Text: perr.Error() + "\nПопробуй ещё раз:"}, true
+			}
+			st.Overrides["date"] = d
+			st.Overrides["start"] = start
+			st.Overrides["end"] = end
 		}
-		st.Overrides["date"] = d
-		st.Overrides["start"] = start
-		st.Overrides["end"] = end
 	} else {
 		if text == "" {
 			return Reply{Text: "Пусто. Введи значение:"}, true
@@ -150,6 +164,12 @@ func (s *Service) pick(ctx context.Context, telegramID int64, idStr string) Repl
 		Cur:         snapshot(found.Meeting, loc),
 		Overrides:   map[string]string{},
 	}
+	if found.SeriesID != nil {
+		st.SeriesID = found.SeriesID.String()
+		_ = s.sessions.Set(ctx, telegramID, st)
+		return scopeReply()
+	}
+	st.Scope = "one"
 	_ = s.sessions.Set(ctx, telegramID, st)
 	return menuReply(st, true)
 }
@@ -165,6 +185,9 @@ func (s *Service) field(ctx context.Context, telegramID int64, f string) Reply {
 	prompt, ok := fieldPrompts[f]
 	if !ok {
 		return Reply{}
+	}
+	if f == "datetime" && st.Scope == "series" {
+		prompt = "Введи новое время ЧЧ:ММ–ЧЧ:ММ (например: 15:00–16:00):"
 	}
 	st.Step = stepAwaiting
 	st.AwaitingField = f
@@ -193,7 +216,7 @@ func (s *Service) apply(ctx context.Context, telegramID int64) Reply {
 		return Reply{Text: "Сессия истекла. Начни заново: /edit"}
 	}
 	if len(st.Overrides) == 0 {
-		return Reply{Text: "Нет изменений. Выбери поле или нажми «Отмена».", Keyboard: menuKeyboard(), Edit: true}
+		return Reply{Text: "Нет изменений. Выбери поле или нажми «Отмена».", Keyboard: menuKeyboard(st.Scope), Edit: true}
 	}
 	// IDs come from our own session (set in pick from uuid.UUID.String()); a parse
 	// failure would yield a zero UUID that UpdateMeeting rejects as ErrForbidden —
@@ -201,6 +224,22 @@ func (s *Service) apply(ctx context.Context, telegramID int64) Reply {
 	ws, _ := uuid.Parse(st.WorkspaceID)
 	uid, _ := uuid.Parse(st.UserID)
 	mid, _ := uuid.Parse(st.MeetingID)
+	if st.Scope == "series" {
+		n, err := s.backend.UpdateSeries(ctx, ws, uid, mid, seriesInput(st.Overrides))
+		if err != nil {
+			switch {
+			case errors.Is(err, application.ErrInvalidInput):
+				return Reply{Text: "Неверные данные. Поправь поле и попробуй снова."}
+			case errors.Is(err, application.ErrForbidden):
+				_ = s.sessions.Del(ctx, telegramID)
+				return Reply{Text: "Нет доступа к этой встрече."}
+			default:
+				return Reply{Text: "Не удалось обновить серию, попробуй позже."}
+			}
+		}
+		_ = s.sessions.Del(ctx, telegramID)
+		return Reply{Text: fmt.Sprintf("Готово ✏️ — обновлено встреч серии: %d", n)}
+	}
 	m, err := s.backend.UpdateMeeting(ctx, ws, uid, mid, toInput(st.Overrides))
 	if err != nil {
 		switch {
@@ -402,7 +441,15 @@ var fieldPrompts = map[string]string{
 	"datetime":    "Введи дату и время: ГГГГ-ММ-ДД ЧЧ:ММ–ЧЧ:ММ\n(например: 2026-06-01 14:00–15:00)",
 }
 
-func menuKeyboard() [][]Button {
+func menuKeyboard(scope string) [][]Button {
+	if scope == "series" {
+		return [][]Button{
+			{{Text: "🕒 Время", Data: "medit:field:datetime"}},
+			{{Text: "🏢 Отдел", Data: "medit:field:dept"}, {Text: "🏷 Тип", Data: "medit:field:type"}},
+			{{Text: "🎤 Ведущий", Data: "medit:field:host"}, {Text: "📝 Описание", Data: "medit:field:description"}},
+			{{Text: "✅ Применить", Data: "medit:apply"}, {Text: "✖ Отмена", Data: "medit:cancel"}},
+		}
+	}
 	return [][]Button{
 		{{Text: "📅 Дата/время", Data: "medit:field:datetime"}},
 		{{Text: "🏢 Отдел", Data: "medit:field:dept"}, {Text: "🏷 Тип", Data: "medit:field:type"}},
@@ -411,6 +458,26 @@ func menuKeyboard() [][]Button {
 		{{Text: "👥 Участники", Data: "medit:parts"}},
 		{{Text: "✅ Применить", Data: "medit:apply"}, {Text: "✖ Отмена", Data: "medit:cancel"}},
 	}
+}
+
+func scopeReply() Reply {
+	return Reply{
+		Text: "Что редактируем?",
+		Keyboard: [][]Button{
+			{{Text: "✏️ Эту встречу", Data: "medit:scope:one"}},
+			{{Text: "🔁 Всю серию (эту и далее)", Data: "medit:scope:series"}},
+		},
+	}
+}
+
+func (s *Service) setScope(ctx context.Context, telegramID int64, scope string) Reply {
+	st, err := s.sessions.Get(ctx, telegramID)
+	if err != nil || st == nil {
+		return Reply{Text: "Сессия истекла. Начни заново: /edit"}
+	}
+	st.Scope = scope
+	_ = s.sessions.Set(ctx, telegramID, *st)
+	return menuReply(*st, true)
 }
 
 func recReply() Reply {
@@ -424,7 +491,7 @@ func recReply() Reply {
 }
 
 func menuReply(st State, edit bool) Reply {
-	return Reply{Text: menuText(st), Keyboard: menuKeyboard(), Edit: edit}
+	return Reply{Text: menuText(st), Keyboard: menuKeyboard(st.Scope), Edit: edit}
 }
 
 func menuText(st State) string {
@@ -441,6 +508,19 @@ func menuText(st State) string {
 		return ""
 	}
 	var b strings.Builder
+	if st.Scope == "series" {
+		fmt.Fprintf(&b, "Редактирование всей серии с %s (★ — изменено):\n", st.Cur["date"])
+		tmark := ""
+		if _, ok := st.Overrides["start"]; ok {
+			tmark = " ★"
+		}
+		fmt.Fprintf(&b, "• Время: %s–%s%s\n", eff("start"), eff("end"), tmark)
+		fmt.Fprintf(&b, "• Отдел: %s%s\n", eff("dept"), mark("dept"))
+		fmt.Fprintf(&b, "• Тип: %s%s\n", eff("type"), mark("type"))
+		fmt.Fprintf(&b, "• Ведущий: %s%s\n", eff("host"), mark("host"))
+		fmt.Fprintf(&b, "• Описание: %s%s\n", eff("description"), mark("description"))
+		return b.String()
+	}
 	b.WriteString("Редактирование встречи (★ — изменено):\n")
 	dmark := ""
 	if _, ok := st.Overrides["date"]; ok {
@@ -486,6 +566,23 @@ func toInput(ov map[string]string) application.UpdateMeetingInput {
 	set(&in.Description, "description")
 	set(&in.Recurrence, "recurrence")
 	set(&in.Date, "date")
+	set(&in.Start, "start")
+	set(&in.End, "end")
+	return in
+}
+
+func seriesInput(ov map[string]string) application.SeriesUpdateInput {
+	var in application.SeriesUpdateInput
+	set := func(p **string, k string) {
+		if v, ok := ov[k]; ok {
+			vv := v
+			*p = &vv
+		}
+	}
+	set(&in.Dept, "dept")
+	set(&in.Type, "type")
+	set(&in.Host, "host")
+	set(&in.Description, "description")
 	set(&in.Start, "start")
 	set(&in.End, "end")
 	return in

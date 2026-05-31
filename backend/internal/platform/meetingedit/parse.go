@@ -7,6 +7,30 @@ import (
 	"time"
 )
 
+// parseTimeRange parses "HH:MM–HH:MM" (en dash or hyphen) into start/end, requiring
+// strict HH:MM and end > start.
+func parseTimeRange(text string) (start, end string, err error) {
+	rng := strings.NewReplacer("–", "-", "—", "-").Replace(strings.TrimSpace(text))
+	parts := strings.SplitN(rng, "-", 2)
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("формат: ЧЧ:ММ–ЧЧ:ММ")
+	}
+	a := strings.TrimSpace(parts[0])
+	b := strings.TrimSpace(parts[1])
+	st, err := time.Parse("15:04", a)
+	if err != nil || len(a) != 5 {
+		return "", "", fmt.Errorf("неверное время начала (ЧЧ:ММ)")
+	}
+	en, err := time.Parse("15:04", b)
+	if err != nil || len(b) != 5 {
+		return "", "", fmt.Errorf("неверное время конца (ЧЧ:ММ)")
+	}
+	if !en.After(st) {
+		return "", "", fmt.Errorf("конец должен быть позже начала")
+	}
+	return st.Format("15:04"), en.Format("15:04"), nil
+}
+
 // parseDateTime parses "YYYY-MM-DD HH:MM–HH:MM" (en dash or hyphen) into the
 // override strings. It validates the formats and that end is after start.
 func parseDateTime(text string) (date, start, end string, err error) {

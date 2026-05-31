@@ -13,18 +13,20 @@ import (
 )
 
 type fakeBackend struct {
-	meetings     []postgres.MeetingWithTZ
-	updateErr    error
-	gotIn        application.UpdateMeetingInput
-	gotWS        uuid.UUID
-	gotUser      uuid.UUID
-	gotMID       uuid.UUID
-	applied      postgres.Meeting
-	participants []postgres.MeetingParticipant
-	employees    []postgres.Employee
-	addErr       error
-	addedEmail   string
-	removedEmail string
+	meetings       []postgres.MeetingWithTZ
+	updateErr      error
+	gotIn          application.UpdateMeetingInput
+	gotWS          uuid.UUID
+	gotUser        uuid.UUID
+	gotMID         uuid.UUID
+	applied        postgres.Meeting
+	participants   []postgres.MeetingParticipant
+	employees      []postgres.Employee
+	addErr         error
+	addedEmail     string
+	removedEmail   string
+	updatedSeries  int
+	seriesIn       application.SeriesUpdateInput
 }
 
 func (f *fakeBackend) ListEditableMeetings(_ context.Context, _ int64) ([]postgres.MeetingWithTZ, error) {
@@ -56,6 +58,11 @@ func (f *fakeBackend) AddParticipant(_ context.Context, _, _, _ uuid.UUID, email
 	f.addedEmail = email
 	f.participants = append(f.participants, postgres.MeetingParticipant{Email: email})
 	return nil
+}
+func (f *fakeBackend) UpdateSeries(_ context.Context, _, _, _ uuid.UUID, in application.SeriesUpdateInput) (int, error) {
+	f.seriesIn = in
+	f.updatedSeries++
+	return 3, nil
 }
 func (f *fakeBackend) RemoveParticipant(_ context.Context, _, _, _ uuid.UUID, email string) error {
 	f.removedEmail = email
@@ -379,5 +386,62 @@ func TestParticipants_SearchNoResults(t *testing.T) {
 	// a non-email query with no directory matches
 	if r, ok := svc.OnText(ctx, tg, "zzz"); !ok || !strings.Contains(r.Text, "Ничего не найдено") {
 		t.Fatalf("expected no-results, got %+v ok=%v", r, ok)
+	}
+}
+
+func seriesMeeting() postgres.MeetingWithTZ {
+	m := sampleMeeting()
+	sid := uuid.New()
+	m.SeriesID = &sid
+	m.Recurrence = "weekly"
+	return m
+}
+
+func TestEditFlow_SeriesScopePrompt(t *testing.T) {
+	ctx := context.Background()
+	m := seriesMeeting()
+	be := &fakeBackend{meetings: []postgres.MeetingWithTZ{m}, applied: m.Meeting}
+	svc := New(be, newMemSessions())
+	const tg = int64(80)
+	r, ok := svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
+	if !ok || !strings.Contains(r.Text, "Что редактируем") {
+		t.Fatalf("series pick should show scope prompt, got %+v", r)
+	}
+}
+
+func TestEditFlow_SeriesEdit(t *testing.T) {
+	ctx := context.Background()
+	m := seriesMeeting()
+	be := &fakeBackend{meetings: []postgres.MeetingWithTZ{m}, applied: m.Meeting}
+	svc := New(be, newMemSessions())
+	const tg = int64(81)
+	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
+	r, _ := svc.OnCallback(ctx, tg, "medit:scope:series")
+	for _, row := range r.Keyboard {
+		for _, b := range row {
+			if b.Data == "medit:field:rec" {
+				t.Fatal("series menu must not offer recurrence")
+			}
+		}
+	}
+	svc.OnCallback(ctx, tg, "medit:field:datetime")
+	if r, ok := svc.OnText(ctx, tg, "10:00-11:00"); !ok || !strings.Contains(r.Text, "★") {
+		t.Fatalf("time input: %+v ok=%v", r, ok)
+	}
+	svc.OnCallback(ctx, tg, "medit:apply")
+	if be.updatedSeries != 1 || be.seriesIn.Start == nil || *be.seriesIn.Start != "10:00" {
+		t.Fatalf("UpdateSeries not called with time: %+v (called=%d)", be.seriesIn, be.updatedSeries)
+	}
+}
+
+func TestEditFlow_NonSeriesNoPrompt(t *testing.T) {
+	ctx := context.Background()
+	m := sampleMeeting()
+	be := &fakeBackend{meetings: []postgres.MeetingWithTZ{m}, applied: m.Meeting}
+	svc := New(be, newMemSessions())
+	const tg = int64(82)
+	r, _ := svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
+	if !strings.Contains(r.Text, "Редактирование встречи") {
+		t.Fatalf("non-series pick should go straight to field menu, got %+v", r)
 	}
 }

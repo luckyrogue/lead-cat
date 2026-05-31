@@ -2,6 +2,20 @@ package meetingedit
 
 import "testing"
 
+func TestParseTimeRange(t *testing.T) {
+	for _, in := range []string{"14:00–15:00", "14:00-15:00"} {
+		s, e, err := parseTimeRange(in)
+		if err != nil || s != "14:00" || e != "15:00" {
+			t.Fatalf("%q -> %q %q err %v", in, s, e, err)
+		}
+	}
+	for _, bad := range []string{"", "14:00", "9:00-10:00", "15:00-14:00", "14:00-14:00"} {
+		if _, _, err := parseTimeRange(bad); err == nil {
+			t.Fatalf("%q: expected error", bad)
+		}
+	}
+}
+
 func TestParseDateTime_OK(t *testing.T) {
 	for _, in := range []string{"2026-06-01 14:00–15:00", "2026-06-01 14:00-15:00"} {
 		d, s, e, err := parseDateTime(in)
