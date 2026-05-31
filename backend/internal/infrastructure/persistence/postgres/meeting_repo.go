@@ -256,6 +256,19 @@ func (s *Store) CancelMeeting(ctx context.Context, workspaceID, id uuid.UUID) er
 	return err
 }
 
+// CancelSeriesOccurrences cancels (status='cancelled') the scheduled occurrences
+// of a series at or after fromStart, in one atomic statement. Returns the count.
+func (s *Store) CancelSeriesOccurrences(ctx context.Context, workspaceID, seriesID uuid.UUID, fromStart time.Time) (int, error) {
+	ct, err := s.pool.Exec(ctx, `
+		UPDATE meetings SET status = 'cancelled', updated_at = now()
+		WHERE series_id = $1 AND workspace_id = $2 AND starts_at >= $3 AND status = 'scheduled'`,
+		seriesID, workspaceID, fromStart)
+	if err != nil {
+		return 0, err
+	}
+	return int(ct.RowsAffected()), nil
+}
+
 func (s *Store) ListUpcomingMeetings(ctx context.Context, until time.Time) ([]Meeting, error) {
 	return s.queryMeetings(ctx, `
 		SELECT `+meetingCols+` FROM meetings
