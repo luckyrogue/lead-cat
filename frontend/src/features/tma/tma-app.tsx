@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTheme } from "next-themes"
 import { LinkTelegramBanner } from "@/features/auth-link-telegram/link-telegram-banner"
+import { TmaAuthProvider, useTmaAuth } from "@/shared/tma/auth-context"
 import { TmaAppProvider, useTmaApp } from "@/shared/tma/context"
 import { DEFAULT_ACCENT, makePalette } from "@/shared/tma/palette"
 import type {
@@ -136,7 +137,7 @@ function SuccessView({
   )
 }
 
-function TmaAppInner() {
+function TmaContent() {
   const [tab, setTab] = useState<TabKey>("home")
   const [meetings, setMeetings] = useState<Meeting[]>(INITIAL_MEETINGS)
   const [scenarios, setScenarios] = useState(INITIAL_SCENARIOS)
@@ -305,7 +306,7 @@ function TmaAppInner() {
   )
 }
 
-export function TmaApp() {
+function TmaAppInner() {
   const { resolvedTheme } = useTheme()
   const dark = resolvedTheme === "dark"
 
@@ -344,8 +345,58 @@ export function TmaApp() {
 
   return (
     <TmaAppProvider value={ctxValue}>
-      <TmaAppInner />
+      <TmaContent />
       <TmaToast data={toast} />
     </TmaAppProvider>
+  )
+}
+
+export function TmaApp() {
+  return (
+    <TmaAuthProvider>
+      <TmaAuthGate />
+    </TmaAuthProvider>
+  )
+}
+
+function TmaAuthGate() {
+  const { status, retry } = useTmaAuth()
+  if (status === "authed") return <TmaAppInner />
+  const botUsername = import.meta.env.VITE_BOT_USERNAME ?? ""
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 16,
+        padding: 24,
+        textAlign: "center",
+      }}
+    >
+      {status === "loading" && <p>Загрузка…</p>}
+      {status === "not_registered" && (
+        <>
+          <p>Сначала зарегистрируйтесь в боте командой /start.</p>
+          {botUsername && (
+            <a
+              href={`https://t.me/${botUsername}?start`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Открыть бота
+            </a>
+          )}
+        </>
+      )}
+      {status === "error" && (
+        <>
+          <p>Не удалось войти. Откройте приложение из Telegram.</p>
+          <button onClick={retry}>Повторить</button>
+        </>
+      )}
+    </div>
   )
 }

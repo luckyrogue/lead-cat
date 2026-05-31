@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from "react"
 import { Link } from "@tanstack/react-router"
 import { I18N } from "@/shared/tma/i18n"
-import { EMPLOYEES, ME } from "@/shared/tma/mock-data"
+import { EMPLOYEES } from "@/shared/tma/mock-data"
+import { useTmaAuth } from "@/shared/tma/auth-context"
 import { useTmaApp } from "@/shared/tma/context"
 import type { Meeting } from "@/shared/tma/types"
 import {
@@ -128,6 +129,7 @@ export function ProfileScreen({
   setRemOn: (v: boolean) => void
 }) {
   const p = useTmaApp()
+  const { user } = useTmaAuth()
   const t = p.t
   const workspaceId = useWorkspaceId()
   const intervals = [
@@ -160,7 +162,7 @@ export function ProfileScreen({
           padding: "4px 4px",
         }}
       >
-        <Avatar name={ME.name} size={62} />
+        <Avatar name={user?.name ?? ""} size={62} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
             style={{
@@ -171,7 +173,7 @@ export function ProfileScreen({
               lineHeight: 1.1,
             }}
           >
-            {ME.name}
+            {user?.name ?? ""}
           </div>
           <div
             style={{
@@ -183,24 +185,26 @@ export function ProfileScreen({
               textOverflow: "ellipsis",
             }}
           >
-            {ME.email}
+            {user?.email ?? ""}
           </div>
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 5,
-              fontSize: 11.5,
-              fontWeight: 800,
-              color: p.accent,
-              background: p.accentSoft,
-              padding: "3px 9px",
-              borderRadius: 999,
-              fontFamily: "var(--font-display)",
-            }}
-          >
-            👑 {t("role_admin")}
-          </span>
+          {user?.role === "admin" && (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                fontSize: 11.5,
+                fontWeight: 800,
+                color: p.accent,
+                background: p.accentSoft,
+                padding: "3px 9px",
+                borderRadius: 999,
+                fontFamily: "var(--font-display)",
+              }}
+            >
+              👑 {t("role_admin")}
+            </span>
+          )}
         </div>
       </div>
 
@@ -347,7 +351,7 @@ export function ProfileScreen({
         />
       </SettingsGroup>
 
-      {ME.role === "admin" && (
+      {user?.role === "admin" && (
         <SettingsGroup title={t("admin")}>
           <Row
             icon="shield"

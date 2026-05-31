@@ -2,11 +2,11 @@ import { useState } from "react"
 import { TMA_NOW } from "@/shared/tma/constants"
 import { useTmaApp } from "@/shared/tma/context"
 import {
-  ME,
   MEETING_TYPES,
   RECURRENCE,
   emailsToPeople,
 } from "@/shared/tma/mock-data"
+import { useTmaAuth } from "@/shared/tma/auth-context"
 import { buildTitle, fmtDate, partWord } from "@/shared/tma/meeting-utils"
 import type { Meeting } from "@/shared/tma/types"
 import {
@@ -172,11 +172,12 @@ export function MeetingDetail({
   onDelete: () => void
 }) {
   const p = useTmaApp()
+  const { user } = useTmaAuth()
   const t = p.t
   const tObj = MEETING_TYPES.find((x) => x.key === m.type)
   const rec = RECURRENCE.find((r) => r.key === m.rec)
   const past = m.date < TMA_NOW
-  const canManage = m.organizer === ME.email || ME.role === "admin"
+  const canManage = m.organizer === user?.email || user?.role === "admin"
   const allPeople = emailsToPeople([m.organizer, ...m.participants])
 
   return (

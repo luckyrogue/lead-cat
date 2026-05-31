@@ -1,5 +1,5 @@
-import { ME } from "@/shared/tma/mock-data"
 import { TMA_NOW } from "@/shared/tma/constants"
+import { useTmaAuth } from "@/shared/tma/auth-context"
 import { useTmaApp } from "@/shared/tma/context"
 import type { Meeting, TabKey } from "@/shared/tma/types"
 import { CatIcon } from "@/shared/ui/cat/primitives"
@@ -21,6 +21,7 @@ export function HomeScreen({
   onTab: (t: TabKey) => void
 }) {
   const p = useTmaApp()
+  const { user } = useTmaAuth()
   const t = p.t
   const today = meetings
     .filter((m) => m.date === TMA_NOW)
@@ -29,7 +30,7 @@ export function HomeScreen({
     .filter((m) => m.date > TMA_NOW)
     .sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start))
     .slice(0, 4)
-  const firstName = ME.name.split(" ")[0]
+  const firstName = (user?.name ?? "").split(" ")[0]
 
   const actions = [
     {
