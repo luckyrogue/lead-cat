@@ -52,6 +52,20 @@ func TestBuildUpdatedMessage(t *testing.T) {
 	}
 }
 
+func TestBuildRemovedMessage(t *testing.T) {
+	loc, _ := time.LoadLocation("Asia/Almaty")
+	start := time.Date(2026, 5, 31, 14, 0, 0, 0, loc)
+	m := buildRemovedMessage("Разработка | Планёрка", start, loc)
+	for _, want := range []string{"удалили", "Разработка | Планёрка", "31.05.2026", "UTC+5"} {
+		if !strings.Contains(m, want) {
+			t.Fatalf("message %q missing %q", m, want)
+		}
+	}
+	if strings.Contains(m, "🔗") {
+		t.Fatal("removed message has no meet link")
+	}
+}
+
 func TestTZLabel(t *testing.T) {
 	almaty, _ := time.LoadLocation("Asia/Almaty")
 	cases := map[*time.Location]string{

@@ -31,6 +31,11 @@ func buildUpdatedMessage(name, meetLink string, startsAt, endsAt time.Time, loc 
 	return buildEventMessage("✏️ Встреча изменена", name, meetLink, startsAt, endsAt, loc)
 }
 
+func buildRemovedMessage(name string, startsAt time.Time, loc *time.Location) string {
+	s := startsAt.In(loc)
+	return fmt.Sprintf("➖ Вас удалили из встречи\n«%s»\n🗓 %s (%s)", name, s.Format("02.01.2006"), tzLabel(s))
+}
+
 // tzLabel renders the timezone of t as a UTC offset, e.g. "UTC+5" or "UTC+5:30".
 func tzLabel(t time.Time) string {
 	_, off := t.Zone()
