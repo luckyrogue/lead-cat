@@ -1,0 +1,34 @@
+package meeting_notifier
+
+import (
+	"strings"
+	"testing"
+	"time"
+)
+
+func TestBuildMessage(t *testing.T) {
+	loc, err := time.LoadLocation("Asia/Almaty")
+	if err != nil {
+		t.Fatal(err)
+	}
+	start := time.Date(2026, 5, 31, 14, 0, 0, 0, loc)
+	end := time.Date(2026, 5, 31, 15, 0, 0, 0, loc)
+
+	m := buildMessage("Разработка | Планёрка", "https://meet.google.com/abc", start, end, loc)
+	for _, want := range []string{"Новая встреча", "Разработка | Планёрка", "31.05.2026", "14:00–15:00", "https://meet.google.com/abc"} {
+		if !strings.Contains(m, want) {
+			t.Fatalf("message %q missing %q", m, want)
+		}
+	}
+
+	if strings.Contains(buildMessage("X", "", start, end, loc), "🔗") {
+		t.Fatal("no link line when meet link empty")
+	}
+
+	// stored times are UTC; rendering must convert to Almaty (+5).
+	startUTC := time.Date(2026, 5, 31, 9, 0, 0, 0, time.UTC) // 14:00 Almaty
+	m2 := buildMessage("X", "", startUTC, startUTC.Add(time.Hour), loc)
+	if !strings.Contains(m2, "14:00–15:00") {
+		t.Fatalf("UTC not converted to Almaty: %q", m2)
+	}
+}
