@@ -249,6 +249,25 @@ func (s *Store) ListScheduleForEmail(ctx context.Context, email string, from, to
 		ORDER BY m.starts_at`, email, from, to)
 }
 
+// ListMeetingsOverlapping returns scheduled meetings overlapping [from,to) where any
+// of emails is a participant or the organizer (by platform_users.email). Global by
+// email (no workspace scope), mirroring ListScheduleForEmail. Participants are NOT
+// hydrated (use ListParticipants for attribution). §4.7/§4.8
+func (s *Store) ListMeetingsOverlapping(ctx context.Context, emails []string, from, to time.Time) ([]Meeting, error) {
+	if len(emails) == 0 {
+		return nil, nil
+	}
+	return s.queryMeetings(ctx, `
+		SELECT DISTINCT `+meetingColsM+`
+		FROM meetings m
+		LEFT JOIN meeting_participants mp ON mp.meeting_id = m.id
+		LEFT JOIN platform_users pu ON pu.id = m.organizer_user_id
+		WHERE (mp.email = ANY($1) OR pu.email = ANY($1))
+			AND m.status = 'scheduled'
+			AND m.starts_at < $3 AND m.ends_at > $2
+		ORDER BY m.starts_at`, emails, from, to)
+}
+
 func (s *Store) CancelMeeting(ctx context.Context, workspaceID, id uuid.UUID) error {
 	_, err := s.pool.Exec(ctx, `
 		UPDATE meetings SET status = 'cancelled', updated_at = now()
