@@ -40,8 +40,9 @@ func (a *API) CreateMeeting(c *fiber.Ctx) error {
 		Date         string                        `json:"date"`
 		Start        string                        `json:"start"`
 		End          string                        `json:"end"`
-		Recurrence   string                        `json:"recurrence"`
-		Description  string                        `json:"description"`
+		Recurrence      string                        `json:"recurrence"`
+		RecurrenceUntil string                        `json:"recurrence_until"`
+		Description     string                        `json:"description"`
 		Participants []postgres.MeetingParticipant `json:"participants"`
 	}
 	if err := c.BodyParser(&body); err != nil {
@@ -50,7 +51,7 @@ func (a *API) CreateMeeting(c *fiber.Ctx) error {
 	m, err := a.App.CreateMeeting(c.Context(), wid, uid, application.CreateMeetingInput{
 		Dept: body.Dept, Type: body.Type, Host: body.Host,
 		Date: body.Date, Start: body.Start, End: body.End,
-		Recurrence: body.Recurrence, Description: body.Description,
+		Recurrence: body.Recurrence, RecurrenceUntil: body.RecurrenceUntil, Description: body.Description,
 		Participants: body.Participants,
 	})
 	if err != nil {

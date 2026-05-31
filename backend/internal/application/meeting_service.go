@@ -18,15 +18,16 @@ var ErrForbidden = errors.New("forbidden")
 
 // CreateMeetingInput is the transport-level payload (strings as received over HTTP).
 type CreateMeetingInput struct {
-	Dept         string
-	Type         string
-	Host         string
-	Date         string // YYYY-MM-DD
-	Start        string // HH:MM
-	End          string // HH:MM
-	Recurrence   string
-	Description  string
-	Participants []postgres.MeetingParticipant
+	Dept            string
+	Type            string
+	Host            string
+	Date            string // YYYY-MM-DD
+	Start           string // HH:MM
+	End             string // HH:MM
+	Recurrence      string
+	RecurrenceUntil string // YYYY-MM-DD; required when Recurrence != once
+	Description     string
+	Participants    []postgres.MeetingParticipant
 }
 
 func (s *Services) ListEmployees(ctx context.Context, workspaceID uuid.UUID) ([]postgres.Employee, error) {
@@ -81,7 +82,17 @@ func (s *Services) CreateMeeting(ctx context.Context, workspaceID, organizerID u
 		return postgres.Meeting{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
 	}
 
-	name := meeting.GenerateName(in.Dept, in.Type, in.Host, startsAt, rec)
+	var until time.Time
+	if in.RecurrenceUntil != "" {
+		until, err = time.ParseInLocation("2006-01-02", in.RecurrenceUntil, loc)
+		if err != nil {
+			return postgres.Meeting{}, fmt.Errorf("%w: bad recurrence_until", ErrInvalidInput)
+		}
+	}
+	spansList, err := meeting.Occurrences(startsAt, endsAt, rec, until)
+	if err != nil {
+		return postgres.Meeting{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+	}
 
 	var emails []string
 	for _, p := range in.Participants {
@@ -93,41 +104,109 @@ func (s *Services) CreateMeeting(ctx context.Context, workspaceID, organizerID u
 	if err != nil {
 		return postgres.Meeting{}, err
 	}
-	cal, err := calSvc.CreateEvent(ctx, CalendarEvent{
-		Title: name, Description: in.Description,
-		Start: startsAt, End: endsAt, AttendeeEmails: emails,
-	})
-	if err != nil {
-		return postgres.Meeting{}, fmt.Errorf("calendar: %w", err)
+
+	// Single (non-recurring) meeting: existing path.
+	if rec == meeting.Once {
+		name := meeting.GenerateName(in.Dept, in.Type, in.Host, startsAt, rec)
+		cal, err := calSvc.CreateEvent(ctx, CalendarEvent{
+			Title: name, Description: in.Description, Start: startsAt, End: endsAt, AttendeeEmails: emails,
+		})
+		if err != nil {
+			return postgres.Meeting{}, fmt.Errorf("calendar: %w", err)
+		}
+		m, err := s.Store.CreateMeeting(ctx, postgres.Meeting{
+			WorkspaceID: workspaceID, OrganizerUserID: &organizerID,
+			Dept: in.Dept, Type: in.Type, Host: in.Host,
+			StartsAt: startsAt.UTC(), EndsAt: endsAt.UTC(),
+			Recurrence: string(rec), Name: name, Description: in.Description,
+			GoogleEventID: cal.EventID, MeetLink: cal.MeetLink,
+		})
+		if err != nil {
+			return postgres.Meeting{}, err
+		}
+		if len(in.Participants) > 0 {
+			if err := s.Store.AddParticipants(ctx, m.ID, in.Participants); err != nil {
+				return m, err
+			}
+			m.Participants = in.Participants
+		}
+		s.enqueueCreated(ctx, workspaceID, m.ID)
+		return m, nil
 	}
 
-	m, err := s.Store.CreateMeeting(ctx, postgres.Meeting{
-		WorkspaceID: workspaceID, OrganizerUserID: &organizerID,
-		Dept: in.Dept, Type: in.Type, Host: in.Host,
-		StartsAt: startsAt.UTC(), EndsAt: endsAt.UTC(),
-		Recurrence: string(rec), Name: name, Description: in.Description,
-		GoogleEventID: cal.EventID, MeetLink: cal.MeetLink,
-	})
+	// Recurring series: materialize occurrences (Google first w/ compensation, then one DB tx).
+	names := make([]string, len(spansList))
+	for i, sp := range spansList {
+		names[i] = meeting.GenerateName(in.Dept, in.Type, in.Host, sp.Start, rec)
+	}
+	evs, err := createSeriesEvents(ctx, calSvc, names, in.Description, emails, spansList)
 	if err != nil {
 		return postgres.Meeting{}, err
 	}
-	if len(in.Participants) > 0 {
-		if err := s.Store.AddParticipants(ctx, m.ID, in.Participants); err != nil {
-			return m, err
-		}
-		m.Participants = in.Participants
-	}
-	// Best-effort: the meeting is already created; a failed enqueue only loses the
-	// creation notification, so log and still return the meeting.
-	if s.Queue != nil {
-		if err := s.Queue.EnqueueMeetingCreated(ctx, workspaceID, m.ID); err != nil && s.Log != nil {
-			s.Log.Warn("enqueue meeting created",
-				zap.String("workspace_id", workspaceID.String()),
-				zap.String("meeting_id", m.ID.String()),
-				zap.Error(err))
+	seriesID := uuid.New()
+	untilUTC := until.UTC()
+	rows := make([]postgres.Meeting, len(evs))
+	for i, e := range evs {
+		rows[i] = postgres.Meeting{
+			WorkspaceID: workspaceID, OrganizerUserID: &organizerID,
+			Dept: in.Dept, Type: in.Type, Host: in.Host,
+			StartsAt: e.Span.Start.UTC(), EndsAt: e.Span.End.UTC(),
+			Recurrence: string(rec), Name: e.Name, Description: in.Description,
+			GoogleEventID: e.EventID, MeetLink: e.MeetLink,
+			SeriesID: &seriesID, RecurrenceUntil: &untilUTC,
 		}
 	}
-	return m, nil
+	created, err := s.Store.CreateMeetingSeries(ctx, rows, in.Participants)
+	if err != nil {
+		for _, e := range evs {
+			_ = calSvc.DeleteEvent(ctx, e.EventID) // best-effort: keep DB all-or-nothing
+		}
+		return postgres.Meeting{}, err
+	}
+	anchor := created[0]
+	s.enqueueCreated(ctx, workspaceID, anchor.ID)
+	return anchor, nil
+}
+
+// enqueueCreated best-effort enqueues the meeting-created notification (once).
+func (s *Services) enqueueCreated(ctx context.Context, workspaceID, meetingID uuid.UUID) {
+	if s.Queue == nil {
+		return
+	}
+	if err := s.Queue.EnqueueMeetingCreated(ctx, workspaceID, meetingID); err != nil && s.Log != nil {
+		s.Log.Warn("enqueue meeting created",
+			zap.String("workspace_id", workspaceID.String()),
+			zap.String("meeting_id", meetingID.String()),
+			zap.Error(err))
+	}
+}
+
+// seriesEvent is a created Google event paired with its span and computed name.
+type seriesEvent struct {
+	Span     meeting.Span
+	Name     string
+	EventID  string
+	MeetLink string
+}
+
+// createSeriesEvents creates one Google event per span (names[i] is the title for
+// spans[i]). On any failure it best-effort deletes the events already created and
+// returns the error, so no partial series leaks.
+func createSeriesEvents(ctx context.Context, cal CalendarService, names []string, description string, emails []string, spans []meeting.Span) ([]seriesEvent, error) {
+	var created []seriesEvent
+	for i, sp := range spans {
+		res, err := cal.CreateEvent(ctx, CalendarEvent{
+			Title: names[i], Description: description, Start: sp.Start, End: sp.End, AttendeeEmails: emails,
+		})
+		if err != nil {
+			for _, c := range created {
+				_ = cal.DeleteEvent(ctx, c.EventID)
+			}
+			return nil, fmt.Errorf("calendar: %w", err)
+		}
+		created = append(created, seriesEvent{Span: sp, Name: names[i], EventID: res.EventID, MeetLink: res.MeetLink})
+	}
+	return created, nil
 }
 
 // UpdateMeeting applies field overrides to a meeting (organizer or workspace
