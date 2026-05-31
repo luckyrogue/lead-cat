@@ -29,6 +29,7 @@ type fakeBackend struct {
 	seriesIn        application.SeriesUpdateInput
 	cancelledOne    bool
 	cancelledSeries int
+	conflicts       []application.Conflict
 }
 
 func (f *fakeBackend) ListEditableMeetings(_ context.Context, _ int64) ([]postgres.MeetingWithTZ, error) {
@@ -84,6 +85,9 @@ func (f *fakeBackend) CancelMeeting(_ context.Context, _, _, _ uuid.UUID) error 
 func (f *fakeBackend) CancelSeries(_ context.Context, _, _, _ uuid.UUID) (int, error) {
 	f.cancelledSeries++
 	return 4, nil
+}
+func (f *fakeBackend) MeetingUpdateConflicts(_ context.Context, _, _ uuid.UUID, _ application.UpdateMeetingInput) ([]application.Conflict, error) {
+	return f.conflicts, nil
 }
 
 type memSessions struct{ m map[int64]*State }
@@ -172,6 +176,38 @@ func TestEditFlow_DateTime(t *testing.T) {
 	svc.OnCallback(ctx, tg, "medit:apply")
 	if be.gotIn.Date == nil || *be.gotIn.Date != "2026-06-02" || be.gotIn.Start == nil || *be.gotIn.Start != "10:00" {
 		t.Fatalf("datetime override not passed: %+v", be.gotIn)
+	}
+}
+
+func TestEditFlow_ConflictWarning(t *testing.T) {
+	ctx := context.Background()
+	m := sampleMeeting()
+	be := &fakeBackend{
+		meetings: []postgres.MeetingWithTZ{m}, applied: m.Meeting,
+		conflicts: []application.Conflict{{
+			Email: "a@x.io", PersonName: "Алиса", MeetingName: "Стендап",
+			Start: m.StartsAt, End: m.EndsAt,
+		}},
+	}
+	svc := New(be, newMemSessions())
+	const tg = int64(91)
+	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
+	svc.OnCallback(ctx, tg, "medit:field:datetime")
+	svc.OnText(ctx, tg, "2026-06-02 10:00-11:00")
+	// A time change with conflicts must warn instead of applying.
+	r, ok := svc.OnCallback(ctx, tg, "medit:apply")
+	if !ok || !strings.Contains(r.Text, "Внимание") || !strings.Contains(r.Text, "Алиса") {
+		t.Fatalf("expected conflict warning, got %+v", r)
+	}
+	if be.gotIn.Date != nil {
+		t.Fatal("UpdateMeeting must not run while warning is shown")
+	}
+	// Forcing past the warning applies the change.
+	if _, ok := svc.OnCallback(ctx, tg, "medit:applyforce"); !ok {
+		t.Fatal("applyforce not handled")
+	}
+	if be.gotIn.Date == nil || *be.gotIn.Date != "2026-06-02" {
+		t.Fatalf("applyforce did not apply change: %+v", be.gotIn)
 	}
 }
 

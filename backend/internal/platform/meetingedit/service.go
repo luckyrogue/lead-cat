@@ -27,6 +27,7 @@ type Backend interface {
 	RemoveParticipant(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, email string) error
 	CancelMeeting(ctx context.Context, workspaceID, userID, meetingID uuid.UUID) error
 	CancelSeries(ctx context.Context, workspaceID, userID, meetingID uuid.UUID) (int, error)
+	MeetingUpdateConflicts(ctx context.Context, workspaceID, meetingID uuid.UUID, in application.UpdateMeetingInput) ([]application.Conflict, error)
 }
 
 type sessions interface {
@@ -72,6 +73,8 @@ func (s *Service) OnCallback(ctx context.Context, telegramID int64, data string)
 		return s.setRec(ctx, telegramID, strings.TrimPrefix(data, "medit:set:rec:")), true
 	case data == "medit:apply":
 		return s.apply(ctx, telegramID), true
+	case data == "medit:applyforce":
+		return s.applyForce(ctx, telegramID), true
 	case data == "medit:cancel":
 		_ = s.sessions.Del(ctx, telegramID)
 		return Reply{Text: "Редактирование отменено.", Edit: true}, true
@@ -230,6 +233,30 @@ func (s *Service) apply(ctx context.Context, telegramID int64) Reply {
 	if len(st.Overrides) == 0 {
 		return Reply{Text: "Нет изменений. Выбери поле или нажми «Отмена».", Keyboard: menuKeyboard(st.Scope), Edit: true}
 	}
+	// §4.7: on a single-meeting time change, warn about participant/organizer overlaps.
+	if st.Scope != "series" {
+		if _, ok := st.Overrides["date"]; ok {
+			ws, _ := uuid.Parse(st.WorkspaceID)
+			mid, _ := uuid.Parse(st.MeetingID)
+			conflicts, cerr := s.backend.MeetingUpdateConflicts(ctx, ws, mid, toInput(st.Overrides))
+			if cerr == nil && len(conflicts) > 0 {
+				return Reply{Text: formatConflictWarning(conflicts), Keyboard: conflictKeyboard(), Edit: true}
+			}
+		}
+	}
+	return s.doApply(ctx, telegramID, st)
+}
+
+// applyForce skips the §4.7 conflict warning (user chose "Да, применить").
+func (s *Service) applyForce(ctx context.Context, telegramID int64) Reply {
+	st, err := s.sessions.Get(ctx, telegramID)
+	if err != nil || st == nil {
+		return Reply{Text: "Сессия истекла. Начни заново: /edit"}
+	}
+	return s.doApply(ctx, telegramID, st)
+}
+
+func (s *Service) doApply(ctx context.Context, telegramID int64, st *State) Reply {
 	// IDs come from our own session (set in pick from uuid.UUID.String()); a parse
 	// failure would yield a zero UUID that UpdateMeeting rejects as ErrForbidden —
 	// safe degradation, so the parse errors are intentionally ignored.
@@ -272,6 +299,28 @@ func (s *Service) apply(ctx context.Context, telegramID int64) Reply {
 	}
 	_ = s.sessions.Del(ctx, telegramID)
 	return Reply{Text: "Готово ✏️\n" + summary(m)}
+}
+
+func formatConflictWarning(cs []application.Conflict) string {
+	loc, err := time.LoadLocation("Asia/Almaty")
+	if err != nil {
+		loc = time.FixedZone("Almaty", 5*60*60)
+	}
+	var b strings.Builder
+	b.WriteString("⚠ Внимание! У следующих участников уже есть встречи в это время:\n")
+	for _, c := range cs {
+		fmt.Fprintf(&b, "- %s — «%s» (%s–%s)\n",
+			c.PersonName, c.MeetingName, c.Start.In(loc).Format("15:04"), c.End.In(loc).Format("15:04"))
+	}
+	b.WriteString("\nПрименить изменения?")
+	return b.String()
+}
+
+func conflictKeyboard() [][]Button {
+	return [][]Button{{
+		{Text: "Да, применить", Data: "medit:applyforce"},
+		{Text: "Изменить время", Data: "medit:field:datetime"},
+	}}
 }
 
 func (s *Service) backToMenu(ctx context.Context, telegramID int64) Reply {
