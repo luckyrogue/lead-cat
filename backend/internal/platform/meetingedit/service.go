@@ -180,6 +180,9 @@ func (s *Service) field(ctx context.Context, telegramID int64, f string) Reply {
 		return Reply{Text: "Сессия истекла. Начни заново: /edit"}
 	}
 	if f == "rec" {
+		if st.Scope == "series" {
+			return menuReply(*st, true) // recurrence isn't series-editable; ignore stale taps
+		}
 		return recReply()
 	}
 	prompt, ok := fieldPrompts[f]
@@ -236,6 +239,9 @@ func (s *Service) apply(ctx context.Context, telegramID int64) Reply {
 			case errors.Is(err, application.ErrForbidden):
 				_ = s.sessions.Del(ctx, telegramID)
 				return Reply{Text: "Нет доступа к этой встрече."}
+			case errors.Is(err, postgres.ErrMeetingNotEditable):
+				_ = s.sessions.Del(ctx, telegramID)
+				return Reply{Text: "Часть серии больше недоступна для редактирования."}
 			default:
 				return Reply{Text: "Не удалось обновить серию, попробуй позже."}
 			}
