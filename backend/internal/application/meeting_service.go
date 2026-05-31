@@ -179,6 +179,19 @@ func (s *Services) enqueueCreated(ctx context.Context, workspaceID, meetingID uu
 	}
 }
 
+// enqueueCancelled best-effort enqueues the meeting-cancelled notification.
+func (s *Services) enqueueCancelled(ctx context.Context, workspaceID, meetingID uuid.UUID) {
+	if s.Queue == nil {
+		return
+	}
+	if err := s.Queue.EnqueueMeetingCancelled(ctx, workspaceID, meetingID); err != nil && s.Log != nil {
+		s.Log.Warn("enqueue meeting cancelled",
+			zap.String("workspace_id", workspaceID.String()),
+			zap.String("meeting_id", meetingID.String()),
+			zap.Error(err))
+	}
+}
+
 // seriesEvent is a created Google event paired with its span and computed name.
 type seriesEvent struct {
 	Span     meeting.Span
@@ -293,12 +306,19 @@ func (s *Services) CancelMeeting(ctx context.Context, workspaceID, userID, id uu
 	if !ownerOrOrganizer(w, m.OrganizerUserID, userID) {
 		return ErrForbidden
 	}
+	if m.Status != "scheduled" {
+		return nil // already cancelled or past — nothing to do
+	}
 	if m.GoogleEventID != "" {
 		if calSvc, ferr := s.Calendar.For(ctx, workspaceID); ferr == nil {
 			_ = calSvc.DeleteEvent(ctx, m.GoogleEventID) // best-effort
 		}
 	}
-	return s.Store.CancelMeeting(ctx, workspaceID, id)
+	if err := s.Store.CancelMeeting(ctx, workspaceID, id); err != nil {
+		return err
+	}
+	s.enqueueCancelled(ctx, workspaceID, id)
+	return nil
 }
 
 func orDefault(v, def string) string {

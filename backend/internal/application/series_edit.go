@@ -131,3 +131,49 @@ func (s *Services) UpdateSeries(ctx context.Context, workspaceID, userID, meetin
 	}
 	return len(rows), nil
 }
+
+// CancelSeries cancels the picked occurrence and all later scheduled ones of its
+// series (organizer or owner only): cancels in one atomic UPDATE, deletes the
+// Google events best-effort, and enqueues one cancellation notification. Returns
+// the number of occurrences cancelled.
+func (s *Services) CancelSeries(ctx context.Context, workspaceID, userID, meetingID uuid.UUID) (int, error) {
+	picked, err := s.Store.GetMeeting(ctx, workspaceID, meetingID)
+	if err != nil {
+		return 0, err
+	}
+	w, err := s.Store.GetWorkspace(ctx, workspaceID)
+	if err != nil {
+		return 0, err
+	}
+	if !ownerOrOrganizer(w, picked.OrganizerUserID, userID) {
+		return 0, ErrForbidden
+	}
+	if picked.SeriesID == nil {
+		return 0, fmt.Errorf("%w: not a series", ErrInvalidInput)
+	}
+	occs, err := s.Store.ListSeriesOccurrences(ctx, workspaceID, *picked.SeriesID, picked.StartsAt)
+	if err != nil {
+		return 0, err
+	}
+	n, err := s.Store.CancelSeriesOccurrences(ctx, workspaceID, *picked.SeriesID, picked.StartsAt)
+	if err != nil {
+		return 0, err
+	}
+	// Google best-effort: deletes are irreversible, so DB-first (above) keeps
+	// Postgres the source of truth; a lingering event is logged, not fatal.
+	if calSvc, ferr := s.Calendar.For(ctx, workspaceID); ferr != nil {
+		if s.Log != nil {
+			s.Log.Warn("cancel series calendar provider", zap.String("workspace_id", workspaceID.String()), zap.Error(ferr))
+		}
+	} else {
+		var ids []string
+		for _, oc := range occs {
+			if oc.GoogleEventID != "" {
+				ids = append(ids, oc.GoogleEventID)
+			}
+		}
+		s.deleteEventsBestEffort(ctx, calSvc, ids)
+	}
+	s.enqueueCancelled(ctx, workspaceID, meetingID)
+	return n, nil
+}
