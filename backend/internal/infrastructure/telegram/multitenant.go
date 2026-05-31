@@ -19,7 +19,14 @@ import (
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/botsettings"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/meetingedit"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/scenario_executor"
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/scheduleview"
 )
+
+// botBackend is the application surface the bot FSMs need (satisfied by *application.Services).
+type botBackend interface {
+	meetingedit.Backend
+	scheduleview.Backend
+}
 
 type MultiHandler struct {
 	store     *postgres.Store
@@ -27,20 +34,23 @@ type MultiHandler struct {
 	registrar *botreg.Service
 	settings  *botsettings.Service
 	editor    *meetingedit.Service
+	schedule  *scheduleview.Service
 	log       *zap.Logger
 }
 
-func NewMultiHandler(store *postgres.Store, cipher *crypto.TokenCipher, b *bot.Bot, rdb *redis.Client, adminIDs []int64, otpLog bool, editorBackend meetingedit.Backend, log *zap.Logger) *MultiHandler {
+func NewMultiHandler(store *postgres.Store, cipher *crypto.TokenCipher, b *bot.Bot, rdb *redis.Client, adminIDs []int64, otpLog bool, backend botBackend, log *zap.Logger) *MultiHandler {
 	otp := platformauth.NewOTP(rdb, log, otpLog)
 	registrar := botreg.New(store, otp, botreg.NewRedisSessions(rdb), adminIDs)
 	settings := botsettings.New(store)
-	editor := meetingedit.New(editorBackend, meetingedit.NewRedisSessions(rdb))
+	editor := meetingedit.New(backend, meetingedit.NewRedisSessions(rdb))
+	schedule := scheduleview.New(backend, scheduleview.NewRedisSessions(rdb))
 	return &MultiHandler{
 		store:     store,
 		executor:  scenario_executor.New(store, cipher, b, log),
 		registrar: registrar,
 		settings:  settings,
 		editor:    editor,
+		schedule:  schedule,
 		log:       log,
 	}
 }
@@ -68,6 +78,10 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 			}
 			if reply, handled := h.editor.OnText(ctx, from.ID, text); handled {
 				h.sendEditorReply(ctx, b, chatID, 0, reply)
+				return
+			}
+			if reply, handled := h.schedule.OnText(ctx, from.ID, text); handled {
+				h.sendSchedReply(ctx, b, chatID, 0, reply)
 			}
 		}
 		return
@@ -129,6 +143,14 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 		if isPrivate {
 			h.sendEditorReply(ctx, b, chatID, 0, h.editor.Start(ctx, from.ID))
 		}
+	case "/schedule":
+		if isPrivate {
+			if _, err := h.store.GetBotUserByTelegramID(ctx, from.ID); err != nil {
+				h.reply(ctx, b, update.Message, "Сначала зарегистрируйся: /start")
+				return
+			}
+			h.sendSchedReply(ctx, b, chatID, 0, h.schedule.Start(ctx, from.ID))
+		}
 	}
 }
 
@@ -149,6 +171,11 @@ func (h *MultiHandler) handleCallback(ctx context.Context, b *bot.Bot, cq *model
 	if strings.HasPrefix(cq.Data, "medit:") {
 		if reply, handled := h.editor.OnCallback(ctx, cq.From.ID, cq.Data); handled && cq.Message.Message != nil {
 			h.sendEditorReply(ctx, b, cq.Message.Message.Chat.ID, cq.Message.Message.ID, reply)
+		}
+	}
+	if strings.HasPrefix(cq.Data, "sched:") {
+		if reply, handled := h.schedule.OnCallback(ctx, cq.From.ID, cq.Data); handled && cq.Message.Message != nil {
+			h.sendSchedReply(ctx, b, cq.Message.Message.Chat.ID, cq.Message.Message.ID, reply)
 		}
 	}
 	_, _ = b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{CallbackQueryID: cq.ID})
@@ -172,6 +199,35 @@ func (h *MultiHandler) sendEditorReply(ctx context.Context, b *bot.Bot, chatID i
 }
 
 func toMeditMarkup(rows [][]meetingedit.Button) models.InlineKeyboardMarkup {
+	var kb [][]models.InlineKeyboardButton
+	for _, row := range rows {
+		var r []models.InlineKeyboardButton
+		for _, btn := range row {
+			r = append(r, models.InlineKeyboardButton{Text: btn.Text, CallbackData: btn.Data})
+		}
+		kb = append(kb, r)
+	}
+	return models.InlineKeyboardMarkup{InlineKeyboard: kb}
+}
+
+func (h *MultiHandler) sendSchedReply(ctx context.Context, b *bot.Bot, chatID int64, msgID int, reply scheduleview.Reply) {
+	if reply.Text == "" {
+		return
+	}
+	var markup models.ReplyMarkup
+	if len(reply.Keyboard) > 0 {
+		markup = toSchedMarkup(reply.Keyboard)
+	}
+	if reply.Edit && msgID != 0 {
+		_, _ = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+			ChatID: chatID, MessageID: msgID, Text: reply.Text, ReplyMarkup: markup,
+		})
+		return
+	}
+	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: chatID, Text: reply.Text, ReplyMarkup: markup})
+}
+
+func toSchedMarkup(rows [][]scheduleview.Button) models.InlineKeyboardMarkup {
 	var kb [][]models.InlineKeyboardButton
 	for _, row := range rows {
 		var r []models.InlineKeyboardButton
