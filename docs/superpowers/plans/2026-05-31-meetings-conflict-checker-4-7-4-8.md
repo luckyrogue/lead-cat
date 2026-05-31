@@ -4,29 +4,40 @@
 
 **Goal:** Add a time-conflict warning on meeting edit (§4.7) and a common-free-time checker (§4.8) to the meetings feature, exposed via both the Telegram bot and REST.
 
-**Architecture:** A pure interval core in `domain/meeting` (`Overlaps`, `FreeSlots`), one new global-by-email repo query (`ListMeetingsOverlapping`), two read-only application methods (`MeetingConflicts`, `FreeSlots`) returning `[]Conflict` / `[]FreeSlot`, then four surfaces: the `/edit` FSM warning, a new `/checker` FSM, and two REST endpoints. Internal DB is the busyness source; queries are global-by-email with a hardcoded `Asia/Almaty` location, mirroring the shipped §4.6 `/schedule` flow.
+**Architecture:** A pure interval core in `domain/meeting` (`Overlaps`, `FreeSlots`); one new global-by-email repo query (`ListMeetingsOverlapping`); application read methods `MeetingConflicts` (low-level: emails+span), `MeetingUpdateConflicts` (resolves a pending edit's effective time + participants + organizer, then delegates), and `FreeSlots`. Surfaces: the `/edit` FSM warning, a new `/checker` FSM, and two REST endpoints. Internal DB is the busyness source; queries are global-by-email with a hardcoded `Asia/Almaty` location for the free-slot windows, mirroring the shipped §4.6 `/schedule`.
 
-**Tech Stack:** Go, Fiber, telebot, pgx/Postgres, Redis-backed FSM sessions, zap.
+**Tech Stack:** Go, Fiber, go-telegram/bot, pgx/Postgres, Redis-backed FSM sessions, zap.
 
 **Spec:** `docs/superpowers/specs/2026-05-31-meetings-conflict-checker-4-7-4-8-design.md`
 
-**Conventions (read before starting):**
-- Run all checks from the **repo root**: `make test && make lint && make build`. Run Go directly as `env -u GOROOT go ...` from `backend/`. **`make lint` includes a gofmt check** — always run it before committing; per-task `go test`/`go vet` will not catch gofmt drift.
+## Codebase facts (verified — rely on these, but confirm before editing)
+
+- **Module path:** `github.com/Jaryq-Lab/notify-bot` (NOT `lead-cat/backend`). Every import is `github.com/Jaryq-Lab/notify-bot/internal/...`.
+- **`Services` struct** (`internal/application/services.go`): fields `Store *postgres.Store`, `Calendar CalendarProvider`, `Queue Queuer`, `Log *zap.Logger`. Methods use receiver `s` and `s.Store`.
+- **`queryMeetings`** (`postgres/meeting_repo.go:148`) scans meeting rows only — it does **NOT** hydrate `Meeting.Participants`. To get participant emails for a meeting, call `s.Store.ListParticipants(ctx, meetingID)`. Organizer email: `s.Store.GetUserByID(ctx, *m.OrganizerUserID)` → `PlatformUser.Email`.
+- **`ListScheduleForEmail`** (`meeting_repo.go:241`) is the join shape to copy (participant OR organizer, global by email, `status='scheduled'`).
+- **`orDefault(a, b string) string`** exists at `meeting_service.go:200` (workspace TZ fallback to `Asia/Almaty`). Reuse it.
+- **Models** (`postgres/models.go`): `Meeting{ID *uuid.UUID, OrganizerUserID *uuid.UUID, StartsAt, EndsAt time.Time, Name string, ...}`; `MeetingParticipant{Email string, ...}`; `Employee{FullName, Email string, ...}`; `PlatformUser{Email string, ...}`.
+- **Bot FSM convention** (see `internal/platform/scheduleview/` and `meetingedit/`): each package defines its own `State`, `Button{Text, Data string}`, `Reply{Text string, Keyboard [][]Button, Edit bool}` (all in `state.go`), a `sessions` interface `Get/Set/Del` (where `Set` takes `State` by value), `New(backend, sess)`, `NewRedisSessions(rdb)` (in `redis_sessions.go`), and `Start` returns `Reply` while `OnText`/`OnCallback` return `(Reply, bool)` (bool = handled). There is **no** `keyboard.go` — keyboards are inline funcs in `service.go`.
+- **Dispatcher** (`internal/infrastructure/telegram/multitenant.go`): `botBackend` interface embeds `meetingedit.Backend` + `scheduleview.Backend`; each FSM gets a field on `MultiHandler`, a `sendXxxReply` + `toXxxMarkup` helper, a command `case` in `Handle`, an `OnText` call in the no-command private branch, and a prefix `case` in `handleCallback`. `/schedule` guards with `GetBotUserByTelegramID`.
+- **REST** (`internal/delivery/http/handlers/`): handler receiver is `*API` with field **`App`** (`a.App`); workspace id via `c.Locals("workspace_id").(uuid.UUID)`; body via `c.BodyParser`; errors via `fiber.NewError`. Routes in `internal/delivery/http/app.go` under the `ws` group (lines ~132–136).
+
+## Conventions
+
+- Run all checks from the **repo root**: `make test && make lint && make build`. Run Go directly as `env -u GOROOT go ...` from `backend/`. **`make lint` includes a gofmt check** — always run it before committing; per-task `go test`/`go vet` will not catch gofmt drift. If lint flags gofmt, run `cd backend && env -u GOROOT gofmt -w ./internal/...`.
 - Backend test convention: **pure logic is unit-tested; I/O paths (repo, REST handlers, bot wiring) are build-verified only** (no DB harness in the postgres package).
-- Bot FSMs live in `internal/platform/<name>` and share one shape: `Backend` interface + `Sessions` interface + `Service{Backend, Sessions}` with `Start`/`OnText`/`OnCallback` returning `*Reply{Text string, Keyboard *Keyboard, Edit bool}`; `Keyboard{Rows [][]Button}`, `Button{Text, Data string}`. Wired in `internal/infrastructure/telegram/multitenant.go`.
 - Do **not** touch `frontend/vite.config.ts` (long-standing local-only edit).
 - All times stored/compared in UTC; user-facing rendering uses `Asia/Almaty`.
 
-**File structure (created/modified):**
-- Create `backend/internal/domain/meeting/conflict.go` — `Overlaps`, `FreeSlots` (pure).
-- Create `backend/internal/domain/meeting/conflict_test.go` — unit tests.
-- Modify `backend/internal/infrastructure/persistence/postgres/meeting_repo.go` — add `ListMeetingsOverlapping`.
-- Create `backend/internal/application/conflict.go` — `Conflict`, `FreeSlot` types, `MeetingConflicts`, `FreeSlots`, constants.
-- Modify `backend/internal/platform/meetingedit/service.go`, `state.go`, `keyboard.go` — §4.7 warning.
-- Create `backend/internal/platform/checker/{state,service,parse,keyboard}.go` (+ `parse_test.go`) — `/checker` FSM.
+## File structure (created/modified)
+
+- Create `backend/internal/domain/meeting/conflict.go` + `conflict_test.go` — `Overlaps`, `FreeSlots` (pure).
+- Modify `backend/internal/infrastructure/persistence/postgres/meeting_repo.go` — `ListMeetingsOverlapping`.
+- Create `backend/internal/application/conflict.go` — `Conflict`, `FreeSlot`, constants, `MeetingConflicts`, `MeetingUpdateConflicts`, `FreeSlots`, `personName`.
+- Modify `backend/internal/platform/meetingedit/service.go` + `state.go` — §4.7 warning (extract `doApply`, add `applyForce`, conflict check).
+- Create `backend/internal/platform/checker/{state,service,parse,redis_sessions}.go` + `parse_test.go` — `/checker` FSM.
 - Modify `backend/internal/infrastructure/telegram/multitenant.go` — wire `/checker`.
-- Create `backend/internal/delivery/http/handlers/meeting_availability.go` — REST handlers.
-- Modify `backend/internal/delivery/http/app.go` — register two routes.
+- Create `backend/internal/delivery/http/handlers/meeting_availability.go` + modify `app.go` — REST.
 - Modify `docs/MEETINGS.md`, `PLAN.md` — status.
 
 ---
@@ -37,7 +48,7 @@
 - Create: `backend/internal/domain/meeting/conflict.go`
 - Test: `backend/internal/domain/meeting/conflict_test.go`
 
-This is pure logic — full TDD with real assertions.
+Pure logic — full TDD. `Span{Start, End time.Time}` already exists in `recurrence.go` (same package).
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -51,26 +62,24 @@ import (
 	"time"
 )
 
-func t(h, m int) time.Time {
-	return time.Date(2026, 6, 1, h, m, 0, 0, time.UTC)
-}
+func tm(h, m int) time.Time { return time.Date(2026, 6, 1, h, m, 0, 0, time.UTC) }
 
-func TestOverlaps(t1 *testing.T) {
+func TestOverlaps(t *testing.T) {
 	cases := []struct {
-		name                   string
-		aS, aE, bS, bE         time.Time
-		want                   bool
+		name           string
+		aS, aE, bS, bE time.Time
+		want           bool
 	}{
-		{"disjoint before", t(9, 0), t(10, 0), t(10, 0), t(11, 0), false}, // touching edge = no overlap
-		{"disjoint after", t(11, 0), t(12, 0), t(9, 0), t(10, 0), false},
-		{"partial", t(9, 0), t(10, 0), t(9, 30), t(11, 0), true},
-		{"full contain", t(9, 0), t(12, 0), t(10, 0), t(11, 0), true},
-		{"identical", t(9, 0), t(10, 0), t(9, 0), t(10, 0), true},
+		{"disjoint before", tm(9, 0), tm(10, 0), tm(10, 0), tm(11, 0), false}, // touching edge = no overlap
+		{"disjoint after", tm(11, 0), tm(12, 0), tm(9, 0), tm(10, 0), false},
+		{"partial", tm(9, 0), tm(10, 0), tm(9, 30), tm(11, 0), true},
+		{"full contain", tm(9, 0), tm(12, 0), tm(10, 0), tm(11, 0), true},
+		{"identical", tm(9, 0), tm(10, 0), tm(9, 0), tm(10, 0), true},
 	}
 	for _, c := range cases {
-		t1.Run(c.name, func(t1 *testing.T) {
+		t.Run(c.name, func(t *testing.T) {
 			if got := Overlaps(c.aS, c.aE, c.bS, c.bE); got != c.want {
-				t1.Fatalf("Overlaps=%v want %v", got, c.want)
+				t.Fatalf("Overlaps=%v want %v", got, c.want)
 			}
 		})
 	}
@@ -88,65 +97,51 @@ func spansEqual(a, b []Span) bool {
 	return true
 }
 
-func TestFreeSlots(t1 *testing.T) {
-	win, winEnd := t(9, 0), t(18, 0)
+func TestFreeSlots(t *testing.T) {
+	win, winEnd := tm(9, 0), tm(18, 0)
 	min := 30 * time.Minute
 
-	t1.Run("no busy = whole window", func(t1 *testing.T) {
-		got := FreeSlots(nil, win, winEnd, min)
-		want := []Span{{win, winEnd}}
+	t.Run("no busy = whole window", func(t *testing.T) {
+		if got := FreeSlots(nil, win, winEnd, min); !spansEqual(got, []Span{{win, winEnd}}) {
+			t.Fatalf("got %v", got)
+		}
+	})
+	t.Run("busy spanning window = none", func(t *testing.T) {
+		if got := FreeSlots([]Span{{tm(8, 0), tm(19, 0)}}, win, winEnd, min); len(got) != 0 {
+			t.Fatalf("got %v want empty", got)
+		}
+	})
+	t.Run("gaps around one meeting", func(t *testing.T) {
+		got := FreeSlots([]Span{{tm(11, 0), tm(12, 30)}}, win, winEnd, min)
+		want := []Span{{tm(9, 0), tm(11, 0)}, {tm(12, 30), tm(18, 0)}}
 		if !spansEqual(got, want) {
-			t1.Fatalf("got %v want %v", got, want)
+			t.Fatalf("got %v want %v", got, want)
 		}
 	})
-
-	t1.Run("busy spanning window = none", func(t1 *testing.T) {
-		busy := []Span{{t(8, 0), t(19, 0)}}
-		if got := FreeSlots(busy, win, winEnd, min); len(got) != 0 {
-			t1.Fatalf("got %v want empty", got)
-		}
-	})
-
-	t1.Run("gaps around one meeting", func(t1 *testing.T) {
-		busy := []Span{{t(11, 0), t(12, 30)}}
-		got := FreeSlots(busy, win, winEnd, min)
-		want := []Span{{t(9, 0), t(11, 0)}, {t(12, 30), t(18, 0)}}
+	t.Run("merge overlapping busy", func(t *testing.T) {
+		got := FreeSlots([]Span{{tm(11, 0), tm(12, 0)}, {tm(11, 30), tm(13, 0)}}, win, winEnd, min)
+		want := []Span{{tm(9, 0), tm(11, 0)}, {tm(13, 0), tm(18, 0)}}
 		if !spansEqual(got, want) {
-			t1.Fatalf("got %v want %v", got, want)
+			t.Fatalf("got %v want %v", got, want)
 		}
 	})
-
-	t1.Run("merge overlapping busy", func(t1 *testing.T) {
-		busy := []Span{{t(11, 0), t(12, 0)}, {t(11, 30), t(13, 0)}}
-		got := FreeSlots(busy, win, winEnd, min)
-		want := []Span{{t(9, 0), t(11, 0)}, {t(13, 0), t(18, 0)}}
+	t.Run("min-duration filter drops short gaps", func(t *testing.T) {
+		// leaves 9:00-9:15 and 17:45-18:00, both < 30m
+		if got := FreeSlots([]Span{{tm(9, 15), tm(17, 45)}}, win, winEnd, min); len(got) != 0 {
+			t.Fatalf("got %v want empty", got)
+		}
+	})
+	t.Run("busy outside window clipped", func(t *testing.T) {
+		got := FreeSlots([]Span{{tm(6, 0), tm(9, 30)}, {tm(18, 30), tm(20, 0)}}, win, winEnd, min)
+		if !spansEqual(got, []Span{{tm(9, 30), tm(18, 0)}}) {
+			t.Fatalf("got %v", got)
+		}
+	})
+	t.Run("unsorted busy input", func(t *testing.T) {
+		got := FreeSlots([]Span{{tm(15, 0), tm(16, 0)}, {tm(10, 0), tm(11, 0)}}, win, winEnd, min)
+		want := []Span{{tm(9, 0), tm(10, 0)}, {tm(11, 0), tm(15, 0)}, {tm(16, 0), tm(18, 0)}}
 		if !spansEqual(got, want) {
-			t1.Fatalf("got %v want %v", got, want)
-		}
-	})
-
-	t1.Run("min-duration filter drops short gap", func(t1 *testing.T) {
-		busy := []Span{{t(9, 15), t(17, 45)}} // leaves 9:00-9:15 (15m) and 17:45-18:00 (15m)
-		if got := FreeSlots(busy, win, winEnd, min); len(got) != 0 {
-			t1.Fatalf("got %v want empty (both gaps < 30m)", got)
-		}
-	})
-
-	t1.Run("busy outside window clipped", func(t1 *testing.T) {
-		busy := []Span{{t(6, 0), t(9, 30)}, {t(18, 30), t(20, 0)}}
-		got := FreeSlots(busy, win, winEnd, min)
-		want := []Span{{t(9, 30), t(18, 0)}}
-		if !spansEqual(got, want) {
-			t1.Fatalf("got %v want %v", got, want)
-		}
-	})
-
-	t1.Run("unsorted busy input", func(t1 *testing.T) {
-		busy := []Span{{t(15, 0), t(16, 0)}, {t(10, 0), t(11, 0)}}
-		got := FreeSlots(busy, win, winEnd, min)
-		want := []Span{{t(9, 0), t(10, 0)}, {t(11, 0), t(15, 0)}, {t(16, 0), t(18, 0)}}
-		if !spansEqual(got, want) {
-			t1.Fatalf("got %v want %v", got, want)
+			t.Fatalf("got %v want %v", got, want)
 		}
 	})
 }
@@ -155,7 +150,7 @@ func TestFreeSlots(t1 *testing.T) {
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `cd backend && env -u GOROOT go test ./internal/domain/meeting/ -run 'TestOverlaps|TestFreeSlots' -v`
-Expected: FAIL — `undefined: Overlaps`, `undefined: FreeSlots`.
+Expected: FAIL — `undefined: Overlaps` / `undefined: FreeSlots`.
 
 - [ ] **Step 3: Implement the core**
 
@@ -175,11 +170,10 @@ func Overlaps(aStart, aEnd, bStart, bEnd time.Time) bool {
 	return aStart.Before(bEnd) && bStart.Before(aEnd)
 }
 
-// FreeSlots returns the gaps in the working window [winStart,winEnd) not covered
-// by busy, keeping only gaps with duration >= minDur. busy spans are merged and
-// clipped to the window; input need not be sorted. Result is chronological. §4.8.3
+// FreeSlots returns the gaps in [winStart,winEnd) not covered by busy, keeping only
+// gaps with duration >= minDur. busy spans are clipped to the window and merged;
+// input need not be sorted. Result is chronological. §4.8.3
 func FreeSlots(busy []Span, winStart, winEnd time.Time, minDur time.Duration) []Span {
-	// Clip busy to the window and drop empties.
 	clipped := make([]Span, 0, len(busy))
 	for _, b := range busy {
 		s, e := b.Start, b.End
@@ -195,7 +189,6 @@ func FreeSlots(busy []Span, winStart, winEnd time.Time, minDur time.Duration) []
 	}
 	sort.Slice(clipped, func(i, j int) bool { return clipped[i].Start.Before(clipped[j].Start) })
 
-	// Merge overlapping/adjacent busy spans.
 	merged := make([]Span, 0, len(clipped))
 	for _, b := range clipped {
 		if n := len(merged); n > 0 && !b.Start.After(merged[n-1].End) {
@@ -207,7 +200,6 @@ func FreeSlots(busy []Span, winStart, winEnd time.Time, minDur time.Duration) []
 		merged = append(merged, b)
 	}
 
-	// Walk the gaps between merged busy spans.
 	var free []Span
 	cursor := winStart
 	add := func(s, e time.Time) {
@@ -233,7 +225,7 @@ func FreeSlots(busy []Span, winStart, winEnd time.Time, minDur time.Duration) []
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `cd backend && env -u GOROOT go test ./internal/domain/meeting/ -run 'TestOverlaps|TestFreeSlots' -v`
-Expected: PASS (all subtests).
+Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
@@ -249,16 +241,17 @@ git commit -m "feat(meetings): pure interval core (Overlaps, FreeSlots) §4.7-4.
 **Files:**
 - Modify: `backend/internal/infrastructure/persistence/postgres/meeting_repo.go`
 
-Build-verified (no DB harness). First **read** `ListScheduleForEmail` (~line 241) and the `queryMeetingsWithParticipants` helper in this file to match the exact patterns (column const `meetingColsM`, participant hydration).
+Build-verified. Read `ListScheduleForEmail` (line ~241) first to match `meetingColsM` and `queryMeetings` usage exactly.
 
 - [ ] **Step 1: Add the query**
 
-Append to `backend/internal/infrastructure/persistence/postgres/meeting_repo.go` (after `ListScheduleForEmail`). Use the same participant-hydrating helper that `ListScheduleForEmail` uses — if `ListScheduleForEmail` calls `queryMeetings`, use `queryMeetings`; if it hydrates participants, use the same hydrating helper. The body below assumes `queryMeetings` (adjust to match):
+Append after `ListScheduleForEmail`:
 
 ```go
 // ListMeetingsOverlapping returns scheduled meetings overlapping [from,to) where any
 // of emails is a participant or the organizer (by platform_users.email). Global by
-// email (no workspace scope), mirroring ListScheduleForEmail. §4.7/§4.8
+// email (no workspace scope), mirroring ListScheduleForEmail. Participants are NOT
+// hydrated (use ListParticipants for attribution). §4.7/§4.8
 func (s *Store) ListMeetingsOverlapping(ctx context.Context, emails []string, from, to time.Time) ([]Meeting, error) {
 	if len(emails) == 0 {
 		return nil, nil
@@ -275,8 +268,6 @@ func (s *Store) ListMeetingsOverlapping(ctx context.Context, emails []string, fr
 }
 ```
 
-> **If** `MeetingConflicts` (Task 3) needs each meeting's participant emails to attribute conflicts and `queryMeetings` does NOT hydrate participants, use `queryMeetingsWithParticipants` instead so `Meeting.Participants` is populated. Verify which helper hydrates participants before choosing.
-
 - [ ] **Step 2: Build-verify**
 
 Run: `cd backend && env -u GOROOT go build ./... && env -u GOROOT go vet ./internal/infrastructure/persistence/postgres/`
@@ -291,12 +282,12 @@ git commit -m "feat(meetings): ListMeetingsOverlapping repo query §4.7-4.8"
 
 ---
 
-## Task 3: Application types + `MeetingConflicts` + `FreeSlots`
+## Task 3: Application layer — types + conflict + free-slot methods
 
 **Files:**
 - Create: `backend/internal/application/conflict.go`
 
-First **read** `backend/internal/application/participants.go` (for the `Services` receiver, `EmployeeSchedule` pattern, imports) and confirm how an organizer's display name/email is reachable (employee directory + `platform_users`). `PersonName` resolution is best-effort: prefer a directory lookup, fall back to the raw email.
+Read `internal/application/participants.go` (for `s.Store`, `SearchEmployeesGlobal`, import style) and `meeting_service.go:200` (`orDefault`). Build-verified (no DB harness).
 
 - [ ] **Step 1: Create the application layer**
 
@@ -311,11 +302,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"lead-cat/backend/internal/domain/meeting"
-	"lead-cat/backend/internal/infrastructure/persistence/postgres"
+
+	"github.com/Jaryq-Lab/notify-bot/internal/domain/meeting"
 )
 
-// almatyLoc is the base timezone for meeting availability (UTC+5). §4.8
+// almatyLoc is the base timezone for free-slot windows (UTC+5). §4.8
 var almatyLoc = func() *time.Location {
 	loc, err := time.LoadLocation("Asia/Almaty")
 	if err != nil {
@@ -345,7 +336,9 @@ type FreeSlot struct {
 }
 
 // MeetingConflicts returns overlaps with [start,end) across emails (participants +
-// organizer), excluding excludeMeetingID (uuid.Nil = none). Global by email. §4.7
+// organizer of each overlapping meeting), excluding excludeMeetingID (uuid.Nil =
+// none). Attribution is done in Go: per overlapping meeting we load its participants
+// and organizer email and keep those in the queried set. Global by email. §4.7
 func (s *Services) MeetingConflicts(ctx context.Context, emails []string, start, end time.Time, excludeMeetingID uuid.UUID) ([]Conflict, error) {
 	if len(emails) == 0 {
 		return nil, nil
@@ -360,26 +353,104 @@ func (s *Services) MeetingConflicts(ctx context.Context, emails []string, start,
 	}
 	var out []Conflict
 	for _, m := range ms {
-		if m.ID != nil && *m.ID == excludeMeetingID {
+		if m.ID == nil || *m.ID == excludeMeetingID {
 			continue
 		}
 		if !meeting.Overlaps(start, end, m.StartsAt, m.EndsAt) {
 			continue
 		}
-		// Attribute to each queried email that is on this meeting (participant or organizer).
-		for _, p := range m.Participants {
+		hit := map[string]bool{}
+		parts, perr := s.Store.ListParticipants(ctx, *m.ID)
+		if perr != nil {
+			return nil, perr
+		}
+		for _, p := range parts {
 			if want[p.Email] {
-				out = append(out, Conflict{
-					Email:       p.Email,
-					PersonName:  s.personName(ctx, p.Email),
-					MeetingName: m.Name,
-					Start:       m.StartsAt,
-					End:         m.EndsAt,
-				})
+				hit[p.Email] = true
 			}
 		}
+		if m.OrganizerUserID != nil {
+			if u, uerr := s.Store.GetUserByID(ctx, *m.OrganizerUserID); uerr == nil && want[u.Email] {
+				hit[u.Email] = true
+			}
+		}
+		for email := range hit {
+			out = append(out, Conflict{
+				Email:       email,
+				PersonName:  s.personName(ctx, email),
+				MeetingName: m.Name,
+				Start:       m.StartsAt,
+				End:         m.EndsAt,
+			})
+		}
 	}
+	// Deterministic order (map iteration above is unordered).
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Start.Equal(out[j].Start) {
+			return out[i].Email < out[j].Email
+		}
+		return out[i].Start.Before(out[j].Start)
+	})
 	return out, nil
+}
+
+// MeetingUpdateConflicts resolves a pending single-meeting edit's effective time,
+// participants and organizer, then checks §4.7 conflicts (excluding the meeting
+// itself). Returns nil when the edit does not change the time (overlap unchanged).
+func (s *Services) MeetingUpdateConflicts(ctx context.Context, workspaceID, meetingID uuid.UUID, in UpdateMeetingInput) ([]Conflict, error) {
+	if in.Date == nil || in.Start == nil || in.End == nil {
+		return nil, nil // no time change → overlap set is unchanged
+	}
+	w, err := s.Store.GetWorkspace(ctx, workspaceID)
+	if err != nil {
+		return nil, err
+	}
+	loc, err := time.LoadLocation(orDefault(w.TZ, "Asia/Almaty"))
+	if err != nil {
+		loc = almatyLoc
+	}
+	start, err := time.ParseInLocation("2006-01-02 15:04", *in.Date+" "+*in.Start, loc)
+	if err != nil {
+		return nil, nil // malformed time is rejected later by UpdateMeeting
+	}
+	end, err := time.ParseInLocation("2006-01-02 15:04", *in.Date+" "+*in.End, loc)
+	if err != nil {
+		return nil, nil
+	}
+	emails, err := s.meetingEmails(ctx, workspaceID, meetingID)
+	if err != nil {
+		return nil, err
+	}
+	return s.MeetingConflicts(ctx, emails, start.UTC(), end.UTC(), meetingID)
+}
+
+// meetingEmails returns a meeting's participant emails plus its organizer email.
+func (s *Services) meetingEmails(ctx context.Context, workspaceID, meetingID uuid.UUID) ([]string, error) {
+	m, err := s.Store.GetMeeting(ctx, workspaceID, meetingID)
+	if err != nil {
+		return nil, err
+	}
+	parts, err := s.Store.ListParticipants(ctx, meetingID)
+	if err != nil {
+		return nil, err
+	}
+	seen := map[string]bool{}
+	var emails []string
+	add := func(e string) {
+		if e != "" && !seen[e] {
+			seen[e] = true
+			emails = append(emails, e)
+		}
+	}
+	for _, p := range parts {
+		add(p.Email)
+	}
+	if m.OrganizerUserID != nil {
+		if u, uerr := s.Store.GetUserByID(ctx, *m.OrganizerUserID); uerr == nil {
+			add(u.Email)
+		}
+	}
+	return emails, nil
 }
 
 // personName resolves a display name for an email (best-effort; falls back to email).
@@ -413,14 +484,12 @@ func (s *Services) FreeSlots(ctx context.Context, emails []string, from, to time
 
 	var out []FreeSlot
 	for day := from.In(almatyLoc); day.Before(to); day = day.AddDate(0, 0, 1) {
-		wd := day.Weekday()
-		if wd == time.Saturday || wd == time.Sunday {
+		if wd := day.Weekday(); wd == time.Saturday || wd == time.Sunday {
 			continue
 		}
 		sod := time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, almatyLoc)
 		winStart := time.Date(day.Year(), day.Month(), day.Day(), workStartHour, 0, 0, 0, almatyLoc)
 		winEnd := time.Date(day.Year(), day.Month(), day.Day(), workEndHour, 0, 0, 0, almatyLoc)
-		// Collect busy spans intersecting this day's window.
 		var dayBusy []meeting.Span
 		for _, b := range busy {
 			if meeting.Overlaps(b.Start, b.End, winStart, winEnd) {
@@ -428,20 +497,14 @@ func (s *Services) FreeSlots(ctx context.Context, emails []string, from, to time
 			}
 		}
 		for _, f := range meeting.FreeSlots(dayBusy, winStart, winEnd, minDur) {
-			out = append(out, FreeSlot{
-				Day:   sod,
-				Start: f.Start,
-				End:   f.End,
-				Mins:  int(f.End.Sub(f.Start).Minutes()),
-			})
+			out = append(out, FreeSlot{Day: sod, Start: f.Start, End: f.End, Mins: int(f.End.Sub(f.Start).Minutes())})
 		}
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].Start.Before(out[j].Start) })
 	return out, nil
 }
 ```
 
-> **Adjust to reality:** confirm `s.Store` is the field name, that `postgres.Meeting` exposes `ID *uuid.UUID`, `StartsAt`, `EndsAt`, `Name`, `Participants []postgres.MeetingParticipant`, and `MeetingParticipant.Email`. If `Meeting.Participants` is NOT hydrated by the helper chosen in Task 2, switch Task 2 to `queryMeetingsWithParticipants`. Confirm `postgres.Employee` has `FullName`/`Email`.
+> **Confirm before building:** `UpdateMeetingInput` has `Date, Start, End *string` (it does — `meeting_update.go`). `Workspace.TZ`, `GetWorkspace`, `GetMeeting`, `GetUserByID`, `ListParticipants`, `SearchEmployeesGlobal` all exist on `*postgres.Store` / `*Services`.
 
 - [ ] **Step 2: Build + vet**
 
@@ -452,7 +515,7 @@ Expected: no errors.
 
 ```bash
 git add backend/internal/application/conflict.go
-git commit -m "feat(meetings): MeetingConflicts + FreeSlots application methods §4.7-4.8"
+git commit -m "feat(meetings): MeetingConflicts/MeetingUpdateConflicts/FreeSlots §4.7-4.8"
 ```
 
 ---
@@ -461,112 +524,123 @@ git commit -m "feat(meetings): MeetingConflicts + FreeSlots application methods 
 
 **Files:**
 - Modify: `backend/internal/platform/meetingedit/service.go`
-- Modify: `backend/internal/platform/meetingedit/keyboard.go`
 
-First **read** `service.go` fully: the `Backend` interface, `OnCallback` switch (routes by `parts[1]`), `handleApply`/`applyResult`, `handleField` (datetime returns to the date step), and how the current meeting + participants + organizer email are available in `State` / via the backend. The warning fires when the user taps **Apply** after changing the datetime.
+Read `service.go`: the `Backend` interface (line ~20), `OnCallback` switch (~65), and `apply()` (~222). The warning fires only on the **single-meeting** path (scope ≠ "series") when the datetime changed; series time-edit conflict checking is out of scope (documented).
 
 - [ ] **Step 1: Extend the Backend interface**
 
-In `service.go`, add to the `meetingedit` `Backend` interface:
+Add to the `meetingedit` `Backend` interface (imports `application`, `uuid`, `context` already present):
 
 ```go
-	MeetingConflicts(ctx context.Context, emails []string, start, end time.Time, excludeMeetingID uuid.UUID) ([]application.Conflict, error)
+	MeetingUpdateConflicts(ctx context.Context, workspaceID, meetingID uuid.UUID, in application.UpdateMeetingInput) ([]application.Conflict, error)
 ```
 
-(Ensure `time` and `application` are imported. `*application.Services` already implements this from Task 3.)
+(`*application.Services` implements this from Task 3.)
 
-- [ ] **Step 2: Add a forced-apply callback + conflict check**
+- [ ] **Step 2: Extract `doApply`, add the conflict check + `applyForce`**
 
-In `OnCallback`'s switch, add a case alongside `"apply"`:
+Refactor `apply()`. Keep the existing scope/empty-overrides guards and the existing UpdateMeeting/UpdateSeries body, but move the body that runs **after** the guards into a new `doApply(ctx, telegramID, st)` method. Then make `apply` run the conflict check first. Concretely:
 
-```go
-	case "applyforce":
-		return s.applyResult(ctx, telegramID, st)
-```
-
-Change `handleApply` so that — when a datetime override is present — it checks conflicts before applying. Replace the body of `handleApply` with:
+Replace the current `apply` function with:
 
 ```go
-func (s *Service) handleApply(ctx context.Context, telegramID int64, st *State) (*Reply, error) {
+func (s *Service) apply(ctx context.Context, telegramID int64) Reply {
+	st, err := s.sessions.Get(ctx, telegramID)
+	if err != nil || st == nil {
+		return Reply{Text: "Сессия истекла. Начни заново: /edit"}
+	}
 	if st.SeriesID != "" && st.Scope == "" {
-		return s.scopeReply(), nil
+		return Reply{Text: "Сначала выбери: эту встречу или всю серию.", Keyboard: scopeReply().Keyboard, Edit: true}
 	}
-	if r, err := s.maybeConflictWarning(ctx, st); err != nil {
-		return nil, err
-	} else if r != nil {
-		return r, nil
+	if len(st.Overrides) == 0 {
+		return Reply{Text: "Нет изменений. Выбери поле или нажми «Отмена».", Keyboard: menuKeyboard(st.Scope), Edit: true}
 	}
-	return s.applyResult(ctx, telegramID, st)
+	// §4.7: on a single-meeting time change, warn about participant/organizer overlaps.
+	if st.Scope != "series" {
+		if _, ok := st.Overrides["date"]; ok {
+			ws, _ := uuid.Parse(st.WorkspaceID)
+			mid, _ := uuid.Parse(st.MeetingID)
+			conflicts, cerr := s.backend.MeetingUpdateConflicts(ctx, ws, mid, toInput(st.Overrides))
+			if cerr == nil && len(conflicts) > 0 {
+				return Reply{Text: formatConflictWarning(conflicts), Keyboard: conflictKeyboard(), Edit: true}
+			}
+		}
+	}
+	return s.doApply(ctx, telegramID, st)
 }
 
-// maybeConflictWarning returns a §4.7 warning Reply if the (possibly edited) time
-// overlaps any participant's or the organizer's other meetings; nil = no conflict.
-func (s *Service) maybeConflictWarning(ctx context.Context, st *State) (*Reply, error) {
-	// Resolve the effective start/end: edited datetime override if present, else current.
-	start, end, ok := st.effectiveSpan()
-	if !ok {
-		return nil, nil // no datetime info to check
+// applyForce skips the §4.7 conflict warning (user chose "Да, применить").
+func (s *Service) applyForce(ctx context.Context, telegramID int64) Reply {
+	st, err := s.sessions.Get(ctx, telegramID)
+	if err != nil || st == nil {
+		return Reply{Text: "Сессия истекла. Начни заново: /edit"}
 	}
-	emails := st.participantEmails() // participants + organizer email
-	if len(emails) == 0 {
-		return nil, nil
-	}
-	mID, _ := uuid.Parse(st.MeetingID)
-	conflicts, err := s.Backend.MeetingConflicts(ctx, emails, start, end, mID)
-	if err != nil {
-		return nil, err
-	}
-	if len(conflicts) == 0 {
-		return nil, nil
-	}
-	return &Reply{Text: formatConflictWarning(conflicts), Keyboard: conflictKeyboard()}, nil
+	return s.doApply(ctx, telegramID, st)
 }
 ```
 
-> **Adapt to the real `State`:** implement `effectiveSpan()` and `participantEmails()` as small helpers (or inline) using whatever the FSM already stores. The datetime override lives in `st.Overrides` (parsed via the existing `parseDateTime`); current values are in `st.Cur`. Participant emails are in `st.PartList`; the organizer's email must be included — if it's not already in state, load it via the backend's meeting-for-edit method. Convert the local datetime to UTC the same way `applyResult`/`UpdateMeeting` does. If wiring the exact emails proves heavy, at minimum check `st.PartList`; note any omission in the task's commit message.
+Create `doApply` containing the **existing** post-guard body of the old `apply` (the `ws, _ := uuid.Parse(...)` lines through the UpdateSeries/UpdateMeeting error handling and final success reply). Its signature:
 
-- [ ] **Step 3: Add the warning text + keyboard**
+```go
+func (s *Service) doApply(ctx context.Context, telegramID int64, st *State) Reply {
+	ws, _ := uuid.Parse(st.WorkspaceID)
+	uid, _ := uuid.Parse(st.UserID)
+	mid, _ := uuid.Parse(st.MeetingID)
+	// ... (verbatim existing body: if st.Scope == "series" { UpdateSeries ... } else { UpdateMeeting ... })
+}
+```
 
-Add to `service.go` (or a small new file `conflict.go` in the package):
+> Move the existing logic verbatim; do not rewrite it. Only the outer guards moved up into `apply`.
+
+- [ ] **Step 3: Add the warning text + keyboard helpers**
+
+Add to `service.go` (package already imports `fmt`, `strings`, `time`, `application`):
 
 ```go
 func formatConflictWarning(cs []application.Conflict) string {
-	loc, _ := time.LoadLocation("Asia/Almaty")
+	loc, err := time.LoadLocation("Asia/Almaty")
+	if err != nil {
+		loc = time.FixedZone("Almaty", 5*60*60)
+	}
 	var b strings.Builder
 	b.WriteString("⚠ Внимание! У следующих участников уже есть встречи в это время:\n")
 	for _, c := range cs {
-		s := c.Start.In(loc).Format("15:04")
-		e := c.End.In(loc).Format("15:04")
-		fmt.Fprintf(&b, "- %s — «%s» (%s–%s)\n", c.PersonName, c.MeetingName, s, e)
+		fmt.Fprintf(&b, "- %s — «%s» (%s–%s)\n",
+			c.PersonName, c.MeetingName, c.Start.In(loc).Format("15:04"), c.End.In(loc).Format("15:04"))
 	}
 	b.WriteString("\nПродолжить создание встречи?")
 	return b.String()
 }
-```
 
-In `keyboard.go` add:
-
-```go
-func conflictKeyboard() *Keyboard {
-	return &Keyboard{Rows: [][]Button{{
+func conflictKeyboard() [][]Button {
+	return [][]Button{{
 		{Text: "Да, применить", Data: "medit:applyforce"},
 		{Text: "Изменить время", Data: "medit:field:datetime"},
-	}}}
+	}}
 }
 ```
 
-(`medit:field:datetime` reuses the existing handler that returns the user to the datetime step keeping other overrides.)
+(`medit:field:datetime` reuses the existing `field` handler, which returns to the datetime step keeping other overrides.)
 
-- [ ] **Step 4: Build + vet + existing tests**
+- [ ] **Step 4: Route the new callback**
+
+In `OnCallback`'s switch, add right after the `case data == "medit:apply":` line:
+
+```go
+	case data == "medit:applyforce":
+		return s.applyForce(ctx, telegramID), true
+```
+
+- [ ] **Step 5: Build + vet + existing tests**
 
 Run: `cd backend && env -u GOROOT go build ./... && env -u GOROOT go vet ./internal/platform/meetingedit/ && env -u GOROOT go test ./internal/platform/meetingedit/`
 Expected: builds; existing tests pass.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
 git add backend/internal/platform/meetingedit/
-git commit -m "feat(meetings): §4.7 conflict warning on /edit apply"
+git commit -m "feat(meetings): §4.7 conflict warning on /edit single-meeting apply"
 ```
 
 ---
@@ -575,14 +649,14 @@ git commit -m "feat(meetings): §4.7 conflict warning on /edit apply"
 
 **Files:**
 - Create: `backend/internal/platform/checker/state.go`
-- Create: `backend/internal/platform/checker/keyboard.go`
+- Create: `backend/internal/platform/checker/redis_sessions.go`
 - Create: `backend/internal/platform/checker/parse.go`
 - Create: `backend/internal/platform/checker/service.go`
 - Test: `backend/internal/platform/checker/parse_test.go`
 
-First **read** `internal/platform/scheduleview/` (all four files) — `/checker` mirrors it closely. Reuse the `parseRange` date convention from `scheduleview/parse.go`.
+Read `internal/platform/scheduleview/` (all files) — `/checker` mirrors it (Reply value+bool, `Get/Set/Del`, `[][]Button`, `NewRedisSessions`).
 
-- [ ] **Step 1: State**
+- [ ] **Step 1: State + Reply/Button**
 
 Create `backend/internal/platform/checker/state.go`:
 
@@ -590,7 +664,7 @@ Create `backend/internal/platform/checker/state.go`:
 // Package checker drives the /checker common-free-time bot flow (§4.8).
 package checker
 
-// Step values for the checker FSM.
+// Steps for the checker FSM.
 const (
 	stepParticipants = "participants"
 	stepRange        = "range"
@@ -599,44 +673,32 @@ const (
 
 // State is the persisted /checker conversation state.
 type State struct {
-	Step    string   `json:"step"`
-	Emails  []string `json:"emails"`  // chosen participant emails
-	Names   []string `json:"names"`   // parallel display names
-	From    string   `json:"from"`    // YYYY-MM-DD
-	To      string   `json:"to"`      // YYYY-MM-DD
-}
-```
-
-- [ ] **Step 2: Keyboard**
-
-Create `backend/internal/platform/checker/keyboard.go`:
-
-```go
-package checker
-
-// Keyboard / Button mirror the other FSM packages.
-type Keyboard struct {
-	Rows [][]Button
+	Step   string   `json:"step"`
+	Emails []string `json:"emails,omitempty"` // chosen participant emails
+	Cands  []string `json:"cands,omitempty"`  // last search candidates (index → email)
+	From   string   `json:"from,omitempty"`   // YYYY-MM-DD (inclusive)
+	To     string   `json:"to,omitempty"`     // YYYY-MM-DD (inclusive)
 }
 
+// Button is one inline-keyboard button.
 type Button struct {
 	Text string
 	Data string
 }
 
-// durationKeyboard offers the §4.8.2 duration presets (minutes).
-func durationKeyboard() *Keyboard {
-	return &Keyboard{Rows: [][]Button{
-		{{Text: "15 мин", Data: "chk:dur:15"}, {Text: "30 мин", Data: "chk:dur:30"}, {Text: "45 мин", Data: "chk:dur:45"}},
-		{{Text: "1 час", Data: "chk:dur:60"}, {Text: "1.5 часа", Data: "chk:dur:90"}, {Text: "2 часа", Data: "chk:dur:120"}},
-	}}
-}
-
-// doneKeyboard lets the user finish picking participants.
-func doneKeyboard() *Keyboard {
-	return &Keyboard{Rows: [][]Button{{{Text: "Готово", Data: "chk:done"}}}}
+// Reply is what the FSM returns for the handler to send.
+type Reply struct {
+	Text     string
+	Keyboard [][]Button
+	Edit     bool
 }
 ```
+
+- [ ] **Step 2: Redis sessions**
+
+Copy `backend/internal/platform/scheduleview/redis_sessions.go` to `backend/internal/platform/checker/redis_sessions.go`, change the package to `checker`, and change the Redis key prefix from the scheduleview one to `"checker:"` (keep the same TTL). Keep the `Get/Set/Del` method set and the `NewRedisSessions(rdb *redis.Client)` constructor.
+
+> Read scheduleview's file and mirror it exactly; only the package name, key prefix, and the `*State` type (already `checker.State`) change.
 
 - [ ] **Step 3: Parse helpers + test**
 
@@ -659,8 +721,8 @@ func almaty() *time.Location {
 	return loc
 }
 
-// parseRange parses "YYYY-MM-DD..YYYY-MM-DD" into [from,to) where to is the day
-// AFTER the end date (exclusive). End must not precede start.
+// parseRange parses "YYYY-MM-DD..YYYY-MM-DD" into inclusive (from,to) dates.
+// End must not precede start.
 func parseRange(s string, loc *time.Location) (from, to time.Time, err error) {
 	parts := strings.SplitN(strings.TrimSpace(s), "..", 2)
 	if len(parts) != 2 {
@@ -674,7 +736,7 @@ func parseRange(s string, loc *time.Location) (from, to time.Time, err error) {
 	if d2.Before(d1) {
 		return time.Time{}, time.Time{}, fmt.Errorf("конец раньше начала")
 	}
-	return d1, d2.AddDate(0, 0, 1), nil
+	return d1, d2, nil
 }
 
 var ruWeekday = map[time.Weekday]string{
@@ -705,7 +767,7 @@ func TestParseRange(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
-	if from.Day() != 1 || to.Day() != 4 { // to is exclusive (day after end)
+	if from.Day() != 1 || to.Day() != 3 {
 		t.Fatalf("from=%v to=%v", from, to)
 	}
 	if _, _, err := parseRange("2026-06-03..2026-06-01", loc); err == nil {
@@ -725,12 +787,7 @@ func TestDayLabel(t *testing.T) {
 }
 ```
 
-- [ ] **Step 4: Run parse tests (fail → pass)**
-
-Run: `cd backend && env -u GOROOT go test ./internal/platform/checker/ -v`
-Expected first: FAIL to compile (no `service.go` yet is fine; package still compiles with these files). If it compiles, tests PASS. If `service.go` references are needed to compile, proceed to Step 5 then re-run.
-
-- [ ] **Step 5: Service**
+- [ ] **Step 4: Service**
 
 Create `backend/internal/platform/checker/service.go`:
 
@@ -744,163 +801,167 @@ import (
 	"strings"
 	"time"
 
-	"lead-cat/backend/internal/application"
-	"lead-cat/backend/internal/infrastructure/persistence/postgres"
+	"github.com/Jaryq-Lab/notify-bot/internal/application"
+	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
 )
 
-// Backend is the application surface the checker FSM needs.
+// Backend is the application surface the checker FSM needs (satisfied by *application.Services).
 type Backend interface {
 	SearchEmployeesGlobal(ctx context.Context, query string) ([]postgres.Employee, error)
 	FreeSlots(ctx context.Context, emails []string, from, to time.Time, durMins int) ([]application.FreeSlot, error)
 }
 
-// Sessions persists FSM state across bot updates (Redis-backed).
-type Sessions interface {
-	Load(ctx context.Context, telegramID int64) (*State, error)
-	Save(ctx context.Context, telegramID int64, st *State) error
-	Clear(ctx context.Context, telegramID int64) error
+type sessions interface {
+	Get(ctx context.Context, telegramID int64) (*State, error)
+	Set(ctx context.Context, telegramID int64, s State) error
+	Del(ctx context.Context, telegramID int64) error
 }
 
-// Service implements the /checker conversation.
 type Service struct {
-	Backend  Backend
-	Sessions Sessions
+	backend  Backend
+	sessions sessions
 }
 
-// New builds the checker service.
-func New(b Backend, s Sessions) *Service { return &Service{Backend: b, Sessions: s} }
-
-// Reply is one bot response.
-type Reply struct {
-	Text     string
-	Keyboard *Keyboard
-	Edit     bool
+func New(backend Backend, sess sessions) *Service {
+	return &Service{backend: backend, sessions: sess}
 }
 
-// Start begins the /checker flow.
-func (s *Service) Start(ctx context.Context, telegramID int64) (*Reply, error) {
-	st := &State{Step: stepParticipants}
-	if err := s.Sessions.Save(ctx, telegramID, st); err != nil {
-		return nil, err
-	}
-	return &Reply{Text: "Поиск общего свободного времени.\nВведите имя или email участника:"}, nil
+// Start handles /checker: prompts for the first participant.
+func (s *Service) Start(ctx context.Context, telegramID int64) Reply {
+	_ = s.sessions.Set(ctx, telegramID, State{Step: stepParticipants})
+	return Reply{Text: "Поиск общего свободного времени.\nВведи имя или email участника:"}
 }
 
-// OnText handles a free-text message during the flow.
-func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (*Reply, error) {
-	st, err := s.Sessions.Load(ctx, telegramID)
+// OnText feeds free text into the active step. bool=false when no active session.
+func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Reply, bool) {
+	st, err := s.sessions.Get(ctx, telegramID)
 	if err != nil || st == nil {
-		return nil, err
+		return Reply{}, false
 	}
+	text = strings.TrimSpace(text)
 	switch st.Step {
 	case stepParticipants:
-		return s.handleSearch(ctx, telegramID, st, text)
+		return s.search(ctx, telegramID, st, text), true
 	case stepRange:
-		return s.handleRange(ctx, telegramID, st, text)
+		return s.setRange(ctx, telegramID, st, text), true
 	}
-	return nil, nil
+	return Reply{}, false
 }
 
-// OnCallback handles an inline-keyboard tap during the flow.
-func (s *Service) OnCallback(ctx context.Context, telegramID int64, data string) (*Reply, error) {
-	st, err := s.Sessions.Load(ctx, telegramID)
+// OnCallback handles chk:* taps. bool=false for non-chk data.
+func (s *Service) OnCallback(ctx context.Context, telegramID int64, data string) (Reply, bool) {
+	if !strings.HasPrefix(data, "chk:") {
+		return Reply{}, false
+	}
+	st, err := s.sessions.Get(ctx, telegramID)
 	if err != nil || st == nil {
-		return nil, err
+		return Reply{Text: "Сессия истекла. Начни заново: /checker"}, true
 	}
-	parts := strings.SplitN(data, ":", 3)
-	if len(parts) < 2 {
-		return nil, nil
+	switch {
+	case strings.HasPrefix(data, "chk:add:"):
+		return s.add(ctx, telegramID, st, strings.TrimPrefix(data, "chk:add:")), true
+	case data == "chk:done":
+		return s.done(ctx, telegramID, st), true
+	case strings.HasPrefix(data, "chk:dur:"):
+		return s.duration(ctx, telegramID, st, strings.TrimPrefix(data, "chk:dur:")), true
 	}
-	switch parts[1] {
-	case "add":
-		return s.handleAdd(ctx, telegramID, st, parts[2])
-	case "done":
-		return s.handleDone(ctx, telegramID, st)
-	case "dur":
-		return s.handleDuration(ctx, telegramID, st, parts[2])
-	}
-	return nil, nil
+	return Reply{}, true
 }
 
-func (s *Service) handleSearch(ctx context.Context, telegramID int64, st *State, text string) (*Reply, error) {
-	matches, err := s.Backend.SearchEmployeesGlobal(ctx, strings.TrimSpace(text))
+func (s *Service) search(ctx context.Context, telegramID int64, st *State, query string) Reply {
+	emps, err := s.backend.SearchEmployeesGlobal(ctx, query)
 	if err != nil {
-		return nil, err
+		return Reply{Text: "Не удалось выполнить поиск, попробуй ещё раз:"}
 	}
-	if len(matches) == 0 {
-		return &Reply{Text: "Ничего не найдено. Попробуйте другой запрос:"}, nil
+	var rows [][]Button
+	var cands []string
+	seen := map[string]bool{}
+	for _, e := range emps {
+		if e.Email == "" || seen[e.Email] {
+			continue
+		}
+		seen[e.Email] = true
+		rows = append(rows, []Button{{Text: e.FullName + " — " + e.Email, Data: fmt.Sprintf("chk:add:%d", len(cands))}})
+		cands = append(cands, e.Email)
 	}
-	kb := &Keyboard{}
-	for _, e := range matches {
-		kb.Rows = append(kb.Rows, []Button{{Text: fmt.Sprintf("%s (%s)", e.FullName, e.Email), Data: "chk:add:" + e.Email}})
+	if len(cands) == 0 {
+		return Reply{Text: "Ничего не найдено. Введи другой запрос:"}
 	}
+	st.Cands = cands
+	_ = s.sessions.Set(ctx, telegramID, *st)
 	if len(st.Emails) > 0 {
-		kb.Rows = append(kb.Rows, doneKeyboard().Rows...)
+		rows = append(rows, []Button{{Text: "Готово ✅", Data: "chk:done"}})
 	}
-	return &Reply{Text: "Выберите участника (можно несколько):", Keyboard: kb}, nil
+	return Reply{Text: "Выбери участника (можно несколько):", Keyboard: rows}
 }
 
-func (s *Service) handleAdd(ctx context.Context, telegramID int64, st *State, email string) (*Reply, error) {
+func (s *Service) add(ctx context.Context, telegramID int64, st *State, idxStr string) Reply {
+	i, err := strconv.Atoi(idxStr)
+	if err != nil || i < 0 || i >= len(st.Cands) {
+		return Reply{Text: "Не найдено, поищи ещё раз:"}
+	}
+	email := st.Cands[i]
 	for _, e := range st.Emails {
 		if e == email {
-			return &Reply{Text: "Уже добавлен. Ищите ещё или нажмите «Готово».", Keyboard: doneKeyboard()}, nil
+			return Reply{Text: "Уже добавлен. Ищи ещё или нажми «Готово».",
+				Keyboard: [][]Button{{{Text: "Готово ✅", Data: "chk:done"}}}}
 		}
 	}
 	st.Emails = append(st.Emails, email)
-	if err := s.Sessions.Save(ctx, telegramID, st); err != nil {
-		return nil, err
+	_ = s.sessions.Set(ctx, telegramID, *st)
+	return Reply{
+		Text:     fmt.Sprintf("Добавлен: %s\nУчастников: %d. Ищи ещё или нажми «Готово».", email, len(st.Emails)),
+		Keyboard: [][]Button{{{Text: "Готово ✅", Data: "chk:done"}}},
 	}
-	return &Reply{
-		Text:     fmt.Sprintf("Добавлен: %s\nУчастников: %d. Ищите ещё или нажмите «Готово».", email, len(st.Emails)),
-		Keyboard: doneKeyboard(),
-	}, nil
 }
 
-func (s *Service) handleDone(ctx context.Context, telegramID int64, st *State) (*Reply, error) {
+func (s *Service) done(ctx context.Context, telegramID int64, st *State) Reply {
 	if len(st.Emails) == 0 {
-		return &Reply{Text: "Добавьте хотя бы одного участника."}, nil
+		return Reply{Text: "Добавь хотя бы одного участника."}
 	}
 	st.Step = stepRange
-	if err := s.Sessions.Save(ctx, telegramID, st); err != nil {
-		return nil, err
-	}
-	return &Reply{Text: "Введите диапазон дат: ГГГГ-ММ-ДД..ГГГГ-ММ-ДД"}, nil
+	_ = s.sessions.Set(ctx, telegramID, *st)
+	return Reply{Text: "Введи диапазон дат: ГГГГ-ММ-ДД..ГГГГ-ММ-ДД"}
 }
 
-func (s *Service) handleRange(ctx context.Context, telegramID int64, st *State, text string) (*Reply, error) {
+func (s *Service) setRange(ctx context.Context, telegramID int64, st *State, text string) Reply {
 	from, to, err := parseRange(text, almaty())
 	if err != nil {
-		return &Reply{Text: err.Error()}, nil
+		return Reply{Text: err.Error() + "\nПопробуй ещё раз:"}
 	}
 	st.From = from.Format("2006-01-02")
-	st.To = to.AddDate(0, 0, -1).Format("2006-01-02") // store inclusive end for display
+	st.To = to.Format("2006-01-02")
 	st.Step = stepDuration
-	if err := s.Sessions.Save(ctx, telegramID, st); err != nil {
-		return nil, err
-	}
-	return &Reply{Text: "Выберите длительность встречи:", Keyboard: durationKeyboard()}, nil
+	_ = s.sessions.Set(ctx, telegramID, *st)
+	return Reply{Text: "Выбери длительность встречи:", Keyboard: durationKeyboard()}
 }
 
-func (s *Service) handleDuration(ctx context.Context, telegramID int64, st *State, durStr string) (*Reply, error) {
+func (s *Service) duration(ctx context.Context, telegramID int64, st *State, durStr string) Reply {
 	durMins, err := strconv.Atoi(durStr)
 	if err != nil || durMins <= 0 {
-		return &Reply{Text: "Неверная длительность."}, nil
+		return Reply{Text: "Неверная длительность."}
 	}
 	loc := almaty()
 	from, _ := time.ParseInLocation("2006-01-02", st.From, loc)
 	toIncl, _ := time.ParseInLocation("2006-01-02", st.To, loc)
-	to := toIncl.AddDate(0, 0, 1) // exclusive upper bound
-
-	slots, err := s.Backend.FreeSlots(ctx, st.Emails, from, to, durMins)
+	slots, err := s.backend.FreeSlots(ctx, st.Emails, from, toIncl.AddDate(0, 0, 1), durMins)
 	if err != nil {
-		return nil, err
+		return Reply{Text: "Не удалось выполнить поиск, попробуй позже."}
 	}
-	s.Sessions.Clear(ctx, telegramID)
+	n := len(st.Emails)
+	_ = s.sessions.Del(ctx, telegramID)
 	if len(slots) == 0 {
-		return &Reply{Text: "Общих свободных слотов в выбранном диапазоне не найдено.\n" +
-			"Попробуйте: расширить диапазон дат / уменьшить длительность / изменить состав участников."}, nil
+		return Reply{Text: "Общих свободных слотов в выбранном диапазоне не найдено.\n" +
+			"Попробуй: расширить диапазон дат / уменьшить длительность / изменить состав участников."}
 	}
-	return &Reply{Text: formatSlots(slots, len(st.Emails), loc)}, nil
+	return Reply{Text: formatSlots(slots, n, loc)}
+}
+
+func durationKeyboard() [][]Button {
+	return [][]Button{
+		{{Text: "15 мин", Data: "chk:dur:15"}, {Text: "30 мин", Data: "chk:dur:30"}, {Text: "45 мин", Data: "chk:dur:45"}},
+		{{Text: "1 час", Data: "chk:dur:60"}, {Text: "1.5 часа", Data: "chk:dur:90"}, {Text: "2 часа", Data: "chk:dur:120"}},
+	}
 }
 
 func formatSlots(slots []application.FreeSlot, n int, loc *time.Location) string {
@@ -916,12 +977,12 @@ func formatSlots(slots []application.FreeSlot, n int, loc *time.Location) string
 
 > No "Создать встречу на этот слот" button — out of scope (spec).
 
-- [ ] **Step 6: Build + vet + test**
+- [ ] **Step 5: Build + vet + test**
 
 Run: `cd backend && env -u GOROOT go build ./... && env -u GOROOT go vet ./internal/platform/checker/ && env -u GOROOT go test ./internal/platform/checker/ -v`
 Expected: builds, vets, tests PASS.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
 git add backend/internal/platform/checker/
@@ -935,25 +996,95 @@ git commit -m "feat(meetings): /checker common-free-time FSM §4.8"
 **Files:**
 - Modify: `backend/internal/infrastructure/telegram/multitenant.go`
 
-First **read** `multitenant.go`: the `Dispatcher` struct, `NewDispatcher` (each FSM wired via `newSessions[State](rdb, "prefix")`), `HandleText` command switch, `routeText` OnText chain, `HandleCallback` prefix switch.
+Read `multitenant.go` to copy the `schedule` wiring pattern exactly.
 
-- [ ] **Step 1: Add the field, wiring, and routes**
+- [ ] **Step 1: Import + interface + field + construction**
 
-1. Import `"lead-cat/backend/internal/platform/checker"`.
-2. Add field to `Dispatcher`: `checker *checker.Service`.
-3. In `NewDispatcher`, add: `checker: checker.New(app, newSessions[checker.State](rdb, "chk")),`
-4. In `HandleText`'s switch, add: `case text == "/checker": return adapt(d.checker.Start(ctx, telegramID))`
-5. In `routeText`, add (same shape as the others): `if r, err := d.checker.OnText(ctx, telegramID, text); err != nil || r != nil { return adapt(r, err) }`
-6. In `HandleCallback`'s prefix switch, add: `case "chk": return adapt(d.checker.OnCallback(ctx, telegramID, data))`
+1. Add import: `"github.com/Jaryq-Lab/notify-bot/internal/platform/checker"`.
+2. Add `checker.Backend` to the `botBackend` interface:
+   ```go
+   type botBackend interface {
+       meetingedit.Backend
+       scheduleview.Backend
+       checker.Backend
+   }
+   ```
+3. Add field to `MultiHandler`: `checker *checker.Service`.
+4. In `NewMultiHandler`, after the `schedule := ...` line:
+   ```go
+   chk := checker.New(backend, checker.NewRedisSessions(rdb))
+   ```
+   and add `checker: chk,` to the returned struct literal.
 
-> `adapt` converts `*Reply` → `(string, *Keyboard, error)`. The `checker.Reply`/`checker.Keyboard` types are package-local but structurally identical; if `adapt` is generic/duck-typed it just works, otherwise check how `scheduleview.Reply` is adapted and mirror it exactly (there may be a per-package `adapt` or a shared conversion — match the existing pattern for `d.schedule`).
+- [ ] **Step 2: Command + OnText + callback routing**
 
-- [ ] **Step 2: Build + vet**
+5. In `Handle`'s no-command private branch, after the `h.schedule.OnText(...)` block:
+   ```go
+   if reply, handled := h.checker.OnText(ctx, from.ID, text); handled {
+       h.sendCheckerReply(ctx, b, chatID, 0, reply)
+   }
+   ```
+6. In the command `switch`, add a `/checker` case (guard like `/schedule`):
+   ```go
+   case "/checker":
+       if isPrivate {
+           if _, err := h.store.GetBotUserByTelegramID(ctx, from.ID); err != nil {
+               h.reply(ctx, b, update.Message, "Сначала зарегистрируйся: /start")
+               return
+           }
+           h.sendCheckerReply(ctx, b, chatID, 0, h.checker.Start(ctx, from.ID))
+       }
+   ```
+7. In `handleCallback`, after the `sched:` block:
+   ```go
+   if strings.HasPrefix(cq.Data, "chk:") {
+       if reply, handled := h.checker.OnCallback(ctx, cq.From.ID, cq.Data); handled && cq.Message.Message != nil {
+           h.sendCheckerReply(ctx, b, cq.Message.Message.Chat.ID, cq.Message.Message.ID, reply)
+       }
+   }
+   ```
+
+- [ ] **Step 3: Reply sender + markup helper**
+
+Add (mirroring `sendSchedReply` / `toSchedMarkup`):
+
+```go
+func (h *MultiHandler) sendCheckerReply(ctx context.Context, b *bot.Bot, chatID int64, msgID int, reply checker.Reply) {
+	if reply.Text == "" {
+		return
+	}
+	var markup models.ReplyMarkup
+	if len(reply.Keyboard) > 0 {
+		markup = toCheckerMarkup(reply.Keyboard)
+	}
+	if reply.Edit && msgID != 0 {
+		_, _ = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+			ChatID: chatID, MessageID: msgID, Text: reply.Text, ReplyMarkup: markup,
+		})
+		return
+	}
+	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: chatID, Text: reply.Text, ReplyMarkup: markup})
+}
+
+func toCheckerMarkup(rows [][]checker.Button) models.InlineKeyboardMarkup {
+	var kb [][]models.InlineKeyboardButton
+	for _, row := range rows {
+		var r []models.InlineKeyboardButton
+		for _, btn := range row {
+			r = append(r, models.InlineKeyboardButton{Text: btn.Text, CallbackData: btn.Data})
+		}
+		kb = append(kb, r)
+	}
+	return models.InlineKeyboardMarkup{InlineKeyboard: kb}
+}
+```
+
+- [ ] **Step 4: Build + vet**
 
 Run: `cd backend && env -u GOROOT go build ./... && env -u GOROOT go vet ./internal/infrastructure/telegram/`
 Expected: no errors.
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add backend/internal/infrastructure/telegram/multitenant.go
@@ -968,11 +1099,11 @@ git commit -m "feat(meetings): wire /checker into bot dispatcher §4.8"
 - Create: `backend/internal/delivery/http/handlers/meeting_availability.go`
 - Modify: `backend/internal/delivery/http/app.go`
 
-First **read** `handlers/meetings.go` (handler receiver type, how it reads the JSON body, success/error response helpers) and `app.go` lines ~132–136 (the `ws` group registration).
+Read `handlers/meetings.go` (receiver `*API`, field `App`, `c.Locals("workspace_id")`, error helpers) and `app.go:132-136`.
 
 - [ ] **Step 1: Handlers**
 
-Create `backend/internal/delivery/http/handlers/meeting_availability.go`. Match the existing handler receiver/response conventions in `meetings.go` (the snippet below assumes an `*API` receiver and `c.JSON`; adapt names):
+Create `backend/internal/delivery/http/handlers/meeting_availability.go`:
 
 ```go
 package handlers
@@ -983,6 +1114,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
+
+func almatyLoc() *time.Location {
+	loc, err := time.LoadLocation("Asia/Almaty")
+	if err != nil {
+		return time.FixedZone("Almaty", 5*60*60)
+	}
+	return loc
+}
 
 type conflictsRequest struct {
 	Date             string   `json:"date"`  // YYYY-MM-DD
@@ -1000,13 +1139,14 @@ type conflictItem struct {
 	End         time.Time `json:"end"`
 }
 
-// MeetingConflicts is the advisory §4.7 overlap check (read-only).
+// MeetingConflicts is the advisory §4.7 overlap check (read-only). Workspace authz
+// is enforced by RequireWorkspaceAccess on the route.
 func (a *API) MeetingConflicts(c *fiber.Ctx) error {
 	var req conflictsRequest
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
 	}
-	loc, _ := time.LoadLocation("Asia/Almaty")
+	loc := almatyLoc()
 	start, err1 := time.ParseInLocation("2006-01-02 15:04", req.Date+" "+req.Start, loc)
 	end, err2 := time.ParseInLocation("2006-01-02 15:04", req.Date+" "+req.End, loc)
 	if err1 != nil || err2 != nil || !end.After(start) {
@@ -1016,7 +1156,7 @@ func (a *API) MeetingConflicts(c *fiber.Ctx) error {
 	if req.ExcludeMeetingID != "" {
 		exclude, _ = uuid.Parse(req.ExcludeMeetingID)
 	}
-	conflicts, err := a.app.MeetingConflicts(c.Context(), req.Participants, start.UTC(), end.UTC(), exclude)
+	conflicts, err := a.App.MeetingConflicts(c.Context(), req.Participants, start.UTC(), end.UTC(), exclude)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "conflict check failed")
 	}
@@ -1028,7 +1168,7 @@ func (a *API) MeetingConflicts(c *fiber.Ctx) error {
 }
 
 type freeSlotsRequest struct {
-	From         string   `json:"from"` // YYYY-MM-DD
+	From         string   `json:"from"` // YYYY-MM-DD (inclusive)
 	To           string   `json:"to"`   // YYYY-MM-DD (inclusive)
 	Participants []string `json:"participants"`
 	DurationMins int      `json:"duration_mins"`
@@ -1047,13 +1187,13 @@ func (a *API) FreeSlots(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
 	}
-	loc, _ := time.LoadLocation("Asia/Almaty")
+	loc := almatyLoc()
 	from, err1 := time.ParseInLocation("2006-01-02", req.From, loc)
 	toIncl, err2 := time.ParseInLocation("2006-01-02", req.To, loc)
 	if err1 != nil || err2 != nil || toIncl.Before(from) || req.DurationMins <= 0 {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid range/duration")
 	}
-	slots, err := a.app.FreeSlots(c.Context(), req.Participants, from, toIncl.AddDate(0, 0, 1), req.DurationMins)
+	slots, err := a.App.FreeSlots(c.Context(), req.Participants, from, toIncl.AddDate(0, 0, 1), req.DurationMins)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "free-slot search failed")
 	}
@@ -1065,11 +1205,11 @@ func (a *API) FreeSlots(c *fiber.Ctx) error {
 }
 ```
 
-> **Adapt:** the receiver type (`*API` vs other), the application field name (`a.app` vs `a.services`), and error/response helpers must match `meetings.go`. The `:id` workspace param is not used in the query — authz is already enforced by `RequireWorkspaceAccess` on the route group.
+> Confirm the receiver is `*API` and the application field is `App` (it is, per `meetings.go`). If `time` is already imported elsewhere in the package that's fine — this is a new file.
 
 - [ ] **Step 2: Register routes**
 
-In `backend/internal/delivery/http/app.go`, inside the `ws` group (right after the existing `ws.Delete("/meetings/:mid", ...)` line):
+In `app.go`, inside the `ws` group right after `ws.Delete("/meetings/:mid", api.DeleteMeeting)`:
 
 ```go
 	ws.Post("/meetings/conflicts", api.MeetingConflicts)
@@ -1098,20 +1238,20 @@ git commit -m "feat(meetings): REST /meetings/conflicts + /meetings/free-slots �
 
 - [ ] **Step 1: Update `docs/MEETINGS.md`**
 
-Add a status line under the Backend "done" block (after the §4.5 deletion line), matching the existing `>` quote style:
+Add after the §4.5 deletion `>` line in the Backend block:
 
 ```markdown
-> **Conflict warning + free-time checker (§4.7–4.8, done):** `/edit` now warns before applying a time change if any participant or the organizer has an overlapping meeting (⚠ list with names + meeting titles; **[Да, применить] / [Изменить время]**, non-blocking per §4.7.3). A new `/checker` bot flow finds common free time: pick participants (directory search) → date range → duration preset → list of slots when everyone is free (Mon–Fri, 09:00–18:00 Almaty, §4.8.4) or a "no slots" message (§4.8.6). Busyness is read from the internal DB (global-by-email, like §4.6) — external/personal Google events are not seen; bot "create from slot" is out of scope. Also exposed over REST: `POST /workspaces/:id/meetings/conflicts` and `.../free-slots` for the (mocked) Mini App. Core interval math is pure (`domain/meeting.Overlaps`/`FreeSlots`).
+> **Conflict warning + free-time checker (§4.7–4.8, done):** `/edit` warns before applying a **single-meeting time change** if any participant or the organizer has an overlapping meeting (⚠ list with names + meeting titles; **[Да, применить] / [Изменить время]**, non-blocking per §4.7.3). A new `/checker` bot flow finds common free time: pick participants (directory search) → date range → duration preset → slots when everyone is free (Mon–Fri, 09:00–18:00 Almaty, §4.8.4) or a "no slots" message (§4.8.6). Busyness is read from the internal DB (global-by-email, like §4.6) — external/personal Google events are not seen; bot "create from slot" and series-time-edit conflict checks are out of scope. Also over REST: `POST /workspaces/:id/meetings/conflicts` and `.../free-slots` for the (mocked) Mini App. Core interval math is pure (`domain/meeting.Overlaps`/`FreeSlots`); conflict attribution is in Go (`application.MeetingConflicts`).
 ```
 
 - [ ] **Step 2: Update `PLAN.md`**
 
-Find the §4.7 / §4.8 (conflict warning / free-time checker) checklist entries and mark them done, matching the file's existing convention (read it first).
+Read `PLAN.md`, find the §4.7 / §4.8 (conflict warning / free-time checker) entries, mark them done matching the file's existing convention.
 
 - [ ] **Step 3: Full verification from repo root**
 
 Run: `make test && make lint && make build`
-Expected: all green. If `make lint` reports gofmt issues, run `cd backend && env -u GOROOT gofmt -w ./internal/...` and re-run.
+Expected: all green. If `make lint` flags gofmt, run `cd backend && env -u GOROOT gofmt -w ./internal/...` and re-run.
 
 - [ ] **Step 4: Commit**
 
@@ -1124,7 +1264,7 @@ git commit -m "docs(meetings): document §4.7-4.8 conflict warning + free-time c
 
 ## Self-review notes (for the executor)
 
-- **Spec coverage:** §4.7.1 (Overlaps + organizer included) → Tasks 1,3,4; §4.7.2 (warning layout) → Task 4 `formatConflictWarning`; §4.7.3 (non-blocking, change-time returns) → Task 4 `applyforce` + `medit:field:datetime`; §4.8.2 (params: ≥1 participant, range, duration presets) → Task 5; §4.8.3 (algorithm, weekday skip, 09:00–18:00) → Task 3 `FreeSlots`; §4.8.4 (results layout) → Task 5 `formatSlots`; §4.8.6 (no-slots message) → Task 5 `handleDuration`. REST → Task 7.
-- **Out of scope (do not implement):** Google freebusy, configurable hours, bot create-from-slot, Mini App frontend wiring.
-- **Type consistency:** `Conflict{Email,PersonName,MeetingName,Start,End}` and `FreeSlot{Day,Start,End,Mins}` are defined once in Task 3 and consumed verbatim in Tasks 4, 5, 7. `ListMeetingsOverlapping(ctx, emails, from, to)` defined in Task 2, called in Task 3. `MeetingConflicts(ctx, emails, start, end, excludeMeetingID)` / `FreeSlots(ctx, emails, from, to, durMins)` defined in Task 3, consumed in Tasks 4, 5, 7.
-- **Verify-before-coding hooks** are flagged inline with `> Adapt:` notes — confirm field/method names against the real files before writing each task's code.
+- **Spec coverage:** §4.7.1 (Overlaps, organizer included via `meetingEmails`) → Tasks 1,3,4; §4.7.2 (warning layout) → Task 4 `formatConflictWarning`; §4.7.3 (non-blocking; "change time" returns) → Task 4 `applyForce` + `medit:field:datetime`; §4.8.2 (≥1 participant, range, duration presets) → Task 5; §4.8.3 (algorithm, weekday skip, 09:00–18:00) → Task 3 `FreeSlots`; §4.8.4 (results layout) → Task 5 `formatSlots`; §4.8.6 (no-slots message) → Task 5 `duration`. REST → Task 7.
+- **Out of scope (do not implement):** Google freebusy; configurable hours; weekend inclusion; bot create-from-slot; Mini App frontend wiring; §4.7 warning on **series** time edits (only single-meeting path warns).
+- **Type consistency:** `Conflict{Email,PersonName,MeetingName,Start,End}` / `FreeSlot{Day,Start,End,Mins}` defined once in Task 3, consumed in Tasks 4,5,7. `ListMeetingsOverlapping(ctx, emails, from, to)` (Task 2) → called in Task 3. `MeetingConflicts(ctx, emails, start, end, excludeMeetingID)`, `MeetingUpdateConflicts(ctx, workspaceID, meetingID, in)`, `FreeSlots(ctx, emails, from, to, durMins)` (Task 3) → consumed in Tasks 4,5,7. FSM convention: `Reply{Text, Keyboard [][]Button, Edit}`, `(Reply, bool)` returns, sessions `Get/Set/Del` — matches `scheduleview`/`meetingedit`.
+- **Known approximations:** `MeetingConflicts` does an N+1 `ListParticipants`/`GetUserByID` per overlapping meeting — acceptable (conflict lists are tiny). `personName` uses `SearchEmployeesGlobal(email)` exact-match — fine for the directory size. Warning times render in `Asia/Almaty` (workspace default), not per-workspace TZ.
