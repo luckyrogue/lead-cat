@@ -26,4 +26,6 @@ func (s *Service) UpdateEvent(_ context.Context, _ string, _ application.Calenda
 	return nil
 }
 
+func (s *Service) UpdateAttendees(_ context.Context, _ string, _ []string) error { return nil }
+
 func (s *Service) DeleteEvent(_ context.Context, _ string) error { return nil }

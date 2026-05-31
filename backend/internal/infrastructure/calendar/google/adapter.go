@@ -85,3 +85,20 @@ func (a *adapter) UpdateEvent(ctx context.Context, eventID string, e application
 		Do()
 	return err
 }
+
+func attendeeList(emails []string) []*calendar.EventAttendee {
+	var as []*calendar.EventAttendee
+	for _, e := range emails {
+		as = append(as, &calendar.EventAttendee{Email: e})
+	}
+	return as
+}
+
+// UpdateAttendees replaces the event's guest list with emails. SendUpdates("all")
+// emails invites to newly-added guests and cancellations to removed ones.
+// ForceSendFields ensures an empty list actually clears the attendees.
+func (a *adapter) UpdateAttendees(ctx context.Context, eventID string, emails []string) error {
+	ev := &calendar.Event{Attendees: attendeeList(emails), ForceSendFields: []string{"Attendees"}}
+	_, err := a.svc.Events.Patch(a.calendarID, eventID, ev).SendUpdates("all").Context(ctx).Do()
+	return err
+}

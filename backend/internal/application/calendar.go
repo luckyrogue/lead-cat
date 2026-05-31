@@ -28,6 +28,7 @@ type CalendarResult struct {
 type CalendarService interface {
 	CreateEvent(ctx context.Context, e CalendarEvent) (CalendarResult, error)
 	UpdateEvent(ctx context.Context, eventID string, e CalendarEvent) error
+	UpdateAttendees(ctx context.Context, eventID string, emails []string) error
 	DeleteEvent(ctx context.Context, eventID string) error
 }
 

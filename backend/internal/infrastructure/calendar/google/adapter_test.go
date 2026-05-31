@@ -30,6 +30,16 @@ func TestBuildPatch(t *testing.T) {
 	}
 }
 
+func TestAttendeeList(t *testing.T) {
+	got := attendeeList([]string{"a@x", "b@y"})
+	if len(got) != 2 || got[0].Email != "a@x" || got[1].Email != "b@y" {
+		t.Fatalf("bad attendees: %+v", got)
+	}
+	if attendeeList(nil) != nil {
+		t.Fatal("empty input must yield nil slice")
+	}
+}
+
 func TestBuildEvent(t *testing.T) {
 	start := time.Date(2025, 6, 2, 10, 0, 0, 0, time.UTC)
 	ev := buildEvent(application.CalendarEvent{
