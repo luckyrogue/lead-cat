@@ -156,6 +156,15 @@ func main() {
 		mid, _ := uuid.Parse(p.MeetingID)
 		return notifier.HandleParticipantRemoved(c, wid, mid, p.Email)
 	}
+	meetingCancelledHandler := func(c context.Context, t *asynq.Task) error {
+		p, err := asynqqueue.ParseMeetingCancelled(t)
+		if err != nil {
+			return err
+		}
+		wid, _ := uuid.Parse(p.WorkspaceID)
+		mid, _ := uuid.Parse(p.MeetingID)
+		return notifier.HandleCancelled(c, wid, mid)
+	}
 
 	asynqSrv, err := asynqqueue.NewServer(cfg.RedisURL, logger, map[string]asynq.HandlerFunc{
 		asynqqueue.TaskRunScenario:        asynqHandler,
@@ -163,6 +172,7 @@ func main() {
 		asynqqueue.TaskMeetingUpdated:     meetingUpdatedHandler,
 		asynqqueue.TaskParticipantAdded:   participantAddedHandler,
 		asynqqueue.TaskParticipantRemoved: participantRemovedHandler,
+		asynqqueue.TaskMeetingCancelled:   meetingCancelledHandler,
 	})
 	if err != nil {
 		logger.Fatal("asynq server", zap.Error(err))
