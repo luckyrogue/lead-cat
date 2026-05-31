@@ -94,8 +94,11 @@ func (n *Notifier) notifyParticipant(ctx context.Context, workspaceID, meetingID
 		loc = time.UTC
 	}
 	u, err := n.store.GetBotUserByEmail(ctx, email)
-	if err != nil {
+	if postgres.IsNotFound(err) {
 		return nil // not a bot user — the Google email invitation/cancellation covers them
+	}
+	if err != nil {
+		return fmt.Errorf("get bot user: %w", err) // transient error — let asynq retry
 	}
 	var text string
 	if added {
@@ -108,6 +111,7 @@ func (n *Notifier) notifyParticipant(ctx context.Context, workspaceID, meetingID
 			zap.Int64("telegram_id", u.TelegramID),
 			zap.String("meeting_id", m.ID.String()),
 			zap.Bool("added", added),
+			zap.String("email", email),
 			zap.Error(err))
 	}
 	return nil
