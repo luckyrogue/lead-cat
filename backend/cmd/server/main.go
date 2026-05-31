@@ -22,6 +22,7 @@ import (
 	asynqqueue "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/queue/asynq"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/telegram"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/config"
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/meeting_notifier"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/observability/log"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/reminder_scheduler"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/scenario_executor"
@@ -109,8 +110,20 @@ func main() {
 		return exec.Run(c, runID, scID, p.Trigger)
 	}
 
+	notifier := meeting_notifier.New(store, tg, logger)
+	meetingCreatedHandler := func(c context.Context, t *asynq.Task) error {
+		p, err := asynqqueue.ParseMeetingCreated(t)
+		if err != nil {
+			return err
+		}
+		wid, _ := uuid.Parse(p.WorkspaceID)
+		mid, _ := uuid.Parse(p.MeetingID)
+		return notifier.HandleCreated(c, wid, mid)
+	}
+
 	asynqSrv, err := asynqqueue.NewServer(cfg.RedisURL, logger, map[string]asynq.HandlerFunc{
-		asynqqueue.TaskRunScenario: asynqHandler,
+		asynqqueue.TaskRunScenario:    asynqHandler,
+		asynqqueue.TaskMeetingCreated: meetingCreatedHandler,
 	})
 	if err != nil {
 		logger.Fatal("asynq server", zap.Error(err))
