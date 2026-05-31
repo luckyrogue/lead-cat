@@ -8,12 +8,15 @@ import (
 	"fmt"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type InitDataUser struct {
 	ID       int64  `json:"id"`
 	Username string `json:"username"`
+	AuthDate int64  `json:"-"` // from the top-level auth_date param, not the user JSON
 }
 
 type InitDataValidator struct {
@@ -38,6 +41,9 @@ func (v *InitDataValidator) Validate(initData string) (InitDataUser, error) {
 	}
 	if u.ID == 0 {
 		return InitDataUser{}, fmt.Errorf("missing user id")
+	}
+	if ad := vals.Get("auth_date"); ad != "" {
+		u.AuthDate, _ = strconv.ParseInt(ad, 10, 64)
 	}
 	return u, nil
 }
@@ -67,4 +73,13 @@ func (v *InitDataValidator) verify(initData string) error {
 		return fmt.Errorf("invalid initData")
 	}
 	return nil
+}
+
+// FreshAuthDate reports whether a Telegram auth_date (unix seconds) is within
+// maxAge of now. An absent auth_date (0) is treated as stale.
+func FreshAuthDate(authDate int64, now time.Time, maxAge time.Duration) bool {
+	if authDate <= 0 {
+		return false
+	}
+	return now.Sub(time.Unix(authDate, 0)) <= maxAge
 }
