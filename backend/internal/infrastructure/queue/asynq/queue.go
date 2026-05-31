@@ -66,6 +66,29 @@ func ParseMeetingCreated(t *asynq.Task) (MeetingCreatedPayload, error) {
 	return p, err
 }
 
+const TaskMeetingUpdated = "meeting:updated"
+
+type MeetingUpdatedPayload struct {
+	WorkspaceID string `json:"workspace_id"`
+	MeetingID   string `json:"meeting_id"`
+}
+
+func (c *Client) EnqueueMeetingUpdated(ctx context.Context, workspaceID, meetingID uuid.UUID) error {
+	p, _ := json.Marshal(MeetingUpdatedPayload{
+		WorkspaceID: workspaceID.String(),
+		MeetingID:   meetingID.String(),
+	})
+	task := asynq.NewTask(TaskMeetingUpdated, p)
+	_, err := c.client.EnqueueContext(ctx, task, asynq.MaxRetry(5))
+	return err
+}
+
+func ParseMeetingUpdated(t *asynq.Task) (MeetingUpdatedPayload, error) {
+	var p MeetingUpdatedPayload
+	err := json.Unmarshal(t.Payload(), &p)
+	return p, err
+}
+
 type Server struct {
 	server *asynq.Server
 	mux    *asynq.ServeMux
