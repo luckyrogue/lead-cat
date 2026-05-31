@@ -109,7 +109,9 @@ func main() {
 		return exec.Run(c, runID, scID, p.Trigger)
 	}
 
-	asynqSrv, err := asynqqueue.NewServer(cfg.RedisURL, logger, asynqHandler)
+	asynqSrv, err := asynqqueue.NewServer(cfg.RedisURL, logger, map[string]asynq.HandlerFunc{
+		asynqqueue.TaskRunScenario: asynqHandler,
+	})
 	if err != nil {
 		logger.Fatal("asynq server", zap.Error(err))
 	}

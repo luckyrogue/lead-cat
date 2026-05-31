@@ -43,19 +43,44 @@ func (c *Client) EnqueueRun(ctx context.Context, runID, scenarioID uuid.UUID, tr
 	return err
 }
 
+const TaskMeetingCreated = "meeting:created"
+
+type MeetingCreatedPayload struct {
+	WorkspaceID string `json:"workspace_id"`
+	MeetingID   string `json:"meeting_id"`
+}
+
+func (c *Client) EnqueueMeetingCreated(ctx context.Context, workspaceID, meetingID uuid.UUID) error {
+	p, _ := json.Marshal(MeetingCreatedPayload{
+		WorkspaceID: workspaceID.String(),
+		MeetingID:   meetingID.String(),
+	})
+	task := asynq.NewTask(TaskMeetingCreated, p)
+	_, err := c.client.EnqueueContext(ctx, task, asynq.MaxRetry(5))
+	return err
+}
+
+func ParseMeetingCreated(t *asynq.Task) (MeetingCreatedPayload, error) {
+	var p MeetingCreatedPayload
+	err := json.Unmarshal(t.Payload(), &p)
+	return p, err
+}
+
 type Server struct {
 	server *asynq.Server
 	mux    *asynq.ServeMux
 }
 
-func NewServer(redisURL string, log *zap.Logger, handler func(context.Context, *asynq.Task) error) (*Server, error) {
+func NewServer(redisURL string, log *zap.Logger, handlers map[string]asynq.HandlerFunc) (*Server, error) {
 	opt, err := asynq.ParseRedisURI(redisURL)
 	if err != nil {
 		return nil, err
 	}
 	srv := asynq.NewServer(opt, asynq.Config{Concurrency: 4})
 	mux := asynq.NewServeMux()
-	mux.HandleFunc(TaskRunScenario, handler)
+	for taskType, h := range handlers {
+		mux.HandleFunc(taskType, h)
+	}
 	return &Server{server: srv, mux: mux}, nil
 }
 
