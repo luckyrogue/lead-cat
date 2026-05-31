@@ -35,10 +35,14 @@ func (f *fakeBackend) UpdateMeeting(_ context.Context, ws, user, mid uuid.UUID, 
 
 type memSessions struct{ m map[int64]*State }
 
-func newMemSessions() *memSessions { return &memSessions{m: map[int64]*State{}} }
+func newMemSessions() *memSessions                                     { return &memSessions{m: map[int64]*State{}} }
 func (s *memSessions) Get(_ context.Context, tg int64) (*State, error) { return s.m[tg], nil }
-func (s *memSessions) Set(_ context.Context, tg int64, st State) error { c := st; s.m[tg] = &c; return nil }
-func (s *memSessions) Del(_ context.Context, tg int64) error          { delete(s.m, tg); return nil }
+func (s *memSessions) Set(_ context.Context, tg int64, st State) error {
+	c := st
+	s.m[tg] = &c
+	return nil
+}
+func (s *memSessions) Del(_ context.Context, tg int64) error { delete(s.m, tg); return nil }
 
 func sampleMeeting() postgres.MeetingWithTZ {
 	loc, _ := time.LoadLocation("Asia/Almaty")

@@ -16,13 +16,13 @@ func TestParseDateTime_OK(t *testing.T) {
 
 func TestParseDateTime_Errors(t *testing.T) {
 	bad := []string{
-		"",                        // empty
-		"2026-06-01",              // no time range
-		"2026/06/01 14:00-15:00",  // bad date
-		"2026-06-01 14:00",        // single time
-		"2026-06-01 9:00-10:00",   // not HH:MM
-		"2026-06-01 15:00-14:00",  // end before start
-		"2026-06-01 14:00-14:00",  // equal
+		"",                       // empty
+		"2026-06-01",             // no time range
+		"2026/06/01 14:00-15:00", // bad date
+		"2026-06-01 14:00",       // single time
+		"2026-06-01 9:00-10:00",  // not HH:MM
+		"2026-06-01 15:00-14:00", // end before start
+		"2026-06-01 14:00-14:00", // equal
 	}
 	for _, in := range bad {
 		if _, _, _, err := parseDateTime(in); err == nil {

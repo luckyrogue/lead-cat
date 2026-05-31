@@ -18,9 +18,9 @@ import (
 
 	"github.com/Jaryq-Lab/notify-bot/internal/application"
 	deliveryhttp "github.com/Jaryq-Lab/notify-bot/internal/delivery/http"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/crypto"
 	calendargoogle "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/google"
 	calendarstub "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/stub"
+	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/crypto"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
 	asynqqueue "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/queue/asynq"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/telegram"
