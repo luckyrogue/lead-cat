@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"github.com/Jaryq-Lab/notify-bot/internal/domain/meeting"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
@@ -115,6 +116,15 @@ func (s *Services) CreateMeeting(ctx context.Context, workspaceID, organizerID u
 			return m, err
 		}
 		m.Participants = in.Participants
+	}
+	// Best-effort: the meeting is already created; a failed enqueue only loses the
+	// creation notification, so log and still return the meeting.
+	if s.Queue != nil {
+		if err := s.Queue.EnqueueMeetingCreated(ctx, workspaceID, m.ID); err != nil && s.Log != nil {
+			s.Log.Warn("enqueue meeting created",
+				zap.String("meeting_id", m.ID.String()),
+				zap.Error(err))
+		}
 	}
 	return m, nil
 }

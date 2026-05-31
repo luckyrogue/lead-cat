@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"github.com/Jaryq-Lab/notify-bot/internal/domain/scenario"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/crypto"
@@ -22,6 +23,7 @@ type Services struct {
 	Cipher   *crypto.TokenCipher
 	Queue    *asynqqueue.Client
 	Calendar CalendarProvider
+	Log      *zap.Logger
 }
 
 func (s *Services) GetMe(ctx context.Context, authSub string) (postgres.User, error) {

@@ -90,7 +90,7 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	}
 
 	api := &handlers.API{
-		App:     &application.Services{Store: store, Cipher: cipher, Queue: queue, Calendar: calProvider},
+		App:     &application.Services{Store: store, Cipher: cipher, Queue: queue, Calendar: calProvider, Log: log},
 		Bot:     tg,
 		RDB:     rdb,
 		Log:     log,
