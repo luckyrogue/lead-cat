@@ -50,7 +50,7 @@ func (s *Store) AddParticipants(ctx context.Context, meetingID uuid.UUID, ps []M
 	for _, p := range ps {
 		if _, err := s.pool.Exec(ctx, `
 			INSERT INTO meeting_participants (meeting_id, employee_id, email)
-			VALUES ($1, $2, $3)`, meetingID, p.EmployeeID, p.Email); err != nil {
+			VALUES ($1, $2, $3) ON CONFLICT (meeting_id, email) DO NOTHING`, meetingID, p.EmployeeID, p.Email); err != nil {
 			return err
 		}
 	}
