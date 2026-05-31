@@ -16,8 +16,11 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
+	"github.com/Jaryq-Lab/notify-bot/internal/application"
 	deliveryhttp "github.com/Jaryq-Lab/notify-bot/internal/delivery/http"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/crypto"
+	calendargoogle "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/google"
+	calendarstub "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/stub"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
 	asynqqueue "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/queue/asynq"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/telegram"
@@ -70,6 +73,14 @@ func main() {
 	}
 	defer queueClient.Close()
 
+	var calProvider application.CalendarProvider
+	if cfg.CalendarStub {
+		calProvider = calendarstub.NewProvider()
+	} else {
+		calProvider = calendargoogle.NewProvider(store, cipher)
+	}
+	services := &application.Services{Store: store, Cipher: cipher, Queue: queueClient, Calendar: calProvider, Log: logger}
+
 	var tgHandler *telegram.MultiHandler
 	botOpts := []bot.Option{
 		bot.WithDefaultHandler(func(c context.Context, b *bot.Bot, u *models.Update) {
@@ -96,7 +107,7 @@ func main() {
 			logger.Fatal("telegram getMe", zap.Error(err))
 		}
 		botUsername = me.Username
-		tgHandler = telegram.NewMultiHandler(store, cipher, tg, rdb, cfg.BotAdminTelegramIDs, cfg.AuthOTPLog, logger)
+		tgHandler = telegram.NewMultiHandler(store, cipher, tg, rdb, cfg.BotAdminTelegramIDs, cfg.AuthOTPLog, services, logger)
 	}
 	exec := scenario_executor.New(store, cipher, tg, logger)
 
@@ -120,10 +131,20 @@ func main() {
 		mid, _ := uuid.Parse(p.MeetingID)
 		return notifier.HandleCreated(c, wid, mid)
 	}
+	meetingUpdatedHandler := func(c context.Context, t *asynq.Task) error {
+		p, err := asynqqueue.ParseMeetingUpdated(t)
+		if err != nil {
+			return err
+		}
+		wid, _ := uuid.Parse(p.WorkspaceID)
+		mid, _ := uuid.Parse(p.MeetingID)
+		return notifier.HandleUpdated(c, wid, mid)
+	}
 
 	asynqSrv, err := asynqqueue.NewServer(cfg.RedisURL, logger, map[string]asynq.HandlerFunc{
 		asynqqueue.TaskRunScenario:    asynqHandler,
 		asynqqueue.TaskMeetingCreated: meetingCreatedHandler,
+		asynqqueue.TaskMeetingUpdated: meetingUpdatedHandler,
 	})
 	if err != nil {
 		logger.Fatal("asynq server", zap.Error(err))
@@ -140,7 +161,7 @@ func main() {
 	remSched := reminder_scheduler.New(store, tg, rdb, logger)
 	go remSched.Run(ctx)
 
-	app, err := deliveryhttp.NewApp(cfg, store, cipher, queueClient, rdb, tg, logger)
+	app, err := deliveryhttp.NewApp(cfg, store, cipher, rdb, tg, logger, services)
 	if err != nil {
 		logger.Fatal("http", zap.Error(err))
 	}

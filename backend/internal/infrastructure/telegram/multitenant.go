@@ -17,6 +17,7 @@ import (
 	platformauth "github.com/Jaryq-Lab/notify-bot/internal/platform/auth"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/botreg"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/botsettings"
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/meetingedit"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/scenario_executor"
 )
 
@@ -25,18 +26,21 @@ type MultiHandler struct {
 	executor  *scenario_executor.Executor
 	registrar *botreg.Service
 	settings  *botsettings.Service
+	editor    *meetingedit.Service
 	log       *zap.Logger
 }
 
-func NewMultiHandler(store *postgres.Store, cipher *crypto.TokenCipher, b *bot.Bot, rdb *redis.Client, adminIDs []int64, otpLog bool, log *zap.Logger) *MultiHandler {
+func NewMultiHandler(store *postgres.Store, cipher *crypto.TokenCipher, b *bot.Bot, rdb *redis.Client, adminIDs []int64, otpLog bool, editorBackend meetingedit.Backend, log *zap.Logger) *MultiHandler {
 	otp := platformauth.NewOTP(rdb, log, otpLog)
 	registrar := botreg.New(store, otp, botreg.NewRedisSessions(rdb), adminIDs)
 	settings := botsettings.New(store)
+	editor := meetingedit.New(editorBackend, meetingedit.NewRedisSessions(rdb))
 	return &MultiHandler{
 		store:     store,
 		executor:  scenario_executor.New(store, cipher, b, log),
 		registrar: registrar,
 		settings:  settings,
+		editor:    editor,
 		log:       log,
 	}
 }
@@ -60,6 +64,10 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 		if isPrivate {
 			if reply, handled := h.registrar.OnText(ctx, from.ID, text); handled {
 				h.reply(ctx, b, update.Message, reply)
+				return
+			}
+			if reply, handled := h.editor.OnText(ctx, from.ID, text); handled {
+				h.sendEditorReply(ctx, b, chatID, 0, reply)
 			}
 		}
 		return
@@ -117,6 +125,14 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 				})
 			}
 		}
+	case "/edit":
+		if isPrivate {
+			if _, err := h.store.GetBotUserByTelegramID(ctx, from.ID); err != nil {
+				h.reply(ctx, b, update.Message, "Сначала зарегистрируйся: /start")
+				return
+			}
+			h.sendEditorReply(ctx, b, chatID, 0, h.editor.Start(ctx, from.ID))
+		}
 	}
 }
 
@@ -134,7 +150,41 @@ func (h *MultiHandler) handleCallback(ctx context.Context, b *bot.Bot, cq *model
 			}
 		}
 	}
+	if strings.HasPrefix(cq.Data, "medit:") {
+		if reply, handled := h.editor.OnCallback(ctx, cq.From.ID, cq.Data); handled && cq.Message.Message != nil {
+			h.sendEditorReply(ctx, b, cq.Message.Message.Chat.ID, cq.Message.Message.ID, reply)
+		}
+	}
 	_, _ = b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{CallbackQueryID: cq.ID})
+}
+
+func (h *MultiHandler) sendEditorReply(ctx context.Context, b *bot.Bot, chatID int64, msgID int, reply meetingedit.Reply) {
+	if reply.Text == "" {
+		return // empty reply = no-op (FSM emitted nothing to send)
+	}
+	var markup models.ReplyMarkup
+	if len(reply.Keyboard) > 0 {
+		markup = toMeditMarkup(reply.Keyboard)
+	}
+	if reply.Edit && msgID != 0 {
+		_, _ = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+			ChatID: chatID, MessageID: msgID, Text: reply.Text, ReplyMarkup: markup,
+		})
+		return
+	}
+	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: chatID, Text: reply.Text, ReplyMarkup: markup})
+}
+
+func toMeditMarkup(rows [][]meetingedit.Button) models.InlineKeyboardMarkup {
+	var kb [][]models.InlineKeyboardButton
+	for _, row := range rows {
+		var r []models.InlineKeyboardButton
+		for _, btn := range row {
+			r = append(r, models.InlineKeyboardButton{Text: btn.Text, CallbackData: btn.Data})
+		}
+		kb = append(kb, r)
+	}
+	return models.InlineKeyboardMarkup{InlineKeyboard: kb}
 }
 
 func toInlineMarkup(rows [][]botsettings.Button) models.InlineKeyboardMarkup {

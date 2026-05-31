@@ -18,17 +18,14 @@ import (
 	"github.com/Jaryq-Lab/notify-bot/internal/delivery/http/middleware"
 	oauthsvc "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/auth/oauth"
 	webauthnsvc "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/auth/webauthn"
-	calendargoogle "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/google"
-	calendarstub "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/stub"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/crypto"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
-	asynqqueue "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/queue/asynq"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/telegram"
 	platformauth "github.com/Jaryq-Lab/notify-bot/internal/platform/auth"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/config"
 )
 
-func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher, queue *asynqqueue.Client, rdb *redis.Client, tg *bot.Bot, log *zap.Logger) (*fiber.App, error) {
+func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher, rdb *redis.Client, tg *bot.Bot, log *zap.Logger, services *application.Services) (*fiber.App, error) {
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			code := fiber.StatusInternalServerError
@@ -82,15 +79,8 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	}
 	authMW := middleware.NewAuth(cfg, jwtSvc, store, log)
 
-	var calProvider application.CalendarProvider
-	if cfg.CalendarStub {
-		calProvider = calendarstub.NewProvider()
-	} else {
-		calProvider = calendargoogle.NewProvider(store, cipher)
-	}
-
 	api := &handlers.API{
-		App:     &application.Services{Store: store, Cipher: cipher, Queue: queue, Calendar: calProvider, Log: log},
+		App:     services,
 		Bot:     tg,
 		RDB:     rdb,
 		Log:     log,
