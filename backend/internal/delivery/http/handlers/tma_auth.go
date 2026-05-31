@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
 
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/telegram"
@@ -41,9 +42,11 @@ func (a *API) TMAAuth(c *fiber.Ctx) error {
 	} else {
 		u, err := a.TMA.Validate(req.InitData)
 		if err != nil {
+			a.Log.Warn("tma_auth_invalid")
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"code": "invalid_init_data"})
 		}
 		if !telegram.FreshAuthDate(u.AuthDate, time.Now(), 24*time.Hour) {
+			a.Log.Warn("tma_auth_invalid")
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"code": "invalid_init_data"})
 		}
 		tgID = u.ID
@@ -51,6 +54,7 @@ func (a *API) TMAAuth(c *fiber.Ctx) error {
 	bu, err := a.App.Store.GetBotUserByTelegramID(c.Context(), tgID)
 	if err != nil {
 		if postgres.IsNotFound(err) {
+			a.Log.Info("tma_auth_unregistered", zap.Int64("telegram_id", tgID))
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"code": "not_registered"})
 		}
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
@@ -59,6 +63,7 @@ func (a *API) TMAAuth(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "token issue failed")
 	}
+	a.Log.Info("tma_auth_ok", zap.Int64("telegram_id", bu.TelegramID))
 	return c.JSON(fiber.Map{
 		"token": token,
 		"user":  tmaUser{TelegramID: bu.TelegramID, Name: bu.FullName, Email: bu.Email, Role: bu.Role},
