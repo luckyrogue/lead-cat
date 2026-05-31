@@ -159,6 +159,19 @@ func (s *Store) ListMeetingsByOrganizerTelegram(ctx context.Context, telegramID 
 	return out, rows.Err()
 }
 
+// ListScheduleForEmail returns the scheduled meetings in [from,to) where email is
+// a participant or the organizer (by platform_users.email).
+func (s *Store) ListScheduleForEmail(ctx context.Context, email string, from, to time.Time) ([]Meeting, error) {
+	return s.queryMeetings(ctx, `
+		SELECT DISTINCT `+meetingColsM+`
+		FROM meetings m
+		LEFT JOIN meeting_participants mp ON mp.meeting_id = m.id
+		LEFT JOIN platform_users pu ON pu.id = m.organizer_user_id
+		WHERE (mp.email = $1 OR pu.email = $1)
+			AND m.status = 'scheduled' AND m.starts_at >= $2 AND m.starts_at < $3
+		ORDER BY m.starts_at`, email, from, to)
+}
+
 func (s *Store) CancelMeeting(ctx context.Context, workspaceID, id uuid.UUID) error {
 	_, err := s.pool.Exec(ctx, `
 		UPDATE meetings SET status = 'cancelled', updated_at = now()
