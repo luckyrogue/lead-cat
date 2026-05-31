@@ -7,6 +7,29 @@ import (
 	"github.com/Jaryq-Lab/notify-bot/internal/application"
 )
 
+func TestBuildPatch(t *testing.T) {
+	e := application.CalendarEvent{
+		Title:          "Разработка | Планёрка",
+		Description:    "desc",
+		Start:          time.Date(2026, 6, 1, 14, 0, 0, 0, time.UTC),
+		End:            time.Date(2026, 6, 1, 15, 0, 0, 0, time.UTC),
+		AttendeeEmails: []string{"a@x"},
+	}
+	ev := buildPatch(e)
+	if ev.Summary != "Разработка | Планёрка" || ev.Description != "desc" {
+		t.Fatalf("summary/description not set: %+v", ev)
+	}
+	if ev.Start == nil || ev.End == nil {
+		t.Fatal("start/end must be set")
+	}
+	if ev.Attendees != nil {
+		t.Fatalf("patch must not set attendees, got %+v", ev.Attendees)
+	}
+	if ev.ConferenceData != nil {
+		t.Fatal("patch must not set conference data")
+	}
+}
+
 func TestBuildEvent(t *testing.T) {
 	start := time.Date(2025, 6, 2, 10, 0, 0, 0, time.UTC)
 	ev := buildEvent(application.CalendarEvent{

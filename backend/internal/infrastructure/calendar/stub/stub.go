@@ -22,4 +22,6 @@ func (s *Service) CreateEvent(_ context.Context, _ application.CalendarEvent) (a
 	}, nil
 }
 
+func (s *Service) UpdateEvent(_ context.Context, _ string, _ application.CalendarEvent) error { return nil }
+
 func (s *Service) DeleteEvent(_ context.Context, _ string) error { return nil }

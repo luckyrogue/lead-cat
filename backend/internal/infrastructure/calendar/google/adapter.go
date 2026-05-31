@@ -64,3 +64,24 @@ func (a *adapter) CreateEvent(ctx context.Context, e application.CalendarEvent) 
 func (a *adapter) DeleteEvent(ctx context.Context, eventID string) error {
 	return a.svc.Events.Delete(a.calendarID, eventID).Context(ctx).Do()
 }
+
+// buildPatch maps a CalendarEvent to a partial Google event for Events.Patch.
+// It sets only the fields edited here; omitting Attendees and ConferenceData
+// leaves the guest list and the Meet link untouched.
+func buildPatch(e application.CalendarEvent) *calendar.Event {
+	return &calendar.Event{
+		Summary:     e.Title,
+		Description: e.Description,
+		Start:       &calendar.EventDateTime{DateTime: e.Start.Format(time.RFC3339)},
+		End:         &calendar.EventDateTime{DateTime: e.End.Format(time.RFC3339)},
+	}
+}
+
+func (a *adapter) UpdateEvent(ctx context.Context, eventID string, e application.CalendarEvent) error {
+	_, err := a.svc.Events.
+		Patch(a.calendarID, eventID, buildPatch(e)).
+		SendUpdates("all").
+		Context(ctx).
+		Do()
+	return err
+}

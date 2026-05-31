@@ -27,6 +27,7 @@ type CalendarResult struct {
 // production, a stub in tests/local). Implemented in infrastructure/calendar/*.
 type CalendarService interface {
 	CreateEvent(ctx context.Context, e CalendarEvent) (CalendarResult, error)
+	UpdateEvent(ctx context.Context, eventID string, e CalendarEvent) error
 	DeleteEvent(ctx context.Context, eventID string) error
 }
 
