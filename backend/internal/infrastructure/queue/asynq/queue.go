@@ -89,6 +89,29 @@ func ParseMeetingUpdated(t *asynq.Task) (MeetingUpdatedPayload, error) {
 	return p, err
 }
 
+const TaskMeetingCancelled = "meeting:cancelled"
+
+type MeetingCancelledPayload struct {
+	WorkspaceID string `json:"workspace_id"`
+	MeetingID   string `json:"meeting_id"`
+}
+
+func (c *Client) EnqueueMeetingCancelled(ctx context.Context, workspaceID, meetingID uuid.UUID) error {
+	p, _ := json.Marshal(MeetingCancelledPayload{
+		WorkspaceID: workspaceID.String(),
+		MeetingID:   meetingID.String(),
+	})
+	task := asynq.NewTask(TaskMeetingCancelled, p)
+	_, err := c.client.EnqueueContext(ctx, task, asynq.MaxRetry(5))
+	return err
+}
+
+func ParseMeetingCancelled(t *asynq.Task) (MeetingCancelledPayload, error) {
+	var p MeetingCancelledPayload
+	err := json.Unmarshal(t.Payload(), &p)
+	return p, err
+}
+
 const (
 	TaskParticipantAdded   = "participant:added"
 	TaskParticipantRemoved = "participant:removed"
