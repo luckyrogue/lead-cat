@@ -68,3 +68,40 @@ func (n *Notifier) HandleCreated(ctx context.Context, workspaceID, meetingID uui
 	}
 	return nil
 }
+
+// HandleUpdated DMs the meeting's recipients that it changed. Like HandleCreated
+// it returns an error only on read failures (asynq retries before any send);
+// sends are best-effort. No dedup: each edit is its own notification.
+func (n *Notifier) HandleUpdated(ctx context.Context, workspaceID, meetingID uuid.UUID) error {
+	m, err := n.store.GetMeeting(ctx, workspaceID, meetingID)
+	if err != nil {
+		return fmt.Errorf("get meeting: %w", err)
+	}
+	w, err := n.store.GetWorkspace(ctx, workspaceID)
+	if err != nil {
+		return fmt.Errorf("get workspace: %w", err)
+	}
+	loc, err := time.LoadLocation(cmp.Or(w.TZ, "Asia/Almaty"))
+	if err != nil {
+		n.log.Warn("load location", zap.String("tz", w.TZ), zap.Error(err))
+		loc = time.UTC
+	}
+	text := buildUpdatedMessage(m.Name, m.MeetLink, m.StartsAt, m.EndsAt, loc)
+
+	recs, err := meetingrecipients.Resolve(ctx, n.store, m)
+	if err != nil {
+		return fmt.Errorf("resolve recipients: %w", err)
+	}
+	for _, r := range recs {
+		if _, err := n.bot.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: r.TelegramID,
+			Text:   text,
+		}); err != nil {
+			n.log.Warn("send meeting updated",
+				zap.Int64("telegram_id", r.TelegramID),
+				zap.String("meeting_id", m.ID.String()),
+				zap.Error(err))
+		}
+	}
+	return nil
+}

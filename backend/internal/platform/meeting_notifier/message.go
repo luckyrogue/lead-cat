@@ -5,12 +5,13 @@ import (
 	"time"
 )
 
-// buildMessage renders the creation DM. Times are converted to loc (workspace
-// timezone, Almaty by default). The link line is omitted when meetLink is empty.
-func buildMessage(name, meetLink string, startsAt, endsAt time.Time, loc *time.Location) string {
+// buildEventMessage renders an event DM with the given header line. Times are
+// converted to loc; the link line is omitted when meetLink is empty.
+func buildEventMessage(header, name, meetLink string, startsAt, endsAt time.Time, loc *time.Location) string {
 	s := startsAt.In(loc)
 	e := endsAt.In(loc)
-	msg := fmt.Sprintf("📅 Новая встреча\n«%s»\n🗓 %s, %s–%s (%s)",
+	msg := fmt.Sprintf("%s\n«%s»\n🗓 %s, %s–%s (%s)",
+		header,
 		name,
 		s.Format("02.01.2006"),
 		s.Format("15:04"),
@@ -20,6 +21,14 @@ func buildMessage(name, meetLink string, startsAt, endsAt time.Time, loc *time.L
 		msg += "\n🔗 " + meetLink
 	}
 	return msg
+}
+
+func buildMessage(name, meetLink string, startsAt, endsAt time.Time, loc *time.Location) string {
+	return buildEventMessage("📅 Новая встреча", name, meetLink, startsAt, endsAt, loc)
+}
+
+func buildUpdatedMessage(name, meetLink string, startsAt, endsAt time.Time, loc *time.Location) string {
+	return buildEventMessage("✏️ Встреча изменена", name, meetLink, startsAt, endsAt, loc)
 }
 
 // tzLabel renders the timezone of t as a UTC offset, e.g. "UTC+5" or "UTC+5:30".

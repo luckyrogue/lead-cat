@@ -33,6 +33,22 @@ func TestBuildMessage(t *testing.T) {
 	}
 }
 
+func TestBuildUpdatedMessage(t *testing.T) {
+	loc, _ := time.LoadLocation("Asia/Almaty")
+	start := time.Date(2026, 5, 31, 14, 0, 0, 0, loc)
+	end := time.Date(2026, 5, 31, 15, 0, 0, 0, loc)
+
+	m := buildUpdatedMessage("Разработка | Планёрка", "https://meet.google.com/abc", start, end, loc)
+	for _, want := range []string{"изменена", "Разработка | Планёрка", "31.05.2026", "14:00–15:00", "UTC+5", "https://meet.google.com/abc"} {
+		if !strings.Contains(m, want) {
+			t.Fatalf("message %q missing %q", m, want)
+		}
+	}
+	if strings.Contains(buildUpdatedMessage("X", "", start, end, loc), "🔗") {
+		t.Fatal("no link line when meet link empty")
+	}
+}
+
 func TestTZLabel(t *testing.T) {
 	almaty, _ := time.LoadLocation("Asia/Almaty")
 	cases := map[*time.Location]string{
