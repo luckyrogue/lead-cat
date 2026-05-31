@@ -89,8 +89,6 @@ func main() {
 			}
 		}),
 	}
-	// In AUTH_DEV_MODE the bot token may be empty (API-only local dev); bot.New
-	// otherwise calls getMe on init and fails. Polling stays disabled below.
 	if cfg.AuthDevMode {
 		botOpts = append(botOpts, bot.WithSkipGetMe())
 	}
@@ -140,11 +138,31 @@ func main() {
 		mid, _ := uuid.Parse(p.MeetingID)
 		return notifier.HandleUpdated(c, wid, mid)
 	}
+	participantAddedHandler := func(c context.Context, t *asynq.Task) error {
+		p, err := asynqqueue.ParseParticipant(t)
+		if err != nil {
+			return err
+		}
+		wid, _ := uuid.Parse(p.WorkspaceID)
+		mid, _ := uuid.Parse(p.MeetingID)
+		return notifier.HandleParticipantAdded(c, wid, mid, p.Email)
+	}
+	participantRemovedHandler := func(c context.Context, t *asynq.Task) error {
+		p, err := asynqqueue.ParseParticipant(t)
+		if err != nil {
+			return err
+		}
+		wid, _ := uuid.Parse(p.WorkspaceID)
+		mid, _ := uuid.Parse(p.MeetingID)
+		return notifier.HandleParticipantRemoved(c, wid, mid, p.Email)
+	}
 
 	asynqSrv, err := asynqqueue.NewServer(cfg.RedisURL, logger, map[string]asynq.HandlerFunc{
-		asynqqueue.TaskRunScenario:    asynqHandler,
-		asynqqueue.TaskMeetingCreated: meetingCreatedHandler,
-		asynqqueue.TaskMeetingUpdated: meetingUpdatedHandler,
+		asynqqueue.TaskRunScenario:        asynqHandler,
+		asynqqueue.TaskMeetingCreated:     meetingCreatedHandler,
+		asynqqueue.TaskMeetingUpdated:     meetingUpdatedHandler,
+		asynqqueue.TaskParticipantAdded:   participantAddedHandler,
+		asynqqueue.TaskParticipantRemoved: participantRemovedHandler,
 	})
 	if err != nil {
 		logger.Fatal("asynq server", zap.Error(err))
