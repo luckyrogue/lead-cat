@@ -17,6 +17,7 @@ import (
 	platformauth "github.com/Jaryq-Lab/notify-bot/internal/platform/auth"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/botreg"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/botsettings"
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/checker"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/meetingedit"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/scenario_executor"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/scheduleview"
@@ -26,6 +27,7 @@ import (
 type botBackend interface {
 	meetingedit.Backend
 	scheduleview.Backend
+	checker.Backend
 }
 
 type MultiHandler struct {
@@ -35,6 +37,7 @@ type MultiHandler struct {
 	settings  *botsettings.Service
 	editor    *meetingedit.Service
 	schedule  *scheduleview.Service
+	checker   *checker.Service
 	log       *zap.Logger
 }
 
@@ -44,6 +47,7 @@ func NewMultiHandler(store *postgres.Store, cipher *crypto.TokenCipher, b *bot.B
 	settings := botsettings.New(store)
 	editor := meetingedit.New(backend, meetingedit.NewRedisSessions(rdb))
 	schedule := scheduleview.New(backend, scheduleview.NewRedisSessions(rdb))
+	chk := checker.New(backend, checker.NewRedisSessions(rdb))
 	return &MultiHandler{
 		store:     store,
 		executor:  scenario_executor.New(store, cipher, b, log),
@@ -51,6 +55,7 @@ func NewMultiHandler(store *postgres.Store, cipher *crypto.TokenCipher, b *bot.B
 		settings:  settings,
 		editor:    editor,
 		schedule:  schedule,
+		checker:   chk,
 		log:       log,
 	}
 }
@@ -82,6 +87,10 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 			}
 			if reply, handled := h.schedule.OnText(ctx, from.ID, text); handled {
 				h.sendSchedReply(ctx, b, chatID, 0, reply)
+				return
+			}
+			if reply, handled := h.checker.OnText(ctx, from.ID, text); handled {
+				h.sendCheckerReply(ctx, b, chatID, 0, reply)
 			}
 		}
 		return
@@ -151,6 +160,14 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 			}
 			h.sendSchedReply(ctx, b, chatID, 0, h.schedule.Start(ctx, from.ID))
 		}
+	case "/checker":
+		if isPrivate {
+			if _, err := h.store.GetBotUserByTelegramID(ctx, from.ID); err != nil {
+				h.reply(ctx, b, update.Message, "Сначала зарегистрируйся: /start")
+				return
+			}
+			h.sendCheckerReply(ctx, b, chatID, 0, h.checker.Start(ctx, from.ID))
+		}
 	}
 }
 
@@ -176,6 +193,11 @@ func (h *MultiHandler) handleCallback(ctx context.Context, b *bot.Bot, cq *model
 	if strings.HasPrefix(cq.Data, "sched:") {
 		if reply, handled := h.schedule.OnCallback(ctx, cq.From.ID, cq.Data); handled && cq.Message.Message != nil {
 			h.sendSchedReply(ctx, b, cq.Message.Message.Chat.ID, cq.Message.Message.ID, reply)
+		}
+	}
+	if strings.HasPrefix(cq.Data, "chk:") {
+		if reply, handled := h.checker.OnCallback(ctx, cq.From.ID, cq.Data); handled && cq.Message.Message != nil {
+			h.sendCheckerReply(ctx, b, cq.Message.Message.Chat.ID, cq.Message.Message.ID, reply)
 		}
 	}
 	_, _ = b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{CallbackQueryID: cq.ID})
@@ -228,6 +250,35 @@ func (h *MultiHandler) sendSchedReply(ctx context.Context, b *bot.Bot, chatID in
 }
 
 func toSchedMarkup(rows [][]scheduleview.Button) models.InlineKeyboardMarkup {
+	var kb [][]models.InlineKeyboardButton
+	for _, row := range rows {
+		var r []models.InlineKeyboardButton
+		for _, btn := range row {
+			r = append(r, models.InlineKeyboardButton{Text: btn.Text, CallbackData: btn.Data})
+		}
+		kb = append(kb, r)
+	}
+	return models.InlineKeyboardMarkup{InlineKeyboard: kb}
+}
+
+func (h *MultiHandler) sendCheckerReply(ctx context.Context, b *bot.Bot, chatID int64, msgID int, reply checker.Reply) {
+	if reply.Text == "" {
+		return
+	}
+	var markup models.ReplyMarkup
+	if len(reply.Keyboard) > 0 {
+		markup = toCheckerMarkup(reply.Keyboard)
+	}
+	if reply.Edit && msgID != 0 {
+		_, _ = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+			ChatID: chatID, MessageID: msgID, Text: reply.Text, ReplyMarkup: markup,
+		})
+		return
+	}
+	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: chatID, Text: reply.Text, ReplyMarkup: markup})
+}
+
+func toCheckerMarkup(rows [][]checker.Button) models.InlineKeyboardMarkup {
 	var kb [][]models.InlineKeyboardButton
 	for _, row := range rows {
 		var r []models.InlineKeyboardButton
