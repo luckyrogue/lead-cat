@@ -65,7 +65,7 @@ func (s *Services) AddParticipant(ctx context.Context, workspaceID, userID, meet
 	}
 	email, err = normalizeEmail(email)
 	if err != nil {
-		return fmt.Errorf("%w: bad email", ErrInvalidInput)
+		return fmt.Errorf("%w: bad email: %v", ErrInvalidInput, err)
 	}
 	parts, err := s.Store.ListParticipants(ctx, meetingID)
 	if err != nil {
@@ -96,6 +96,10 @@ func (s *Services) RemoveParticipant(ctx context.Context, workspaceID, userID, m
 	m, _, err := s.loadForParticipantOp(ctx, workspaceID, meetingID, userID)
 	if err != nil {
 		return err
+	}
+	email, err = normalizeEmail(email)
+	if err != nil {
+		return fmt.Errorf("%w: bad email: %v", ErrInvalidInput, err)
 	}
 	if err := s.Store.RemoveParticipant(ctx, meetingID, email); err != nil {
 		return err
