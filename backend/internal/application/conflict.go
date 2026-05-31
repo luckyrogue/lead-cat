@@ -60,6 +60,7 @@ func (s *Services) MeetingConflicts(ctx context.Context, emails []string, start,
 		if m.ID == excludeMeetingID {
 			continue
 		}
+		// Defensive: the repo query already guarantees overlap; re-check in case its predicate ever drifts.
 		if !meeting.Overlaps(start, end, m.StartsAt, m.EndsAt) {
 			continue
 		}
@@ -103,7 +104,8 @@ func (s *Services) MeetingConflicts(ctx context.Context, emails []string, start,
 // itself). Returns nil when the edit does not change the time (overlap unchanged).
 func (s *Services) MeetingUpdateConflicts(ctx context.Context, workspaceID, meetingID uuid.UUID, in UpdateMeetingInput) ([]Conflict, error) {
 	if in.Date == nil || in.Start == nil || in.End == nil {
-		return nil, nil // no time change → overlap set is unchanged
+		// No date/time edit (or only a partial one) → the overlap set is unchanged; nothing to warn about.
+		return nil, nil
 	}
 	w, err := s.Store.GetWorkspace(ctx, workspaceID)
 	if err != nil {
@@ -172,6 +174,7 @@ func (s *Services) personName(ctx context.Context, email string) string {
 
 // FreeSlots finds windows where ALL emails are free within [from,to) (day-exclusive),
 // Mon–Fri, workStartHour–workEndHour Almaty, gaps >= durMins. Global by email. §4.8
+// Callers should pass start-of-day Almaty boundaries for from/to so day windows align.
 func (s *Services) FreeSlots(ctx context.Context, emails []string, from, to time.Time, durMins int) ([]FreeSlot, error) {
 	if len(emails) == 0 || durMins <= 0 {
 		return nil, nil
