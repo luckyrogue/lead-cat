@@ -93,6 +93,8 @@ type Meeting struct {
 	GoogleEventID   string               `json:"google_event_id"`
 	MeetLink        string               `json:"meet_link"`
 	Status          string               `json:"status"`
+	SeriesID        *uuid.UUID           `json:"series_id,omitempty"`
+	RecurrenceUntil *time.Time           `json:"recurrence_until,omitempty"`
 	Participants    []MeetingParticipant `json:"participants"`
 }
 

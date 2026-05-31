@@ -13,12 +13,14 @@ import (
 var ErrMeetingNotEditable = errors.New("meeting not found or not editable")
 
 const meetingCols = `id, workspace_id, organizer_user_id, dept, type, host,
-	starts_at, ends_at, recurrence, name, description, google_event_id, meet_link, status`
+	starts_at, ends_at, recurrence, name, description, google_event_id, meet_link, status,
+	series_id, recurrence_until`
 
 // meetingColsM is meetingCols qualified with the `m` alias for joins.
-// Keep its columns (and the ListMeetingsByOrganizerTelegram scan order) in sync with meetingCols.
+// Keep its columns (and the scanMeeting scan order) in sync with meetingCols.
 const meetingColsM = `m.id, m.workspace_id, m.organizer_user_id, m.dept, m.type, m.host,
-	m.starts_at, m.ends_at, m.recurrence, m.name, m.description, m.google_event_id, m.meet_link, m.status`
+	m.starts_at, m.ends_at, m.recurrence, m.name, m.description, m.google_event_id, m.meet_link, m.status,
+	m.series_id, m.recurrence_until`
 
 // MeetingWithTZ is a meeting plus its workspace timezone (for bot rendering).
 type MeetingWithTZ struct {
@@ -31,19 +33,57 @@ func scanMeeting(row interface {
 }) (Meeting, error) {
 	var m Meeting
 	err := row.Scan(&m.ID, &m.WorkspaceID, &m.OrganizerUserID, &m.Dept, &m.Type, &m.Host,
-		&m.StartsAt, &m.EndsAt, &m.Recurrence, &m.Name, &m.Description, &m.GoogleEventID, &m.MeetLink, &m.Status)
+		&m.StartsAt, &m.EndsAt, &m.Recurrence, &m.Name, &m.Description, &m.GoogleEventID, &m.MeetLink, &m.Status,
+		&m.SeriesID, &m.RecurrenceUntil)
 	return m, err
 }
 
+const insertMeetingSQL = `
+	INSERT INTO meetings (workspace_id, organizer_user_id, dept, type, host,
+		starts_at, ends_at, recurrence, name, description, google_event_id, meet_link,
+		series_id, recurrence_until)
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+	RETURNING ` + meetingCols
+
+func meetingInsertArgs(m Meeting) []any {
+	return []any{m.WorkspaceID, m.OrganizerUserID, m.Dept, m.Type, m.Host,
+		m.StartsAt, m.EndsAt, m.Recurrence, m.Name, m.Description, m.GoogleEventID, m.MeetLink,
+		m.SeriesID, m.RecurrenceUntil}
+}
+
 func (s *Store) CreateMeeting(ctx context.Context, m Meeting) (Meeting, error) {
-	row := s.pool.QueryRow(ctx, `
-		INSERT INTO meetings (workspace_id, organizer_user_id, dept, type, host,
-			starts_at, ends_at, recurrence, name, description, google_event_id, meet_link)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
-		RETURNING `+meetingCols,
-		m.WorkspaceID, m.OrganizerUserID, m.Dept, m.Type, m.Host,
-		m.StartsAt, m.EndsAt, m.Recurrence, m.Name, m.Description, m.GoogleEventID, m.MeetLink)
-	return scanMeeting(row)
+	return scanMeeting(s.pool.QueryRow(ctx, insertMeetingSQL, meetingInsertArgs(m)...))
+}
+
+// CreateMeetingSeries inserts all meetings + their participants in one
+// transaction (all-or-nothing) and returns the inserted rows with IDs.
+func (s *Store) CreateMeetingSeries(ctx context.Context, ms []Meeting, ps []MeetingParticipant) ([]Meeting, error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	out := make([]Meeting, 0, len(ms))
+	for _, m := range ms {
+		created, err := scanMeeting(tx.QueryRow(ctx, insertMeetingSQL, meetingInsertArgs(m)...))
+		if err != nil {
+			return nil, err
+		}
+		for _, p := range ps {
+			if _, err := tx.Exec(ctx, `
+				INSERT INTO meeting_participants (meeting_id, employee_id, email)
+				VALUES ($1, $2, $3) ON CONFLICT (meeting_id, email) DO NOTHING`, created.ID, p.EmployeeID, p.Email); err != nil {
+				return nil, err
+			}
+		}
+		created.Participants = ps
+		out = append(out, created)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (s *Store) AddParticipants(ctx context.Context, meetingID uuid.UUID, ps []MeetingParticipant) error {
@@ -151,6 +191,7 @@ func (s *Store) ListMeetingsByOrganizerTelegram(ctx context.Context, telegramID 
 		var mt MeetingWithTZ
 		if err := rows.Scan(&mt.ID, &mt.WorkspaceID, &mt.OrganizerUserID, &mt.Dept, &mt.Type, &mt.Host,
 			&mt.StartsAt, &mt.EndsAt, &mt.Recurrence, &mt.Name, &mt.Description, &mt.GoogleEventID, &mt.MeetLink, &mt.Status,
+			&mt.SeriesID, &mt.RecurrenceUntil,
 			&mt.TZ); err != nil {
 			return nil, err
 		}
