@@ -82,3 +82,29 @@ func TestApplyMeetingUpdate_RecurrenceLabelInName(t *testing.T) {
 		t.Fatalf("name = %q", out.Name)
 	}
 }
+
+func TestApplyMeetingUpdate_NameUsesLocalDate(t *testing.T) {
+	loc, _ := time.LoadLocation("Asia/Almaty")
+	m := baseMeeting()
+	// 01:00 Almaty == 2026-05-31 20:00 UTC. The name must use the LOCAL date.
+	m.StartsAt = time.Date(2026, 6, 1, 1, 0, 0, 0, loc).UTC()
+	m.EndsAt = time.Date(2026, 6, 1, 2, 0, 0, 0, loc).UTC()
+	out, err := applyMeetingUpdate(m, UpdateMeetingInput{Dept: strp("Маркетинг")}, loc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out.Name != "Маркетинг | Планёрка | Иванов А.А. | 2026-06-01" {
+		t.Fatalf("name must use local date 2026-06-01, got %q", out.Name)
+	}
+}
+
+func TestApplyMeetingUpdate_PartialDateTime(t *testing.T) {
+	loc, _ := time.LoadLocation("Asia/Almaty")
+	// Date + Start but no End -> error.
+	_, err := applyMeetingUpdate(baseMeeting(), UpdateMeetingInput{
+		Date: strp("2026-06-02"), Start: strp("10:00"),
+	}, loc)
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("want ErrInvalidInput for partial date/time, got %v", err)
+	}
+}

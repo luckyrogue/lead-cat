@@ -34,7 +34,15 @@ func applyMeetingUpdate(cur postgres.Meeting, in UpdateMeetingInput, loc *time.L
 	startLocal := cur.StartsAt.In(loc)
 	startsAt := cur.StartsAt
 	endsAt := cur.EndsAt
-	if in.Date != nil && in.Start != nil && in.End != nil {
+
+	// Date/Start/End are a unit: all three or none.
+	hasDate := in.Date != nil || in.Start != nil || in.End != nil
+	allDate := in.Date != nil && in.Start != nil && in.End != nil
+	if hasDate && !allDate {
+		return postgres.Meeting{}, fmt.Errorf("%w: date, start, and end must be supplied together", ErrInvalidInput)
+	}
+
+	if allDate {
 		s, err := time.ParseInLocation("2006-01-02 15:04", *in.Date+" "+*in.Start, loc)
 		if err != nil {
 			return postgres.Meeting{}, fmt.Errorf("%w: bad start time", ErrInvalidInput)
