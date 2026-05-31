@@ -75,6 +75,13 @@ func (s *Store) ListParticipants(ctx context.Context, meetingID uuid.UUID) ([]Me
 	return out, rows.Err()
 }
 
+// RemoveParticipant deletes a participant by email from a meeting.
+func (s *Store) RemoveParticipant(ctx context.Context, meetingID uuid.UUID, email string) error {
+	_, err := s.pool.Exec(ctx, `
+		DELETE FROM meeting_participants WHERE meeting_id = $1 AND email = $2`, meetingID, email)
+	return err
+}
+
 func (s *Store) ListMeetings(ctx context.Context, workspaceID uuid.UUID) ([]Meeting, error) {
 	return s.queryMeetings(ctx, `
 		SELECT `+meetingCols+` FROM meetings
