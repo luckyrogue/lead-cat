@@ -127,10 +127,6 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 		}
 	case "/edit":
 		if isPrivate {
-			if _, err := h.store.GetBotUserByTelegramID(ctx, from.ID); err != nil {
-				h.reply(ctx, b, update.Message, "Сначала зарегистрируйся: /start")
-				return
-			}
 			h.sendEditorReply(ctx, b, chatID, 0, h.editor.Start(ctx, from.ID))
 		}
 	}

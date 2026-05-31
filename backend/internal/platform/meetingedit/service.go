@@ -188,6 +188,9 @@ func (s *Service) apply(ctx context.Context, telegramID int64) Reply {
 		case errors.Is(err, application.ErrForbidden):
 			_ = s.sessions.Del(ctx, telegramID)
 			return Reply{Text: "Нет доступа к этой встрече."}
+		case errors.Is(err, postgres.ErrMeetingNotEditable):
+			_ = s.sessions.Del(ctx, telegramID)
+			return Reply{Text: "Встреча больше недоступна для редактирования."}
 		default:
 			return Reply{Text: "Не удалось обновить встречу, попробуй позже."}
 		}

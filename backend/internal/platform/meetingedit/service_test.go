@@ -168,6 +168,23 @@ func TestEditFlow_SessionExpired(t *testing.T) {
 	}
 }
 
+func TestEditFlow_NotEditable(t *testing.T) {
+	ctx := context.Background()
+	m := sampleMeeting()
+	sess := newMemSessions()
+	svc := New(&fakeBackend{meetings: []postgres.MeetingWithTZ{m}, updateErr: postgres.ErrMeetingNotEditable}, sess)
+	const tg = int64(16)
+	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
+	svc.OnCallback(ctx, tg, "medit:field:dept")
+	svc.OnText(ctx, tg, "Маркетинг")
+	if r, _ := svc.OnCallback(ctx, tg, "medit:apply"); !strings.Contains(r.Text, "больше недоступна") {
+		t.Fatalf("not-editable mapping: %+v", r)
+	}
+	if st, _ := sess.Get(ctx, tg); st != nil {
+		t.Fatal("session should be cleared when meeting not editable")
+	}
+}
+
 func TestEditFlow_ApplyErrors(t *testing.T) {
 	ctx := context.Background()
 	m := sampleMeeting()
@@ -184,6 +201,20 @@ func TestEditFlow_ApplyErrors(t *testing.T) {
 	}
 	if st, _ := sess.Get(ctx, tg); st != nil {
 		t.Fatal("session should be cleared on forbidden")
+	}
+
+	// ErrMeetingNotEditable -> "больше недоступна", session cleared.
+	sess3 := newMemSessions()
+	svc3 := New(&fakeBackend{meetings: []postgres.MeetingWithTZ{m}, updateErr: postgres.ErrMeetingNotEditable}, sess3)
+	const tg3 = int64(16)
+	svc3.OnCallback(ctx, tg3, "medit:pick:"+m.ID.String())
+	svc3.OnCallback(ctx, tg3, "medit:field:dept")
+	svc3.OnText(ctx, tg3, "Маркетинг")
+	if r, _ := svc3.OnCallback(ctx, tg3, "medit:apply"); !strings.Contains(r.Text, "больше недоступна") {
+		t.Fatalf("not-editable mapping: %+v", r)
+	}
+	if st, _ := sess3.Get(ctx, tg3); st != nil {
+		t.Fatal("session should be cleared when meeting not editable")
 	}
 
 	// ErrInvalidInput -> "Неверные данные", session kept.
