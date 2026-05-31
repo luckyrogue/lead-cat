@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/mail"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -49,6 +50,18 @@ func (s *Services) SearchEmployees(ctx context.Context, workspaceID uuid.UUID, q
 		return nil, err
 	}
 	return filterEmployees(all, query), nil
+}
+
+// SearchEmployeesGlobal finds directory entries across all workspaces (for the
+// bot schedule view, which has no workspace context).
+func (s *Services) SearchEmployeesGlobal(ctx context.Context, query string) ([]postgres.Employee, error) {
+	return s.Store.SearchEmployeesGlobal(ctx, query)
+}
+
+// EmployeeSchedule returns the scheduled meetings in [from,to) for an email
+// (participant or organizer).
+func (s *Services) EmployeeSchedule(ctx context.Context, email string, from, to time.Time) ([]postgres.Meeting, error) {
+	return s.Store.ListScheduleForEmail(ctx, email, from, to)
 }
 
 // ListParticipants returns a meeting's participants (for the bot FSM).
