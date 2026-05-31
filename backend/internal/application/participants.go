@@ -128,6 +128,9 @@ func (s *Services) loadForParticipantOp(ctx context.Context, workspaceID, meetin
 	if !ownerOrOrganizer(w, m.OrganizerUserID, userID) {
 		return postgres.Meeting{}, postgres.Workspace{}, ErrForbidden
 	}
+	if m.Status != "scheduled" {
+		return postgres.Meeting{}, postgres.Workspace{}, postgres.ErrMeetingNotEditable
+	}
 	return m, w, nil
 }
 
