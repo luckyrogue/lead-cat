@@ -142,9 +142,7 @@ func (s *Services) UpdateMeeting(ctx context.Context, workspaceID, userID, meeti
 	if err != nil {
 		return postgres.Meeting{}, err
 	}
-	isOwner := w.OwnerUserID != nil && *w.OwnerUserID == userID
-	isOrganizer := cur.OrganizerUserID != nil && *cur.OrganizerUserID == userID
-	if !isOwner && !isOrganizer {
+	if !ownerOrOrganizer(w, cur.OrganizerUserID, userID) {
 		return postgres.Meeting{}, ErrForbidden
 	}
 	loc, err := time.LoadLocation(orDefault(w.TZ, "Asia/Almaty"))
@@ -200,9 +198,7 @@ func (s *Services) CancelMeeting(ctx context.Context, workspaceID, userID, id uu
 	if err != nil {
 		return err
 	}
-	isOwner := w.OwnerUserID != nil && *w.OwnerUserID == userID
-	isOrganizer := m.OrganizerUserID != nil && *m.OrganizerUserID == userID
-	if !isOwner && !isOrganizer {
+	if !ownerOrOrganizer(w, m.OrganizerUserID, userID) {
 		return ErrForbidden
 	}
 	if m.GoogleEventID != "" {
