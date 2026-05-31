@@ -13,18 +13,22 @@ import (
 )
 
 type fakeBackend struct {
-	meetings []postgres.MeetingWithTZ
-	gotIn    application.UpdateMeetingInput
-	gotWS    uuid.UUID
-	gotUser  uuid.UUID
-	gotMID   uuid.UUID
-	applied  postgres.Meeting
+	meetings  []postgres.MeetingWithTZ
+	updateErr error
+	gotIn     application.UpdateMeetingInput
+	gotWS     uuid.UUID
+	gotUser   uuid.UUID
+	gotMID    uuid.UUID
+	applied   postgres.Meeting
 }
 
 func (f *fakeBackend) ListEditableMeetings(_ context.Context, _ int64) ([]postgres.MeetingWithTZ, error) {
 	return f.meetings, nil
 }
 func (f *fakeBackend) UpdateMeeting(_ context.Context, ws, user, mid uuid.UUID, in application.UpdateMeetingInput) (postgres.Meeting, error) {
+	if f.updateErr != nil {
+		return postgres.Meeting{}, f.updateErr
+	}
 	f.gotWS, f.gotUser, f.gotMID, f.gotIn = ws, user, mid, in
 	return f.applied, nil
 }
@@ -111,5 +115,84 @@ func TestEditFlow_DateTime(t *testing.T) {
 	svc.OnCallback(ctx, tg, "medit:apply")
 	if be.gotIn.Date == nil || *be.gotIn.Date != "2026-06-02" || be.gotIn.Start == nil || *be.gotIn.Start != "10:00" {
 		t.Fatalf("datetime override not passed: %+v", be.gotIn)
+	}
+}
+
+func TestEditFlow_Recurrence(t *testing.T) {
+	ctx := context.Background()
+	m := sampleMeeting()
+	be := &fakeBackend{meetings: []postgres.MeetingWithTZ{m}, applied: m.Meeting}
+	svc := New(be, newMemSessions())
+	const tg = int64(11)
+	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
+	if r, ok := svc.OnCallback(ctx, tg, "medit:field:rec"); !ok || !strings.Contains(r.Text, "частоту") {
+		t.Fatalf("rec menu: %+v", r)
+	}
+	svc.OnCallback(ctx, tg, "medit:set:rec:weekly")
+	svc.OnCallback(ctx, tg, "medit:apply")
+	if be.gotIn.Recurrence == nil || *be.gotIn.Recurrence != "weekly" {
+		t.Fatalf("recurrence not passed: %+v", be.gotIn)
+	}
+}
+
+func TestEditFlow_Cancel(t *testing.T) {
+	ctx := context.Background()
+	m := sampleMeeting()
+	sess := newMemSessions()
+	be := &fakeBackend{meetings: []postgres.MeetingWithTZ{m}, applied: m.Meeting}
+	svc := New(be, sess)
+	const tg = int64(12)
+	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
+	r, ok := svc.OnCallback(ctx, tg, "medit:cancel")
+	if !ok || !r.Edit || !strings.Contains(r.Text, "отменено") {
+		t.Fatalf("cancel reply: %+v", r)
+	}
+	if st, _ := sess.Get(ctx, tg); st != nil {
+		t.Fatal("session not cleared on cancel")
+	}
+}
+
+func TestEditFlow_SessionExpired(t *testing.T) {
+	ctx := context.Background()
+	svc := New(&fakeBackend{}, newMemSessions())
+	const tg = int64(13)
+	if r, ok := svc.OnCallback(ctx, tg, "medit:field:dept"); !ok || !strings.Contains(r.Text, "истекла") {
+		t.Fatalf("expected session-expired on field, got %+v ok=%v", r, ok)
+	}
+	if r, ok := svc.OnCallback(ctx, tg, "medit:apply"); !ok || !strings.Contains(r.Text, "истекла") {
+		t.Fatalf("expected session-expired on apply, got %+v", r)
+	}
+}
+
+func TestEditFlow_ApplyErrors(t *testing.T) {
+	ctx := context.Background()
+	m := sampleMeeting()
+
+	// ErrForbidden -> "Нет доступа", session cleared.
+	sess := newMemSessions()
+	svc := New(&fakeBackend{meetings: []postgres.MeetingWithTZ{m}, updateErr: application.ErrForbidden}, sess)
+	const tg = int64(14)
+	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
+	svc.OnCallback(ctx, tg, "medit:field:dept")
+	svc.OnText(ctx, tg, "Маркетинг")
+	if r, _ := svc.OnCallback(ctx, tg, "medit:apply"); !strings.Contains(r.Text, "Нет доступа") {
+		t.Fatalf("forbidden mapping: %+v", r)
+	}
+	if st, _ := sess.Get(ctx, tg); st != nil {
+		t.Fatal("session should be cleared on forbidden")
+	}
+
+	// ErrInvalidInput -> "Неверные данные", session kept.
+	sess2 := newMemSessions()
+	svc2 := New(&fakeBackend{meetings: []postgres.MeetingWithTZ{m}, updateErr: application.ErrInvalidInput}, sess2)
+	const tg2 = int64(15)
+	svc2.OnCallback(ctx, tg2, "medit:pick:"+m.ID.String())
+	svc2.OnCallback(ctx, tg2, "medit:field:dept")
+	svc2.OnText(ctx, tg2, "Маркетинг")
+	if r, _ := svc2.OnCallback(ctx, tg2, "medit:apply"); !strings.Contains(r.Text, "Неверные данные") {
+		t.Fatalf("invalid mapping: %+v", r)
+	}
+	if st, _ := sess2.Get(ctx, tg2); st == nil {
+		t.Fatal("session should persist on invalid input")
 	}
 }

@@ -95,6 +95,9 @@ func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Re
 	st.Step = stepMenu
 	st.AwaitingField = ""
 	_ = s.sessions.Set(ctx, telegramID, *st)
+	// New message (not Edit): we can't turn the user's text message into the menu,
+	// so the refreshed menu is sent below. The previous menu's buttons still work
+	// (FSM state lives in Redis, not the message).
 	return menuReply(*st, false), true
 }
 
@@ -171,6 +174,9 @@ func (s *Service) apply(ctx context.Context, telegramID int64) Reply {
 	if len(st.Overrides) == 0 {
 		return Reply{Text: "Нет изменений. Выбери поле или нажми «Отмена».", Keyboard: menuKeyboard(), Edit: true}
 	}
+	// IDs come from our own session (set in pick from uuid.UUID.String()); a parse
+	// failure would yield a zero UUID that UpdateMeeting rejects as ErrForbidden —
+	// safe degradation, so the parse errors are intentionally ignored.
 	ws, _ := uuid.Parse(st.WorkspaceID)
 	uid, _ := uuid.Parse(st.UserID)
 	mid, _ := uuid.Parse(st.MeetingID)
