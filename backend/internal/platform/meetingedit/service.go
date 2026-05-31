@@ -215,6 +215,9 @@ func (s *Service) apply(ctx context.Context, telegramID int64) Reply {
 	if err != nil || st == nil {
 		return Reply{Text: "Сессия истекла. Начни заново: /edit"}
 	}
+	if st.SeriesID != "" && st.Scope == "" {
+		return Reply{Text: "Сначала выбери: эту встречу или всю серию.", Keyboard: scopeReply().Keyboard, Edit: true}
+	}
 	if len(st.Overrides) == 0 {
 		return Reply{Text: "Нет изменений. Выбери поле или нажми «Отмена».", Keyboard: menuKeyboard(st.Scope), Edit: true}
 	}
@@ -463,6 +466,7 @@ func menuKeyboard(scope string) [][]Button {
 func scopeReply() Reply {
 	return Reply{
 		Text: "Что редактируем?",
+		Edit: true,
 		Keyboard: [][]Button{
 			{{Text: "✏️ Эту встречу", Data: "medit:scope:one"}},
 			{{Text: "🔁 Всю серию (эту и далее)", Data: "medit:scope:series"}},

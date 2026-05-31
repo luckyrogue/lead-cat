@@ -445,3 +445,19 @@ func TestEditFlow_NonSeriesNoPrompt(t *testing.T) {
 		t.Fatalf("non-series pick should go straight to field menu, got %+v", r)
 	}
 }
+
+func TestEditFlow_SeriesApplyWithoutScope(t *testing.T) {
+	ctx := context.Background()
+	m := seriesMeeting()
+	be := &fakeBackend{meetings: []postgres.MeetingWithTZ{m}, applied: m.Meeting}
+	svc := New(be, newMemSessions())
+	const tg = int64(83)
+	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String()) // scope prompt shown, Scope=""
+	// a stray apply before choosing scope must re-prompt, not call UpdateMeeting/UpdateSeries
+	if r, _ := svc.OnCallback(ctx, tg, "medit:apply"); !strings.Contains(r.Text, "выбери") {
+		t.Fatalf("apply without scope should re-prompt, got %+v", r)
+	}
+	if be.updatedSeries != 0 {
+		t.Fatal("UpdateSeries must not be called without a chosen scope")
+	}
+}
