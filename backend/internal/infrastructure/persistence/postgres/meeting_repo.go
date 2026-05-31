@@ -52,6 +52,16 @@ func meetingInsertArgs(m Meeting) []any {
 		m.SeriesID, m.RecurrenceUntil}
 }
 
+const updateMeetingSQL = `
+	UPDATE meetings SET dept=$3, type=$4, host=$5, starts_at=$6, ends_at=$7,
+		recurrence=$8, name=$9, description=$10, updated_at=now()
+	WHERE id=$1 AND workspace_id=$2 AND status='scheduled'`
+
+// updateMeetingArgs returns the args for updateMeetingSQL; order MUST match its $1..$10.
+func updateMeetingArgs(workspaceID, id uuid.UUID, m Meeting) []any {
+	return []any{id, workspaceID, m.Dept, m.Type, m.Host, m.StartsAt, m.EndsAt, m.Recurrence, m.Name, m.Description}
+}
+
 func (s *Store) CreateMeeting(ctx context.Context, m Meeting) (Meeting, error) {
 	return scanMeeting(s.pool.QueryRow(ctx, insertMeetingSQL, meetingInsertArgs(m)...))
 }
@@ -152,6 +162,15 @@ func (s *Store) queryMeetings(ctx context.Context, sql string, args ...any) ([]M
 	return out, rows.Err()
 }
 
+// ListSeriesOccurrences returns the scheduled occurrences of a series at or after
+// fromStart, in the workspace, ordered by start.
+func (s *Store) ListSeriesOccurrences(ctx context.Context, workspaceID, seriesID uuid.UUID, fromStart time.Time) ([]Meeting, error) {
+	return s.queryMeetings(ctx, `
+		SELECT `+meetingCols+` FROM meetings
+		WHERE series_id = $1 AND workspace_id = $2 AND starts_at >= $3 AND status = 'scheduled'
+		ORDER BY starts_at`, seriesID, workspaceID, fromStart)
+}
+
 func (s *Store) GetMeeting(ctx context.Context, workspaceID, id uuid.UUID) (Meeting, error) {
 	row := s.pool.QueryRow(ctx, `SELECT `+meetingCols+` FROM meetings WHERE id = $1 AND workspace_id = $2`, id, workspaceID)
 	return scanMeeting(row)
@@ -159,11 +178,7 @@ func (s *Store) GetMeeting(ctx context.Context, workspaceID, id uuid.UUID) (Meet
 
 // UpdateMeeting overwrites the editable fields of a scheduled meeting.
 func (s *Store) UpdateMeeting(ctx context.Context, workspaceID, id uuid.UUID, m Meeting) error {
-	ct, err := s.pool.Exec(ctx, `
-		UPDATE meetings SET dept=$3, type=$4, host=$5, starts_at=$6, ends_at=$7,
-			recurrence=$8, name=$9, description=$10, updated_at=now()
-		WHERE id=$1 AND workspace_id=$2 AND status='scheduled'`,
-		id, workspaceID, m.Dept, m.Type, m.Host, m.StartsAt, m.EndsAt, m.Recurrence, m.Name, m.Description)
+	ct, err := s.pool.Exec(ctx, updateMeetingSQL, updateMeetingArgs(workspaceID, id, m)...)
 	if err != nil {
 		return err
 	}
@@ -171,6 +186,26 @@ func (s *Store) UpdateMeeting(ctx context.Context, workspaceID, id uuid.UUID, m 
 		return ErrMeetingNotEditable
 	}
 	return nil
+}
+
+// UpdateMeetingsTx updates all meetings in one transaction (all-or-nothing). Each
+// must still be scheduled in the workspace, else ErrMeetingNotEditable rolls back.
+func (s *Store) UpdateMeetingsTx(ctx context.Context, workspaceID uuid.UUID, ms []Meeting) error {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	for _, m := range ms {
+		ct, err := tx.Exec(ctx, updateMeetingSQL, updateMeetingArgs(workspaceID, m.ID, m)...)
+		if err != nil {
+			return err
+		}
+		if ct.RowsAffected() == 0 {
+			return ErrMeetingNotEditable
+		}
+	}
+	return tx.Commit(ctx)
 }
 
 // ListMeetingsByOrganizerTelegram returns the upcoming scheduled meetings
