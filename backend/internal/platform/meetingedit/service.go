@@ -25,6 +25,8 @@ type Backend interface {
 	SearchEmployees(ctx context.Context, workspaceID uuid.UUID, query string) ([]postgres.Employee, error)
 	AddParticipant(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, email string) error
 	RemoveParticipant(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, email string) error
+	CancelMeeting(ctx context.Context, workspaceID, userID, meetingID uuid.UUID) error
+	CancelSeries(ctx context.Context, workspaceID, userID, meetingID uuid.UUID) (int, error)
 }
 
 type sessions interface {
@@ -89,6 +91,10 @@ func (s *Service) OnCallback(ctx context.Context, telegramID int64, data string)
 		return s.setScope(ctx, telegramID, "one"), true
 	case data == "medit:scope:series":
 		return s.setScope(ctx, telegramID, "series"), true
+	case data == "medit:delete":
+		return s.confirmDelete(ctx, telegramID), true
+	case data == "medit:delconf":
+		return s.doDelete(ctx, telegramID), true
 	}
 	return Reply{}, false
 }
@@ -456,6 +462,7 @@ func menuKeyboard(scope string) [][]Button {
 			{{Text: "🕒 Время", Data: "medit:field:datetime"}},
 			{{Text: "🏢 Отдел", Data: "medit:field:dept"}, {Text: "🏷 Тип", Data: "medit:field:type"}},
 			{{Text: "🎤 Ведущий", Data: "medit:field:host"}, {Text: "📝 Описание", Data: "medit:field:description"}},
+			{{Text: "🗑 Удалить", Data: "medit:delete"}},
 			{{Text: "✅ Применить", Data: "medit:apply"}, {Text: "✖ Отмена", Data: "medit:cancel"}},
 		}
 	}
@@ -465,18 +472,75 @@ func menuKeyboard(scope string) [][]Button {
 		{{Text: "🎤 Ведущий", Data: "medit:field:host"}, {Text: "📝 Описание", Data: "medit:field:description"}},
 		{{Text: "🔁 Частота", Data: "medit:field:rec"}},
 		{{Text: "👥 Участники", Data: "medit:parts"}},
+		{{Text: "🗑 Удалить", Data: "medit:delete"}},
 		{{Text: "✅ Применить", Data: "medit:apply"}, {Text: "✖ Отмена", Data: "medit:cancel"}},
 	}
 }
 
 func scopeReply() Reply {
 	return Reply{
-		Text: "Что редактируем?",
+		Text: "Эта встреча или вся серия (эта и далее)?",
 		Edit: true,
 		Keyboard: [][]Button{
-			{{Text: "✏️ Эту встречу", Data: "medit:scope:one"}},
-			{{Text: "🔁 Всю серию (эту и далее)", Data: "medit:scope:series"}},
+			{{Text: "📍 Эта встреча", Data: "medit:scope:one"}},
+			{{Text: "🔁 Вся серия (эта и далее)", Data: "medit:scope:series"}},
 		},
+	}
+}
+
+func (s *Service) confirmDelete(ctx context.Context, telegramID int64) Reply {
+	st, err := s.sessions.Get(ctx, telegramID)
+	if err != nil || st == nil {
+		return Reply{Text: "Сессия истекла. Начни заново: /edit"}
+	}
+	text := "Удалить эту встречу?"
+	if st.Scope == "series" {
+		text = "Удалить всю серию (эту и далее)? Это отменит все будущие встречи серии."
+	}
+	return Reply{
+		Text: text,
+		Edit: true,
+		Keyboard: [][]Button{
+			{{Text: "✅ Да, удалить", Data: "medit:delconf"}},
+			{{Text: "⬅ Отмена", Data: "medit:menu"}},
+		},
+	}
+}
+
+func (s *Service) doDelete(ctx context.Context, telegramID int64) Reply {
+	st, err := s.sessions.Get(ctx, telegramID)
+	if err != nil || st == nil {
+		return Reply{Text: "Сессия истекла. Начни заново: /edit"}
+	}
+	ws, _ := uuid.Parse(st.WorkspaceID)
+	uid, _ := uuid.Parse(st.UserID)
+	mid, _ := uuid.Parse(st.MeetingID)
+
+	if st.Scope == "series" {
+		n, err := s.backend.CancelSeries(ctx, ws, uid, mid)
+		if err != nil {
+			return s.deleteErrReply(ctx, telegramID, err)
+		}
+		_ = s.sessions.Del(ctx, telegramID)
+		return Reply{Text: fmt.Sprintf("Удалено встреч серии: %d ❌", n)}
+	}
+	if err := s.backend.CancelMeeting(ctx, ws, uid, mid); err != nil {
+		return s.deleteErrReply(ctx, telegramID, err)
+	}
+	_ = s.sessions.Del(ctx, telegramID)
+	return Reply{Text: "Встреча удалена ❌"}
+}
+
+func (s *Service) deleteErrReply(ctx context.Context, telegramID int64, err error) Reply {
+	switch {
+	case errors.Is(err, application.ErrForbidden):
+		_ = s.sessions.Del(ctx, telegramID)
+		return Reply{Text: "Нет доступа к этой встрече."}
+	case errors.Is(err, postgres.ErrMeetingNotEditable):
+		_ = s.sessions.Del(ctx, telegramID)
+		return Reply{Text: "Встреча больше недоступна."}
+	default:
+		return Reply{Text: "Не удалось удалить, попробуй позже."}
 	}
 }
 

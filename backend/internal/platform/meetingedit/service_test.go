@@ -13,20 +13,22 @@ import (
 )
 
 type fakeBackend struct {
-	meetings      []postgres.MeetingWithTZ
-	updateErr     error
-	gotIn         application.UpdateMeetingInput
-	gotWS         uuid.UUID
-	gotUser       uuid.UUID
-	gotMID        uuid.UUID
-	applied       postgres.Meeting
-	participants  []postgres.MeetingParticipant
-	employees     []postgres.Employee
-	addErr        error
-	addedEmail    string
-	removedEmail  string
-	updatedSeries int
-	seriesIn      application.SeriesUpdateInput
+	meetings        []postgres.MeetingWithTZ
+	updateErr       error
+	gotIn           application.UpdateMeetingInput
+	gotWS           uuid.UUID
+	gotUser         uuid.UUID
+	gotMID          uuid.UUID
+	applied         postgres.Meeting
+	participants    []postgres.MeetingParticipant
+	employees       []postgres.Employee
+	addErr          error
+	addedEmail      string
+	removedEmail    string
+	updatedSeries   int
+	seriesIn        application.SeriesUpdateInput
+	cancelledOne    bool
+	cancelledSeries int
 }
 
 func (f *fakeBackend) ListEditableMeetings(_ context.Context, _ int64) ([]postgres.MeetingWithTZ, error) {
@@ -74,6 +76,14 @@ func (f *fakeBackend) RemoveParticipant(_ context.Context, _, _, _ uuid.UUID, em
 	}
 	f.participants = kept
 	return nil
+}
+func (f *fakeBackend) CancelMeeting(_ context.Context, _, _, _ uuid.UUID) error {
+	f.cancelledOne = true
+	return nil
+}
+func (f *fakeBackend) CancelSeries(_ context.Context, _, _, _ uuid.UUID) (int, error) {
+	f.cancelledSeries++
+	return 4, nil
 }
 
 type memSessions struct{ m map[int64]*State }
@@ -404,7 +414,7 @@ func TestEditFlow_SeriesScopePrompt(t *testing.T) {
 	svc := New(be, newMemSessions())
 	const tg = int64(80)
 	r, ok := svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
-	if !ok || !strings.Contains(r.Text, "Что редактируем") {
+	if !ok || !strings.Contains(r.Text, "Эта встреча или вся серия") {
 		t.Fatalf("series pick should show scope prompt, got %+v", r)
 	}
 }
@@ -459,5 +469,42 @@ func TestEditFlow_SeriesApplyWithoutScope(t *testing.T) {
 	}
 	if be.updatedSeries != 0 {
 		t.Fatal("UpdateSeries must not be called without a chosen scope")
+	}
+}
+
+func TestDeleteFlow_Single(t *testing.T) {
+	ctx := context.Background()
+	m := sampleMeeting()
+	be := &fakeBackend{meetings: []postgres.MeetingWithTZ{m}, applied: m.Meeting}
+	svc := New(be, newMemSessions())
+	const tg = int64(90)
+	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
+	if r, _ := svc.OnCallback(ctx, tg, "medit:delete"); !strings.Contains(r.Text, "Удалить эту встречу") {
+		t.Fatalf("confirm: %+v", r)
+	}
+	if r, _ := svc.OnCallback(ctx, tg, "medit:delconf"); !strings.Contains(r.Text, "удалена") {
+		t.Fatalf("delconf reply: %+v", r)
+	}
+	if !be.cancelledOne || be.cancelledSeries != 0 {
+		t.Fatalf("expected single cancel, got one=%v series=%d", be.cancelledOne, be.cancelledSeries)
+	}
+}
+
+func TestDeleteFlow_Series(t *testing.T) {
+	ctx := context.Background()
+	m := seriesMeeting()
+	be := &fakeBackend{meetings: []postgres.MeetingWithTZ{m}, applied: m.Meeting}
+	svc := New(be, newMemSessions())
+	const tg = int64(91)
+	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
+	svc.OnCallback(ctx, tg, "medit:scope:series")
+	if r, _ := svc.OnCallback(ctx, tg, "medit:delete"); !strings.Contains(r.Text, "всю серию") {
+		t.Fatalf("series confirm: %+v", r)
+	}
+	if r, _ := svc.OnCallback(ctx, tg, "medit:delconf"); !strings.Contains(r.Text, "серии") {
+		t.Fatalf("series delconf reply: %+v", r)
+	}
+	if be.cancelledSeries != 1 || be.cancelledOne {
+		t.Fatalf("expected series cancel, got one=%v series=%d", be.cancelledOne, be.cancelledSeries)
 	}
 }
