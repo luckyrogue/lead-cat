@@ -10,6 +10,7 @@ import (
 
 // UpdateMeetingInput carries optional field overrides (nil = leave unchanged).
 // Date/Start/End must be supplied together to change the time.
+// Participant changes are not handled here (separate increment).
 type UpdateMeetingInput struct {
 	Dept        *string
 	Type        *string

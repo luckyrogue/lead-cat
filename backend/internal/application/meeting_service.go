@@ -155,6 +155,10 @@ func (s *Services) UpdateMeeting(ctx context.Context, workspaceID, userID, meeti
 	if err != nil {
 		return postgres.Meeting{}, err
 	}
+	// Google event is patched before the DB write (consistent with CreateMeeting).
+	// The common failure (Google API error) then leaves the DB unchanged for a
+	// clean retry; the rare DB-write-after-Google-success skew is reconciled by
+	// a subsequent edit/retry. Postgres remains the source of truth.
 	if updated.GoogleEventID != "" {
 		calSvc, err := s.Calendar.For(ctx, workspaceID)
 		if err != nil {
