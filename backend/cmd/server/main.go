@@ -25,6 +25,7 @@ import (
 	asynqqueue "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/queue/asynq"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/telegram"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/config"
+	"github.com/Jaryq-Lab/notify-bot/internal/platform/employeedir"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/meeting_notifier"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/observability/log"
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/reminder_scheduler"
@@ -57,6 +58,7 @@ func main() {
 	}
 
 	store := postgres.New(pool, logger)
+	employeedir.Seed(ctx, store, logger)
 	cipher, err := crypto.NewTokenCipher(cfg.MasterEncryptionKey)
 	if err != nil {
 		logger.Fatal("cipher", zap.Error(err))
