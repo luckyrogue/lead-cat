@@ -13,8 +13,9 @@
 ## Codebase facts (verified — rely on these, but confirm before editing)
 
 - **Module path:** `github.com/Jaryq-Lab/notify-bot` (NOT `lead-cat/backend`). Every import is `github.com/Jaryq-Lab/notify-bot/internal/...`.
-- **`Services` struct** (`internal/application/services.go`): fields `Store *postgres.Store`, `Calendar CalendarProvider`, `Queue Queuer`, `Log *zap.Logger`. Methods use receiver `s` and `s.Store`.
-- **`queryMeetings`** (`postgres/meeting_repo.go:148`) scans meeting rows only — it does **NOT** hydrate `Meeting.Participants`. To get participant emails for a meeting, call `s.Store.ListParticipants(ctx, meetingID)`. Organizer email: `s.Store.GetUserByID(ctx, *m.OrganizerUserID)` → `PlatformUser.Email`.
+- **`Services` struct** (`internal/application/services.go`): fields `Store *postgres.Store`, `Cipher *crypto.TokenCipher`, `Queue *asynqqueue.Client`, `Calendar CalendarProvider`, `Log *zap.Logger`. Methods use receiver `s` and `s.Store`. (conflict.go uses only `s.Store`.)
+- **`queryMeetings`** (`postgres/meeting_repo.go:148`) scans meeting rows only — it does **NOT** hydrate `Meeting.Participants`. To get participant emails for a meeting, call `s.Store.ListParticipants(ctx, meetingID)`.
+- **No existing Store method returns a user's email by ID.** The organizer email lives in the table joined as `platform_users pu ON pu.id = m.organizer_user_id` inside `ListScheduleForEmail` (selecting `pu.email`). Task 2 adds a small `GetUserEmailByID` method for this — **confirm the exact table name** (`platform_users` vs `users`) by reading the `ListScheduleForEmail` SQL before writing it.
 - **`ListScheduleForEmail`** (`meeting_repo.go:241`) is the join shape to copy (participant OR organizer, global by email, `status='scheduled'`).
 - **`orDefault(a, b string) string`** exists at `meeting_service.go:200` (workspace TZ fallback to `Asia/Almaty`). Reuse it.
 - **Models** (`postgres/models.go`): `Meeting{ID *uuid.UUID, OrganizerUserID *uuid.UUID, StartsAt, EndsAt time.Time, Name string, ...}`; `MeetingParticipant{Email string, ...}`; `Employee{FullName, Email string, ...}`; `PlatformUser{Email string, ...}`.
@@ -236,22 +237,23 @@ git commit -m "feat(meetings): pure interval core (Overlaps, FreeSlots) §4.7-4.
 
 ---
 
-## Task 2: Repo query `ListMeetingsOverlapping`
+## Task 2: Repo queries — `ListMeetingsOverlapping` + `GetUserEmailByID`
 
 **Files:**
 - Modify: `backend/internal/infrastructure/persistence/postgres/meeting_repo.go`
+- Modify: `backend/internal/infrastructure/persistence/postgres/user_repo.go`
 
-Build-verified. Read `ListScheduleForEmail` (line ~241) first to match `meetingColsM` and `queryMeetings` usage exactly.
+Build-verified. Read `ListScheduleForEmail` (line ~241) first to match `meetingColsM`, `queryMeetings`, **and the exact organizer-join table name** (`platform_users` vs `users`).
 
-- [ ] **Step 1: Add the query**
+- [ ] **Step 1: Add `ListMeetingsOverlapping`**
 
-Append after `ListScheduleForEmail`:
+Append after `ListScheduleForEmail` in `meeting_repo.go` (use the **same** organizer-join table that `ListScheduleForEmail` uses — shown here as `platform_users`; correct it if that file uses `users`):
 
 ```go
 // ListMeetingsOverlapping returns scheduled meetings overlapping [from,to) where any
-// of emails is a participant or the organizer (by platform_users.email). Global by
-// email (no workspace scope), mirroring ListScheduleForEmail. Participants are NOT
-// hydrated (use ListParticipants for attribution). §4.7/§4.8
+// of emails is a participant or the organizer. Global by email (no workspace scope),
+// mirroring ListScheduleForEmail. Participants are NOT hydrated (use ListParticipants
+// for attribution). §4.7/§4.8
 func (s *Store) ListMeetingsOverlapping(ctx context.Context, emails []string, from, to time.Time) ([]Meeting, error) {
 	if len(emails) == 0 {
 		return nil, nil
@@ -268,16 +270,29 @@ func (s *Store) ListMeetingsOverlapping(ctx context.Context, emails []string, fr
 }
 ```
 
-- [ ] **Step 2: Build-verify**
+- [ ] **Step 2: Add `GetUserEmailByID`**
+
+Append to `user_repo.go` (use the same table aliased `pu` in `ListScheduleForEmail`'s organizer join — `platform_users` here; correct if it's `users`):
+
+```go
+// GetUserEmailByID returns the platform user's email (for organizer attribution).
+func (s *Store) GetUserEmailByID(ctx context.Context, userID uuid.UUID) (string, error) {
+	var email string
+	err := s.pool.QueryRow(ctx, `SELECT email FROM platform_users WHERE id = $1`, userID).Scan(&email)
+	return email, err
+}
+```
+
+- [ ] **Step 3: Build-verify**
 
 Run: `cd backend && env -u GOROOT go build ./... && env -u GOROOT go vet ./internal/infrastructure/persistence/postgres/`
 Expected: no errors.
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add backend/internal/infrastructure/persistence/postgres/meeting_repo.go
-git commit -m "feat(meetings): ListMeetingsOverlapping repo query §4.7-4.8"
+git add backend/internal/infrastructure/persistence/postgres/
+git commit -m "feat(meetings): ListMeetingsOverlapping + GetUserEmailByID repo queries §4.7-4.8"
 ```
 
 ---
@@ -370,8 +385,8 @@ func (s *Services) MeetingConflicts(ctx context.Context, emails []string, start,
 			}
 		}
 		if m.OrganizerUserID != nil {
-			if u, uerr := s.Store.GetUserByID(ctx, *m.OrganizerUserID); uerr == nil && want[u.Email] {
-				hit[u.Email] = true
+			if oe, uerr := s.Store.GetUserEmailByID(ctx, *m.OrganizerUserID); uerr == nil && want[oe] {
+				hit[oe] = true
 			}
 		}
 		for email := range hit {
@@ -446,8 +461,8 @@ func (s *Services) meetingEmails(ctx context.Context, workspaceID, meetingID uui
 		add(p.Email)
 	}
 	if m.OrganizerUserID != nil {
-		if u, uerr := s.Store.GetUserByID(ctx, *m.OrganizerUserID); uerr == nil {
-			add(u.Email)
+		if oe, uerr := s.Store.GetUserEmailByID(ctx, *m.OrganizerUserID); uerr == nil {
+			add(oe)
 		}
 	}
 	return emails, nil
@@ -504,7 +519,7 @@ func (s *Services) FreeSlots(ctx context.Context, emails []string, from, to time
 }
 ```
 
-> **Confirm before building:** `UpdateMeetingInput` has `Date, Start, End *string` (it does — `meeting_update.go`). `Workspace.TZ`, `GetWorkspace`, `GetMeeting`, `GetUserByID`, `ListParticipants`, `SearchEmployeesGlobal` all exist on `*postgres.Store` / `*Services`.
+> **Confirm before building:** `UpdateMeetingInput` has `Date, Start, End *string` (it does — `meeting_update.go`). `Workspace.TZ`, `GetWorkspace`, `GetMeeting`, `ListParticipants`, `SearchEmployeesGlobal` exist on `*postgres.Store` / `*Services`; `GetUserEmailByID` is added in Task 2. `Meeting.OrganizerUserID` is `*uuid.UUID`.
 
 - [ ] **Step 2: Build + vet**
 
@@ -1267,4 +1282,4 @@ git commit -m "docs(meetings): document §4.7-4.8 conflict warning + free-time c
 - **Spec coverage:** §4.7.1 (Overlaps, organizer included via `meetingEmails`) → Tasks 1,3,4; §4.7.2 (warning layout) → Task 4 `formatConflictWarning`; §4.7.3 (non-blocking; "change time" returns) → Task 4 `applyForce` + `medit:field:datetime`; §4.8.2 (≥1 participant, range, duration presets) → Task 5; §4.8.3 (algorithm, weekday skip, 09:00–18:00) → Task 3 `FreeSlots`; §4.8.4 (results layout) → Task 5 `formatSlots`; §4.8.6 (no-slots message) → Task 5 `duration`. REST → Task 7.
 - **Out of scope (do not implement):** Google freebusy; configurable hours; weekend inclusion; bot create-from-slot; Mini App frontend wiring; §4.7 warning on **series** time edits (only single-meeting path warns).
 - **Type consistency:** `Conflict{Email,PersonName,MeetingName,Start,End}` / `FreeSlot{Day,Start,End,Mins}` defined once in Task 3, consumed in Tasks 4,5,7. `ListMeetingsOverlapping(ctx, emails, from, to)` (Task 2) → called in Task 3. `MeetingConflicts(ctx, emails, start, end, excludeMeetingID)`, `MeetingUpdateConflicts(ctx, workspaceID, meetingID, in)`, `FreeSlots(ctx, emails, from, to, durMins)` (Task 3) → consumed in Tasks 4,5,7. FSM convention: `Reply{Text, Keyboard [][]Button, Edit}`, `(Reply, bool)` returns, sessions `Get/Set/Del` — matches `scheduleview`/`meetingedit`.
-- **Known approximations:** `MeetingConflicts` does an N+1 `ListParticipants`/`GetUserByID` per overlapping meeting — acceptable (conflict lists are tiny). `personName` uses `SearchEmployeesGlobal(email)` exact-match — fine for the directory size. Warning times render in `Asia/Almaty` (workspace default), not per-workspace TZ.
+- **Known approximations:** `MeetingConflicts` does an N+1 `ListParticipants`/`GetUserEmailByID` per overlapping meeting — acceptable (conflict lists are tiny). `personName` uses `SearchEmployeesGlobal(email)` exact-match — fine for the directory size. Warning times render in `Asia/Almaty` (workspace default), not per-workspace TZ.
