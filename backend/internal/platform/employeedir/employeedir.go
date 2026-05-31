@@ -38,8 +38,9 @@ func Seed(ctx context.Context, store *postgres.Store, log *zap.Logger) {
 	}
 	if len(wsIDs) == 0 {
 		// No workspace has Google configured yet — the directory has nowhere to
-		// land. Warn (not Info) so this operationally relevant no-op is visible.
-		log.Warn("employee_seed_no_google_workspaces")
+		// land. This is the expected steady state until Google is set up, so it's
+		// Info (a distinct message, not the misleading employee_seed_done{0}).
+		log.Info("employee_seed_no_google_workspaces")
 		return
 	}
 	for _, wsID := range wsIDs {
