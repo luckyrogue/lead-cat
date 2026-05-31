@@ -212,7 +212,12 @@ In `backend/internal/platform/reminder_scheduler/scheduler.go`, replace the enti
 // the shared meetingrecipients helper.
 func (s *Scheduler) recipients(ctx context.Context, m postgres.Meeting) map[int64][]int {
 	out := map[int64][]int{}
-	for _, r := range meetingrecipients.Resolve(ctx, s.store, m) {
+	recs, err := meetingrecipients.Resolve(ctx, s.store, m)
+	if err != nil {
+		s.log.Warn("resolve recipients", zap.String("meeting_id", m.ID.String()), zap.Error(err))
+		return out
+	}
+	for _, r := range recs {
 		if r.IsOrganizer {
 			out[r.TelegramID] = defaultOrganizerOffsets
 		} else {
@@ -222,6 +227,8 @@ func (s *Scheduler) recipients(ctx context.Context, m postgres.Meeting) map[int6
 	return out
 }
 ```
+
+(`zap` is already imported in `scheduler.go`.)
 
 - [ ] **Step 2: Add the import**
 
@@ -473,7 +480,11 @@ func (n *Notifier) HandleCreated(ctx context.Context, workspaceID, meetingID uui
 	}
 	text := buildMessage(m.Name, m.MeetLink, m.StartsAt, m.EndsAt, loc)
 
-	for _, r := range meetingrecipients.Resolve(ctx, n.store, m) {
+	recs, err := meetingrecipients.Resolve(ctx, n.store, m)
+	if err != nil {
+		return fmt.Errorf("resolve recipients: %w", err)
+	}
+	for _, r := range recs {
 		claimed, err := n.store.TryClaimReminder(ctx, m.ID, r.TelegramID, offsetCreated)
 		if err != nil || !claimed {
 			continue
