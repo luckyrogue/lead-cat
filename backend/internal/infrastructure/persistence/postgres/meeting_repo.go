@@ -45,6 +45,7 @@ const insertMeetingSQL = `
 	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
 	RETURNING ` + meetingCols
 
+// meetingInsertArgs returns the args for insertMeetingSQL; order MUST match its $1..$14.
 func meetingInsertArgs(m Meeting) []any {
 	return []any{m.WorkspaceID, m.OrganizerUserID, m.Dept, m.Type, m.Host,
 		m.StartsAt, m.EndsAt, m.Recurrence, m.Name, m.Description, m.GoogleEventID, m.MeetLink,
