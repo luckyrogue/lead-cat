@@ -130,6 +130,63 @@ func (s *Services) CreateMeeting(ctx context.Context, workspaceID, organizerID u
 	return m, nil
 }
 
+// UpdateMeeting applies field overrides to a meeting (organizer or workspace
+// owner only): validates, recomputes the name, patches the Google event, persists,
+// and enqueues a change notification. Mirrors CreateMeeting.
+func (s *Services) UpdateMeeting(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, in UpdateMeetingInput) (postgres.Meeting, error) {
+	cur, err := s.Store.GetMeeting(ctx, workspaceID, meetingID)
+	if err != nil {
+		return postgres.Meeting{}, err
+	}
+	w, err := s.Store.GetWorkspace(ctx, workspaceID)
+	if err != nil {
+		return postgres.Meeting{}, err
+	}
+	isOwner := w.OwnerUserID != nil && *w.OwnerUserID == userID
+	isOrganizer := cur.OrganizerUserID != nil && *cur.OrganizerUserID == userID
+	if !isOwner && !isOrganizer {
+		return postgres.Meeting{}, ErrForbidden
+	}
+	loc, err := time.LoadLocation(orDefault(w.TZ, "Asia/Almaty"))
+	if err != nil {
+		return postgres.Meeting{}, fmt.Errorf("bad timezone: %w", err)
+	}
+	updated, err := applyMeetingUpdate(cur, in, loc)
+	if err != nil {
+		return postgres.Meeting{}, err
+	}
+	if updated.GoogleEventID != "" {
+		calSvc, err := s.Calendar.For(ctx, workspaceID)
+		if err != nil {
+			return postgres.Meeting{}, err
+		}
+		if err := calSvc.UpdateEvent(ctx, updated.GoogleEventID, CalendarEvent{
+			Title: updated.Name, Description: updated.Description,
+			Start: updated.StartsAt, End: updated.EndsAt,
+		}); err != nil {
+			return postgres.Meeting{}, fmt.Errorf("calendar: %w", err)
+		}
+	}
+	if err := s.Store.UpdateMeeting(ctx, workspaceID, meetingID, updated); err != nil {
+		return postgres.Meeting{}, err
+	}
+	if s.Queue != nil {
+		if err := s.Queue.EnqueueMeetingUpdated(ctx, workspaceID, meetingID); err != nil && s.Log != nil {
+			s.Log.Warn("enqueue meeting updated",
+				zap.String("workspace_id", workspaceID.String()),
+				zap.String("meeting_id", meetingID.String()),
+				zap.Error(err))
+		}
+	}
+	return updated, nil
+}
+
+// ListEditableMeetings returns the upcoming meetings the Telegram user organizes,
+// each with its workspace timezone (for the bot edit FSM).
+func (s *Services) ListEditableMeetings(ctx context.Context, telegramID int64) ([]postgres.MeetingWithTZ, error) {
+	return s.Store.ListMeetingsByOrganizerTelegram(ctx, telegramID)
+}
+
 func (s *Services) CancelMeeting(ctx context.Context, workspaceID, userID, id uuid.UUID) error {
 	m, err := s.Store.GetMeeting(ctx, workspaceID, id)
 	if err != nil {
