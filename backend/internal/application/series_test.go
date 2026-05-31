@@ -39,7 +39,8 @@ func spans(n int) []meeting.Span {
 func TestCreateSeriesEvents_OK(t *testing.T) {
 	cal := &fakeCal{}
 	names := []string{"a", "b", "c"}
-	evs, err := createSeriesEvents(context.Background(), cal, names, "desc", []string{"x@y"}, spans(3))
+	s := &Services{}
+	evs, err := s.createSeriesEvents(context.Background(), cal, names, "desc", []string{"x@y"}, spans(3))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,7 +55,8 @@ func TestCreateSeriesEvents_OK(t *testing.T) {
 func TestCreateSeriesEvents_CompensatesOnFailure(t *testing.T) {
 	cal := &fakeCal{failAt: 3}
 	names := []string{"a", "b", "c"}
-	_, err := createSeriesEvents(context.Background(), cal, names, "desc", nil, spans(3))
+	s := &Services{}
+	_, err := s.createSeriesEvents(context.Background(), cal, names, "desc", nil, spans(3))
 	if err == nil {
 		t.Fatal("expected error")
 	}

@@ -139,12 +139,12 @@ func (s *Services) CreateMeeting(ctx context.Context, workspaceID, organizerID u
 	for i, sp := range spansList {
 		names[i] = meeting.GenerateName(in.Dept, in.Type, in.Host, sp.Start, rec)
 	}
-	evs, err := createSeriesEvents(ctx, calSvc, names, in.Description, emails, spansList)
+	evs, err := s.createSeriesEvents(ctx, calSvc, names, in.Description, emails, spansList)
 	if err != nil {
 		return postgres.Meeting{}, err
 	}
 	seriesID := uuid.New()
-	untilUTC := until.UTC()
+	recUntil := until // midnight in the workspace TZ; its date component is the intended end day (no .UTC() — column is DATE)
 	rows := make([]postgres.Meeting, len(evs))
 	for i, e := range evs {
 		rows[i] = postgres.Meeting{
@@ -153,14 +153,12 @@ func (s *Services) CreateMeeting(ctx context.Context, workspaceID, organizerID u
 			StartsAt: e.Span.Start.UTC(), EndsAt: e.Span.End.UTC(),
 			Recurrence: string(rec), Name: e.Name, Description: in.Description,
 			GoogleEventID: e.EventID, MeetLink: e.MeetLink,
-			SeriesID: &seriesID, RecurrenceUntil: &untilUTC,
+			SeriesID: &seriesID, RecurrenceUntil: &recUntil,
 		}
 	}
 	created, err := s.Store.CreateMeetingSeries(ctx, rows, in.Participants)
 	if err != nil {
-		for _, e := range evs {
-			_ = calSvc.DeleteEvent(ctx, e.EventID) // best-effort: keep DB all-or-nothing
-		}
+		s.deleteEventsBestEffort(ctx, calSvc, eventIDs(evs))
 		return postgres.Meeting{}, err
 	}
 	anchor := created[0]
@@ -192,21 +190,36 @@ type seriesEvent struct {
 // createSeriesEvents creates one Google event per span (names[i] is the title for
 // spans[i]). On any failure it best-effort deletes the events already created and
 // returns the error, so no partial series leaks.
-func createSeriesEvents(ctx context.Context, cal CalendarService, names []string, description string, emails []string, spans []meeting.Span) ([]seriesEvent, error) {
+func (s *Services) createSeriesEvents(ctx context.Context, cal CalendarService, names []string, description string, emails []string, spans []meeting.Span) ([]seriesEvent, error) {
 	var created []seriesEvent
 	for i, sp := range spans {
 		res, err := cal.CreateEvent(ctx, CalendarEvent{
 			Title: names[i], Description: description, Start: sp.Start, End: sp.End, AttendeeEmails: emails,
 		})
 		if err != nil {
-			for _, c := range created {
-				_ = cal.DeleteEvent(ctx, c.EventID)
-			}
+			s.deleteEventsBestEffort(ctx, cal, eventIDs(created))
 			return nil, fmt.Errorf("calendar: %w", err)
 		}
 		created = append(created, seriesEvent{Span: sp, Name: names[i], EventID: res.EventID, MeetLink: res.MeetLink})
 	}
 	return created, nil
+}
+
+// deleteEventsBestEffort deletes Google events, logging (not failing) on error.
+func (s *Services) deleteEventsBestEffort(ctx context.Context, cal CalendarService, ids []string) {
+	for _, id := range ids {
+		if err := cal.DeleteEvent(ctx, id); err != nil && s.Log != nil {
+			s.Log.Warn("delete orphan meeting event", zap.String("event_id", id), zap.Error(err))
+		}
+	}
+}
+
+func eventIDs(evs []seriesEvent) []string {
+	ids := make([]string, len(evs))
+	for i, e := range evs {
+		ids[i] = e.EventID
+	}
+	return ids
 }
 
 // UpdateMeeting applies field overrides to a meeting (organizer or workspace

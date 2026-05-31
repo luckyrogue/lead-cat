@@ -34,16 +34,16 @@ func (a *API) CreateMeeting(c *fiber.Ctx) error {
 	wid := c.Locals("workspace_id").(uuid.UUID)
 	uid, _ := c.Locals("user_id").(uuid.UUID)
 	var body struct {
-		Dept         string                        `json:"dept"`
-		Type         string                        `json:"type"`
-		Host         string                        `json:"host"`
-		Date         string                        `json:"date"`
-		Start        string                        `json:"start"`
-		End          string                        `json:"end"`
+		Dept            string                        `json:"dept"`
+		Type            string                        `json:"type"`
+		Host            string                        `json:"host"`
+		Date            string                        `json:"date"`
+		Start           string                        `json:"start"`
+		End             string                        `json:"end"`
 		Recurrence      string                        `json:"recurrence"`
 		RecurrenceUntil string                        `json:"recurrence_until"`
 		Description     string                        `json:"description"`
-		Participants []postgres.MeetingParticipant `json:"participants"`
+		Participants    []postgres.MeetingParticipant `json:"participants"`
 	}
 	if err := c.BodyParser(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
