@@ -89,6 +89,42 @@ func ParseMeetingUpdated(t *asynq.Task) (MeetingUpdatedPayload, error) {
 	return p, err
 }
 
+const (
+	TaskParticipantAdded   = "participant:added"
+	TaskParticipantRemoved = "participant:removed"
+)
+
+type ParticipantPayload struct {
+	WorkspaceID string `json:"workspace_id"`
+	MeetingID   string `json:"meeting_id"`
+	Email       string `json:"email"`
+}
+
+func (c *Client) EnqueueParticipantAdded(ctx context.Context, workspaceID, meetingID uuid.UUID, email string) error {
+	return c.enqueueParticipant(ctx, TaskParticipantAdded, workspaceID, meetingID, email)
+}
+
+func (c *Client) EnqueueParticipantRemoved(ctx context.Context, workspaceID, meetingID uuid.UUID, email string) error {
+	return c.enqueueParticipant(ctx, TaskParticipantRemoved, workspaceID, meetingID, email)
+}
+
+func (c *Client) enqueueParticipant(ctx context.Context, taskType string, workspaceID, meetingID uuid.UUID, email string) error {
+	p, _ := json.Marshal(ParticipantPayload{
+		WorkspaceID: workspaceID.String(),
+		MeetingID:   meetingID.String(),
+		Email:       email,
+	})
+	task := asynq.NewTask(taskType, p)
+	_, err := c.client.EnqueueContext(ctx, task, asynq.MaxRetry(5))
+	return err
+}
+
+func ParseParticipant(t *asynq.Task) (ParticipantPayload, error) {
+	var p ParticipantPayload
+	err := json.Unmarshal(t.Payload(), &p)
+	return p, err
+}
+
 type Server struct {
 	server *asynq.Server
 	mux    *asynq.ServeMux
