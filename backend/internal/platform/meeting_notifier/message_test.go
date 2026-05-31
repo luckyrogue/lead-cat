@@ -15,7 +15,7 @@ func TestBuildMessage(t *testing.T) {
 	end := time.Date(2026, 5, 31, 15, 0, 0, 0, loc)
 
 	m := buildMessage("Разработка | Планёрка", "https://meet.google.com/abc", start, end, loc)
-	for _, want := range []string{"Новая встреча", "Разработка | Планёрка", "31.05.2026", "14:00–15:00", "https://meet.google.com/abc"} {
+	for _, want := range []string{"Новая встреча", "Разработка | Планёрка", "31.05.2026", "14:00–15:00", "https://meet.google.com/abc", "UTC+5"} {
 		if !strings.Contains(m, want) {
 			t.Fatalf("message %q missing %q", m, want)
 		}
@@ -30,5 +30,19 @@ func TestBuildMessage(t *testing.T) {
 	m2 := buildMessage("X", "", startUTC, startUTC.Add(time.Hour), loc)
 	if !strings.Contains(m2, "14:00–15:00") {
 		t.Fatalf("UTC not converted to Almaty: %q", m2)
+	}
+}
+
+func TestTZLabel(t *testing.T) {
+	almaty, _ := time.LoadLocation("Asia/Almaty")
+	cases := map[*time.Location]string{
+		almaty:   "UTC+5",
+		time.UTC: "UTC+0",
+	}
+	for loc, want := range cases {
+		got := tzLabel(time.Date(2026, 5, 31, 12, 0, 0, 0, loc))
+		if got != want {
+			t.Fatalf("tzLabel(%v)=%q want %q", loc, got, want)
+		}
 	}
 }

@@ -107,6 +107,11 @@ func (s *Store) ListUpcomingMeetings(ctx context.Context, until time.Time) ([]Me
 		ORDER BY starts_at`, until)
 }
 
+// ReminderOffsetCreated is the sentinel offset_minutes value reserved in
+// meeting_reminders for the "meeting created" notification dedup. It never
+// collides with real reminder offsets (10/15/30/60/120/1440).
+const ReminderOffsetCreated = -1
+
 // TryClaimReminder atomically records that (meeting, telegram, offset) is being
 // reminded. Returns true if this call claimed it (caller should send), false if
 // it was already claimed.
