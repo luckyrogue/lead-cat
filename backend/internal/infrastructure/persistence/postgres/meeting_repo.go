@@ -63,7 +63,7 @@ func (s *Store) CreateMeetingSeries(ctx context.Context, ms []Meeting, ps []Meet
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	out := make([]Meeting, 0, len(ms))
 	for _, m := range ms {
