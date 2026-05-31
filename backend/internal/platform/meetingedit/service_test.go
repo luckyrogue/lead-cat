@@ -334,8 +334,50 @@ func TestParticipants_Remove(t *testing.T) {
 	if r, _ := svc.OnCallback(ctx, tg, "medit:prem:0"); !strings.Contains(r.Text, "Удалить участника bye@corp.kz") {
 		t.Fatalf("confirm reply: %+v", r)
 	}
-	svc.OnCallback(ctx, tg, "medit:premc:0")
+	svc.OnCallback(ctx, tg, "medit:premc")
 	if be.removedEmail != "bye@corp.kz" {
 		t.Fatalf("removed email = %q", be.removedEmail)
+	}
+}
+
+func TestParticipants_SessionExpired(t *testing.T) {
+	ctx := context.Background()
+	svc := New(&fakeBackend{}, newMemSessions())
+	const tg = int64(60)
+	for _, data := range []string{"medit:parts", "medit:padd", "medit:premc"} {
+		if r, ok := svc.OnCallback(ctx, tg, data); !ok || !strings.Contains(r.Text, "истекла") {
+			t.Fatalf("%s: expected session-expired, got %+v ok=%v", data, r, ok)
+		}
+	}
+}
+
+func TestParticipants_AddBadIndex(t *testing.T) {
+	ctx := context.Background()
+	m := sampleMeeting()
+	be := &fakeBackend{meetings: []postgres.MeetingWithTZ{m}, applied: m.Meeting}
+	svc := New(be, newMemSessions())
+	const tg = int64(61)
+	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
+	svc.OnCallback(ctx, tg, "medit:padd")
+	// no search performed yet → PartCands empty → index 0 is out of bounds
+	if r, _ := svc.OnCallback(ctx, tg, "medit:padd:0"); !strings.Contains(r.Text, "не найден") {
+		t.Fatalf("expected not-found for bad index, got %+v", r)
+	}
+	if be.addedEmail != "" {
+		t.Fatalf("nothing should have been added, got %q", be.addedEmail)
+	}
+}
+
+func TestParticipants_SearchNoResults(t *testing.T) {
+	ctx := context.Background()
+	m := sampleMeeting()
+	be := &fakeBackend{meetings: []postgres.MeetingWithTZ{m}, applied: m.Meeting} // no employees
+	svc := New(be, newMemSessions())
+	const tg = int64(62)
+	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
+	svc.OnCallback(ctx, tg, "medit:padd")
+	// a non-email query with no directory matches
+	if r, ok := svc.OnText(ctx, tg, "zzz"); !ok || !strings.Contains(r.Text, "Ничего не найдено") {
+		t.Fatalf("expected no-results, got %+v ok=%v", r, ok)
 	}
 }

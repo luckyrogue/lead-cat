@@ -80,8 +80,8 @@ func (s *Service) OnCallback(ctx context.Context, telegramID int64, data string)
 		return s.padd(ctx, telegramID), true
 	case strings.HasPrefix(data, "medit:padd:"):
 		return s.paddPick(ctx, telegramID, strings.TrimPrefix(data, "medit:padd:")), true
-	case strings.HasPrefix(data, "medit:premc:"):
-		return s.premConfirm(ctx, telegramID, strings.TrimPrefix(data, "medit:premc:")), true
+	case data == "medit:premc":
+		return s.premConfirm(ctx, telegramID), true
 	case strings.HasPrefix(data, "medit:prem:"):
 		return s.prem(ctx, telegramID, strings.TrimPrefix(data, "medit:prem:")), true
 	}
@@ -292,6 +292,9 @@ func (s *Service) searchParticipant(ctx context.Context, telegramID int64, st *S
 		if e.Email == "" || seen[e.Email] {
 			continue
 		}
+		if len(cands) >= 10 {
+			break
+		}
 		seen[e.Email] = true
 		rows = append(rows, []Button{{Text: e.FullName + " — " + e.Email, Data: fmt.Sprintf("medit:padd:%d", len(cands))}})
 		cands = append(cands, e.Email)
@@ -346,24 +349,26 @@ func (s *Service) prem(ctx context.Context, telegramID int64, idxStr string) Rep
 	if !ok {
 		return Reply{Text: "Участник не найден, открой список заново."}
 	}
+	st.PendingRemove = email
+	_ = s.sessions.Set(ctx, telegramID, *st)
 	return Reply{
 		Text: "Удалить участника " + email + "?",
 		Edit: true,
 		Keyboard: [][]Button{
-			{{Text: "✅ Да", Data: fmt.Sprintf("medit:premc:%s", idxStr)}},
+			{{Text: "✅ Да", Data: "medit:premc"}},
 			{{Text: "⬅ Отмена", Data: "medit:parts"}},
 		},
 	}
 }
 
-func (s *Service) premConfirm(ctx context.Context, telegramID int64, idxStr string) Reply {
+func (s *Service) premConfirm(ctx context.Context, telegramID int64) Reply {
 	st, err := s.sessions.Get(ctx, telegramID)
 	if err != nil || st == nil {
 		return Reply{Text: "Сессия истекла. Начни заново: /edit"}
 	}
-	email, ok := indexInto(st.PartList, idxStr)
-	if !ok {
-		return Reply{Text: "Участник не найден, открой список заново."}
+	email := st.PendingRemove
+	if email == "" {
+		return Reply{Text: "Нечего удалять, открой список заново."}
 	}
 	ws, _ := uuid.Parse(st.WorkspaceID)
 	uid, _ := uuid.Parse(st.UserID)
@@ -375,6 +380,8 @@ func (s *Service) premConfirm(ctx context.Context, telegramID int64, idxStr stri
 		}
 		return Reply{Text: "Не удалось удалить участника, попробуй позже."}
 	}
+	st.PendingRemove = ""
+	_ = s.sessions.Set(ctx, telegramID, *st)
 	return s.parts(ctx, telegramID)
 }
 
