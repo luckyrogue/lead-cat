@@ -3,6 +3,7 @@ package http
 import (
 	"os"
 	"strings"
+	"time"
 
 	"github.com/go-telegram/bot"
 	"github.com/gofiber/fiber/v2"
@@ -53,6 +54,10 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	if err != nil {
 		return nil, err
 	}
+	tmaToken, err := platformauth.NewTMAToken(cfg.JWTSecret, cfg.JWTIssuer, 24*time.Hour)
+	if err != nil {
+		return nil, err
+	}
 	sessStore := platformauth.NewSessionStore(rdb)
 	otpSvc := platformauth.NewOTP(rdb, log, cfg.AuthOTPLog)
 	wan, err := webauthnsvc.NewService(cfg.WebAuthnRPID, cfg.WebAuthnRPOrigin, store, sessStore)
@@ -80,12 +85,14 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	authMW := middleware.NewAuth(cfg, jwtSvc, store, log)
 
 	api := &handlers.API{
-		App:     services,
-		Bot:     tg,
-		RDB:     rdb,
-		Log:     log,
-		TMA:     telegram.NewInitDataValidator(cfg.BotToken),
-		Version: os.Getenv("APP_VERSION"),
+		App:         services,
+		Bot:         tg,
+		RDB:         rdb,
+		Log:         log,
+		TMA:         telegram.NewInitDataValidator(cfg.BotToken),
+		Version:     os.Getenv("APP_VERSION"),
+		TMAToken:    tmaToken,
+		AuthDevMode: cfg.AuthDevMode,
 	}
 
 	app.Get("/api/health", api.Health)
@@ -101,6 +108,7 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	authPub.Post("/passkey/login/finish", authH.PasskeyLoginFinish)
 	authPub.Get("/oauth/:provider", authH.OAuthStart)
 	authPub.Get("/oauth/callback", authH.OAuthCallback)
+	authPub.Post("/tma", api.TMAAuth)
 
 	ap := app.Group("/api", authMW.Middleware)
 	ap.Post("/auth/passkey/register/begin", authH.PasskeyRegisterBegin)
@@ -136,6 +144,10 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	ws.Delete("/meetings/:mid", api.DeleteMeeting)
 	ws.Post("/meetings/conflicts", api.MeetingConflicts)
 	ws.Post("/meetings/free-slots", api.FreeSlots)
+
+	tmaAuth := middleware.NewTMAAuth(tmaToken, store)
+	tma := app.Group("/api/tma", tmaAuth.Middleware)
+	tma.Get("/me", api.TMAMe)
 
 	if stat, err := os.Stat(cfg.StaticDir); err == nil && stat.IsDir() {
 		app.Static("/", cfg.StaticDir, fiber.Static{
