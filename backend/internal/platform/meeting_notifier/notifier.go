@@ -1,4 +1,4 @@
-// Package meeting_notifier sends a Telegram DM when a meeting is created.
+// Package meeting_notifier sends Telegram DMs when a meeting is created or updated.
 package meeting_notifier
 
 import (

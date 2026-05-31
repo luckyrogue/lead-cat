@@ -34,7 +34,10 @@ func TestBuildMessage(t *testing.T) {
 }
 
 func TestBuildUpdatedMessage(t *testing.T) {
-	loc, _ := time.LoadLocation("Asia/Almaty")
+	loc, err := time.LoadLocation("Asia/Almaty")
+	if err != nil {
+		t.Fatal(err)
+	}
 	start := time.Date(2026, 5, 31, 14, 0, 0, 0, loc)
 	end := time.Date(2026, 5, 31, 15, 0, 0, 0, loc)
 
