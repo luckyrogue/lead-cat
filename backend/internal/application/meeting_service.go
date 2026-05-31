@@ -122,6 +122,7 @@ func (s *Services) CreateMeeting(ctx context.Context, workspaceID, organizerID u
 	if s.Queue != nil {
 		if err := s.Queue.EnqueueMeetingCreated(ctx, workspaceID, m.ID); err != nil && s.Log != nil {
 			s.Log.Warn("enqueue meeting created",
+				zap.String("workspace_id", workspaceID.String()),
 				zap.String("meeting_id", m.ID.String()),
 				zap.Error(err))
 		}
