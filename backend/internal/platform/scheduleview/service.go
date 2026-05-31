@@ -131,6 +131,8 @@ func (s *Service) periods(ctx context.Context, telegramID int64) Reply {
 	if err != nil || st == nil || st.EmployeeEmail == "" {
 		return Reply{Text: "Сессия истекла. Начни заново: /schedule"}
 	}
+	st.AwaitingKind = ""
+	_ = s.sessions.Set(ctx, telegramID, *st)
 	return periodReply(st.EmployeeEmail, true)
 }
 
