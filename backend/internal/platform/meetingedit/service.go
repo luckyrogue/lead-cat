@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/mail"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,6 +20,10 @@ import (
 type Backend interface {
 	ListEditableMeetings(ctx context.Context, telegramID int64) ([]postgres.MeetingWithTZ, error)
 	UpdateMeeting(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, in application.UpdateMeetingInput) (postgres.Meeting, error)
+	ListParticipants(ctx context.Context, meetingID uuid.UUID) ([]postgres.MeetingParticipant, error)
+	SearchEmployees(ctx context.Context, workspaceID uuid.UUID, query string) ([]postgres.Employee, error)
+	AddParticipant(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, email string) error
+	RemoveParticipant(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, email string) error
 }
 
 type sessions interface {
@@ -66,6 +72,18 @@ func (s *Service) OnCallback(ctx context.Context, telegramID int64, data string)
 	case data == "medit:cancel":
 		_ = s.sessions.Del(ctx, telegramID)
 		return Reply{Text: "Редактирование отменено.", Edit: true}, true
+	case data == "medit:menu":
+		return s.backToMenu(ctx, telegramID), true
+	case data == "medit:parts":
+		return s.parts(ctx, telegramID), true
+	case data == "medit:padd":
+		return s.padd(ctx, telegramID), true
+	case strings.HasPrefix(data, "medit:padd:"):
+		return s.paddPick(ctx, telegramID, strings.TrimPrefix(data, "medit:padd:")), true
+	case strings.HasPrefix(data, "medit:premc:"):
+		return s.premConfirm(ctx, telegramID, strings.TrimPrefix(data, "medit:premc:")), true
+	case strings.HasPrefix(data, "medit:prem:"):
+		return s.prem(ctx, telegramID, strings.TrimPrefix(data, "medit:prem:")), true
 	}
 	return Reply{}, false
 }
@@ -78,6 +96,9 @@ func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Re
 		return Reply{}, false
 	}
 	text = strings.TrimSpace(text)
+	if st.AwaitingField == "participant" {
+		return s.searchParticipant(ctx, telegramID, st, text), true
+	}
 	if st.AwaitingField == "datetime" {
 		d, start, end, perr := parseDateTime(text)
 		if perr != nil {
@@ -199,6 +220,173 @@ func (s *Service) apply(ctx context.Context, telegramID int64) Reply {
 	return Reply{Text: "Готово ✏️\n" + summary(m)}
 }
 
+func (s *Service) backToMenu(ctx context.Context, telegramID int64) Reply {
+	st, err := s.sessions.Get(ctx, telegramID)
+	if err != nil || st == nil {
+		return Reply{Text: "Сессия истекла. Начни заново: /edit"}
+	}
+	return menuReply(*st, true)
+}
+
+// parts renders the participants sub-menu and records the shown emails by index.
+func (s *Service) parts(ctx context.Context, telegramID int64) Reply {
+	st, err := s.sessions.Get(ctx, telegramID)
+	if err != nil || st == nil {
+		return Reply{Text: "Сессия истекла. Начни заново: /edit"}
+	}
+	mid, _ := uuid.Parse(st.MeetingID)
+	ps, err := s.backend.ListParticipants(ctx, mid)
+	if err != nil {
+		return Reply{Text: "Не удалось получить участников."}
+	}
+	var emails []string
+	for _, p := range ps {
+		if p.Email != "" {
+			emails = append(emails, p.Email)
+		}
+	}
+	st.PartList = emails
+	st.Step = stepMenu
+	st.AwaitingField = ""
+	_ = s.sessions.Set(ctx, telegramID, *st)
+	return partsReply(emails, true)
+}
+
+func partsReply(emails []string, edit bool) Reply {
+	var rows [][]Button
+	for i, e := range emails {
+		rows = append(rows, []Button{{Text: "✖ " + e, Data: fmt.Sprintf("medit:prem:%d", i)}})
+	}
+	rows = append(rows, []Button{{Text: "➕ Добавить", Data: "medit:padd"}})
+	rows = append(rows, []Button{{Text: "⬅ Назад", Data: "medit:menu"}})
+	text := "Участники встречи:"
+	if len(emails) == 0 {
+		text = "Участников пока нет."
+	}
+	return Reply{Text: text, Keyboard: rows, Edit: edit}
+}
+
+func (s *Service) padd(ctx context.Context, telegramID int64) Reply {
+	st, err := s.sessions.Get(ctx, telegramID)
+	if err != nil || st == nil {
+		return Reply{Text: "Сессия истекла. Начни заново: /edit"}
+	}
+	st.Step = stepAwaiting
+	st.AwaitingField = "participant"
+	_ = s.sessions.Set(ctx, telegramID, *st)
+	return Reply{Text: "Введи email участника или часть имени для поиска:"}
+}
+
+// searchParticipant offers directory matches (plus the raw email if valid) as add
+// buttons. Stays in the awaiting step so re-typing re-searches.
+func (s *Service) searchParticipant(ctx context.Context, telegramID int64, st *State, query string) Reply {
+	ws, _ := uuid.Parse(st.WorkspaceID)
+	emps, err := s.backend.SearchEmployees(ctx, ws, query)
+	if err != nil {
+		return Reply{Text: "Не удалось выполнить поиск, попробуй ещё раз:"}
+	}
+	var cands []string
+	var rows [][]Button
+	seen := map[string]bool{}
+	for _, e := range emps {
+		if e.Email == "" || seen[e.Email] {
+			continue
+		}
+		seen[e.Email] = true
+		rows = append(rows, []Button{{Text: e.FullName + " — " + e.Email, Data: fmt.Sprintf("medit:padd:%d", len(cands))}})
+		cands = append(cands, e.Email)
+	}
+	if addr, perr := mail.ParseAddress(strings.TrimSpace(query)); perr == nil {
+		email := strings.ToLower(addr.Address)
+		if !seen[email] {
+			rows = append(rows, []Button{{Text: "➕ Добавить " + email, Data: fmt.Sprintf("medit:padd:%d", len(cands))}})
+			cands = append(cands, email)
+		}
+	}
+	if len(cands) == 0 {
+		return Reply{Text: "Ничего не найдено. Введи корректный email или часть имени:"}
+	}
+	st.PartCands = cands
+	_ = s.sessions.Set(ctx, telegramID, *st)
+	return Reply{Text: "Выбери, кого добавить:", Keyboard: rows}
+}
+
+func (s *Service) paddPick(ctx context.Context, telegramID int64, idxStr string) Reply {
+	st, err := s.sessions.Get(ctx, telegramID)
+	if err != nil || st == nil {
+		return Reply{Text: "Сессия истекла. Начни заново: /edit"}
+	}
+	email, ok := indexInto(st.PartCands, idxStr)
+	if !ok {
+		return Reply{Text: "Кандидат не найден, начни добавление заново."}
+	}
+	ws, _ := uuid.Parse(st.WorkspaceID)
+	uid, _ := uuid.Parse(st.UserID)
+	mid, _ := uuid.Parse(st.MeetingID)
+	if err := s.backend.AddParticipant(ctx, ws, uid, mid, email); err != nil {
+		switch {
+		case errors.Is(err, application.ErrInvalidInput):
+			return Reply{Text: "Уже участник или неверный email."}
+		case errors.Is(err, application.ErrForbidden):
+			_ = s.sessions.Del(ctx, telegramID)
+			return Reply{Text: "Нет доступа к этой встрече."}
+		default:
+			return Reply{Text: "Не удалось добавить участника, попробуй позже."}
+		}
+	}
+	return s.parts(ctx, telegramID)
+}
+
+func (s *Service) prem(ctx context.Context, telegramID int64, idxStr string) Reply {
+	st, err := s.sessions.Get(ctx, telegramID)
+	if err != nil || st == nil {
+		return Reply{Text: "Сессия истекла. Начни заново: /edit"}
+	}
+	email, ok := indexInto(st.PartList, idxStr)
+	if !ok {
+		return Reply{Text: "Участник не найден, открой список заново."}
+	}
+	return Reply{
+		Text: "Удалить участника " + email + "?",
+		Edit: true,
+		Keyboard: [][]Button{
+			{{Text: "✅ Да", Data: fmt.Sprintf("medit:premc:%s", idxStr)}},
+			{{Text: "⬅ Отмена", Data: "medit:parts"}},
+		},
+	}
+}
+
+func (s *Service) premConfirm(ctx context.Context, telegramID int64, idxStr string) Reply {
+	st, err := s.sessions.Get(ctx, telegramID)
+	if err != nil || st == nil {
+		return Reply{Text: "Сессия истекла. Начни заново: /edit"}
+	}
+	email, ok := indexInto(st.PartList, idxStr)
+	if !ok {
+		return Reply{Text: "Участник не найден, открой список заново."}
+	}
+	ws, _ := uuid.Parse(st.WorkspaceID)
+	uid, _ := uuid.Parse(st.UserID)
+	mid, _ := uuid.Parse(st.MeetingID)
+	if err := s.backend.RemoveParticipant(ctx, ws, uid, mid, email); err != nil {
+		if errors.Is(err, application.ErrForbidden) {
+			_ = s.sessions.Del(ctx, telegramID)
+			return Reply{Text: "Нет доступа к этой встрече."}
+		}
+		return Reply{Text: "Не удалось удалить участника, попробуй позже."}
+	}
+	return s.parts(ctx, telegramID)
+}
+
+// indexInto resolves a string index into a slice, guarding bounds.
+func indexInto(list []string, idxStr string) (string, bool) {
+	i, err := strconv.Atoi(idxStr)
+	if err != nil || i < 0 || i >= len(list) {
+		return "", false
+	}
+	return list[i], true
+}
+
 var fieldPrompts = map[string]string{
 	"dept":        "Введи новый отдел:",
 	"type":        "Введи новый тип встречи:",
@@ -213,6 +401,7 @@ func menuKeyboard() [][]Button {
 		{{Text: "🏢 Отдел", Data: "medit:field:dept"}, {Text: "🏷 Тип", Data: "medit:field:type"}},
 		{{Text: "🎤 Ведущий", Data: "medit:field:host"}, {Text: "📝 Описание", Data: "medit:field:description"}},
 		{{Text: "🔁 Частота", Data: "medit:field:rec"}},
+		{{Text: "👥 Участники", Data: "medit:parts"}},
 		{{Text: "✅ Применить", Data: "medit:apply"}, {Text: "✖ Отмена", Data: "medit:cancel"}},
 	}
 }

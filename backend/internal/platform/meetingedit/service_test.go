@@ -13,13 +13,18 @@ import (
 )
 
 type fakeBackend struct {
-	meetings  []postgres.MeetingWithTZ
-	updateErr error
-	gotIn     application.UpdateMeetingInput
-	gotWS     uuid.UUID
-	gotUser   uuid.UUID
-	gotMID    uuid.UUID
-	applied   postgres.Meeting
+	meetings     []postgres.MeetingWithTZ
+	updateErr    error
+	gotIn        application.UpdateMeetingInput
+	gotWS        uuid.UUID
+	gotUser      uuid.UUID
+	gotMID       uuid.UUID
+	applied      postgres.Meeting
+	participants []postgres.MeetingParticipant
+	employees    []postgres.Employee
+	addErr       error
+	addedEmail   string
+	removedEmail string
 }
 
 func (f *fakeBackend) ListEditableMeetings(_ context.Context, _ int64) ([]postgres.MeetingWithTZ, error) {
@@ -31,6 +36,37 @@ func (f *fakeBackend) UpdateMeeting(_ context.Context, ws, user, mid uuid.UUID, 
 	}
 	f.gotWS, f.gotUser, f.gotMID, f.gotIn = ws, user, mid, in
 	return f.applied, nil
+}
+func (f *fakeBackend) ListParticipants(_ context.Context, _ uuid.UUID) ([]postgres.MeetingParticipant, error) {
+	return f.participants, nil
+}
+func (f *fakeBackend) SearchEmployees(_ context.Context, _ uuid.UUID, query string) ([]postgres.Employee, error) {
+	var out []postgres.Employee
+	for _, e := range f.employees {
+		if strings.Contains(strings.ToLower(e.FullName), strings.ToLower(query)) || strings.Contains(strings.ToLower(e.Email), strings.ToLower(query)) {
+			out = append(out, e)
+		}
+	}
+	return out, nil
+}
+func (f *fakeBackend) AddParticipant(_ context.Context, _, _, _ uuid.UUID, email string) error {
+	if f.addErr != nil {
+		return f.addErr
+	}
+	f.addedEmail = email
+	f.participants = append(f.participants, postgres.MeetingParticipant{Email: email})
+	return nil
+}
+func (f *fakeBackend) RemoveParticipant(_ context.Context, _, _, _ uuid.UUID, email string) error {
+	f.removedEmail = email
+	var kept []postgres.MeetingParticipant
+	for _, p := range f.participants {
+		if p.Email != email {
+			kept = append(kept, p)
+		}
+	}
+	f.participants = kept
+	return nil
 }
 
 type memSessions struct{ m map[int64]*State }
@@ -229,5 +265,77 @@ func TestEditFlow_ApplyErrors(t *testing.T) {
 	}
 	if st, _ := sess2.Get(ctx, tg2); st == nil {
 		t.Fatal("session should persist on invalid input")
+	}
+}
+
+func TestParticipants_AddBySearch(t *testing.T) {
+	ctx := context.Background()
+	m := sampleMeeting()
+	be := &fakeBackend{
+		meetings:  []postgres.MeetingWithTZ{m},
+		applied:   m.Meeting,
+		employees: []postgres.Employee{{FullName: "Иван Иванов", Email: "ivan@corp.kz"}},
+	}
+	svc := New(be, newMemSessions())
+	const tg = int64(50)
+	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
+	svc.OnCallback(ctx, tg, "medit:parts")
+	svc.OnCallback(ctx, tg, "medit:padd")
+	if r, ok := svc.OnText(ctx, tg, "иван"); !ok || len(r.Keyboard) == 0 {
+		t.Fatalf("search reply: %+v ok=%v", r, ok)
+	}
+	svc.OnCallback(ctx, tg, "medit:padd:0")
+	if be.addedEmail != "ivan@corp.kz" {
+		t.Fatalf("added email = %q", be.addedEmail)
+	}
+}
+
+func TestParticipants_AddByRawEmail(t *testing.T) {
+	ctx := context.Background()
+	m := sampleMeeting()
+	be := &fakeBackend{meetings: []postgres.MeetingWithTZ{m}, applied: m.Meeting}
+	svc := New(be, newMemSessions())
+	const tg = int64(51)
+	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
+	svc.OnCallback(ctx, tg, "medit:padd")
+	svc.OnText(ctx, tg, "new@corp.kz")
+	svc.OnCallback(ctx, tg, "medit:padd:0")
+	if be.addedEmail != "new@corp.kz" {
+		t.Fatalf("added email = %q", be.addedEmail)
+	}
+}
+
+func TestParticipants_AddDuplicate(t *testing.T) {
+	ctx := context.Background()
+	m := sampleMeeting()
+	be := &fakeBackend{meetings: []postgres.MeetingWithTZ{m}, applied: m.Meeting, addErr: application.ErrInvalidInput}
+	svc := New(be, newMemSessions())
+	const tg = int64(52)
+	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
+	svc.OnCallback(ctx, tg, "medit:padd")
+	svc.OnText(ctx, tg, "dup@corp.kz")
+	if r, _ := svc.OnCallback(ctx, tg, "medit:padd:0"); !strings.Contains(r.Text, "Уже участник") {
+		t.Fatalf("duplicate reply: %+v", r)
+	}
+}
+
+func TestParticipants_Remove(t *testing.T) {
+	ctx := context.Background()
+	m := sampleMeeting()
+	be := &fakeBackend{
+		meetings:     []postgres.MeetingWithTZ{m},
+		applied:      m.Meeting,
+		participants: []postgres.MeetingParticipant{{Email: "bye@corp.kz"}},
+	}
+	svc := New(be, newMemSessions())
+	const tg = int64(53)
+	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
+	svc.OnCallback(ctx, tg, "medit:parts")
+	if r, _ := svc.OnCallback(ctx, tg, "medit:prem:0"); !strings.Contains(r.Text, "Удалить участника bye@corp.kz") {
+		t.Fatalf("confirm reply: %+v", r)
+	}
+	svc.OnCallback(ctx, tg, "medit:premc:0")
+	if be.removedEmail != "bye@corp.kz" {
+		t.Fatalf("removed email = %q", be.removedEmail)
 	}
 }
