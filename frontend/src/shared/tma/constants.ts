@@ -1,4 +1,9 @@
-export const TMA_NOW = "2026-06-01"
+// Today's date (YYYY-MM-DD) in the base meetings timezone (Asia/Almaty, UTC+5),
+// used for upcoming/past/today comparisons against meeting `date` strings.
+// en-CA formats as YYYY-MM-DD, matching the meeting date format.
+export const TMA_NOW = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Almaty",
+}).format(new Date())
 
 export const WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"] as const
 
