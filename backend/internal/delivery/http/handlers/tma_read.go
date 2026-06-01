@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -105,4 +106,41 @@ func botUserEmail(c *fiber.Ctx) (string, bool) {
 		return "", false
 	}
 	return bu.Email, true
+}
+
+// TMAMyMeetings lists the authed user's meetings for a scope window.
+func (a *API) TMAMyMeetings(c *fiber.Ctx) error {
+	email, ok := botUserEmail(c)
+	if !ok {
+		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
+	}
+	from, to, ok := tmaScopeWindow(c.Query("scope"), time.Now())
+	if !ok {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid scope")
+	}
+	ms, err := a.App.EmployeeSchedule(c.Context(), email, from, to)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	return c.JSON(fiber.Map{"meetings": a.toMeetingDTOs(c.Context(), ms)})
+}
+
+// TMASchedule lists a colleague's meetings (read-only directory feature, §4.6).
+func (a *API) TMASchedule(c *fiber.Ctx) error {
+	if _, ok := botUserEmail(c); !ok {
+		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
+	}
+	email := strings.TrimSpace(c.Query("email"))
+	if email == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "email required")
+	}
+	from, to, ok := tmaScopeWindow(c.Query("scope"), time.Now())
+	if !ok {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid scope")
+	}
+	ms, err := a.App.EmployeeSchedule(c.Context(), email, from, to)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	return c.JSON(fiber.Map{"meetings": a.toMeetingDTOs(c.Context(), ms)})
 }

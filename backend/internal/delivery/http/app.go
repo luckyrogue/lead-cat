@@ -148,6 +148,8 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	tmaAuth := middleware.NewTMAAuth(tmaToken, store)
 	tma := app.Group("/api/tma", tmaAuth.Middleware)
 	tma.Get("/me", api.TMAMe)
+	tma.Get("/meetings", api.TMAMyMeetings)
+	tma.Get("/schedule", api.TMASchedule)
 
 	if stat, err := os.Stat(cfg.StaticDir); err == nil && stat.IsDir() {
 		app.Static("/", cfg.StaticDir, fiber.Static{
