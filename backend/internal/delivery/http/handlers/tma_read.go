@@ -144,3 +144,60 @@ func (a *API) TMASchedule(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{"meetings": a.toMeetingDTOs(c.Context(), ms)})
 }
+
+// TMAEmployees searches the global directory (empty q → empty list).
+func (a *API) TMAEmployees(c *fiber.Ctx) error {
+	if _, ok := botUserEmail(c); !ok {
+		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
+	}
+	q := strings.TrimSpace(c.Query("q"))
+	out := []tmaEmployeeDTO{}
+	if q != "" {
+		emps, err := a.App.SearchEmployeesGlobal(c.Context(), q)
+		if err != nil {
+			return fiber.NewError(fiber.StatusInternalServerError, "internal")
+		}
+		for _, e := range emps {
+			out = append(out, tmaEmployeeDTO{ID: e.ID.String(), Name: e.FullName, Email: e.Email, Dept: e.Dept, Tg: e.HasTelegram})
+		}
+	}
+	return c.JSON(fiber.Map{"employees": out})
+}
+
+type tmaFreeSlotsRequest struct {
+	Participants []string `json:"participants"`
+	From         string   `json:"from"` // YYYY-MM-DD (inclusive)
+	To           string   `json:"to"`   // YYYY-MM-DD (inclusive)
+	DurationMins int      `json:"duration_mins"`
+}
+
+// TMAFreeSlots finds common free time across participants (§4.8).
+func (a *API) TMAFreeSlots(c *fiber.Ctx) error {
+	if _, ok := botUserEmail(c); !ok {
+		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
+	}
+	var req tmaFreeSlotsRequest
+	if err := c.BodyParser(&req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
+	}
+	loc := almatyLoc()
+	from, err1 := time.ParseInLocation("2006-01-02", req.From, loc)
+	toIncl, err2 := time.ParseInLocation("2006-01-02", req.To, loc)
+	if err1 != nil || err2 != nil || toIncl.Before(from) || req.DurationMins <= 0 || len(req.Participants) == 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid range/participants/duration")
+	}
+	slots, err := a.App.FreeSlots(c.Context(), req.Participants, from, toIncl.AddDate(0, 0, 1), req.DurationMins)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	out := make([]tmaFreeSlotDTO, 0, len(slots))
+	for _, sl := range slots {
+		out = append(out, tmaFreeSlotDTO{
+			ISO:   sl.Day.In(loc).Format("2006-01-02"),
+			Start: sl.Start.In(loc).Format("15:04"),
+			End:   sl.End.In(loc).Format("15:04"),
+			Mins:  sl.Mins,
+		})
+	}
+	return c.JSON(fiber.Map{"slots": out})
+}
