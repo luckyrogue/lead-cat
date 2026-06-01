@@ -1,7 +1,7 @@
 import { useState } from "react"
-import { EMPLOYEES, FREE_SLOTS } from "@/shared/tma/mock-data"
 import { useTmaApp } from "@/shared/tma/context"
 import type { Employee, FreeSlot } from "@/shared/tma/types"
+import { useEmployeeSearch, useFreeSlots } from "@/shared/tma/queries"
 import {
   Avatar,
   CatBtn,
@@ -20,22 +20,18 @@ export function CheckerScreen({
 }) {
   const p = useTmaApp()
   const t = p.t
-  const [people, setPeople] = useState<Employee[]>([EMPLOYEES[1], EMPLOYEES[2]])
+  const [people, setPeople] = useState<Employee[]>([])
   const [search, setSearch] = useState("")
   const [range, setRange] = useState("7")
   const [dur, setDur] = useState(60)
-  const [searched, setSearched] = useState(false)
 
-  const matches = EMPLOYEES.filter((e) => {
-    const q = search.toLowerCase()
-    return (
-      q &&
-      (e.name.toLowerCase().includes(q) || e.email.toLowerCase().includes(q)) &&
-      !people.find((x) => x.id === e.id)
-    )
-  }).slice(0, 5)
+  const { data: searchResults = [] } = useEmployeeSearch(search)
+  const matches = searchResults
+    .filter((e) => !people.find((x) => x.id === e.id))
+    .slice(0, 5)
 
-  const slots = FREE_SLOTS.filter((s) => s.mins >= dur)
+  const mutation = useFreeSlots()
+  const slots = (mutation.data ?? []).filter((s) => s.mins >= dur)
 
   return (
     <div style={{ padding: "16px 16px 28px" }}>
@@ -87,7 +83,6 @@ export function CheckerScreen({
                 onClick={() => {
                   setPeople([...people, e])
                   setSearch("")
-                  setSearched(false)
                 }}
                 style={{
                   width: "100%",
@@ -154,7 +149,6 @@ export function CheckerScreen({
                   type="button"
                   onClick={() => {
                     setPeople(people.filter((_, j) => j !== i))
-                    setSearched(false)
                   }}
                   style={{
                     border: "none",
@@ -178,7 +172,6 @@ export function CheckerScreen({
           value={range}
           onChange={(v) => {
             setRange(v)
-            setSearched(false)
           }}
           options={[
             { value: "7", label: "7 дн" },
@@ -199,7 +192,6 @@ export function CheckerScreen({
                 type="button"
                 onClick={() => {
                   setDur(d)
-                  setSearched(false)
                 }}
                 style={{
                   padding: "9px 14px",
@@ -229,14 +221,40 @@ export function CheckerScreen({
         variant="primary"
         full
         size="lg"
-        disabled={people.length === 0}
-        onClick={() => setSearched(true)}
+        disabled={people.length === 0 || mutation.isPending}
+        onClick={() => {
+          const today = new Date()
+          const from = today.toISOString().slice(0, 10)
+          const toDate = new Date(today)
+          toDate.setDate(toDate.getDate() + Number(range))
+          const to = toDate.toISOString().slice(0, 10)
+          mutation.mutate({
+            participants: people.map((e) => e.email),
+            from,
+            to,
+            durationMins: dur,
+          })
+        }}
         icon={<CatIcon name="search" size={20} color={p.accentText} sw={2.2} />}
       >
-        {t("findSlots")}
+        {mutation.isPending ? "…" : t("findSlots")}
       </CatBtn>
 
-      {searched && (
+      {mutation.isError && (
+        <div
+          style={{
+            marginTop: 12,
+            color: p.muted,
+            fontSize: 14,
+            fontWeight: 600,
+            textAlign: "center",
+          }}
+        >
+          Не удалось найти слоты. Попробуй ещё раз.
+        </div>
+      )}
+
+      {mutation.isSuccess && (
         <div style={{ marginTop: 22 }}>
           {slots.length === 0 ? (
             <div

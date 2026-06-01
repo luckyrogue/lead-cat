@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react"
 import { Link } from "@tanstack/react-router"
 import { I18N } from "@/shared/tma/i18n"
 import { EMPLOYEES } from "@/shared/tma/mock-data"
+import { useColleagueSchedule, useEmployeeSearch } from "@/shared/tma/queries"
 import { useTmaAuth } from "@/shared/tma/auth-context"
 import { useTmaApp } from "@/shared/tma/context"
 import type { Meeting } from "@/shared/tma/types"
@@ -390,27 +391,27 @@ export function ProfileScreen({
   )
 }
 
-export function ColleagueSchedule({ meetings }: { meetings: Meeting[] }) {
+export function ColleagueSchedule() {
   const p = useTmaApp()
   const t = p.t
-  const [picked, setPicked] = useState<(typeof EMPLOYEES)[0] | null>(null)
+  const [picked, setPicked] = useState<{
+    id: string
+    name: string
+    email: string
+    dept?: string
+  } | null>(null)
   const [search, setSearch] = useState("")
 
-  const matches = EMPLOYEES.filter((e) => {
-    const q = search.toLowerCase()
-    return (
-      q &&
-      (e.name.toLowerCase().includes(q) || e.email.toLowerCase().includes(q))
-    )
-  }).slice(0, 6)
+  const { data: searchResults = [] } = useEmployeeSearch(search)
+  const matches = searchResults.slice(0, 6)
+
+  const { data: colleagueMeetings = [], isLoading: loadingSchedule } =
+    useColleagueSchedule(picked?.email ?? "", "all")
 
   if (picked) {
-    const list = meetings
-      .filter(
-        (m) =>
-          m.organizer === picked.email || m.participants.includes(picked.email)
-      )
-      .sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start))
+    const list = [...colleagueMeetings].sort((a, b) =>
+      (a.date + a.start).localeCompare(b.date + b.start)
+    )
     return (
       <div style={{ padding: "16px 16px 28px" }}>
         <button
@@ -472,7 +473,18 @@ export function ColleagueSchedule({ meetings }: { meetings: Meeting[] }) {
         >
           👁️ {t("viewOnly")}
         </div>
-        {list.length === 0 ? (
+        {loadingSchedule ? (
+          <div
+            style={{
+              textAlign: "center",
+              color: p.muted,
+              fontSize: 14,
+              padding: 20,
+            }}
+          >
+            Загрузка…
+          </div>
+        ) : list.length === 0 ? (
           <div
             style={{
               background: p.card,

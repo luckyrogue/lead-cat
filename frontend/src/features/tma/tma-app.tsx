@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { useTheme } from "next-themes"
 import { LinkTelegramBanner } from "@/features/auth-link-telegram/link-telegram-banner"
 import { TmaAuthProvider, useTmaAuth } from "@/shared/tma/auth-context"
@@ -13,7 +14,8 @@ import type {
   OverlayState,
   TabKey,
 } from "@/shared/tma/types"
-import { INITIAL_MEETINGS, INITIAL_SCENARIOS } from "@/shared/tma/mock-data"
+import { INITIAL_SCENARIOS } from "@/shared/tma/mock-data"
+import { useMyMeetings } from "@/shared/tma/queries"
 import {
   buildTitle,
   detailToDraft,
@@ -139,7 +141,8 @@ function SuccessView({
 
 function TmaContent() {
   const [tab, setTab] = useState<TabKey>("home")
-  const [meetings, setMeetings] = useState<Meeting[]>(INITIAL_MEETINGS)
+  const { data: meetings = [] } = useMyMeetings("all")
+  const queryClient = useQueryClient()
   const [scenarios, setScenarios] = useState(INITIAL_SCENARIOS)
   const [reminders, setReminders] = useState(["15m"])
   const [remOn, setRemOn] = useState(true)
@@ -156,7 +159,10 @@ function TmaContent() {
 
   const completeCreate = (m: MeetingDraft & { end: string }) => {
     const nm = draftToMeeting(m, `new-${Date.now()}`)
-    setMeetings((arr) => [...arr, nm])
+    queryClient.setQueryData<Meeting[]>(
+      ["tma", "meetings", "all"],
+      (old = []) => [nm, ...old]
+    )
     setOverlay(null)
     setTab("meetings")
     setBurst(true)
@@ -175,7 +181,10 @@ function TmaContent() {
   }
 
   const deleteMeeting = (id: string) => {
-    setMeetings((arr) => arr.filter((m) => m.id !== id))
+    queryClient.setQueryData<Meeting[]>(
+      ["tma", "meetings", "all"],
+      (old = []) => old.filter((m) => m.id !== id)
+    )
     setDetail(null)
     p.showToast(
       p.lang === "en"
@@ -261,9 +270,7 @@ function TmaContent() {
         onClose={() => setOverlay(null)}
         title={translate(p.lang, "colleagueSchedule")}
       >
-        {overlay?.type === "colleague" && (
-          <ColleagueSchedule meetings={meetings} />
-        )}
+        {overlay?.type === "colleague" && <ColleagueSchedule />}
       </Overlay>
 
       <Overlay
