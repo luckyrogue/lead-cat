@@ -6,7 +6,12 @@ import {
   type ReactNode,
 } from "react"
 import { isAxiosError } from "axios"
-import { getInitData, tmaLogin, type TmaUser } from "./auth"
+import {
+  getInitData,
+  installTmaAuthInterceptor,
+  tmaLogin,
+  type TmaUser,
+} from "./auth"
 
 export type TmaAuthStatus = "loading" | "authed" | "not_registered" | "error"
 
@@ -23,6 +28,7 @@ export function TmaAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<TmaUser | null>(null)
 
   function run() {
+    installTmaAuthInterceptor()
     setStatus("loading")
     const initData = getInitData()
     if (!initData) {

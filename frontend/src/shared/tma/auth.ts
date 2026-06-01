@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios"
 import { api, setAuthToken } from "@/shared/api/client"
 
 export type TmaUser = {
@@ -43,4 +44,34 @@ export function getInitData(): string {
     window as unknown as { Telegram?: { WebApp?: { initData?: string } } }
   ).Telegram
   return tg?.WebApp?.initData ?? ""
+}
+
+let interceptorInstalled = false
+
+// installTmaAuthInterceptor wires a one-shot re-login on 401 from /api/tma/* calls:
+// it re-exchanges initData for a fresh TMA JWT once and replays the request.
+export function installTmaAuthInterceptor(): void {
+  if (interceptorInstalled) return
+  interceptorInstalled = true
+  api.interceptors.response.use(undefined, async (error: unknown) => {
+    if (!isAxiosError(error) || !error.config) return Promise.reject(error)
+    const cfg = error.config as typeof error.config & { __tmaRetried?: boolean }
+    const url = cfg.url ?? ""
+    if (
+      error.response?.status === 401 &&
+      url.startsWith("/tma/") &&
+      !cfg.__tmaRetried
+    ) {
+      cfg.__tmaRetried = true
+      try {
+        await tmaLogin(getInitData())
+        return api(cfg)
+      } catch {
+        // Re-login failed; surface a non-PII signal (never log the error object —
+        // it carries init_data) and fall through to the original 401 rejection.
+        console.warn("tma re-login failed")
+      }
+    }
+    return Promise.reject(error)
+  })
 }
