@@ -3,7 +3,6 @@ import { RouterProvider, createRouter } from "@tanstack/react-router"
 import { ThemeProvider } from "next-themes"
 import { routeTree } from "../routeTree.gen"
 import { setAuthToken } from "@/shared/api/client"
-import { getAccessToken } from "@/shared/auth/session"
 
 const queryClient = new QueryClient()
 export const router = createRouter({ routeTree })
@@ -23,11 +22,6 @@ if (import.meta.hot) {
 
 if (import.meta.env.VITE_AUTH_DEV_MODE === "true") {
   setAuthToken("dev")
-} else {
-  const saved = getAccessToken()
-  if (saved) {
-    setAuthToken(saved)
-  }
 }
 
 export function AppProviders() {

@@ -1,11 +1,9 @@
-import { Link } from "@tanstack/react-router"
 import { WEEKDAYS } from "@/shared/tma/constants"
 import { useTmaApp } from "@/shared/tma/context"
 import type { Lang, Scenario } from "@/shared/tma/types"
 import { hexToRgba } from "@/shared/tma/palette"
 import { CatCard, CatIcon, CatToggle } from "@/shared/ui/cat/primitives"
 import { Paw } from "@/shared/ui/cat/paw"
-import { useWorkspaceId } from "@/shared/hooks/use-workspace-id"
 
 const ACTION_META: Record<
   string,
@@ -34,7 +32,6 @@ export function AutoScreen({
 }) {
   const p = useTmaApp()
   const t = p.t
-  const workspaceId = useWorkspaceId()
 
   return (
     <div style={{ padding: "16px 16px 28px" }}>
@@ -223,58 +220,30 @@ export function AutoScreen({
         })}
       </div>
 
-      {workspaceId ? (
-        <Link
-          to="/scenarios"
-          search={{ workspaceId }}
-          style={{
-            marginTop: 14,
-            width: "100%",
-            padding: "15px",
-            borderRadius: 16,
-            border: `1.5px dashed ${p.borderStrong}`,
-            background: "transparent",
-            color: p.accent,
-            fontWeight: 800,
-            fontFamily: "var(--font-display)",
-            fontSize: 15,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            textDecoration: "none",
-          }}
-        >
-          <CatIcon name="plus" size={20} color={p.accent} sw={2.4} />{" "}
-          {t("legacyScenarios")}
-        </Link>
-      ) : (
-        <button
-          type="button"
-          onClick={() => p.showToast("Конструктор сценариев скоро 🐾")}
-          style={{
-            marginTop: 14,
-            width: "100%",
-            padding: "15px",
-            borderRadius: 16,
-            border: `1.5px dashed ${p.borderStrong}`,
-            background: "transparent",
-            color: p.accent,
-            fontWeight: 800,
-            fontFamily: "var(--font-display)",
-            fontSize: 15,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-          }}
-        >
-          <CatIcon name="plus" size={20} color={p.accent} sw={2.4} /> Новый
-          сценарий
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={() => p.showToast("Конструктор сценариев скоро 🐾")}
+        style={{
+          marginTop: 14,
+          width: "100%",
+          padding: "15px",
+          borderRadius: 16,
+          border: `1.5px dashed ${p.borderStrong}`,
+          background: "transparent",
+          color: p.accent,
+          fontWeight: 800,
+          fontFamily: "var(--font-display)",
+          fontSize: 15,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+        }}
+      >
+        <CatIcon name="plus" size={20} color={p.accent} sw={2.4} /> Новый
+        сценарий
+      </button>
     </div>
   )
 }

@@ -90,9 +90,6 @@ export const I18N = {
     searchColleague: "Найти коллегу",
     colleagueSchedule: "Расписание",
     viewOnly: "Только просмотр",
-    legacyScenarios: "Конструктор сценариев",
-    legacyTeam: "Котики и VCS",
-    legacyWorkspaces: "Логова",
   },
   kk: {
     _label: "Қазақша",
@@ -181,9 +178,6 @@ export const I18N = {
     searchColleague: "Әріптес табу",
     colleagueSchedule: "Кесте",
     viewOnly: "Тек қарау",
-    legacyScenarios: "Сценарий конструкторы",
-    legacyTeam: "Котиктер және VCS",
-    legacyWorkspaces: "Логова",
   },
   en: {
     _label: "English",
@@ -272,9 +266,6 @@ export const I18N = {
     searchColleague: "Find a teammate",
     colleagueSchedule: "Schedule",
     viewOnly: "View only",
-    legacyScenarios: "Scenario builder",
-    legacyTeam: "Team & VCS",
-    legacyWorkspaces: "Workspaces",
   },
 } as const
 
