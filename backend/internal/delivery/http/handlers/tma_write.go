@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"github.com/Jaryq-Lab/notify-bot/internal/application"
@@ -114,4 +115,44 @@ func toConflictDTO(c application.Conflict, loc *time.Location) tmaConflictDTO {
 		Start: c.Start.In(loc).Format("15:04"),
 		End:   c.End.In(loc).Format("15:04"),
 	}
+}
+
+type tmaConflictRequest struct {
+	Participants []string `json:"participants"`
+	Date         string   `json:"date"`  // YYYY-MM-DD
+	Start        string   `json:"start"` // HH:MM
+	End          string   `json:"end"`   // HH:MM
+	ExcludeID    string   `json:"exclude_id"`
+}
+
+// TMAConflicts reports cross-participant conflicts for a pending meeting (§4.7).
+func (a *API) TMAConflicts(c *fiber.Ctx) error {
+	if _, ok := botUser(c); !ok {
+		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
+	}
+	var req tmaConflictRequest
+	if err := c.BodyParser(&req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
+	}
+	loc := almatyLoc()
+	start, err1 := time.ParseInLocation("2006-01-02 15:04", req.Date+" "+req.Start, loc)
+	end, err2 := time.ParseInLocation("2006-01-02 15:04", req.Date+" "+req.End, loc)
+	if err1 != nil || err2 != nil || !end.After(start) || len(req.Participants) == 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid range/participants")
+	}
+	exclude := uuid.Nil
+	if s := strings.TrimSpace(req.ExcludeID); s != "" {
+		if id, perr := uuid.Parse(s); perr == nil {
+			exclude = id
+		}
+	}
+	conflicts, err := a.App.MeetingConflicts(c.Context(), req.Participants, start, end, exclude)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	out := make([]tmaConflictDTO, 0, len(conflicts))
+	for _, cf := range conflicts {
+		out = append(out, toConflictDTO(cf, loc))
+	}
+	return c.JSON(fiber.Map{"conflicts": out})
 }
