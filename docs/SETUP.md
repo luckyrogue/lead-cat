@@ -136,7 +136,7 @@ Deprecation schedule follows the phased rollout in the
 | Phase | Route deprecated for human use |
 | --- | --- |
 | Phase 1 (meetings unblock) | `PATCH /api/workspaces/:id/integrations` |
-| Phase 2 (notify-bot ops) | `…/chat/*`, `…/members/*` |
+| Phase 2 (legacy notify-bot ops) | `…/chat/*`, `…/members/*` |
 | Phase 3 (auto-tab ops) | `…/auto/*` read/toggle |
 
 After all phases ship, platform setup routes will require a script-only token or be

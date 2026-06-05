@@ -112,7 +112,7 @@ except the public auth endpoints. Operator-only; being retired.
 - `POST /api/workspaces/:id/members/sync-chat`
 - `PATCH /api/workspaces/:id/members/:username/vcs`
 
-**Scenarios** (notify-bot engine)
+**Scenarios** (legacy — not used by the meetings Mini App)
 
 - `GET /api/workspaces/:id/scenarios`
 - `POST /api/workspaces/:id/scenarios`

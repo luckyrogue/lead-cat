@@ -1,6 +1,6 @@
 # Lead Cat
 
-Multi-tenant SaaS: Telegram reminders with evil cats, n8n-like scenarios, Mini App admin. Plus a Google Meet meeting-management Mini App (in development — see docs/MEETINGS.md).
+Google Meet meeting-management Mini App — Telegram-delivered notifications, employee scheduling, and conflict detection (in development — see docs/MEETINGS.md).
 
 ## Quick start (local)
 
@@ -20,7 +20,7 @@ Or step by step: `make help`
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)     | System design                       |
 | [docs/DEPLOY-DOKPLOY.md](docs/DEPLOY-DOKPLOY.md) | Dokploy                             |
 | [docs/AUTH.md](docs/AUTH.md)                     | Login (OTP, passkey, GitHub/GitLab) |
-| [docs/SCENARIOS.md](docs/SCENARIOS.md)           | Workflow builder                    |
+| [docs/SETUP.md](docs/SETUP.md)                   | Local dev & environment setup       |
 | [docs/MEETINGS.md](docs/MEETINGS.md)             | Google Meet meetings (in dev)       |
 | [docs/NEW-FEATURES.md](docs/NEW-FEATURES.md)     | Meetings spec (ТЗ)                  |
 | [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md)     | Backend/frontend requirements       |
