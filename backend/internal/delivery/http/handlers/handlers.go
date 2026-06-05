@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"strings"
 
@@ -88,6 +89,9 @@ func (a *API) LinkTelegram(c *fiber.Ctx) error {
 	}
 	uid := c.Locals("user_id").(uuid.UUID)
 	if err := a.App.LinkTelegram(c.Context(), uid, user.ID, user.Username); err != nil {
+		if errors.Is(err, application.ErrTelegramLinkedToOtherAccount) {
+			return fiber.NewError(fiber.StatusConflict, "telegram already linked")
+		}
 		a.logHTTPError(c, "link telegram", err)
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}

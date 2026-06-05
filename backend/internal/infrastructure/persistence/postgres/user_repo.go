@@ -30,6 +30,18 @@ func (s *Store) GetUserBySub(ctx context.Context, sub string) (User, error) {
 	return u, err
 }
 
+func (s *Store) GetPlatformUserIDByTelegramID(ctx context.Context, telegramID int64) (uuid.UUID, bool, error) {
+	var id uuid.UUID
+	err := s.pool.QueryRow(ctx, `SELECT id FROM platform_users WHERE telegram_id = $1`, telegramID).Scan(&id)
+	if IsNotFound(err) {
+		return uuid.Nil, false, nil
+	}
+	if err != nil {
+		return uuid.Nil, false, err
+	}
+	return id, true, nil
+}
+
 func (s *Store) LinkTelegram(ctx context.Context, userID uuid.UUID, telegramID int64) error {
 	_, err := s.pool.Exec(ctx, `
 		UPDATE platform_users SET telegram_id = $2 WHERE id = $1`, userID, telegramID)

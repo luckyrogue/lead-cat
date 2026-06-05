@@ -18,6 +18,7 @@ export type TmaAuthStatus = "loading" | "authed" | "not_registered" | "error"
 type TmaAuthValue = {
   status: TmaAuthStatus
   user: TmaUser | null
+  errorCode: string | null
   retry: () => void
 }
 
@@ -26,13 +27,16 @@ const TmaAuthContext = createContext<TmaAuthValue | null>(null)
 export function TmaAuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<TmaAuthStatus>("loading")
   const [user, setUser] = useState<TmaUser | null>(null)
+  const [errorCode, setErrorCode] = useState<string | null>(null)
 
   function run() {
     installTmaAuthInterceptor()
     setStatus("loading")
+    setErrorCode(null)
     const initData = getInitData()
     if (!initData) {
       setStatus("error")
+      setErrorCode("no_init_data")
       return
     }
     tmaLogin(initData)
@@ -44,6 +48,7 @@ export function TmaAuthProvider({ children }: { children: ReactNode }) {
         const code = isAxiosError(e)
           ? (e.response?.data as { code?: string })?.code
           : undefined
+        setErrorCode(code ?? "unknown")
         setStatus(code === "not_registered" ? "not_registered" : "error")
       })
   }
@@ -55,7 +60,7 @@ export function TmaAuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <TmaAuthContext.Provider value={{ status, user, retry: run }}>
+    <TmaAuthContext.Provider value={{ status, user, errorCode, retry: run }}>
       {children}
     </TmaAuthContext.Provider>
   )

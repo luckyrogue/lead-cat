@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -26,11 +27,23 @@ type Services struct {
 	Log      *zap.Logger
 }
 
+var ErrTelegramLinkedToOtherAccount = errors.New("telegram already linked to another account")
+
 func (s *Services) GetMe(ctx context.Context, authSub string) (postgres.User, error) {
 	return s.Store.GetUserBySub(ctx, authSub)
 }
 
 func (s *Services) LinkTelegram(ctx context.Context, userID uuid.UUID, telegramID int64, username string) error {
+	if existing, ok, err := s.Store.GetUserTelegramID(ctx, userID); err != nil {
+		return err
+	} else if ok && existing == telegramID {
+		return s.Store.LinkMemberUserIDsByTelegram(ctx, userID, username)
+	}
+	if ownerID, ok, err := s.Store.GetPlatformUserIDByTelegramID(ctx, telegramID); err != nil {
+		return err
+	} else if ok && ownerID != userID {
+		return ErrTelegramLinkedToOtherAccount
+	}
 	if err := s.Store.LinkTelegram(ctx, userID, telegramID); err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "../shared/theme/cat-tokens.css";
 @import "../shared/theme/cat-animations.css";
+@import "../shared/theme/tma-shell.css";
 
 @theme inline {
   --color-background: var(--background);

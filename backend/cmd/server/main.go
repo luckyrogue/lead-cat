@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -91,7 +92,7 @@ func main() {
 			}
 		}),
 	}
-	if cfg.AuthDevMode {
+	if cfg.AuthDevMode && !cfg.RealBotToken() {
 		botOpts = append(botOpts, bot.WithSkipGetMe())
 	}
 	tg, err := bot.New(cfg.BotToken, botOpts...)
@@ -99,15 +100,17 @@ func main() {
 		logger.Fatal("telegram", zap.Error(err))
 	}
 	botUsername := "dev"
-	if cfg.AuthDevMode {
-		logger.Warn("AUTH_DEV_MODE: telegram polling disabled; set real BOT_TOKEN for bot features")
-	} else {
+	if cfg.RealBotToken() {
 		me, err := tg.GetMe(ctx)
 		if err != nil {
 			logger.Fatal("telegram getMe", zap.Error(err))
 		}
 		botUsername = me.Username
 		tgHandler = telegram.NewMultiHandler(store, cipher, tg, rdb, cfg.BotAdminTelegramIDs, cfg.AuthOTPLog, services, logger)
+	} else if cfg.AuthDevMode {
+		logger.Warn("AUTH_DEV_MODE: telegram polling disabled (set BOT_TOKEN for /start and bot commands)")
+	} else {
+		logger.Fatal("telegram", zap.Error(fmt.Errorf("BOT_TOKEN is required")))
 	}
 	exec := scenario_executor.New(store, cipher, tg, logger)
 

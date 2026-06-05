@@ -32,8 +32,8 @@ func (a *API) TMAAuth(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
 	}
 	var tgID int64
-	if a.AuthDevMode {
-		// Dev: no Telegram, no HMAC. init_data carries the dev telegram_id.
+	if a.AuthDevMode && !looksLikeTelegramInitData(req.InitData) {
+		// Browser-only dev: init_data is a raw telegram_id, no HMAC.
 		id, err := strconv.ParseInt(strings.TrimSpace(req.InitData), 10, 64)
 		if err != nil || id == 0 {
 			return fiber.NewError(fiber.StatusBadRequest, "dev init_data must be a telegram id")
@@ -68,4 +68,8 @@ func (a *API) TMAAuth(c *fiber.Ctx) error {
 		"token": token,
 		"user":  tmaUser{TelegramID: bu.TelegramID, Name: bu.FullName, Email: bu.Email, Role: bu.Role},
 	})
+}
+
+func looksLikeTelegramInitData(initData string) bool {
+	return strings.Contains(initData, "hash=") || strings.Contains(initData, "auth_date=")
 }

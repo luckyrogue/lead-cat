@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
@@ -10,11 +10,23 @@ declare global {
   }
 }
 
+type MeResponse = {
+  telegram_id?: number | null
+}
+
+/** Links platform_users.telegram_id from web admin (not TMA bot_users auth). */
 export function LinkTelegramBanner() {
   const qc = useQueryClient()
+  const initData = window.Telegram?.WebApp?.initData
+
+  const me = useQuery({
+    queryKey: ["me"],
+    queryFn: async () => (await api.get<MeResponse>("/me")).data,
+    enabled: !!initData,
+  })
+
   const link = useMutation({
     mutationFn: async () => {
-      const initData = window.Telegram?.WebApp?.initData
       if (!initData) throw new Error("no initData")
       await api.post("/me/link-telegram", null, {
         headers: { "X-Telegram-Init-Data": initData },
@@ -27,7 +39,9 @@ export function LinkTelegramBanner() {
     onError: () => toast.error("Не удалось привязать Telegram"),
   })
 
-  if (!window.Telegram?.WebApp?.initData) return null
+  if (!initData) return null
+  if (me.isLoading) return null
+  if (me.data?.telegram_id) return null
 
   return (
     <Button

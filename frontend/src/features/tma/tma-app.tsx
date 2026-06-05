@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTheme } from "next-themes"
-import { LinkTelegramBanner } from "@/features/auth-link-telegram/link-telegram-banner"
 import { TmaAuthProvider, useTmaAuth } from "@/shared/tma/auth-context"
+import { isTelegramMiniApp } from "@/shared/tma/telegram-env"
+import { useTelegramViewport } from "@/shared/tma/use-telegram-viewport"
 import { TmaAppProvider, useTmaApp } from "@/shared/tma/context"
 import { DEFAULT_ACCENT, makePalette } from "@/shared/tma/palette"
 import type {
@@ -153,6 +154,8 @@ function TmaContent() {
   const [langOpen, setLangOpen] = useState(false)
   const [success, setSuccess] = useState<Meeting | null>(null)
   const [burst, setBurst] = useState(false)
+  const inTelegram = isTelegramMiniApp()
+  const overlayOpen = overlay !== null
 
   const openCreate = (initial?: Partial<MeetingDraft>) =>
     setOverlay({ type: "create", initial })
@@ -228,32 +231,25 @@ function TmaContent() {
 
   return (
     <TmaFrame>
-      <div
-        style={{
-          position: "relative",
-          display: "flex",
-          flex: 1,
-          flexDirection: "column",
-          minHeight: "100dvh",
-        }}
-      >
-        <TgBar onLang={() => setLangOpen(true)} />
-        <div className="px-2 pt-1">
-          <LinkTelegramBanner />
-        </div>
-        <div
-          key={tab}
-          className="lc-scroll lc-screen"
-          style={{ flex: 1, overflow: "auto" }}
-        >
+      <div className="tma-shell">
+        {!overlayOpen && (
+          <TgBar
+            native={inTelegram}
+            onLang={() => setLangOpen(true)}
+          />
+        )}
+        <div key={tab} className="tma-shell__main lc-scroll lc-screen">
           {screens[tab]}
         </div>
-        <TabBar tab={tab} onTab={setTab} onCreate={() => openCreate()} />
+        {!overlayOpen && (
+          <TabBar tab={tab} onTab={setTab} onCreate={() => openCreate()} />
+        )}
       </div>
 
       <Overlay
         open={overlay?.type === "create"}
         onClose={() => setOverlay(null)}
+        onBack={() => setOverlay(null)}
         title={translate(p.lang, "create")}
       >
         {overlay?.type === "create" && (
@@ -268,6 +264,7 @@ function TmaContent() {
       <Overlay
         open={overlay?.type === "colleague"}
         onClose={() => setOverlay(null)}
+        onBack={() => setOverlay(null)}
         title={translate(p.lang, "colleagueSchedule")}
       >
         {overlay?.type === "colleague" && <ColleagueSchedule />}
@@ -276,6 +273,7 @@ function TmaContent() {
       <Overlay
         open={overlay?.type === "admin"}
         onClose={() => setOverlay(null)}
+        onBack={() => setOverlay(null)}
         title={translate(p.lang, "admin")}
       >
         {overlay?.type === "admin" && <AdminPanel meetings={meetings} />}
@@ -316,11 +314,6 @@ function TmaContent() {
 function TmaAppInner() {
   const { resolvedTheme } = useTheme()
   const dark = resolvedTheme === "dark"
-
-  useEffect(() => {
-    document.body.classList.add("tma-mode")
-    return () => document.body.classList.remove("tma-mode")
-  }, [])
   const [accent] = useState(
     () => localStorage.getItem("lc-accent") || DEFAULT_ACCENT
   )
@@ -359,6 +352,7 @@ function TmaAppInner() {
 }
 
 export function TmaApp() {
+  useTelegramViewport()
   return (
     <TmaAuthProvider>
       <TmaAuthGate />
@@ -367,9 +361,15 @@ export function TmaApp() {
 }
 
 function TmaAuthGate() {
-  const { status, retry } = useTmaAuth()
+  const { status, errorCode, retry } = useTmaAuth()
   if (status === "authed") return <TmaAppInner />
   const botUsername = import.meta.env.VITE_BOT_USERNAME ?? ""
+  const errorMessage =
+    errorCode === "no_init_data"
+      ? "Откройте приложение из Telegram."
+      : errorCode === "invalid_init_data"
+        ? "Сессия Telegram недействительна. Закройте и откройте Mini App заново."
+        : "Не удалось войти. Проверьте, что backend запущен (make dev)."
   return (
     <div
       style={{
@@ -400,8 +400,10 @@ function TmaAuthGate() {
       )}
       {status === "error" && (
         <>
-          <p>Не удалось войти. Откройте приложение из Telegram.</p>
-          <button onClick={retry}>Повторить</button>
+          <p>{errorMessage}</p>
+          <button type="button" onClick={retry}>
+            Повторить
+          </button>
         </>
       )}
     </div>

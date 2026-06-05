@@ -907,7 +907,7 @@ export function CreateWizard({
       <div
         style={{
           flexShrink: 0,
-          padding: "12px 16px 26px",
+          padding: "12px 16px max(12px, var(--tma-safe-bottom, 0px))",
           borderTop: `1px solid ${p.border}`,
           background: p.tgBar,
           display: "flex",

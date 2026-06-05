@@ -105,7 +105,7 @@ func Load() (Config, error) {
 
 	if cfg.BotToken == "" {
 		if cfg.AuthDevMode {
-			cfg.BotToken = "000000000:AAFakeDevTokenForLocalOnly"
+			cfg.BotToken = fakeDevBotToken
 		} else {
 			return cfg, fmt.Errorf("BOT_TOKEN is required")
 		}
@@ -123,6 +123,13 @@ func Load() (Config, error) {
 		cfg.JWTSecret = cfg.MasterEncryptionKey
 	}
 	return cfg, nil
+}
+
+const fakeDevBotToken = "000000000:AAFakeDevTokenForLocalOnly"
+
+// RealBotToken is true when BOT_TOKEN is a non-placeholder value (bot polling can run).
+func (c Config) RealBotToken() bool {
+	return c.BotToken != "" && c.BotToken != fakeDevBotToken
 }
 
 func envOr(key, fallback string) string {

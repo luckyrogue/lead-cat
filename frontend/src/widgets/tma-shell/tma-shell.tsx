@@ -6,7 +6,14 @@ import { useTmaApp } from "@/shared/tma/context"
 import { CatIcon, tgIconBtn } from "@/shared/ui/cat/primitives"
 import { useMounted } from "./use-mounted"
 
-export function TgBar({ onLang }: { onLang: () => void }) {
+export function TgBar({
+  onLang,
+  native = false,
+}: {
+  onLang: () => void
+  /** Inside Telegram: no fake ⋮/✕ — native header already provides them. */
+  native?: boolean
+}) {
   const p = useTmaApp()
   return (
     <div
@@ -89,32 +96,36 @@ export function TgBar({ onLang }: { onLang: () => void }) {
         <span style={{ fontSize: 16 }}>{I18N[p.lang]._flag}</span>
         <CatIcon name="chevD" size={13} color={p.muted} sw={2.4} />
       </button>
-      <button
-        type="button"
-        style={{ ...tgIconBtn(p), width: 34, gap: 0 }}
-        aria-label="menu"
-      >
-        <span style={{ display: "flex", gap: 3 }}>
-          {[0, 1, 2].map((i) => (
-            <span
-              key={i}
-              style={{
-                width: 3.4,
-                height: 3.4,
-                borderRadius: 2,
-                background: p.muted,
-              }}
-            />
-          ))}
-        </span>
-      </button>
-      <button
-        type="button"
-        style={{ ...tgIconBtn(p), width: 34 }}
-        aria-label="close"
-      >
-        <CatIcon name="x" size={18} color={p.muted} sw={2.2} />
-      </button>
+      {!native && (
+        <>
+          <button
+            type="button"
+            style={{ ...tgIconBtn(p), width: 34, gap: 0 }}
+            aria-label="menu"
+          >
+            <span style={{ display: "flex", gap: 3 }}>
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  style={{
+                    width: 3.4,
+                    height: 3.4,
+                    borderRadius: 2,
+                    background: p.muted,
+                  }}
+                />
+              ))}
+            </span>
+          </button>
+          <button
+            type="button"
+            style={{ ...tgIconBtn(p), width: 34 }}
+            aria-label="close"
+          >
+            <CatIcon name="x" size={18} color={p.muted} sw={2.2} />
+          </button>
+        </>
+      )}
     </div>
   )
 }
@@ -243,16 +254,12 @@ export function TabBar({
 
   return (
     <div
+      className="tma-tabbar"
       style={{
-        flexShrink: 0,
-        position: "relative",
         background: p.tgBar,
         borderTop: `1px solid ${p.border}`,
-        paddingBottom: 22,
-        paddingTop: 8,
         display: "flex",
         alignItems: "flex-start",
-        zIndex: 6,
       }}
     >
       {items.map((it) => {
@@ -455,7 +462,7 @@ export function Overlay({
         background: p.bg,
         display: "flex",
         flexDirection: "column",
-        paddingTop: 54,
+        minHeight: 0,
         transform: shown ? "translateX(0)" : "translateX(100%)",
         transition: "transform .32s cubic-bezier(.32,.72,0,1)",
         boxShadow: "-12px 0 40px rgba(0,0,0,0.12)",
@@ -499,14 +506,22 @@ export function Overlay({
           {title}
         </div>
       </div>
-      <div className="lc-scroll" style={{ flex: 1, overflow: "auto" }}>
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
         {children}
       </div>
       {footer && (
         <div
           style={{
             flexShrink: 0,
-            padding: "12px 16px 26px",
+            padding: "12px 16px max(12px, var(--tma-safe-bottom, 0px))",
             borderTop: `1px solid ${p.border}`,
             background: p.tgBar,
           }}
@@ -611,12 +626,11 @@ export function TmaFrame({ children }: { children: ReactNode }) {
   const p = useTmaApp()
   return (
     <div
-      className="mx-auto flex min-h-[100dvh] w-full max-w-[480px] flex-col"
+      className="tma-frame"
       style={{
         background: p.bg,
         backgroundImage: `radial-gradient(${p.pattern} 1.4px, transparent 1.4px)`,
         backgroundSize: "22px 22px",
-        position: "relative",
       }}
     >
       {children}

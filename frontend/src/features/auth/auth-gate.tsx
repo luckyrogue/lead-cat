@@ -11,6 +11,8 @@ export function AuthGate({ children }: Props) {
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
 
+  const isTma = pathname === "/"
+
   useEffect(() => {
     const token = getAccessToken()
     if (token) {
@@ -22,12 +24,16 @@ export function AuthGate({ children }: Props) {
       }
       return
     }
+    if (isTma) return
     if (!isAuthenticated()) {
       navigate({ to: "/login" })
     }
-  }, [pathname, navigate])
+  }, [pathname, navigate, isTma])
 
   if (pathname === "/login") {
+    return <>{children}</>
+  }
+  if (isTma) {
     return <>{children}</>
   }
   if (!isAuthenticated()) {
