@@ -204,6 +204,212 @@
           }
         }
       }
+    },
+    "/api/tma/meetings/{id}": {
+      "patch": {
+        "operationId": "tmaUpdateMeeting",
+        "tags": ["tma"],
+        "summary": "Edit a single meeting (organizer/owner only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TmaMeetingUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated meeting",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["meeting"],
+                  "properties": {
+                    "meeting": { "$ref": "#/components/schemas/TmaMeeting" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body / invalid time / meetings_recurring_unsupported",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "tmaDeleteMeeting",
+        "tags": ["tma"],
+        "summary": "Cancel a single meeting (organizer/owner only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Meeting cancelled"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tma/conflicts": {
+      "post": {
+        "operationId": "tmaConflicts",
+        "tags": ["tma"],
+        "summary": "Cross-participant conflict warning",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TmaConflictsRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conflicts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["conflicts"],
+                  "properties": {
+                    "conflicts": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/TmaConflict" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid range / participants",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -366,6 +572,40 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/TmaFreeSlot" }
           }
+        }
+      },
+      "TmaMeetingUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "dept":  { "type": "string", "nullable": true },
+          "type":  { "type": "string", "nullable": true },
+          "host":  { "type": "string", "nullable": true },
+          "date":  { "type": "string", "nullable": true, "description": "YYYY-MM-DD" },
+          "start": { "type": "string", "nullable": true, "description": "HH:MM" },
+          "end":   { "type": "string", "nullable": true, "description": "HH:MM" },
+          "desc":  { "type": "string", "nullable": true }
+        }
+      },
+      "TmaConflictsRequest": {
+        "type": "object",
+        "required": ["participants", "date", "start", "end"],
+        "properties": {
+          "participants": { "type": "array", "items": { "type": "string", "format": "email" } },
+          "date":  { "type": "string", "description": "YYYY-MM-DD" },
+          "start": { "type": "string", "description": "HH:MM Almaty" },
+          "end":   { "type": "string", "description": "HH:MM Almaty" },
+          "exclude_id": { "type": "string", "format": "uuid" }
+        }
+      },
+      "TmaConflict": {
+        "type": "object",
+        "required": ["email", "name", "title", "start", "end"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "name":  { "type": "string" },
+          "title": { "type": "string" },
+          "start": { "type": "string", "description": "HH:MM Almaty" },
+          "end":   { "type": "string", "description": "HH:MM Almaty" }
         }
       }
     }

@@ -123,6 +123,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tma/meetings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Cancel a single meeting (organizer/owner only) */
+        delete: operations["tmaDeleteMeeting"];
+        options?: never;
+        head?: never;
+        /** Edit a single meeting (organizer/owner only) */
+        patch: operations["tmaUpdateMeeting"];
+        trace?: never;
+    };
+    "/api/tma/conflicts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cross-participant conflict warning */
+        post: operations["tmaConflicts"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -208,6 +243,39 @@ export interface components {
         };
         TmaFreeSlotsResponse: {
             slots: components["schemas"]["TmaFreeSlot"][];
+        };
+        TmaMeetingUpdateRequest: {
+            dept?: string | null;
+            type?: string | null;
+            host?: string | null;
+            /** @description YYYY-MM-DD */
+            date?: string | null;
+            /** @description HH:MM */
+            start?: string | null;
+            /** @description HH:MM */
+            end?: string | null;
+            desc?: string | null;
+        };
+        TmaConflictsRequest: {
+            participants: string[];
+            /** @description YYYY-MM-DD */
+            date: string;
+            /** @description HH:MM Almaty */
+            start: string;
+            /** @description HH:MM Almaty */
+            end: string;
+            /** Format: uuid */
+            exclude_id?: string;
+        };
+        TmaConflict: {
+            /** Format: email */
+            email: string;
+            name: string;
+            title: string;
+            /** @description HH:MM Almaty */
+            start: string;
+            /** @description HH:MM Almaty */
+            end: string;
         };
     };
     responses: never;
@@ -396,6 +464,206 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TmaFreeSlotsResponse"];
+                };
+            };
+        };
+    };
+    tmaDeleteMeeting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Meeting cancelled */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    tmaUpdateMeeting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TmaMeetingUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated meeting */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        meeting: components["schemas"]["TmaMeeting"];
+                    };
+                };
+            };
+            /** @description Invalid body / invalid time / meetings_recurring_unsupported */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    tmaConflicts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TmaConflictsRequest"];
+            };
+        };
+        responses: {
+            /** @description Conflicts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        conflicts: components["schemas"]["TmaConflict"][];
+                    };
+                };
+            };
+            /** @description Invalid range / participants */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
