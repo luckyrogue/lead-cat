@@ -231,3 +231,40 @@ func (a *API) TMAUpdateMeeting(c *fiber.Ctx) error {
 		zap.String("workspace_id", workspaceID.String()))
 	return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m)})
 }
+
+// TMADeleteMeeting cancels a single meeting the authed TMA user organizes (§4.5).
+func (a *API) TMADeleteMeeting(c *fiber.Ctx) error {
+	bu, ok := botUser(c)
+	if !ok {
+		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
+	}
+	meetingID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid meeting id")
+	}
+	workspaceID, found, err := a.editableWorkspace(c, bu.TelegramID, meetingID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	if !found {
+		return fiber.NewError(fiber.StatusNotFound, "not_found")
+	}
+	organizerID, err := a.App.EnsureTMAOrganizer(c.Context(), bu.Email, bu.TelegramID)
+	if err != nil {
+		if errors.Is(err, application.ErrTelegramLinkedToOtherAccount) {
+			return fiber.NewError(fiber.StatusConflict, "telegram_linked_to_other_account")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	if err := a.App.CancelMeeting(c.Context(), workspaceID, organizerID, meetingID); err != nil {
+		if errors.Is(err, application.ErrForbidden) {
+			return fiber.NewError(fiber.StatusForbidden, "forbidden")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	a.App.Log.Info("tma_meeting_cancelled",
+		zap.Int64("telegram_id", bu.TelegramID),
+		zap.String("meeting_id", meetingID.String()),
+		zap.String("workspace_id", workspaceID.String()))
+	return c.SendStatus(fiber.StatusNoContent)
+}
