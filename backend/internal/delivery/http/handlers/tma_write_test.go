@@ -1,6 +1,11 @@
 package handlers
 
-import "testing"
+import (
+	"testing"
+	"time"
+
+	"github.com/Jaryq-Lab/notify-bot/internal/application"
+)
 
 func TestToCreateMeetingInput(t *testing.T) {
 	// Host falls back to the bot user's full name when empty; blank participant
@@ -22,5 +27,21 @@ func TestToCreateMeetingInput(t *testing.T) {
 	// Non-empty host is kept.
 	if got := toCreateMeetingInput(tmaCreateRequest{Host: "Custom"}, "Real").Host; got != "Custom" {
 		t.Fatalf("host kept: %q", got)
+	}
+}
+
+func TestToConflictDTO(t *testing.T) {
+	loc, _ := time.LoadLocation("Asia/Almaty")
+	// 09:00–10:00 UTC == 14:00–15:00 Almaty
+	c := application.Conflict{
+		Email:       "a@x.io",
+		PersonName:  "Alice",
+		MeetingName: "Weekly",
+		Start:       time.Date(2026, 6, 1, 9, 0, 0, 0, time.UTC),
+		End:         time.Date(2026, 6, 1, 10, 0, 0, 0, time.UTC),
+	}
+	d := toConflictDTO(c, loc)
+	if d.Email != "a@x.io" || d.Name != "Alice" || d.Title != "Weekly" || d.Start != "14:00" || d.End != "15:00" {
+		t.Fatalf("toConflictDTO got %+v", d)
 	}
 }

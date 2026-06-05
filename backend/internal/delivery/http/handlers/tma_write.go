@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
@@ -94,4 +95,23 @@ func (a *API) TMACreateMeeting(c *fiber.Ctx) error {
 		zap.String("meeting_id", m.ID.String()),
 		zap.String("workspace_id", workspaceID.String()))
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m)})
+}
+
+type tmaConflictDTO struct {
+	Email string `json:"email"`
+	Name  string `json:"name"`  // application.Conflict.PersonName
+	Title string `json:"title"` // application.Conflict.MeetingName
+	Start string `json:"start"` // HH:MM Almaty
+	End   string `json:"end"`
+}
+
+// toConflictDTO renders a conflict's UTC times into Almaty HH:MM. Pure.
+func toConflictDTO(c application.Conflict, loc *time.Location) tmaConflictDTO {
+	return tmaConflictDTO{
+		Email: c.Email,
+		Name:  c.PersonName,
+		Title: c.MeetingName,
+		Start: c.Start.In(loc).Format("15:04"),
+		End:   c.End.In(loc).Format("15:04"),
+	}
 }
