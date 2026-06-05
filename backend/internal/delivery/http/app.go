@@ -152,6 +152,7 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	tma.Get("/schedule", api.TMASchedule)
 	tma.Get("/employees", api.TMAEmployees)
 	tma.Post("/free-slots", api.TMAFreeSlots)
+	tma.Post("/meetings", api.TMACreateMeeting)
 
 	if stat, err := os.Stat(cfg.StaticDir); err == nil && stat.IsDir() {
 		app.Static("/", cfg.StaticDir, fiber.Static{
