@@ -96,6 +96,7 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	}
 
 	app.Get("/api/health", api.Health)
+	app.Get("/openapi.json", handlers.OpenAPI)
 	app.Get("/metrics", api.Metrics)
 
 	authPub := app.Group("/api/auth")

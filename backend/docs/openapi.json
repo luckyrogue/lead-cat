@@ -1,0 +1,373 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Lead Cat API",
+    "version": "1.0.0",
+    "description": "TMA-facing endpoints and health check for frontend codegen."
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "tags": ["health"],
+        "summary": "Service health",
+        "responses": {
+          "200": {
+            "description": "Dependencies healthy",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency down",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/tma": {
+      "post": {
+        "operationId": "tma_auth_post",
+        "tags": ["auth"],
+        "summary": "Exchange Telegram initData for TMA JWT",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TmaAuthRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TmaAuthResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Auth failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TmaAuthError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tma/me": {
+      "get": {
+        "operationId": "tma_me_get",
+        "tags": ["tma"],
+        "summary": "Current TMA user",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "User identity",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TmaUser" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tma/meetings": {
+      "get": {
+        "operationId": "tma_meetings_get",
+        "tags": ["tma"],
+        "summary": "List authed user meetings",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["upcoming", "past", "all"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Meetings list",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TmaMeetingsResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tma/schedule": {
+      "get": {
+        "operationId": "tma_schedule_get",
+        "tags": ["tma"],
+        "summary": "Colleague schedule (read-only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "email" }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["upcoming", "past", "all"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Meetings list",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TmaMeetingsResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tma/employees": {
+      "get": {
+        "operationId": "tma_employees_get",
+        "tags": ["tma"],
+        "summary": "Search employee directory",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Employees",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TmaEmployeesResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tma/free-slots": {
+      "post": {
+        "operationId": "tma_free_slots_post",
+        "tags": ["tma"],
+        "summary": "Common free-time checker",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TmaFreeSlotsRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Free slots",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TmaFreeSlotsResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "required": ["postgres", "redis", "bot_ok", "version"],
+        "properties": {
+          "postgres": { "type": "string", "enum": ["ok", "down"] },
+          "redis": { "type": "string", "enum": ["ok", "down"] },
+          "bot_ok": { "type": "boolean" },
+          "version": { "type": "string" }
+        }
+      },
+      "TmaAuthRequest": {
+        "type": "object",
+        "required": ["init_data"],
+        "properties": {
+          "init_data": { "type": "string" }
+        }
+      },
+      "TmaUser": {
+        "type": "object",
+        "required": ["telegram_id", "name", "email", "role"],
+        "properties": {
+          "telegram_id": { "type": "integer", "format": "int64" },
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "role": { "type": "string", "enum": ["user", "admin"] }
+        }
+      },
+      "TmaAuthResponse": {
+        "type": "object",
+        "required": ["token", "user"],
+        "properties": {
+          "token": { "type": "string" },
+          "user": { "$ref": "#/components/schemas/TmaUser" }
+        }
+      },
+      "TmaAuthError": {
+        "type": "object",
+        "required": ["code"],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["not_registered", "invalid_init_data"]
+          }
+        }
+      },
+      "ApiErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" },
+          "message": { "type": "string" },
+          "code": { "type": "string" }
+        }
+      },
+      "TmaMeeting": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "dept",
+          "host",
+          "date",
+          "start",
+          "end",
+          "rec",
+          "organizer",
+          "participants",
+          "desc",
+          "meet_link",
+          "status"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "type": { "type": "string" },
+          "dept": { "type": "string" },
+          "host": { "type": "string" },
+          "date": { "type": "string", "format": "date" },
+          "start": { "type": "string" },
+          "end": { "type": "string" },
+          "rec": { "type": "string" },
+          "organizer": { "type": "string", "format": "email" },
+          "participants": {
+            "type": "array",
+            "items": { "type": "string", "format": "email" }
+          },
+          "desc": { "type": "string" },
+          "meet_link": { "type": "string" },
+          "status": { "type": "string" }
+        }
+      },
+      "TmaMeetingsResponse": {
+        "type": "object",
+        "required": ["meetings"],
+        "properties": {
+          "meetings": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TmaMeeting" }
+          }
+        }
+      },
+      "TmaEmployee": {
+        "type": "object",
+        "required": ["id", "name", "email", "dept", "tg"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "dept": { "type": "string" },
+          "tg": { "type": "boolean" }
+        }
+      },
+      "TmaEmployeesResponse": {
+        "type": "object",
+        "required": ["employees"],
+        "properties": {
+          "employees": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TmaEmployee" }
+          }
+        }
+      },
+      "TmaFreeSlotsRequest": {
+        "type": "object",
+        "required": ["participants", "from", "to", "duration_mins"],
+        "properties": {
+          "participants": {
+            "type": "array",
+            "items": { "type": "string", "format": "email" }
+          },
+          "from": { "type": "string", "format": "date" },
+          "to": { "type": "string", "format": "date" },
+          "duration_mins": { "type": "integer", "minimum": 1 }
+        }
+      },
+      "TmaFreeSlot": {
+        "type": "object",
+        "required": ["iso", "start", "end", "mins"],
+        "properties": {
+          "iso": { "type": "string", "format": "date" },
+          "start": { "type": "string" },
+          "end": { "type": "string" },
+          "mins": { "type": "integer" }
+        }
+      },
+      "TmaFreeSlotsResponse": {
+        "type": "object",
+        "required": ["slots"],
+        "properties": {
+          "slots": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TmaFreeSlot" }
+          }
+        }
+      }
+    }
+  }
+}

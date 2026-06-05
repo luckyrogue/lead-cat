@@ -1,3 +1,5 @@
+> **Superseded paths:** implemented under `frontend/src/features/*`, `shared/api`, `features/auth`. See `frontend/README.md`.
+
 # TMA Read Paths — Design (frontend integration, sub-project 2)
 
 **Status:** approved (brainstorm), ready for implementation plan.

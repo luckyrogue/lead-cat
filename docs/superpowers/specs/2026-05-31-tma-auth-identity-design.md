@@ -1,3 +1,5 @@
+> **Superseded paths:** implemented under `frontend/src/features/*`, `shared/api`, `features/auth`. See `frontend/README.md`.
+
 # TMA Authentication & Identity — Design (frontend integration, sub-project 1)
 
 **Status:** approved, ready for implementation plan.

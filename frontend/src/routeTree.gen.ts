@@ -9,50 +9,296 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as TmaRouteImport } from './routes/_tma'
+import { Route as TmaIndexRouteImport } from './routes/_tma/index'
+import { Route as TmaProfileRouteImport } from './routes/_tma/profile'
+import { Route as TmaMeetingsRouteImport } from './routes/_tma/meetings'
+import { Route as TmaCheckerRouteImport } from './routes/_tma/checker'
+import { Route as TmaAutoRouteImport } from './routes/_tma/auto'
+import { Route as TmaProfileColleagueRouteImport } from './routes/_tma/profile.colleague'
+import { Route as TmaProfileAdminRouteImport } from './routes/_tma/profile.admin'
+import { Route as TmaMeetingsCreateRouteImport } from './routes/_tma/meetings.create'
+import { Route as TmaMeetingsMeetingIdRouteImport } from './routes/_tma/meetings.$meetingId'
+import { Route as TmaMeetingsCreateEditIdRouteImport } from './routes/_tma/meetings.create.$editId'
 
-const IndexRoute = IndexRouteImport.update({
+const TmaRoute = TmaRouteImport.update({
+  id: '/_tma',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TmaIndexRoute = TmaIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => TmaRoute,
+} as any)
+const TmaProfileRoute = TmaProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => TmaRoute,
+} as any)
+const TmaMeetingsRoute = TmaMeetingsRouteImport.update({
+  id: '/meetings',
+  path: '/meetings',
+  getParentRoute: () => TmaRoute,
+} as any)
+const TmaCheckerRoute = TmaCheckerRouteImport.update({
+  id: '/checker',
+  path: '/checker',
+  getParentRoute: () => TmaRoute,
+} as any)
+const TmaAutoRoute = TmaAutoRouteImport.update({
+  id: '/auto',
+  path: '/auto',
+  getParentRoute: () => TmaRoute,
+} as any)
+const TmaProfileColleagueRoute = TmaProfileColleagueRouteImport.update({
+  id: '/colleague',
+  path: '/colleague',
+  getParentRoute: () => TmaProfileRoute,
+} as any)
+const TmaProfileAdminRoute = TmaProfileAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => TmaProfileRoute,
+} as any)
+const TmaMeetingsCreateRoute = TmaMeetingsCreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => TmaMeetingsRoute,
+} as any)
+const TmaMeetingsMeetingIdRoute = TmaMeetingsMeetingIdRouteImport.update({
+  id: '/$meetingId',
+  path: '/$meetingId',
+  getParentRoute: () => TmaMeetingsRoute,
+} as any)
+const TmaMeetingsCreateEditIdRoute = TmaMeetingsCreateEditIdRouteImport.update({
+  id: '/$editId',
+  path: '/$editId',
+  getParentRoute: () => TmaMeetingsCreateRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof TmaIndexRoute
+  '/auto': typeof TmaAutoRoute
+  '/checker': typeof TmaCheckerRoute
+  '/meetings': typeof TmaMeetingsRouteWithChildren
+  '/profile': typeof TmaProfileRouteWithChildren
+  '/meetings/$meetingId': typeof TmaMeetingsMeetingIdRoute
+  '/meetings/create': typeof TmaMeetingsCreateRouteWithChildren
+  '/profile/admin': typeof TmaProfileAdminRoute
+  '/profile/colleague': typeof TmaProfileColleagueRoute
+  '/meetings/create/$editId': typeof TmaMeetingsCreateEditIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/auto': typeof TmaAutoRoute
+  '/checker': typeof TmaCheckerRoute
+  '/meetings': typeof TmaMeetingsRouteWithChildren
+  '/profile': typeof TmaProfileRouteWithChildren
+  '/': typeof TmaIndexRoute
+  '/meetings/$meetingId': typeof TmaMeetingsMeetingIdRoute
+  '/meetings/create': typeof TmaMeetingsCreateRouteWithChildren
+  '/profile/admin': typeof TmaProfileAdminRoute
+  '/profile/colleague': typeof TmaProfileColleagueRoute
+  '/meetings/create/$editId': typeof TmaMeetingsCreateEditIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_tma': typeof TmaRouteWithChildren
+  '/_tma/auto': typeof TmaAutoRoute
+  '/_tma/checker': typeof TmaCheckerRoute
+  '/_tma/meetings': typeof TmaMeetingsRouteWithChildren
+  '/_tma/profile': typeof TmaProfileRouteWithChildren
+  '/_tma/': typeof TmaIndexRoute
+  '/_tma/meetings/$meetingId': typeof TmaMeetingsMeetingIdRoute
+  '/_tma/meetings/create': typeof TmaMeetingsCreateRouteWithChildren
+  '/_tma/profile/admin': typeof TmaProfileAdminRoute
+  '/_tma/profile/colleague': typeof TmaProfileColleagueRoute
+  '/_tma/meetings/create/$editId': typeof TmaMeetingsCreateEditIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auto'
+    | '/checker'
+    | '/meetings'
+    | '/profile'
+    | '/meetings/$meetingId'
+    | '/meetings/create'
+    | '/profile/admin'
+    | '/profile/colleague'
+    | '/meetings/create/$editId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/auto'
+    | '/checker'
+    | '/meetings'
+    | '/profile'
+    | '/'
+    | '/meetings/$meetingId'
+    | '/meetings/create'
+    | '/profile/admin'
+    | '/profile/colleague'
+    | '/meetings/create/$editId'
+  id:
+    | '__root__'
+    | '/_tma'
+    | '/_tma/auto'
+    | '/_tma/checker'
+    | '/_tma/meetings'
+    | '/_tma/profile'
+    | '/_tma/'
+    | '/_tma/meetings/$meetingId'
+    | '/_tma/meetings/create'
+    | '/_tma/profile/admin'
+    | '/_tma/profile/colleague'
+    | '/_tma/meetings/create/$editId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  TmaRoute: typeof TmaRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_tma': {
+      id: '/_tma'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof TmaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_tma/': {
+      id: '/_tma/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof TmaIndexRouteImport
+      parentRoute: typeof TmaRoute
+    }
+    '/_tma/profile': {
+      id: '/_tma/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof TmaProfileRouteImport
+      parentRoute: typeof TmaRoute
+    }
+    '/_tma/meetings': {
+      id: '/_tma/meetings'
+      path: '/meetings'
+      fullPath: '/meetings'
+      preLoaderRoute: typeof TmaMeetingsRouteImport
+      parentRoute: typeof TmaRoute
+    }
+    '/_tma/checker': {
+      id: '/_tma/checker'
+      path: '/checker'
+      fullPath: '/checker'
+      preLoaderRoute: typeof TmaCheckerRouteImport
+      parentRoute: typeof TmaRoute
+    }
+    '/_tma/auto': {
+      id: '/_tma/auto'
+      path: '/auto'
+      fullPath: '/auto'
+      preLoaderRoute: typeof TmaAutoRouteImport
+      parentRoute: typeof TmaRoute
+    }
+    '/_tma/profile/colleague': {
+      id: '/_tma/profile/colleague'
+      path: '/colleague'
+      fullPath: '/profile/colleague'
+      preLoaderRoute: typeof TmaProfileColleagueRouteImport
+      parentRoute: typeof TmaProfileRoute
+    }
+    '/_tma/profile/admin': {
+      id: '/_tma/profile/admin'
+      path: '/admin'
+      fullPath: '/profile/admin'
+      preLoaderRoute: typeof TmaProfileAdminRouteImport
+      parentRoute: typeof TmaProfileRoute
+    }
+    '/_tma/meetings/create': {
+      id: '/_tma/meetings/create'
+      path: '/create'
+      fullPath: '/meetings/create'
+      preLoaderRoute: typeof TmaMeetingsCreateRouteImport
+      parentRoute: typeof TmaMeetingsRoute
+    }
+    '/_tma/meetings/$meetingId': {
+      id: '/_tma/meetings/$meetingId'
+      path: '/$meetingId'
+      fullPath: '/meetings/$meetingId'
+      preLoaderRoute: typeof TmaMeetingsMeetingIdRouteImport
+      parentRoute: typeof TmaMeetingsRoute
+    }
+    '/_tma/meetings/create/$editId': {
+      id: '/_tma/meetings/create/$editId'
+      path: '/$editId'
+      fullPath: '/meetings/create/$editId'
+      preLoaderRoute: typeof TmaMeetingsCreateEditIdRouteImport
+      parentRoute: typeof TmaMeetingsCreateRoute
     }
   }
 }
 
+interface TmaMeetingsCreateRouteChildren {
+  TmaMeetingsCreateEditIdRoute: typeof TmaMeetingsCreateEditIdRoute
+}
+
+const TmaMeetingsCreateRouteChildren: TmaMeetingsCreateRouteChildren = {
+  TmaMeetingsCreateEditIdRoute: TmaMeetingsCreateEditIdRoute,
+}
+
+const TmaMeetingsCreateRouteWithChildren =
+  TmaMeetingsCreateRoute._addFileChildren(TmaMeetingsCreateRouteChildren)
+
+interface TmaMeetingsRouteChildren {
+  TmaMeetingsMeetingIdRoute: typeof TmaMeetingsMeetingIdRoute
+  TmaMeetingsCreateRoute: typeof TmaMeetingsCreateRouteWithChildren
+}
+
+const TmaMeetingsRouteChildren: TmaMeetingsRouteChildren = {
+  TmaMeetingsMeetingIdRoute: TmaMeetingsMeetingIdRoute,
+  TmaMeetingsCreateRoute: TmaMeetingsCreateRouteWithChildren,
+}
+
+const TmaMeetingsRouteWithChildren = TmaMeetingsRoute._addFileChildren(
+  TmaMeetingsRouteChildren,
+)
+
+interface TmaProfileRouteChildren {
+  TmaProfileAdminRoute: typeof TmaProfileAdminRoute
+  TmaProfileColleagueRoute: typeof TmaProfileColleagueRoute
+}
+
+const TmaProfileRouteChildren: TmaProfileRouteChildren = {
+  TmaProfileAdminRoute: TmaProfileAdminRoute,
+  TmaProfileColleagueRoute: TmaProfileColleagueRoute,
+}
+
+const TmaProfileRouteWithChildren = TmaProfileRoute._addFileChildren(
+  TmaProfileRouteChildren,
+)
+
+interface TmaRouteChildren {
+  TmaAutoRoute: typeof TmaAutoRoute
+  TmaCheckerRoute: typeof TmaCheckerRoute
+  TmaMeetingsRoute: typeof TmaMeetingsRouteWithChildren
+  TmaProfileRoute: typeof TmaProfileRouteWithChildren
+  TmaIndexRoute: typeof TmaIndexRoute
+}
+
+const TmaRouteChildren: TmaRouteChildren = {
+  TmaAutoRoute: TmaAutoRoute,
+  TmaCheckerRoute: TmaCheckerRoute,
+  TmaMeetingsRoute: TmaMeetingsRouteWithChildren,
+  TmaProfileRoute: TmaProfileRouteWithChildren,
+  TmaIndexRoute: TmaIndexRoute,
+}
+
+const TmaRouteWithChildren = TmaRoute._addFileChildren(TmaRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  TmaRoute: TmaRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -212,7 +212,7 @@ func (h *AuthAPI) OAuthCallback(c *fiber.Ctx) error {
 
 func (h *AuthAPI) oauthRedirect(c *fiber.Ctx, token, errCode string) error {
 	base := strings.TrimSuffix(h.Webapp, "/")
-	u, _ := url.Parse(base + "/login")
+	u, _ := url.Parse(base + "/")
 	q := u.Query()
 	if token != "" {
 		q.Set("access_token", token)

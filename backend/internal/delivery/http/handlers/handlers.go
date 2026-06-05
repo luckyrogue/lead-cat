@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"os"
 	"strings"
 
@@ -79,23 +78,11 @@ func (a *API) Me(c *fiber.Ctx) error {
 }
 
 func (a *API) LinkTelegram(c *fiber.Ctx) error {
-	initData := c.Get("X-Telegram-Init-Data")
-	if initData == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "X-Telegram-Init-Data required")
-	}
-	user, err := a.TMA.Validate(initData)
-	if err != nil {
-		return fiber.NewError(fiber.StatusUnauthorized, "invalid initData")
-	}
-	uid := c.Locals("user_id").(uuid.UUID)
-	if err := a.App.LinkTelegram(c.Context(), uid, user.ID, user.Username); err != nil {
-		if errors.Is(err, application.ErrTelegramLinkedToOtherAccount) {
-			return fiber.NewError(fiber.StatusConflict, "telegram already linked")
-		}
-		a.logHTTPError(c, "link telegram", err)
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
-	}
-	return c.SendStatus(fiber.StatusNoContent)
+	c.Set("Deprecation", "true")
+	return c.Status(fiber.StatusGone).JSON(fiber.Map{
+		"error":   "deprecated",
+		"message": "Use POST /api/auth/tma for Mini App; platform_users.telegram_id is linked via EnsureTMAOrganizer on meeting create",
+	})
 }
 
 func (a *API) ListWorkspaces(c *fiber.Ctx) error {

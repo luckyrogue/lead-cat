@@ -1,0 +1,58 @@
+import { queryOptions, useQuery } from "@tanstack/react-query"
+import {
+  fetchColleagueSchedule,
+  fetchMyMeetings,
+  type Scope,
+} from "@/features/meetings/api"
+import { tmaKeys } from "@/shared/api/query-keys"
+
+export const myMeetingsQuery = (scope: Scope) =>
+  queryOptions({
+    queryKey: tmaKeys.meetings(scope),
+    queryFn: () => fetchMyMeetings(scope),
+  })
+
+export const colleagueScheduleQuery = (email: string, scope: Scope) =>
+  queryOptions({
+    queryKey: tmaKeys.schedule(email, scope),
+    queryFn: () => fetchColleagueSchedule(email, scope),
+    enabled: email.trim().length > 0,
+  })
+
+export function useMyMeetings(scope: Scope) {
+  return useQuery(myMeetingsQuery(scope))
+}
+
+export function useColleagueSchedule(email: string, scope: Scope) {
+  return useQuery(colleagueScheduleQuery(email, scope))
+}
+
+export type MeetingsFilter = "up" | "past" | "all"
+
+export function parseMeetingsFilter(
+  searchParams: URLSearchParams
+): MeetingsFilter {
+  return scopeToFilter(searchParams.get("scope"))
+}
+
+export function scopeToFilter(scope: string | null): MeetingsFilter {
+  if (scope === "past") return "past"
+  if (scope === "all") return "all"
+  return "up"
+}
+
+export function filterToScope(filter: MeetingsFilter): string {
+  if (filter === "past") return "past"
+  if (filter === "all") return "all"
+  return "upcoming"
+}
+
+export function serializeMeetingsFilter(filter: MeetingsFilter): string {
+  return filterToScope(filter)
+}
+
+export function meetingsScopeFromFilter(filter: MeetingsFilter): Scope {
+  if (filter === "past") return "past"
+  if (filter === "all") return "all"
+  return "upcoming"
+}

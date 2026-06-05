@@ -1,0 +1,105 @@
+import { useTmaApp } from "@/shared/tma/context"
+import type { Meeting, MeetingDraft } from "@/shared/tma/types"
+import { CatBtn, CatIcon } from "@/shared/ui/cat/primitives"
+import { useCreateWizard } from "../lib/use-create-wizard"
+import { WIZARD_STEPS } from "../lib/wizard-constants"
+import { WizardStepProgress } from "./wizard-step-progress"
+import { WizardStepReview } from "./wizard-step-review"
+import { WizardStepWhat } from "./wizard-step-what"
+import { WizardStepWhen } from "./wizard-step-when"
+import { WizardStepWho } from "./wizard-step-who"
+
+export function CreateWizard({
+  initial,
+  onComplete,
+  meetings,
+}: {
+  initial?: Partial<MeetingDraft>
+  onComplete: (m: MeetingDraft & { end: string }) => void
+  meetings: Meeting[]
+}) {
+  const p = useTmaApp()
+  const t = p.t
+  const wizard = useCreateWizard({ initial, meetings, onComplete })
+  const {
+    step,
+    draft,
+    set,
+    endTime,
+    canNext,
+    go,
+    conflictPeople,
+    finalMeeting,
+    pSearch,
+    setPSearch,
+  } = wizard
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        minHeight: 0,
+      }}
+    >
+      <WizardStepProgress step={step} />
+
+      <div
+        className="lc-scroll"
+        style={{ flex: 1, overflow: "auto", padding: "10px 16px 16px" }}
+      >
+        {WIZARD_STEPS[step] === "what" && (
+          <WizardStepWhat draft={draft} set={set} />
+        )}
+        {WIZARD_STEPS[step] === "when" && (
+          <WizardStepWhen draft={draft} set={set} endTime={endTime} />
+        )}
+        {WIZARD_STEPS[step] === "who" && (
+          <WizardStepWho
+            draft={draft}
+            set={set}
+            pSearch={pSearch}
+            setPSearch={setPSearch}
+          />
+        )}
+        {WIZARD_STEPS[step] === "review" && (
+          <WizardStepReview
+            draft={draft}
+            endTime={endTime}
+            finalMeeting={finalMeeting}
+            conflictPeople={conflictPeople}
+          />
+        )}
+      </div>
+
+      <div
+        style={{
+          flexShrink: 0,
+          padding: "12px 16px max(12px, var(--tma-safe-bottom, 0px))",
+          borderTop: `1px solid ${p.border}`,
+          background: p.tgBar,
+          display: "flex",
+          gap: 10,
+        }}
+      >
+        {step > 0 && (
+          <CatBtn
+            variant="outline"
+            onClick={() => go(-1)}
+            icon={<CatIcon name="chevL" size={18} color={p.text} sw={2.2} />}
+          >
+            {t("back")}
+          </CatBtn>
+        )}
+        <CatBtn variant="primary" full disabled={!canNext} onClick={() => go(1)}>
+          {step === WIZARD_STEPS.length - 1
+            ? conflictPeople.length
+              ? `🐾 ${t("proceed")}`
+              : `🐾 ${t("confirmCreate")}`
+            : t("next")}
+        </CatBtn>
+      </div>
+    </div>
+  )
+}

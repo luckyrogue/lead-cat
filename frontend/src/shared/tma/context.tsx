@@ -12,7 +12,7 @@ export type TmaAppContextValue = CatPalette & {
   lang: Lang
   setLang: (lang: Lang) => void
   t: (key: I18nKey) => string
-  showToast: (msg: string, emoji?: string) => void
+  openLangPicker: () => void
 }
 
 const TmaAppContext = createContext<TmaAppContextValue | null>(null)

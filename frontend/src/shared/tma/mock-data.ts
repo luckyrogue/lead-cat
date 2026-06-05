@@ -1,116 +1,27 @@
-import type { Employee, FreeSlot, Meeting, Scenario } from "./types"
+import type { Meeting } from "@/entities/meeting/types"
+import type { FreeSlot } from "@/entities/meeting/types"
+import type { Scenario } from "@/entities/scenario/types"
+import {
+  DEPARTMENTS,
+  EMPLOYEES,
+  emailsToPeople,
+} from "@/entities/employee/fixtures"
+import {
+  MEETING_TYPES,
+  RECURRENCE,
+} from "@/entities/meeting/constants"
+import { INITIAL_SCENARIOS } from "@/features/auto/fixtures"
 
-export const EMPLOYEES: Employee[] = [
-  {
-    id: "u1",
-    name: "Алия Жумабекова",
-    email: "a.zhumabekova@company.kz",
-    dept: "Разработка",
-    tg: true,
-    role: "admin",
-  },
-  {
-    id: "u2",
-    name: "Иван Петров",
-    email: "i.petrov@company.kz",
-    dept: "Разработка",
-    tg: true,
-  },
-  {
-    id: "u3",
-    name: "Дамир Сейтказы",
-    email: "d.seitkazy@company.kz",
-    dept: "Дизайн",
-    tg: true,
-  },
-  {
-    id: "u4",
-    name: "Мария Соколова",
-    email: "m.sokolova@company.kz",
-    dept: "HR",
-    tg: false,
-  },
-  {
-    id: "u5",
-    name: "Тимур Абдрахманов",
-    email: "t.abd@company.kz",
-    dept: "Продукт",
-    tg: true,
-  },
-  {
-    id: "u6",
-    name: "Айгерим Нурлан",
-    email: "a.nurlan@company.kz",
-    dept: "Маркетинг",
-    tg: true,
-  },
-  {
-    id: "u7",
-    name: "Олег Васильев",
-    email: "o.vasiliev@company.kz",
-    dept: "Разработка",
-    tg: false,
-  },
-  {
-    id: "u8",
-    name: "Сабина Ахмет",
-    email: "s.akhmet@company.kz",
-    dept: "Продукт",
-    tg: true,
-  },
-  {
-    id: "u9",
-    name: "Ержан Касымов",
-    email: "e.kasymov@company.kz",
-    dept: "Разработка",
-    tg: true,
-  },
-]
+export {
+  DEPARTMENTS,
+  EMPLOYEES,
+  emailsToPeople,
+  MEETING_TYPES,
+  RECURRENCE,
+  INITIAL_SCENARIOS,
+}
 
 export const ME = EMPLOYEES[0]
-
-export const DEPARTMENTS = [
-  "Разработка",
-  "Дизайн",
-  "Продукт",
-  "HR",
-  "Маркетинг",
-  "Аналитика",
-]
-
-export const MEETING_TYPES = [
-  { key: "planning", label: "Планёрка" },
-  { key: "weekly", label: "Еженедельная" },
-  { key: "oneonone", label: "1:1" },
-  { key: "retro", label: "Ретроспектива" },
-  { key: "demo", label: "Демо / Презентация" },
-  { key: "interview", label: "Интервью" },
-  { key: "onboarding", label: "Онбординг" },
-  { key: "brainstorm", label: "Брейншторм" },
-  { key: "strategy", label: "Стратегическая сессия" },
-  { key: "other", label: "Другое" },
-]
-
-export const RECURRENCE = [
-  { key: "once", label: "Однократно", short: "" },
-  { key: "daily", label: "Ежедневно", short: "Ежедневно" },
-  { key: "weekly", label: "Еженедельно", short: "Еженедельно" },
-  { key: "custom", label: "Выбранные дни", short: "По дням" },
-  { key: "monthly", label: "Ежемесячно", short: "Ежемесячно" },
-]
-
-export function emailsToPeople(emails: string[]): Employee[] {
-  return emails.map(
-    (e) =>
-      EMPLOYEES.find((x) => x.email === e) ?? {
-        id: e,
-        name: e,
-        email: e,
-        dept: "",
-        tg: false,
-      }
-  )
-}
 
 export const INITIAL_MEETINGS: Meeting[] = [
   {
@@ -210,33 +121,6 @@ export const INITIAL_MEETINGS: Meeting[] = [
   },
 ]
 
-export const INITIAL_SCENARIOS: Scenario[] = [
-  {
-    id: "s1",
-    name: "Утренний созвон",
-    enabled: true,
-    trigger: { hour: 10, minute: 15, days: [1, 3, 5] },
-    actions: ["message", "cat_photo"],
-    note: "За 15 минут пингует команду в чат и кидает котика для настроения.",
-  },
-  {
-    id: "s2",
-    name: "Пора коммитить",
-    enabled: true,
-    trigger: { hour: 18, minute: 30, days: [1, 2, 3, 4, 5] },
-    actions: ["message"],
-    note: "Напоминает залить код перед концом дня. «Пора коммитить! 🐾»",
-  },
-  {
-    id: "s3",
-    name: "Отчёт по коммитам",
-    enabled: false,
-    trigger: { hour: 18, minute: 35, days: [1, 2, 3, 4, 5] },
-    actions: ["commits_report"],
-    note: "Собирает дайджест коммитов за день и шлёт в чат команды.",
-  },
-]
-
 export const FREE_SLOTS: FreeSlot[] = [
   {
     day: "Пн, 01.06",
@@ -267,3 +151,5 @@ export const FREE_SLOTS: FreeSlot[] = [
     mins: 120,
   },
 ]
+
+export type { Meeting, FreeSlot, Scenario }
