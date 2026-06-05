@@ -1,0 +1,99 @@
+# Docs Rebuild — Meetings-Only Bot — Design
+
+**Status:** approved (brainstorm), ready for implementation plan.
+**Topic:** Rebuild all project documentation + agent-guidance files to describe a single-purpose Google Meet meetings-management Telegram Mini App, removing the old multi-tenant SaaS / notify-bot / scenarios framing.
+**ТЗ (source of truth):** `docs/NEW-FEATURES.md` (canonical, 1025 lines — left untouched).
+**Related:** `docs/superpowers/specs/2026-06-05-tma-setup-replacement-design.md` (the user's TMA-admin setup cutover — informs the "platform = deprecated" framing).
+
+## Goal
+
+The codebase has pivoted from a multi-tenant SaaS notify-bot into a single-purpose **Google Meet meetings management Telegram Mini App**. The old SaaS web frontend, scenarios/n8n engine, and notify flows are being removed; setup is moving into the Mini App (`/api/tma/admin/*`). The docs still describe the old product and now mislead readers and agents. This project rebuilds `docs/*.md` and the agent-guidance files (`AGENTS.md`, `.cursor/rules/*.mdc`) so every document reflects the meetings-only product, with the surviving platform/setup layer demoted to a short "deprecated alpha-setup" appendix.
+
+## Decisions (locked during brainstorming)
+
+1. **Framing = meetings-only; platform = deprecated appendix.** Docs describe the product as a single-purpose meetings Mini App. Scenarios/n8n, notify-bot, VCS, and multi-tenant workspace concepts are removed from the narrative. The platform REST layer (`/api/workspaces/*`, platform OTP/passkey/OAuth) still exists in code (kept during the setup cutover), so it survives **only** as a short, clearly-labelled "Deprecated — alpha setup (curl)" appendix in the docs that must mention it (API, AUTH, ARCHITECTURE, SETUP). It is not part of the main product story.
+2. **Scope = `docs/*.md` + agent guides.** `AGENTS.md`, `CLAUDE.md` (no change needed — just `@AGENTS.md`), and `.cursor/rules/*.mdc` are updated so agent/IDE guidance stops describing the old product. `docs/NEW-FEATURES.md` (the ТЗ) is **not** modified.
+3. **Layout = curated in-place (flat).** Keep the flat `docs/` directory so existing references (AGENTS.md, cursor rules, code comments) don't break. Delete obsolete docs, rewrite the rest meetings-only, fold tiny single-purpose docs where it removes redundancy, add a `docs/README.md` index. No subfolder reorg.
+4. **Stack note.** Docs reflect the actual implementation — **Go (Fiber) + React Telegram Mini App** — and explicitly note that the ТЗ's tentative "Python 3.10+ / Node.js 18+" stack (NEW-FEATURES §9) is superseded by the real Go/React stack.
+5. **API source of truth.** `docs/API.md` is prose + a route map; it points to `docs/openapi.json` (generated, mirrored to `frontend/src/shared/api/generated/`) as the authoritative machine-readable contract. The route list is reconciled against the OpenAPI spec, not hand-invented.
+6. **Commit hygiene.** The working tree contains heavy in-progress **code** changes (the user's pivot refactor). This project touches **only** docs + agent-guide files and stages **only** those paths in a single `docs:` commit (no `git add -A`, no touching code files, never staging `frontend/vite.config.ts`). Alternatively, leave unstaged for the user to commit — user chooses at execution time. This avoids the concurrent-git collision seen earlier.
+
+## Product framing (the through-line for every rewritten doc)
+
+> **Lead Cat** — a single-purpose **Google Meet meetings-management Telegram Mini App**. Employees register via the bot's `/start`; inside the Mini App they create / edit / delete meetings, receive conflict warnings, find common free time, view colleague schedules, and get Telegram reminders. Google Meet links are created through a corporate Google **service account**. Admins configure the integration **inside the Mini App** (`/api/tma/admin/*`). Identity is Telegram-native (`bot_users`: telegram_id ↔ email ↔ role); meetings are owned by a linked `platform_users` row. Stack: Go (Fiber, asynq, pgx/Postgres) + React (Vite, TanStack Router/Query) TMA.
+
+## Doc-by-doc disposition (`docs/`)
+
+Each REWRITE keeps the meetings-relevant content, excises SaaS/scenarios/notify/VCS/multi-tenant, and (where it currently documents platform setup/auth) ends with a short **"Deprecated — alpha setup"** appendix.
+
+| Doc | Verdict | Target content |
+| --- | --- | --- |
+| `NEW-FEATURES.md` | **KEEP (untouched)** | The ТЗ. Do not edit. |
+| `README.md` (new) | **CREATE** | Product one-liner + a doc index table (what each doc is, who it's for: user/admin/operator/dev). Links the ТЗ first. |
+| `REQUIREMENTS.md` | **REWRITE** | Single-purpose meetings product overview; prerequisites (Go, Node/pnpm, Postgres, Redis, Google SA, Telegram bot); the meetings feature set summarized from the ТЗ. Cut: scenario engine, VCS, coverage gate, multi-tenant workspace model. |
+| `ARCHITECTURE.md` | **REWRITE** | Clean-architecture layers (`domain ← application ← infrastructure/delivery/platform`); the meeting domain + application commands/queries; TMA delivery (Mini App → `/api/tma/*`); bot `/start` registration into `bot_users`; the `bot_users` ↔ `platform_users` organizer bridge; Google SA calendar integration; reminders via asynq. Cut scenario scheduler, VCS, multi-tenant. Platform JWT mentioned only in the deprecated appendix. |
+| `API.md` | **REWRITE** | TMA auth (`POST /api/auth/tma`), TMA read/write (`/api/tma/meetings`, `/schedule`, `/employees`, `/free-slots`, `/conflicts`), TMA admin (`/api/tma/admin/*`, per the setup-replacement design). Points to `docs/openapi.json`. Platform `/api/workspaces/*` in a "Deprecated — alpha setup (curl)" appendix. |
+| `AUTH.md` | **REWRITE** | TMA Telegram auth as the primary (and only user-facing) flow: initData → TMA JWT (`tok_typ:"tma"`), `bot_users` resolution, `middleware.TMAAuth`. Platform OTP/passkey/OAuth → deprecated appendix. |
+| `DEPLOY-DOKPLOY.md` | **REWRITE** | Dokploy deploy; env vars for meetings (`BOT_TOKEN`, `JWT_SECRET`, `DATABASE_URL`, `REDIS_URL`, Google SA config, `BOT_ADMIN_TELEGRAM_IDS`, employee CSV note). Cut scenario/chat-webhook env. |
+| `SETUP.md` (rename ← `ONBOARDING-WORKSPACE.md`) | **REWRITE + RENAME** | Operator/admin setup path: create bot token → configure Google service account (calendar/subject/calendar-id) → employee directory CSV → users self-register via `/start` → (target) configure via TMA admin. Note curl-based alpha setup as the current interim, deprecated as TMA admin ships. Update inbound references to the old filename. |
+| `BOTFATHER.md` | **REWRITE** | BotFather token creation, `/start` registration, and the meetings menu commands (ТЗ §8). Cut notify commands (`/test`, `/chatid`, `/report`, `/leave`, group binding). |
+| `OPERATIONS.md` | **REWRITE** | Logs (zap), health endpoint, metrics (HTTP counters; drop `*_scenario_runs_*`), Postgres backup/rollback, Redis scheduler lock for reminders, plus a short **meetings E2E smoke checklist** (absorbs the useful parts of ALPHA-SMOKE: auth via initData, list meetings, create, conflict check, free-slots, cancel). |
+| `REDIS.md` | **REWRITE** | Redis = asynq queues for **reminder/notification jobs** + scheduler leader lock. Note the footprint shrank (no scenario tasks). |
+| `MEETINGS.md` | **KEEP (light refresh)** | Refresh the engineering-status summary to current reality (TMA read paths done; write paths in progress; setup cutover planned). Keep structure. |
+| `DESIGN-CATS.md` | **KEEP** | Cat design system — product-neutral. |
+| `LOCAL_DEV.md` | **KEEP (light)** | Local dev workflow; strip any scenario/notify references if present. |
+| `MIGRATIONS.md` | **KEEP** | Goose migration conventions — generic. |
+| `SCENARIOS.md` | **DELETE** | n8n scenario engine — removed from the product. |
+| `ALPHA-SMOKE.md` | **DELETE** | Notify-bot smoke; its meetings-relevant checks move into OPERATIONS.md. |
+
+## Agent-guidance disposition
+
+| File | Verdict | Target |
+| --- | --- | --- |
+| `AGENTS.md` | **REWRITE** | Meetings-only product description + stack; keep engineering principles (KISS/DRY/SOLID/Clean Arch), CQRS, logging/observability guidance (these are generic and still apply); drop the scenario-engine and multi-tenant SaaS framing; update the cursor-rules table (remove `scenarios.mdc`). |
+| `CLAUDE.md` | **KEEP** | Just `@AGENTS.md` — no change. |
+| `.cursor/rules/scenarios.mdc` | **DELETE** | Scenario-engine rule — obsolete. |
+| `.cursor/rules/lead-cat-core.mdc` | **REWRITE** | Single-purpose meetings bot; remove multi-tenant SaaS / one-platform-bot scenario framing. |
+| `.cursor/rules/redis-asynq.mdc` | **REWRITE** | Reframe queue usage around reminders/notifications (not scenario runs). |
+| `.cursor/rules/lead-cat-auth.mdc` | **REWRITE** | TMA Telegram auth primary; platform auth as deprecated/secondary. |
+| `.cursor/rules/go-backend.mdc` | **AUDIT + light touch** | Remove scenario/multi-tenant mentions if present; keep Go conventions. |
+| `.cursor/rules/frontend-fsd.mdc` | **AUDIT + light touch** | Align with the new TMA feature-slice structure; remove old SaaS web references. |
+| `.cursor/rules/cat-design.mdc` | **KEEP** | Design rule — neutral. |
+| `.cursor/rules/migrations.mdc` | **KEEP** | Generic. |
+
+> If a `docs.mdc` (or similar) rule exists referencing deleted docs, update its references during the audit.
+
+## Architecture of the work
+
+A documentation project, executed as grouped edits with a per-doc fact-check:
+
+- **Group 1 — Deletes & index:** delete `SCENARIOS.md`, `ALPHA-SMOKE.md`, `.cursor/rules/scenarios.mdc`; create `docs/README.md`.
+- **Group 2 — Core product docs:** `REQUIREMENTS.md`, `ARCHITECTURE.md`, `API.md`, `AUTH.md` (these carry the platform-deprecated appendix).
+- **Group 3 — Setup/ops docs:** `DEPLOY-DOKPLOY.md`, `SETUP.md` (rename), `BOTFATHER.md`, `OPERATIONS.md`, `REDIS.md`.
+- **Group 4 — Light refresh/keep:** `MEETINGS.md`, `LOCAL_DEV.md` (+ confirm `DESIGN-CATS.md`/`MIGRATIONS.md` need nothing).
+- **Group 5 — Agent guides:** `AGENTS.md` + `.cursor/rules/*` rewrites/audits.
+
+Each rewrite is grounded against current code (route registrations in `backend/internal/delivery/http/app.go`, env in `backend/internal/platform/config`, `docs/openapi.json`) and the ТЗ — not invented. Where code is mid-flux, document the intended contract from the ТЗ + the setup-replacement design and avoid asserting line-level specifics that may churn.
+
+## Data flow / accuracy guardrails
+
+- **Route lists** come from `app.go` + `docs/openapi.json`. Mark anything not-yet-implemented as "planned" rather than present.
+- **Env vars** come from `backend/internal/platform/config` + `deploy/.env.example`.
+- **No secrets** in any doc (no real tokens, SA JSON, JWTs).
+- **Cross-links:** after the `ONBOARDING-WORKSPACE.md` → `SETUP.md` rename and the deletes, grep the repo for inbound links to renamed/removed docs and fix them.
+
+## Testing / verification
+
+- **Link check:** grep for references to deleted/renamed docs (`SCENARIOS.md`, `ALPHA-SMOKE.md`, `ONBOARDING-WORKSPACE.md`, `scenarios.mdc`) across `docs/`, `*.md`, `.cursor/`, and code comments; fix or remove each.
+- **Consistency check:** no surviving doc (outside the explicit deprecated appendices) mentions scenarios/n8n, notify chat-binding, VCS, or multi-tenant workspaces as current product.
+- **Framing check:** each rewritten doc opens with the meetings-only product context.
+- **Build untouched:** this project changes no code; `make build` is unaffected (a sanity `make build` may run at the end to confirm no doc-referenced code path was accidentally edited).
+- **Commit scope:** the final commit stages only docs + agent-guide paths (verified via `git status` before commit); no code files, never `vite.config.ts`.
+
+## Out of scope
+
+- Editing `docs/NEW-FEATURES.md` (the ТЗ).
+- Any **code** changes (the pivot refactor is the user's separate in-progress work).
+- Implementing the `/api/tma/admin/*` routes themselves (that's the setup-replacement project; here we only document them as the target).
+- Reorganizing `docs/` into subfolders.
+- Writing new feature specs under `docs/superpowers/` (those follow their own per-increment flow).
