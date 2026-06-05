@@ -90,6 +90,12 @@ export const I18N = {
     searchColleague: "Найти коллегу",
     colleagueSchedule: "Расписание",
     viewOnly: "Только просмотр",
+    errNotConfigured: "Создание встреч не настроено",
+    errNotYours: "Это не ваша встреча",
+    recurringSoon: "Повторяющиеся встречи скоро будут доступны",
+    errGeneric: "Что-то пошло не так",
+    updated: "Встреча обновлена",
+    deleted: "Встреча удалена",
   },
   kk: {
     _label: "Қазақша",
@@ -178,6 +184,12 @@ export const I18N = {
     searchColleague: "Әріптес табу",
     colleagueSchedule: "Кесте",
     viewOnly: "Тек қарау",
+    errNotConfigured: "Кездесулерді жоспарлау бапталмаған",
+    errNotYours: "Бұл сіздің кездесуіңіз емес",
+    recurringSoon: "Қайталанатын кездесулер жақында қол жетімді болады",
+    errGeneric: "Бір нәрсе дұрыс болмады",
+    updated: "Кездесу жаңартылды",
+    deleted: "Кездесу жойылды",
   },
   en: {
     _label: "English",
@@ -266,6 +278,12 @@ export const I18N = {
     searchColleague: "Find a teammate",
     colleagueSchedule: "Schedule",
     viewOnly: "View only",
+    errNotConfigured: "Meeting creation isn't configured",
+    errNotYours: "Not your meeting",
+    recurringSoon: "Recurring meetings coming soon",
+    errGeneric: "Something went wrong",
+    updated: "Meeting updated",
+    deleted: "Meeting deleted",
   },
 } as const
 
