@@ -1,19 +1,34 @@
 ---
-description: Native auth (JWT, OTP, passkey, OAuth)
+description: Auth — TMA JWT primary, platform bootstrap secondary
 globs:
   - backend/internal/delivery/http/middleware/auth.go
   - backend/internal/delivery/http/handlers/auth.go
   - backend/internal/platform/auth/**
   - backend/internal/infrastructure/auth/**
   - frontend/src/features/auth/**
-  - frontend/src/features/auth-link-telegram/**
   - frontend/src/shared/auth/**
 alwaysApply: false
 ---
 
 # Auth
 
-- No Authentik/OIDC. API validates **HS256 JWT** (`JWT_SECRET`).
-- Login: email/phone OTP, WebAuthn passkey, GitHub/GitLab OAuth — see `docs/AUTH.md`.
-- Workspace VCS tokens ≠ login OAuth (encrypted in Postgres).
-- Dev: `AUTH_DEV_MODE=true` — Bearer `dev` or custom sub for smoke.
+See `docs/AUTH.md` for the full reference.
+
+## TMA JWT (primary — the product flow)
+
+- Issued by `POST /api/auth/tma` after validating Telegram `initData` (HMAC-SHA256 with `BOT_TOKEN`).
+- Token type `tok_typ: "tma"`, 24 h expiry. Claims carry `bot_user` identity (Telegram ID + role).
+- All Mini App routes (`/api/tma/*`) require a valid TMA JWT via `TMAAuth` middleware.
+- 401 → frontend calls `refreshSession()` (single-flight) then retries once.
+- No secrets, `initData`, or raw JWT in logs.
+
+## Platform JWT (secondary — alpha operator bootstrap only)
+
+- Issued via email/phone OTP, WebAuthn passkey, or GitHub/GitLab OAuth (`/api/auth/*`).
+- Used by operators to bootstrap the system (workspace config, Google credentials, employee CSV) via curl/scripts — no Mini App UI.
+- `EnsureTMAOrganizer` (`application/tma_organizer.go`) find-or-creates a `platform_users` row keyed by `auth_sub = "email:<email>"` at meeting-write time, bridging the two identity worlds. Idempotent; returns HTTP 409 if Telegram ID is already bound to a different account.
+- These flows are being superseded by a TMA admin surface (`/api/tma/admin/*`).
+
+## Dev
+
+- `AUTH_DEV_MODE=true` — Bearer `dev` accepted for smoke-testing without a real Telegram session.

@@ -1,14 +1,15 @@
 ---
-description: Lead Cat core product and Alpha constraints
+description: Lead Cat core product conventions
 alwaysApply: true
 ---
 
 # Lead Cat core
 
-- SaaS multi-tenant; one platform `BOT_TOKEN`; workspace config in Postgres only.
-- Alpha deploy: Dokploy with Postgres + Redis + app (no external IdP).
-- Auth: native JWT (`JWT_SECRET`); login via `/login` — see `lead-cat-auth.mdc`.
-- Scenarios: n8n-like JSON (nodes/edges); asynq on Redis; no Temporal.
+- Single-purpose **Google Meet meetings-management Telegram Mini App**. Employees schedule, edit, and cancel meetings inside Telegram; the system creates Google Calendar events and sends notifications via a Telegram bot.
+- One Postgres workspace + one Google service-account organizer (no multi-tenancy).
+- Deploy: Dokploy with Postgres + Redis + app container — see `docs/DEPLOY-DOKPLOY.md`.
+- Auth: TMA JWT primary — see `lead-cat-auth.mdc` and `docs/AUTH.md`.
+- Product behavior source of truth: `docs/NEW-FEATURES.md` (ТЗ). Engineering summary: `docs/MEETINGS.md`.
 - UI: cat design mandatory — see `cat-design.mdc`.
-- KISS / DRY / SOLID; Clean Architecture in Go (`backend/`); lite FSD in `frontend/`.
-- Update `docs/*` when changing API, nodes, or env.
+- KISS / DRY / SOLID; Clean Architecture in Go (`backend/`) — see `docs/ARCHITECTURE.md`; lite FSD in `frontend/` — see `frontend-fsd.mdc`.
+- Update `docs/*` when changing API, env, auth, or deploy.

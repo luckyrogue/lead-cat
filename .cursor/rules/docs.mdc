@@ -6,5 +6,5 @@ alwaysApply: false
 
 # Docs
 
-When changing API, env, auth, deploy, or scenario nodes — update the matching file under `docs/`.
+When changing API, env, auth, or deploy — update the matching file under `docs/`.
 Keep `PLAN.md` checkboxes in sync for completed phases.

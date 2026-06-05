@@ -1,14 +1,61 @@
 ---
-description: Mini App lite FSD
+description: Mini App lite FSD (sadu-aligned)
 globs: "frontend/**"
 alwaysApply: false
 ---
 
 # Frontend FSD
 
-Import direction: `app` → `routes` → `widgets` → `features` → `entities` → `shared`.
-Routes in `src/routes/` are thin; page UI lives in `features/` (files: kebab-case, e.g. `login-page.tsx`).
-Auth: JWT in `localStorage` + axios Bearer; `/login` page; `VITE_AUTH_DEV_MODE` for local skip.
-Route tree: `@tanstack/router-plugin` → `src/routeTree.gen.ts` (do not hand-edit).
-pnpm only; UI from `@/components/ui/*` (Button, Input, Select, Tabs, Label, Spinner, Sonner).
-Cat colors via CSS vars `--cat-*` / shadcn `--primary` in `app/app.css`.
+Import direction: `app` → `routes` → `components` → `features` → `entities` → `shared`.
+
+Canonical reference: `frontend/README.md` (mirrors sadu/admin/app layout).
+
+## TMA-only SPA
+
+- Layout: `routes/_tma.tsx` → `components/tma-shell/tma-layout.tsx`
+- Tab routes: `/`, `/meetings`, `/checker`, `/auto`, `/profile`
+- Overlay routes: `/meetings/create`, `/profile/colleague`, `/profile/admin`
+- Detail-as-sheet: `/meetings/$meetingId` reuses `MeetingsListPage`
+- TabBar items from `getVisibleTabBarModules(user)`; FAB unchanged by design
+
+## Feature slices
+
+```
+features/
+  auth/          — api, session, refresh-session, require-auth, me-cache, schemas, auth-context
+  home/pages/
+  meetings/{api,queries,components/meeting-ui/,pages/,list-url}/
+  meeting-create/{components/,lib/,pages/}/
+  checker/{components/,queries.ts,pages/}/
+  auto/{fixtures.ts,pages}/
+  profile/{components,pages}/
+entities/{meeting,employee,scenario}/
+shared/
+  api/           — client, types, query-client, query-keys, list-params, health, generated/schema.ts
+  auth/          — module-policies, permissions, permission-requirement, route-access, require-permission
+  lib/           — list-url-params, use-list-url-state, route-revalidation, toast, format-datetime
+  tma/           — i18n, palette, context, constants (re-exports), mock-data (legacy fixtures)
+components/      — tma-shell/*, meetings/*, employee-picker, duration-picker, tma-list-page-shell, auth/
+app/             — providers, app-content, router, router-context
+```
+
+Feature X must not import feature Y; share via `shared/`, `entities/`, or `components/`.
+
+## File size
+
+Hand-written `.ts`/`.tsx` files **≤300 lines** (exception: generated `routeTree.gen.ts`, `shared/api/generated/*`). Split pages into `components/` subfolders; extract UI repeated 2+ times into `components/`.
+
+## Data loading
+
+- `apiFetch` + `ApiError` in `shared/api/client.ts`; Bearer via `getSession()`
+- 401 single-flight: `features/auth/refresh-session.ts`
+- `queryOptions` in `features/*/queries.ts`; keys in `shared/api/query-keys.ts`
+- Route `loader` + `shouldReload: shouldReloadExceptSearch` + `loaderDeps: () => ({})`
+- List filters: `shared/lib/use-list-url-state.ts` + `TmaListPageShell`
+- Health gate: `app/app-content.tsx` + `useAppHealth()`; Toaster inside gate
+
+## Tooling
+
+- `pnpm openapi:generate` → `shared/api/generated/schema.ts`
+- Route tree: `@tanstack/router-plugin` → `src/routeTree.gen.ts` (do not hand-edit)
+- pnpm only; UI from `@/components/ui/*` and `@/shared/ui/cat/*`

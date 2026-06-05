@@ -6,5 +6,21 @@ alwaysApply: false
 
 # Redis / asynq
 
-- Queues in `internal/infrastructure/queue/asynq`.
-- Scenario runs enqueued from API; worker in `cmd/server`.
+See `docs/REDIS.md` for configuration and key-space conventions.
+
+## Job queues
+
+- Queue client/server in `internal/infrastructure/queue/asynq`.
+- **Notification jobs** (meeting created/updated/cancelled) enqueued from application-layer commands → processed by `platform/meeting_notifier` → Telegram bot send.
+- Worker runs in-process alongside the HTTP server (`cmd/server`).
+
+## Reminder scheduler
+
+- `platform/reminder_scheduler` runs a **Redis-leader-locked tick loop** so only one replica fires reminders when the binary is scaled horizontally.
+- Lock key and TTL configured via env — see `docs/REDIS.md`.
+
+## Rules
+
+- Enqueue from commands only; never from query handlers (CQRS).
+- Task type constants live in the queue package — do not scatter magic strings across layers.
+- Keep task payloads small (IDs only); workers fetch full data from Postgres.
