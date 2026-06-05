@@ -17,6 +17,7 @@
 ## Task 1: `CalendarService.UpdateAttendees` (port + stub + Google adapter)
 
 **Files:**
+
 - Modify: `backend/internal/application/calendar.go`
 - Modify: `backend/internal/infrastructure/calendar/stub/stub.go`
 - Modify: `backend/internal/infrastructure/calendar/google/adapter.go`
@@ -91,6 +92,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 2: repo — `RemoveParticipant`
 
 **Files:**
+
 - Modify: `backend/internal/infrastructure/persistence/postgres/meeting_repo.go`
 
 - [ ] **Step 1: Add the method** (after `ListParticipants`):
@@ -119,6 +121,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 3: queue — `participant:added` / `participant:removed` tasks
 
 **Files:**
+
 - Modify: `backend/internal/infrastructure/queue/asynq/queue.go`
 
 - [ ] **Step 1: Add tasks, shared payload, enqueues, parser** (after the `meeting:updated` block):
@@ -176,6 +179,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 4: notifier — `buildRemovedMessage` + `HandleParticipantAdded`/`HandleParticipantRemoved`
 
 **Files:**
+
 - Modify: `backend/internal/platform/meeting_notifier/message.go`
 - Modify: `backend/internal/platform/meeting_notifier/message_test.go`
 - Modify: `backend/internal/platform/meeting_notifier/notifier.go`
@@ -276,6 +280,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 5: application — commands, search, ACL helper, email normalize
 
 **Files:**
+
 - Create: `backend/internal/application/participants.go`
 - Create: `backend/internal/application/participants_test.go`
 - Modify: `backend/internal/application/meeting_service.go` (use the new `ownerOrOrganizer` helper)
@@ -527,6 +532,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 6: `meetingedit` — participants sub-flow
 
 **Files:**
+
 - Modify: `backend/internal/platform/meetingedit/state.go` (add `PartList`, `PartCands`)
 - Modify: `backend/internal/platform/meetingedit/service.go` (Backend extension, callbacks, sub-flow, "Участники" button)
 - Modify: `backend/internal/platform/meetingedit/service_test.go` (extend fake + add tests)
@@ -922,6 +928,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 7: wire the participant asynq handlers (main.go)
 
 **Files:**
+
 - Modify: `backend/cmd/server/main.go`
 
 - [ ] **Step 1: Add the two handlers + register them.** In `backend/cmd/server/main.go`, after the existing `meetingUpdatedHandler`, add:
@@ -976,6 +983,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 8: full verification + docs
 
 **Files:**
+
 - Modify: `docs/MEETINGS.md`
 
 - [ ] **Step 1: Run the full suite.** From the repo root: `make test && make lint && make build`. (Fallback: `cd backend && env -u GOROOT go test ./... && env -u GOROOT go vet ./... && env -u GOROOT go build ./...`, plus `gofmt -l backend` — if it lists any file, run `gofmt -w` on it.) If anything fails, STOP and report.
@@ -1001,4 +1009,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - **Spec coverage:** entry/flow/layering (Tasks 5,6) · FSM sub-flow incl. index-safe callbacks (Task 6) · `UpdateAttendees` Google sync (Task 1) · repo `RemoveParticipant` (Task 2) · `SearchEmployees`/email normalize/ACL helper (Task 5) · `AddParticipant`/`RemoveParticipant` commands with DB-first ordering (Task 5) · `participant:added/removed` queue + worker + messages (Tasks 3,4) · wiring (Task 7) · testing (Tasks 1,4,5,6,8) · docs (Task 8). Out-of-scope items recorded in spec + Task 8 note. All covered.
 - **Type consistency:** `Backend` methods (Task 6) — `ListParticipants`, `SearchEmployees`, `AddParticipant(ctx, ws, userID, meetingID, email)`, `RemoveParticipant(...)` — match `*application.Services` (Task 5). `ParticipantPayload{WorkspaceID,MeetingID,Email}` + `ParseParticipant` + `EnqueueParticipantAdded/Removed` (Task 3) used in Tasks 5,7. `UpdateAttendees(ctx, eventID, emails)` (Task 1) called by `syncAttendees` (Task 5). `buildRemovedMessage`/`buildEventMessage` (Task 4) reused; `HandleParticipantAdded/Removed` (Task 4) called in Task 7. `State.PartList/PartCands` + `indexInto` (Task 6) keep callback_data within 64 bytes. `ownerOrOrganizer` (Task 5) reused in `UpdateMeeting`/`CancelMeeting`.
 - **No placeholders:** every code/command step is concrete. The one conditional note (the `_ = w` vs `m, _, err :=` in `AddParticipant`) is explicit and build-checked.
+
+```
+
 ```

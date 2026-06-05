@@ -13,7 +13,7 @@ Let a Telegram Mini App user authenticate to the backend with zero extra login a
 1. **Telegram-native auth on `bot_users`.** A Telegram user is identified by `initData` → `bot_users` (global, `telegram_id ↔ email ↔ role`). This matches the meetings feature's actual identity model (every bot flow + the global-by-email read logic) and gives the correct Mini-App UX. The existing `platform_users`/workspace web-auth world is left untouched — the two identity worlds stay separate.
 2. **Exchange `initData` for a short-lived TMA JWT** (not per-request `initData` validation). Centralizes validation, avoids `auth_date` TTL tension, and reuses the existing `Authorization: Bearer` middleware shape + the frontend's axios token plumbing.
 3. **Registration stays owned by the bot.** If a Telegram user has no `bot_users` row, the exchange returns `401 not_registered`; the Mini App shows a "register in the bot first" screen with a deep link. No OTP onboarding is duplicated in the Mini App (DRY).
-4. **Read scope is global-by-email** (deferred to sub-project 2, noted here for context): the Mini App will show the user's own meetings as organizer/participant, mirroring the bot's `/schedule` & `/checker`. Meeting *creation*'s workspace targeting is a sub-project-3 concern.
+4. **Read scope is global-by-email** (deferred to sub-project 2, noted here for context): the Mini App will show the user's own meetings as organizer/participant, mirroring the bot's `/schedule` & `/checker`. Meeting _creation_'s workspace targeting is a sub-project-3 concern.
 
 ## Codebase facts (verified)
 
@@ -46,16 +46,19 @@ GET /api/tma/me → returns the current bot_user identity
 ### Backend components
 
 **1. TMA token (`internal/platform/auth/tma.go`, new file in the existing package)**
+
 - `type TMAClaims struct { TelegramID int64 \`json:"tg_id"\`; Email string \`json:"email"\`; Role string \`json:"role"\`; Typ string \`json:"typ"\`; jwt.RegisteredClaims }`.
 - `type TMAToken struct { secret []byte; ttl time.Duration; issuer string }` with `NewTMAToken(secret, issuer string, ttl time.Duration) (*TMAToken, error)` (reuses `JWT_SECRET`; default ttl 24h; same ≥16-char secret guard as `NewJWT`).
 - `Issue(tgID int64, email, role string) (string, error)` — sets `Typ:"tma"`, HS256.
 - `Parse(token string) (*TMAClaims, error)` — HS256 only; rejects when `Typ != "tma"` (so a platform JWT can't be used as a TMA token and vice-versa).
 
 **2. initData freshness (`internal/infrastructure/telegram/initdata.go`, extend)**
+
 - Add `AuthDate int64` to `InitDataUser`; parse `vals.Get("auth_date")` in `Validate` (best-effort; 0 if absent). Non-breaking.
 - The TMA handler enforces freshness; the validator stays a pure HMAC+parse unit.
 
 **3. Public exchange handler `POST /api/auth/tma` (`internal/delivery/http/handlers/tma_auth.go`, new)**
+
 - Body `{ "init_data": string }`. Steps:
   1. **Dev mode** (`cfg.AuthDevMode`): skip HMAC + freshness; derive `telegram_id` from the `init_data` string parsed as int (frontend sends a configured dev id). Else:
   2. `validator.Validate(init_data)` → `401 invalid_init_data` on error.
@@ -66,6 +69,7 @@ GET /api/tma/me → returns the current bot_user identity
 - Registered at `/api/auth/tma` so the platform middleware's existing `/api/auth/` skip makes it public.
 
 **4. TMA auth middleware (`internal/delivery/http/middleware/tma_auth.go`, new)**
+
 - `type TMAAuth struct { cfg; token *auth.TMAToken; store *postgres.Store; log }`, `NewTMAAuth(...)`, `Middleware(c)`.
 - Requires `Authorization: Bearer <tma jwt>`; `token.Parse` → on error `401`. Re-resolve `GetBotUserByTelegramID(claims.TelegramID)` (so role/email changes and de-registration take effect) → on error `401`. Set `c.Locals("bot_user", botUser)`. (Dev mode mirrors the platform middleware: accept a dev telegram id.)
 - Applied to a `/api/tma` route group (excluding the public `/api/auth/tma`).
@@ -73,34 +77,38 @@ GET /api/tma/me → returns the current bot_user identity
 **5. `GET /api/tma/me` (`tma_handlers.go`, new)** — reads `c.Locals("bot_user")`, returns `{ telegram_id, name, email, role }`.
 
 **6. Wiring (`internal/delivery/http/app.go`)**
+
 - Add `strings.HasPrefix(c.Path(), "/api/tma/")` to the platform `Auth.Middleware` skip condition.
 - Construct `TMAToken` (from `cfg.JWTSecret`) and `TMAAuth`; register `app.Post("/api/auth/tma", api.TMAAuth)` and a group `tma := app.Group("/api/tma", tmaAuth.Middleware)` with `tma.Get("/me", api.TMAMe)`.
 
 ### Frontend components
 
 **1. TMA auth client (`frontend/src/shared/tma/auth.ts` or similar, new)**
+
 - `tmaLogin(initData: string): Promise<{ token; user }>` → `POST /api/auth/tma`.
 - Stores the token (in-memory module variable + `sessionStorage` for reloads) and sets the axios default `Authorization: Bearer` header (same mechanism `providers.tsx` uses).
 
 **2. TMA auth provider/context (`frontend/src/shared/tma/auth-context.tsx`, new)**
+
 - On mount: read `window.Telegram?.WebApp?.initData`; in `VITE_AUTH_DEV_MODE` fall back to a configured dev id string (`VITE_TMA_DEV_TG_ID`). Call `tmaLogin`.
 - Exposes `{ status: "loading" | "authed" | "not_registered" | "error", user }`.
 - On a 401 from a later API call, transparently re-run `tmaLogin` once before surfacing the error.
 
 **3. Auth gate + identity (`frontend/src/features/tma/tma-app.tsx`)**
+
 - Wrap the app: `loading` → spinner/skeleton; `not_registered` → a "register in the bot first" screen with a deep link (`https://t.me/<bot>?start`); `error` → retry; `authed` → render the app.
 - Replace the mock `ME` with the provider's `user` (the rest of the screens still read mocks for their lists — that's sub-project 2).
 
 ## Data flow & error handling
 
-| Case | Backend | Frontend |
-| --- | --- | --- |
-| Valid initData, registered | 200 `{token,user}` | store token, render app |
-| Bad/forged initData | 401 `invalid_init_data` | error state + retry |
-| Stale initData (`auth_date` > 24h) | 401 `invalid_init_data` | re-read initData & retry once |
-| Valid initData, no `bot_users` row | 401 `not_registered` | "register in the bot first" screen |
-| Expired TMA JWT on a `/api/tma/*` call | 401 | re-run `tmaLogin` once, replay |
-| Not in Telegram & not dev | no initData | error state ("open in Telegram") |
+| Case                                   | Backend                 | Frontend                           |
+| -------------------------------------- | ----------------------- | ---------------------------------- |
+| Valid initData, registered             | 200 `{token,user}`      | store token, render app            |
+| Bad/forged initData                    | 401 `invalid_init_data` | error state + retry                |
+| Stale initData (`auth_date` > 24h)     | 401 `invalid_init_data` | re-read initData & retry once      |
+| Valid initData, no `bot_users` row     | 401 `not_registered`    | "register in the bot first" screen |
+| Expired TMA JWT on a `/api/tma/*` call | 401                     | re-run `tmaLogin` once, replay     |
+| Not in Telegram & not dev              | no initData             | error state ("open in Telegram")   |
 
 No `initData`, JWT, email beyond the response payload, or secrets are logged. The exchange logs `tma_auth_ok{telegram_id}` (Info) and `tma_auth_unregistered{telegram_id}` (Info) / `tma_auth_invalid` (Warn) — counts/ids only.
 

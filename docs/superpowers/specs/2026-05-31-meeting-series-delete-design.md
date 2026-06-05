@@ -31,9 +31,11 @@ Deletion is reached from the **/edit menu** (reuses meeting selection + the scop
 ## Application + repo
 
 **Repo:**
+
 - `CancelSeriesOccurrences(ctx, ws, seriesID uuid.UUID, fromStart time.Time) (int, error)` — one atomic `UPDATE meetings SET status='cancelled', updated_at=now() WHERE series_id=$1 AND workspace_id=$2 AND starts_at>=$3 AND status='scheduled'`; returns `RowsAffected` (no transaction needed — single statement).
 
 **Application:**
+
 - `CancelMeeting` (retrofit): after the ACL check, `if m.Status != "scheduled" { return nil }`; then the current Google-delete best-effort + `Store.CancelMeeting`; finally `s.enqueueCancelled(ctx, ws, id)`.
 - `CancelSeries(ctx, ws, userID, meetingID uuid.UUID) (int, error)`: `GetMeeting` + `GetWorkspace`; ACL `ownerOrOrganizer`; `picked.SeriesID == nil → %w ErrInvalidInput`; `occs := ListSeriesOccurrences(ws, *picked.SeriesID, picked.StartsAt)` (for the event IDs); `n := CancelSeriesOccurrences(...)`; Google `DeleteEvent` per `occs[i].GoogleEventID` (best-effort, logged via the existing `deleteEventsBestEffort`); `s.enqueueCancelled(ws, meetingID)` once; return `n`.
 - `enqueueCancelled` — a shared best-effort helper (mirrors `enqueueCreated`).

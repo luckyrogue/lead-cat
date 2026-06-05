@@ -35,10 +35,12 @@ In `/edit`, after picking a meeting: if it has a `series_id`, ask **"Редак�
 **Pure helper** `applySeriesUpdate(cur postgres.Meeting, in SeriesUpdateInput, loc *time.Location) (postgres.Meeting, error)` (mirrors `applyMeetingUpdate`): applies the non-nil field overrides; if `Start`+`End` are set, combines the occurrence's own date (in `loc`) with the new HH:MM → new `starts_at`/`ends_at` (UTC), else keeps the current times; domain-validates (wrap `ErrInvalidInput`); recomputes the name = `GenerateName(..., localStart, cur.Recurrence)` (the occurrence's recurrence label is preserved). Unit-tested.
 
 **Repo:**
+
 - `ListSeriesOccurrences(ctx, ws, seriesID uuid.UUID, fromStart time.Time) ([]Meeting, error)` — `series_id=$ AND workspace_id=$ AND starts_at>=$ AND status='scheduled' ORDER BY starts_at` (via `queryMeetings`/`scanMeeting`).
 - Extract a shared `updateMeetingSQL` + `updateMeetingArgs` (refactor of the existing `UpdateMeeting`, like `insertMeetingSQL`), plus `UpdateMeetingsTx(ctx, ws uuid.UUID, ms []Meeting) error` — `pool.Begin` → per row `UPDATE … WHERE id+workspace_id+status='scheduled'`; `RowsAffected()==0 → ErrMeetingNotEditable` (rollback); `Commit`.
 
 **`Services.UpdateSeries(ctx, ws, userID, meetingID uuid.UUID, in SeriesUpdateInput) (int, error)`:**
+
 1. `GetMeeting` + `GetWorkspace`; ACL `ownerOrOrganizer`; `picked.SeriesID == nil → fmt.Errorf("%w: not a series", ErrInvalidInput)`.
 2. `loc` from workspace TZ; `occs := ListSeriesOccurrences(ws, *picked.SeriesID, picked.StartsAt)`.
 3. `rows := applySeriesUpdate(occ, in, loc)` for each (error → `%w ErrInvalidInput`).

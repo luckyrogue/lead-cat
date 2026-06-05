@@ -41,6 +41,7 @@
 ## Task 1: Pure CSV parser (`Record`, `Parse`)
 
 **Files:**
+
 - Create: `backend/internal/platform/employeedir/parse.go`
 - Test: `backend/internal/platform/employeedir/parse_test.go`
 
@@ -199,6 +200,7 @@ git commit -m "feat(meetings): pure employees.csv parser §9.4"
 ## Task 2: Repo — `EmployeeSeed`, `ListWorkspacesWithGoogle`, `SyncEmployees`
 
 **Files:**
+
 - Modify: `backend/internal/infrastructure/persistence/postgres/employee_repo.go`
 
 Build-verified (no DB harness). Read the existing file first to match style; it already imports `context` and `github.com/google/uuid`.
@@ -305,6 +307,7 @@ git commit -m "feat(meetings): employee directory sync repo queries §9.4"
 ## Task 3: Embedded CSV + `Seed` orchestrator
 
 **Files:**
+
 - Create: `backend/internal/platform/employeedir/employees.csv`
 - Create: `backend/internal/platform/employeedir/employeedir.go`
 
@@ -394,6 +397,7 @@ git commit -m "feat(meetings): embedded employees.csv + Seed orchestrator §9.4"
 ## Task 4: Wire `Seed` into server startup
 
 **Files:**
+
 - Modify: `backend/cmd/server/main.go`
 
 - [ ] **Step 1: Add the import**
@@ -432,6 +436,7 @@ git commit -m "feat(meetings): seed employee directory on startup §9.4"
 ## Task 5: Docs + final verification
 
 **Files:**
+
 - Modify: `docs/MEETINGS.md`
 - Modify: `docs/REQUIREMENTS.md`
 
@@ -477,4 +482,7 @@ git commit -m "docs(meetings): document employee directory CSV seeding §9.4"
 - **Type consistency:** `employeedir.Record{FullName,Email,Dept}` (Task 1) maps to `postgres.EmployeeSeed{FullName,Email,Dept}` (Task 2) in `Seed` (Task 3). `SyncEmployees(ctx, workspaceID uuid.UUID, seeds []postgres.EmployeeSeed) (added, updated, deleted int, err error)` consumed in Task 3. `ListWorkspacesWithGoogle(ctx) ([]uuid.UUID, error)` consumed in Task 3. `Seed(ctx, store *postgres.Store, log *zap.Logger)` consumed in Task 4.
 - **Out of scope (do not implement):** `EMPLOYEES_CSV_PATH` env override, hot-reload, bot/admin directory UI, `has_telegram` maintenance, export/AD integration.
 - **Known approximations:** `SyncEmployees` does one `QueryRow` per row (directory is small — fine). The delete uses `email <> ALL($2)`; the empty-seeds guard (both in `Seed` and `SyncEmployees`) prevents an all-rows delete. `has_telegram` defaults false for CSV-inserted rows and is never set elsewhere, so it is effectively always false today.
+
+```
+
 ```

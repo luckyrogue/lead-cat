@@ -17,6 +17,7 @@
 ## Task 1: participant UNIQUE constraint + ON CONFLICT
 
 **Files:**
+
 - Create: `backend/migrations/20260531120000_meeting_participants_unique.sql`
 - Modify: `backend/internal/infrastructure/persistence/postgres/meeting_repo.go` (`AddParticipants`)
 
@@ -46,7 +47,7 @@ func (s *Store) AddParticipants(ctx context.Context, meetingID uuid.UUID, ps []M
 ```
 
 - [ ] **Step 3: Build + vet.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go build ./... && env -u GOROOT go vet ./internal/infrastructure/persistence/postgres/`
-Expected: clean. (The migration is applied at runtime via goose; no DB harness — build/vet is the gate.)
+      Expected: clean. (The migration is applied at runtime via goose; no DB harness — build/vet is the gate.)
 
 - [ ] **Step 4: Commit.**
 
@@ -61,6 +62,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 2: repo — global employee search + schedule query
 
 **Files:**
+
 - Modify: `backend/internal/infrastructure/persistence/postgres/employee_repo.go`
 - Modify: `backend/internal/infrastructure/persistence/postgres/meeting_repo.go`
 
@@ -111,7 +113,7 @@ func (s *Store) ListScheduleForEmail(ctx context.Context, email string, from, to
 (`queryMeetings` and `meetingColsM` already exist in this file; `queryMeetings` uses `scanMeeting` which scans the 14 `meetingColsM` columns. `SELECT DISTINCT` over exactly those columns is consistent.)
 
 - [ ] **Step 3: Build + vet.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go build ./... && env -u GOROOT go vet ./internal/infrastructure/persistence/postgres/`
-Expected: clean.
+      Expected: clean.
 
 - [ ] **Step 4: Commit.**
 
@@ -126,6 +128,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 3: application — schedule query delegates
 
 **Files:**
+
 - Modify: `backend/internal/application/participants.go` (add the two delegates near `SearchEmployees`)
 
 - [ ] **Step 1: Add the delegates.** In `backend/internal/application/participants.go`, add (after `SearchEmployees`):
@@ -147,7 +150,7 @@ func (s *Services) EmployeeSchedule(ctx context.Context, email string, from, to 
 Add `"time"` to the import block of `participants.go` (it is not currently imported there).
 
 - [ ] **Step 2: Build + vet.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go build ./... && env -u GOROOT go vet ./internal/application/`
-Expected: clean.
+      Expected: clean.
 
 - [ ] **Step 3: Commit.**
 
@@ -162,6 +165,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 4: `scheduleview` — pure date/window/status helpers
 
 **Files:**
+
 - Create: `backend/internal/platform/scheduleview/parse.go`
 - Test: `backend/internal/platform/scheduleview/parse_test.go`
 
@@ -247,7 +251,7 @@ func TestStatusEmoji(t *testing.T) {
 ```
 
 - [ ] **Step 2: Run, verify fail.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go test ./internal/platform/scheduleview/ -v`
-Expected: FAIL — undefined parseDate/parseRange/dayWindow/statusEmoji.
+      Expected: FAIL — undefined parseDate/parseRange/dayWindow/statusEmoji.
 
 - [ ] **Step 3: Implement.** Create `backend/internal/platform/scheduleview/parse.go`:
 
@@ -317,7 +321,7 @@ func statusEmoji(startsAt, now time.Time) string {
 ```
 
 - [ ] **Step 4: Run, verify pass.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go test ./internal/platform/scheduleview/ -v`
-Expected: all 4 PASS.
+      Expected: all 4 PASS.
 
 - [ ] **Step 5: Commit.**
 
@@ -332,6 +336,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 5: `scheduleview` — FSM service, state, sessions, render
 
 **Files:**
+
 - Create: `backend/internal/platform/scheduleview/state.go`
 - Create: `backend/internal/platform/scheduleview/redis_sessions.go`
 - Create: `backend/internal/platform/scheduleview/service.go`
@@ -537,7 +542,7 @@ func TestScheduleFlow_BadDate(t *testing.T) {
 ```
 
 - [ ] **Step 4: Run, verify fail.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go test ./internal/platform/scheduleview/ -run TestScheduleFlow -v`
-Expected: FAIL — undefined New/Service.
+      Expected: FAIL — undefined New/Service.
 
 - [ ] **Step 5: Implement service.go.** Create `backend/internal/platform/scheduleview/service.go`:
 
@@ -778,7 +783,7 @@ const (
 ```
 
 - [ ] **Step 6: Run tests, verify pass.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go test ./internal/platform/scheduleview/ -v && env -u GOROOT go build ./...`
-Expected: `TestParse*`, `TestDayWindow`, `TestStatusEmoji`, `TestScheduleFlow_*` PASS; build OK.
+      Expected: `TestParse*`, `TestDayWindow`, `TestStatusEmoji`, `TestScheduleFlow_*` PASS; build OK.
 
 - [ ] **Step 7: Commit.**
 
@@ -793,6 +798,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 6: wire `/schedule` into MultiHandler
 
 **Files:**
+
 - Modify: `backend/internal/infrastructure/telegram/multitenant.go`
 
 - [ ] **Step 1: Add the import + field.** In `backend/internal/infrastructure/telegram/multitenant.go`, add the import `"github.com/Jaryq-Lab/notify-bot/internal/platform/scheduleview"`, and add a field to `MultiHandler`:
@@ -913,7 +919,7 @@ func toSchedMarkup(rows [][]scheduleview.Button) models.InlineKeyboardMarkup {
 ```
 
 - [ ] **Step 5: Build + vet + test.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go build ./... && env -u GOROOT go vet ./... && env -u GOROOT go test ./internal/infrastructure/telegram/ ./internal/platform/scheduleview/`
-Expected: clean; tests PASS. Fix any unused-import error the compiler reports.
+      Expected: clean; tests PASS. Fix any unused-import error the compiler reports.
 
 - [ ] **Step 6: Commit.**
 
@@ -928,6 +934,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 7: full verification + docs
 
 **Files:**
+
 - Modify: `docs/MEETINGS.md`
 
 - [ ] **Step 1: Run the full suite.** From the repo root: `make test && make lint && make build`. (Fallback: `cd backend && env -u GOROOT go test ./... && env -u GOROOT go vet ./... && env -u GOROOT go build ./...`.) ALSO run `cd backend && gofmt -l .` — if it lists any file, `gofmt -w` it and re-run lint. If a real failure occurs, STOP and report.
@@ -954,4 +961,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - **Type consistency:** `scheduleview.Backend{SearchEmployeesGlobal, EmployeeSchedule}` (Task 5) matches the `*application.Services` delegates (Task 3) and the repo methods (Task 2). `Reply`/`Button` (Task 5) consumed by `sendSchedReply`/`toSchedMarkup` (Task 6). `dayWindow`/`parseDate`/`parseRange`/`statusEmoji` (Task 4) used in `service.go` (Task 5). `botBackend` composite (Task 6) is satisfied by `*application.Services` (already passed to `NewMultiHandler`). `meetingColsM` (existing) reused by `ListScheduleForEmail` (Task 2).
 - **No placeholders:** every code/command step is concrete. The one conditional (remove unused imports if the compiler flags) in Task 6 is explicit and build-checked.
 - **Known small dup:** `toSchedMarkup`/`sendSchedReply` mirror `toMeditMarkup`/`sendEditorReply` (third inline-markup converter). Acceptable per KISS / consistency with the existing wiring; a shared `botkb` extraction is a possible follow-up, not in scope here.
+
+```
+
 ```

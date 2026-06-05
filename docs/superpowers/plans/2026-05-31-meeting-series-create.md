@@ -17,6 +17,7 @@
 ## Task 1: domain — `Occurrences` expander
 
 **Files:**
+
 - Create: `backend/internal/domain/meeting/recurrence.go`
 - Test: `backend/internal/domain/meeting/recurrence_test.go`
 
@@ -183,6 +184,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 2: migration + model + repo (series columns + transactional batch insert)
 
 **Files:**
+
 - Create: `backend/migrations/20260531130000_meeting_series.sql`
 - Modify: `backend/internal/infrastructure/persistence/postgres/models.go` (Meeting struct)
 - Modify: `backend/internal/infrastructure/persistence/postgres/meeting_repo.go`
@@ -297,7 +299,7 @@ func (s *Store) CreateMeetingSeries(ctx context.Context, ms []Meeting, ps []Meet
 ```
 
 - [ ] **Step 5: Build + vet.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go build ./... && env -u GOROOT go vet ./internal/infrastructure/persistence/postgres/`
-Expected: clean. (No DB harness — build/vet is the gate. The two new columns are appended to every `scanMeeting`-based query consistently via the shared `meetingCols`.)
+      Expected: clean. (No DB harness — build/vet is the gate. The two new columns are appended to every `scanMeeting`-based query consistently via the shared `meetingCols`.)
 
 - [ ] **Step 6: Commit.**
 
@@ -312,6 +314,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 3: application — series creation in CreateMeeting
 
 **Files:**
+
 - Modify: `backend/internal/application/meeting_service.go` (`CreateMeetingInput`, `CreateMeeting`, new `createSeriesEvents` helper)
 - Test: `backend/internal/application/series_test.go`
 - Modify: `backend/internal/delivery/http/handlers/meetings.go` (request field)
@@ -540,16 +543,19 @@ func (s *Services) enqueueCreated(ctx context.Context, workspaceID, meetingID uu
 - [ ] **Step 6: Map the request field in the HTTP handler.** In `backend/internal/delivery/http/handlers/meetings.go`, add `RecurrenceUntil` to the `CreateMeeting` request struct and pass it through:
 
 In the anonymous `body` struct, after `Recurrence`:
+
 ```go
 		RecurrenceUntil string                        `json:"recurrence_until"`
 ```
+
 In the `application.CreateMeetingInput{...}` literal, add:
+
 ```go
 		RecurrenceUntil: body.RecurrenceUntil,
 ```
 
 - [ ] **Step 7: Build + test.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go build ./... && env -u GOROOT go test ./internal/application/ -v`
-Expected: build OK; `TestCreateSeriesEvents_*` + existing application tests PASS. (The full series orchestration — `CreateMeetingSeries` tx — is build-verified; the Google compensation is covered by `TestCreateSeriesEvents_CompensatesOnFailure`.)
+      Expected: build OK; `TestCreateSeriesEvents_*` + existing application tests PASS. (The full series orchestration — `CreateMeetingSeries` tx — is build-verified; the Google compensation is covered by `TestCreateSeriesEvents_CompensatesOnFailure`.)
 
 - [ ] **Step 8: Commit.**
 
@@ -564,6 +570,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 4: full verification + docs
 
 **Files:**
+
 - Modify: `docs/MEETINGS.md`
 
 - [ ] **Step 1: Run the full suite.** From the repo root: `make test && make lint && make build`. (Fallback: `cd backend && env -u GOROOT go test ./... && env -u GOROOT go vet ./... && env -u GOROOT go build ./...`; then `cd backend && gofmt -l .` and `gofmt -w` any listed file, re-run lint.) If a real failure occurs, STOP and report BLOCKED.
@@ -589,4 +596,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - **Spec coverage:** domain `Occurrences` + cap + validation (Task 1) · `series_id` migration + model + cols/scanMeeting + `CreateMeetingSeries` tx (Task 2) · `CreateMeetingInput.RecurrenceUntil` + HTTP field + once-path-preserved + series branch (Google-first compensation, DB tx, enqueue-once) (Task 3) · testing (Tasks 1,3) · docs (Task 4). Out-of-scope (§4.4.2 edit, re-materialization, single Meet link, series delete) recorded in spec + Task 4 note. All covered.
 - **Type consistency:** `meeting.Span{Start,End}` + `Occurrences(start,end,r,until) ([]Span,error)` + `ErrTooManyOccurrences`/`ErrRecurrenceWindow` (Task 1) used in Task 3. `Meeting.SeriesID *uuid.UUID` + `RecurrenceUntil *time.Time` (Task 2) set in Task 3's rows and scanned by `scanMeeting`. `insertMeetingSQL`/`meetingInsertArgs`/`CreateMeetingSeries` (Task 2) called by Task 3. `seriesEvent{Span,Name,EventID,MeetLink}` + `createSeriesEvents(ctx,cal,names,description,emails,spans)` (Task 3) used by the series branch. `enqueueCreated` (Task 3) used by both paths.
 - **No placeholders:** every code/command step is concrete. The once-path code in Task 3 Step 5 is shown in full (not "as before") because the surrounding function tail is rewritten.
+
+```
+
 ```

@@ -12,7 +12,7 @@ Wire the Mini App's read-only screens to the backend through the TMA auth from s
 
 1. **Backend TMA DTO (UI-shaped).** New `/api/tma/*` endpoints return JSON already in the frontend's shape (date/start/end strings, organizer **email**, participant **emails**). Identity resolution (`organizer_user_id` UUID → `platform_users.email`) and Almaty time-splitting must happen server-side anyway, so one mapping site lives on the backend; the frontend maps the DTO to its existing `Meeting`/`Employee`/`FreeSlot` types with near-zero work.
 2. **Windowing = a `scope` enum** (`upcoming` / `past` / `all`), computed server-side in Asia/Almaty (reusing the bot's window approach). The frontend never computes "now"/timezone boundaries. Home derives "today" by filtering the `upcoming` list client-side.
-3. **Detail renders from the list item (YAGNI refinement — see below).** The list DTO is complete (includes participants + organizer), and the Mini App only opens a detail sheet from a list tap, so a per-id detail endpoint and its membership-authorization are **not built** in this slice. *(This trims the `GET /api/tma/meetings/:id` + `GetMeetingByID` + membership check from the brainstormed design — flagged for review. It can be added later for deep-linking.)*
+3. **Detail renders from the list item (YAGNI refinement — see below).** The list DTO is complete (includes participants + organizer), and the Mini App only opens a detail sheet from a list tap, so a per-id detail endpoint and its membership-authorization are **not built** in this slice. _(This trims the `GET /api/tma/meetings/:id` + `GetMeetingByID` + membership check from the brainstormed design — flagged for review. It can be added later for deep-linking.)_
 4. **Add the deferred 401 → re-login interceptor** now that authed read-calls exist (carried over from sub-project 1).
 5. **Writes stay client-side.** Create/delete buttons keep their existing local-state handlers; a created meeting won't survive a React Query refetch until sub-project 3. Acceptable for a read-only slice.
 
@@ -37,16 +37,17 @@ Thin TMA read handlers over the existing global-by-email application methods; a 
 
 ### Backend — new endpoints (all under the `/api/tma` group, TMA-auth)
 
-| Method & path | Reuses | Returns |
-| --- | --- | --- |
-| `GET /api/tma/meetings?scope=upcoming\|past\|all` | `EmployeeSchedule(botUser.Email, from, to)` | `{meetings: tmaMeetingDTO[]}` |
-| `GET /api/tma/employees?q=<query>` | `SearchEmployeesGlobal(q)` | `{employees: tmaEmployeeDTO[]}` |
-| `GET /api/tma/schedule?email=<email>&scope=…` | `EmployeeSchedule(email, from, to)` | `{meetings: tmaMeetingDTO[]}` |
-| `POST /api/tma/free-slots` `{participants:[email…], from, to, duration_mins}` | `FreeSlots(...)` | `{slots: tmaFreeSlotDTO[]}` |
+| Method & path                                                                 | Reuses                                      | Returns                         |
+| ----------------------------------------------------------------------------- | ------------------------------------------- | ------------------------------- |
+| `GET /api/tma/meetings?scope=upcoming\|past\|all`                             | `EmployeeSchedule(botUser.Email, from, to)` | `{meetings: tmaMeetingDTO[]}`   |
+| `GET /api/tma/employees?q=<query>`                                            | `SearchEmployeesGlobal(q)`                  | `{employees: tmaEmployeeDTO[]}` |
+| `GET /api/tma/schedule?email=<email>&scope=…`                                 | `EmployeeSchedule(email, from, to)`         | `{meetings: tmaMeetingDTO[]}`   |
+| `POST /api/tma/free-slots` `{participants:[email…], from, to, duration_mins}` | `FreeSlots(...)`                            | `{slots: tmaFreeSlotDTO[]}`     |
 
 All read the authed `bot_user` from `c.Locals("bot_user")`. The first endpoint scopes to `botUser.Email`; `/schedule` takes an explicit `email` (the §4.6 directory feature lets any registered user view any colleague's schedule, read-only — no per-meeting auth needed). `q` empty → empty list. Invalid `scope` → 400.
 
 **DTOs** (new, in a `handlers/tma_read.go`):
+
 ```go
 type tmaMeetingDTO struct {
     ID           string   `json:"id"`
@@ -68,6 +69,7 @@ type tmaFreeSlotDTO struct { ISO, Start, End string; Mins int }       // json: i
 ```
 
 **Mapper + helpers:**
+
 - `splitMeetingTime(startsAt, endsAt time.Time, loc *time.Location) (date, start, end string)` — **pure**, unit-tested. `date=2006-01-02`, `start/end=15:04`, all in `loc`.
 - `tmaScopeWindow(scope string, now time.Time) (from, to time.Time, ok bool)` — **pure**, unit-tested. `upcoming → [now, now+365d]`; `past → [now-365d, now]`; `all → [now-365d, now+365d]`; unknown → `ok=false`. (`ListScheduleForEmail` filters `starts_at` in `[from,to)`.)
 - `toMeetingDTO(ctx, a *API, m postgres.Meeting) tmaMeetingDTO` — resolves organizer email (`GetUserByID` when `OrganizerUserID != nil`, best-effort: empty on error), `ListParticipants` → emails, `splitMeetingTime`. N+1 `GetUserByID`/`ListParticipants` per meeting — acceptable for personal-scale lists (tens of rows); a note documents it. (`recDays` is omitted — not modeled server-side; it's a create-only concern.)
@@ -97,13 +99,13 @@ React Query: isLoading → skeleton; isError → error+retry; data → render
 401 on any /api/tma/* → interceptor re-login once → replay (else error state)
 ```
 
-| Case | Backend | Frontend |
-| --- | --- | --- |
-| OK | 200 `{meetings\|employees\|slots: […]}` | render |
-| Invalid `scope` / bad body | 400 | error state |
-| Expired TMA JWT | 401 | interceptor re-login once → replay |
-| DB error | 500 | error + retry |
-| Empty result | 200 `[]` | empty-state copy |
+| Case                       | Backend                                 | Frontend                           |
+| -------------------------- | --------------------------------------- | ---------------------------------- |
+| OK                         | 200 `{meetings\|employees\|slots: […]}` | render                             |
+| Invalid `scope` / bad body | 400                                     | error state                        |
+| Expired TMA JWT            | 401                                     | interceptor re-login once → replay |
+| DB error                   | 500                                     | error + retry                      |
+| Empty result               | 200 `[]`                                | empty-state copy                   |
 
 No PII beyond the response payloads; read handlers log nothing (or `Debug` only).
 

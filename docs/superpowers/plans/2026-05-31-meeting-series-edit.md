@@ -17,6 +17,7 @@
 ## Task 1: application — `applySeriesUpdate` + `SeriesUpdateInput`
 
 **Files:**
+
 - Create: `backend/internal/application/series_edit.go`
 - Test: `backend/internal/application/series_edit_test.go`
 
@@ -173,6 +174,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 2: repo — `ListSeriesOccurrences` + transactional `UpdateMeetingsTx`
 
 **Files:**
+
 - Modify: `backend/internal/infrastructure/persistence/postgres/meeting_repo.go`
 
 - [ ] **Step 1: Extract a shared update statement + add the queries.** In `backend/internal/infrastructure/persistence/postgres/meeting_repo.go`:
@@ -230,7 +232,7 @@ func (s *Store) UpdateMeetingsTx(ctx context.Context, workspaceID uuid.UUID, ms 
 }
 ```
 
-(c) Add the series occurrence query (after `ListScheduleForEmail` or near the other List* methods):
+(c) Add the series occurrence query (after `ListScheduleForEmail` or near the other List\* methods):
 
 ```go
 // ListSeriesOccurrences returns the scheduled occurrences of a series at or after
@@ -244,7 +246,7 @@ func (s *Store) ListSeriesOccurrences(ctx context.Context, workspaceID, seriesID
 ```
 
 - [ ] **Step 2: Build + vet.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go build ./... && env -u GOROOT go vet ./internal/infrastructure/persistence/postgres/`
-Expected: clean.
+      Expected: clean.
 
 - [ ] **Step 3: Commit.**
 
@@ -259,6 +261,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 3: application — `Services.UpdateSeries`
 
 **Files:**
+
 - Modify: `backend/internal/application/series_edit.go`
 
 Context: `Services{Store, Cipher, Queue, Calendar, Log}`. `ownerOrOrganizer(w postgres.Workspace, organizerUserID *uuid.UUID, userID uuid.UUID) bool` and `orDefault(v, def string) string` exist in the package. `s.Calendar.For(ctx, ws) (CalendarService, error)`, `CalendarService.UpdateEvent(ctx, eventID, CalendarEvent) error`, `s.Queue.EnqueueMeetingUpdated(ctx, ws, id) error`.
@@ -335,7 +338,7 @@ func (s *Services) UpdateSeries(ctx context.Context, workspaceID, userID, meetin
 ```
 
 - [ ] **Step 2: Build + vet + test.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go build ./... && env -u GOROOT go vet ./internal/application/ && env -u GOROOT go test ./internal/application/`
-Expected: build OK; `TestApplySeriesUpdate*` PASS. (The orchestration's DB/Google path is build-verified, per the `CreateMeeting`-series convention.)
+      Expected: build OK; `TestApplySeriesUpdate*` PASS. (The orchestration's DB/Google path is build-verified, per the `CreateMeeting`-series convention.)
 
 - [ ] **Step 3: Commit.**
 
@@ -350,6 +353,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 4: `meetingedit` — scope screen + series menu
 
 **Files:**
+
 - Modify: `backend/internal/platform/meetingedit/state.go`
 - Modify: `backend/internal/platform/meetingedit/parse.go`
 - Modify: `backend/internal/platform/meetingedit/service.go`
@@ -414,6 +418,7 @@ func parseTimeRange(text string) (start, end string, err error) {
 - [ ] **Step 3: Scope-aware pick + scope screen + Backend method.** In `service.go`:
 
 (a) Extend the `Backend` interface — add:
+
 ```go
 	UpdateSeries(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, in application.SeriesUpdateInput) (int, error)
 ```
@@ -723,7 +728,7 @@ func TestEditFlow_NonSeriesNoPrompt(t *testing.T) {
 (`sampleMeeting` returns a `postgres.MeetingWithTZ` with no `SeriesID` — confirm; if its struct literal would need `SeriesID` left nil, that's the default.)
 
 - [ ] **Step 6: Run tests + build.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go test ./internal/platform/meetingedit/ -v && env -u GOROOT go build ./...`
-Expected: all PASS (existing + parseTimeRange + 3 scope tests), build OK. (`*application.Services` now satisfies the extended `Backend` because `UpdateSeries` was added in Task 3.)
+      Expected: all PASS (existing + parseTimeRange + 3 scope tests), build OK. (`*application.Services` now satisfies the extended `Backend` because `UpdateSeries` was added in Task 3.)
 
 - [ ] **Step 7: Commit.**
 
@@ -738,6 +743,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 5: full verification + docs
 
 **Files:**
+
 - Modify: `docs/MEETINGS.md`
 
 - [ ] **Step 1: Run the full suite from the repo root.** `cd /Users/temirlan/Workspace/in-house/lead-cat && make test && make lint && make build`. `make lint` runs golangci-lint (incl. gofmt). If gofmt issues appear, `gofmt -w` the listed backend files and re-run `make lint`. If a real failure occurs, STOP and report BLOCKED with output.
@@ -763,4 +769,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - **Spec coverage:** `applySeriesUpdate` field+time-of-day (Task 1) · `ListSeriesOccurrences` + `UpdateMeetingsTx` (Task 2) · `UpdateSeries` orchestration (ACL, future-from-picked, tx, Google best-effort, enqueue-once) (Task 3) · FSM scope screen + series menu + `parseTimeRange` + scope-aware field/OnText/apply (Task 4) · testing (Tasks 1,3,4) · docs (Task 5). Out-of-scope (recurrence-pattern change, series delete, past occurrences) recorded in spec + Task 5 note. All covered.
 - **Type consistency:** `SeriesUpdateInput{Dept,Type,Host,Description,Start,End *string}` (Task 1) used by `applySeriesUpdate`/`UpdateSeries` (Tasks 1,3), `meetingedit.Backend.UpdateSeries` + `seriesInput` (Task 4). `UpdateMeetingsTx(ws, []Meeting)` + `ListSeriesOccurrences(ws, seriesID, fromStart)` (Task 2) called by `UpdateSeries` (Task 3). `parseTimeRange` (Task 4) used in OnText. `State.SeriesID/Scope` (Task 4) drive pick/menu/field/OnText/apply. `updateMeetingSQL`/`updateMeetingArgs` (Task 2) shared by `UpdateMeeting` + `UpdateMeetingsTx`.
 - **No placeholders:** every code/command step is concrete. The OnText edit (Task 4 Step 4c) explicitly preserves the existing `participant` branch and only rewrites the `datetime` block.
+
+```
+
 ```

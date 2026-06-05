@@ -11,6 +11,7 @@
 **Spec:** `docs/superpowers/specs/2026-05-31-meeting-created-notification-design.md`
 
 **Conventions:**
+
 - Run Go commands from `backend/` with `env -u GOROOT` prefix.
 - Module path: `github.com/Jaryq-Lab/notify-bot`.
 - Build check: `env -u GOROOT go build ./...`
@@ -20,6 +21,7 @@
 ## Task 1: Shared recipient resolver (`meetingrecipients`)
 
 **Files:**
+
 - Create: `backend/internal/platform/meetingrecipients/recipients.go`
 - Test: `backend/internal/platform/meetingrecipients/recipients_test.go`
 
@@ -200,6 +202,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 2: Adopt the resolver in the reminder engine
 
 **Files:**
+
 - Modify: `backend/internal/platform/reminder_scheduler/scheduler.go` (the `recipients` method, lines ~80-107)
 
 - [ ] **Step 1: Replace the `recipients` method**
@@ -258,6 +261,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 3: Queue plumbing — `meeting:created` task + multi-handler server
 
 **Files:**
+
 - Modify: `backend/internal/infrastructure/queue/asynq/queue.go`
 - Modify: `backend/cmd/server/main.go` (the `asynqqueue.NewServer(...)` call, line ~112)
 
@@ -343,6 +347,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 4: Notifier package (`meeting_notifier`)
 
 **Files:**
+
 - Create: `backend/internal/platform/meeting_notifier/message.go`
 - Create: `backend/internal/platform/meeting_notifier/notifier.go`
 - Test: `backend/internal/platform/meeting_notifier/message_test.go`
@@ -528,6 +533,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 5: Enqueue from `CreateMeeting` + logger on `Services`
 
 **Files:**
+
 - Modify: `backend/internal/application/services.go` (the `Services` struct, line ~20)
 - Modify: `backend/internal/delivery/http/app.go` (Services construction, line ~93)
 - Modify: `backend/internal/application/meeting_service.go` (`CreateMeeting`, end of function ~line 119)
@@ -627,6 +633,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 6: Wire the notifier handler in main.go
 
 **Files:**
+
 - Modify: `backend/cmd/server/main.go`
 
 - [ ] **Step 1: Construct the notifier and its handler**
@@ -683,6 +690,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 7: Full verification + docs
 
 **Files:**
+
 - Modify: `docs/MEETINGS.md` (Backend planned section)
 
 - [ ] **Step 1: Run the full suite**
@@ -713,4 +721,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - **Spec coverage:** flow (Tasks 3,5,6) · queue+task (Task 3) · worker/HandleCreated (Task 4) · message builder (Task 4) · dedup sentinel (Task 4) · shared resolver (Tasks 1,2) · wiring + Services.Log (Tasks 5,6) · tests (Tasks 1,4) · docs (Task 7). All covered.
 - **Type consistency:** `meetingrecipients.Resolve(ctx, Store, postgres.Meeting) []Recipient`; `Recipient{TelegramID, ReminderMinutes, IsOrganizer}` used identically in Tasks 1, 2, 4. `EnqueueMeetingCreated(ctx, workspaceID, meetingID uuid.UUID)` / `ParseMeetingCreated` / `MeetingCreatedPayload{WorkspaceID, MeetingID}` consistent across Tasks 3, 5, 6. `offsetCreated = -1`, `buildMessage(name, meetLink string, startsAt, endsAt time.Time, loc *time.Location)` consistent in Task 4.
 - **No placeholders:** every code/command step is concrete.
+
+```
+
 ```

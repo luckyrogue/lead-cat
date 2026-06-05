@@ -11,6 +11,7 @@
 **Spec:** `docs/superpowers/specs/2026-05-31-meeting-edit-fields-design.md`
 
 **Conventions:**
+
 - Run Go commands from `backend/` with the `env -u GOROOT` prefix. Module: `github.com/Jaryq-Lab/notify-bot`.
 - Build check: `env -u GOROOT go build ./...`
 
@@ -19,6 +20,7 @@
 ## Task 1: `CalendarService.UpdateEvent` (port + stub + Google adapter)
 
 **Files:**
+
 - Modify: `backend/internal/application/calendar.go`
 - Modify: `backend/internal/infrastructure/calendar/stub/stub.go`
 - Modify: `backend/internal/infrastructure/calendar/google/adapter.go`
@@ -71,7 +73,7 @@ func TestBuildPatch(t *testing.T) {
 (The file already imports `testing`, `time`, and `application` for `TestBuildEvent`. Confirm; add any missing import.)
 
 - [ ] **Step 4: Run it, verify it fails.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go test ./internal/infrastructure/calendar/google/ -run TestBuildPatch -v`
-Expected: FAIL — `undefined: buildPatch`.
+      Expected: FAIL — `undefined: buildPatch`.
 
 - [ ] **Step 5: Implement `buildPatch` + `UpdateEvent`.** In `backend/internal/infrastructure/calendar/google/adapter.go`, add (after `DeleteEvent`):
 
@@ -99,7 +101,7 @@ func (a *adapter) UpdateEvent(ctx context.Context, eventID string, e application
 ```
 
 - [ ] **Step 6: Run tests + build.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go test ./internal/infrastructure/calendar/... -v && env -u GOROOT go build ./...`
-Expected: `TestBuildPatch`, `TestBuildEvent`, stub tests PASS; build OK.
+      Expected: `TestBuildPatch`, `TestBuildEvent`, stub tests PASS; build OK.
 
 - [ ] **Step 7: Commit.**
 
@@ -114,6 +116,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 2: repo — `UpdateMeeting`, `MeetingWithTZ`, `ListMeetingsByOrganizerTelegram`
 
 **Files:**
+
 - Modify: `backend/internal/infrastructure/persistence/postgres/meeting_repo.go`
 
 - [ ] **Step 1: Add a qualified column list + the `MeetingWithTZ` type + the two queries.** In `backend/internal/infrastructure/persistence/postgres/meeting_repo.go`, after the existing `meetingCols` const (line ~11), add:
@@ -172,7 +175,7 @@ func (s *Store) ListMeetingsByOrganizerTelegram(ctx context.Context, telegramID 
 ```
 
 - [ ] **Step 2: Build + vet.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go build ./... && env -u GOROOT go vet ./internal/infrastructure/persistence/postgres/`
-Expected: clean. (No DB harness in the postgres package — build/vet is the gate, consistent with the rest of the repo.)
+      Expected: clean. (No DB harness in the postgres package — build/vet is the gate, consistent with the rest of the repo.)
 
 - [ ] **Step 3: Commit.**
 
@@ -187,6 +190,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 3: queue — `meeting:updated` task
 
 **Files:**
+
 - Modify: `backend/internal/infrastructure/queue/asynq/queue.go`
 
 - [ ] **Step 1: Add the task type, payload, enqueue, and parser.** In `backend/internal/infrastructure/queue/asynq/queue.go`, after the `meeting:created` block (after `ParseMeetingCreated`), add:
@@ -217,7 +221,7 @@ func ParseMeetingUpdated(t *asynq.Task) (MeetingUpdatedPayload, error) {
 ```
 
 - [ ] **Step 2: Build.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go build ./...`
-Expected: OK. (The handler is registered in Task 9.)
+      Expected: OK. (The handler is registered in Task 9.)
 
 - [ ] **Step 3: Commit.**
 
@@ -232,6 +236,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 4: notifier — `buildUpdatedMessage` + `HandleUpdated`
 
 **Files:**
+
 - Modify: `backend/internal/platform/meeting_notifier/message.go`
 - Modify: `backend/internal/platform/meeting_notifier/message_test.go`
 - Modify: `backend/internal/platform/meeting_notifier/notifier.go`
@@ -257,7 +262,7 @@ func TestBuildUpdatedMessage(t *testing.T) {
 ```
 
 - [ ] **Step 2: Run it, verify it fails.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go test ./internal/platform/meeting_notifier/ -run TestBuildUpdatedMessage -v`
-Expected: FAIL — `undefined: buildUpdatedMessage`.
+      Expected: FAIL — `undefined: buildUpdatedMessage`.
 
 - [ ] **Step 3: Refactor the builder + add the updated variant.** In `backend/internal/platform/meeting_notifier/message.go`, replace the existing `buildMessage` function with a shared builder plus two thin wrappers (DRY — only the header differs):
 
@@ -292,7 +297,7 @@ func buildUpdatedMessage(name, meetLink string, startsAt, endsAt time.Time, loc 
 Leave `tzLabel` unchanged.
 
 - [ ] **Step 4: Run tests, verify they pass.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go test ./internal/platform/meeting_notifier/ -v`
-Expected: `TestBuildMessage`, `TestTZLabel`, `TestBuildUpdatedMessage` PASS.
+      Expected: `TestBuildMessage`, `TestTZLabel`, `TestBuildUpdatedMessage` PASS.
 
 - [ ] **Step 5: Add `HandleUpdated`.** In `backend/internal/platform/meeting_notifier/notifier.go`, add (after `HandleCreated`):
 
@@ -338,7 +343,7 @@ func (n *Notifier) HandleUpdated(ctx context.Context, workspaceID, meetingID uui
 (`cmp`, `fmt`, `time`, the bot/uuid/zap imports, `postgres`, `meetingrecipients` are already imported in `notifier.go` from §5a. Confirm `cmp` is present.)
 
 - [ ] **Step 6: Build + test.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go build ./... && env -u GOROOT go test ./internal/platform/meeting_notifier/ -v`
-Expected: build OK; all message tests PASS.
+      Expected: build OK; all message tests PASS.
 
 - [ ] **Step 7: Commit.**
 
@@ -353,6 +358,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 5: application — `applyMeetingUpdate` pure helper
 
 **Files:**
+
 - Create: `backend/internal/application/meeting_update.go`
 - Test: `backend/internal/application/meeting_update_test.go`
 
@@ -447,7 +453,7 @@ func TestApplyMeetingUpdate_RecurrenceLabelInName(t *testing.T) {
 ```
 
 - [ ] **Step 2: Run it, verify it fails.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go test ./internal/application/ -run TestApplyMeetingUpdate -v`
-Expected: FAIL — `undefined: applyMeetingUpdate` / `UpdateMeetingInput`.
+      Expected: FAIL — `undefined: applyMeetingUpdate` / `UpdateMeetingInput`.
 
 - [ ] **Step 3: Implement the helper.** Create `backend/internal/application/meeting_update.go`:
 
@@ -525,7 +531,7 @@ func orStr(p *string, def string) string {
 ```
 
 - [ ] **Step 4: Run tests, verify they pass.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go test ./internal/application/ -run TestApplyMeetingUpdate -v`
-Expected: all five PASS.
+      Expected: all five PASS.
 
 - [ ] **Step 5: Commit.**
 
@@ -540,6 +546,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 6: application — `Services.UpdateMeeting` + `ListEditableMeetings`
 
 **Files:**
+
 - Modify: `backend/internal/application/meeting_service.go`
 
 - [ ] **Step 1: Add the command + query.** In `backend/internal/application/meeting_service.go`, add (after `CreateMeeting`, before `CancelMeeting`):
@@ -606,7 +613,7 @@ func (s *Services) ListEditableMeetings(ctx context.Context, telegramID int64) (
 (`fmt`, `time`, `uuid`, `zap`, `postgres` are already imported in `meeting_service.go`. `orDefault` already exists in this file.)
 
 - [ ] **Step 2: Build + run application tests.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go build ./... && env -u GOROOT go test ./internal/application/ -v`
-Expected: build OK; `TestApplyMeetingUpdate*` PASS. (The orchestration's storage path is build-verified — no DB harness, consistent with `CreateMeeting`.)
+      Expected: build OK; `TestApplyMeetingUpdate*` PASS. (The orchestration's storage path is build-verified — no DB harness, consistent with `CreateMeeting`.)
 
 - [ ] **Step 3: Commit.**
 
@@ -621,6 +628,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 7: `meetingedit` — date/time parser
 
 **Files:**
+
 - Create: `backend/internal/platform/meetingedit/parse.go`
 - Test: `backend/internal/platform/meetingedit/parse_test.go`
 
@@ -662,7 +670,7 @@ func TestParseDateTime_Errors(t *testing.T) {
 ```
 
 - [ ] **Step 2: Run it, verify it fails.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go test ./internal/platform/meetingedit/ -v`
-Expected: FAIL — `undefined: parseDateTime`.
+      Expected: FAIL — `undefined: parseDateTime`.
 
 - [ ] **Step 3: Implement the parser.** Create `backend/internal/platform/meetingedit/parse.go`:
 
@@ -708,7 +716,7 @@ func parseDateTime(text string) (date, start, end string, err error) {
 ```
 
 - [ ] **Step 4: Run tests, verify they pass.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go test ./internal/platform/meetingedit/ -v`
-Expected: `TestParseDateTime_OK`, `TestParseDateTime_Errors` PASS.
+      Expected: `TestParseDateTime_OK`, `TestParseDateTime_Errors` PASS.
 
 - [ ] **Step 5: Commit.**
 
@@ -723,6 +731,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 8: `meetingedit` — FSM Service, state, sessions, renderers
 
 **Files:**
+
 - Create: `backend/internal/platform/meetingedit/state.go`
 - Create: `backend/internal/platform/meetingedit/redis_sessions.go`
 - Create: `backend/internal/platform/meetingedit/service.go`
@@ -946,7 +955,7 @@ func TestEditFlow_DateTime(t *testing.T) {
 ```
 
 - [ ] **Step 4: Run it, verify it fails.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go test ./internal/platform/meetingedit/ -run TestEditFlow -v`
-Expected: FAIL — `undefined: New` / `Service`.
+      Expected: FAIL — `undefined: New` / `Service`.
 
 - [ ] **Step 5: Implement the Service.** Create `backend/internal/platform/meetingedit/service.go`:
 
@@ -1260,7 +1269,7 @@ func loadLoc(tz string) *time.Location {
 ```
 
 - [ ] **Step 6: Run tests, verify they pass.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go test ./internal/platform/meetingedit/ -v`
-Expected: `TestParseDateTime*`, `TestEditFlow_TextField`, `TestEditFlow_NoChanges`, `TestEditFlow_DateTime` PASS.
+      Expected: `TestParseDateTime*`, `TestEditFlow_TextField`, `TestEditFlow_NoChanges`, `TestEditFlow_DateTime` PASS.
 
 - [ ] **Step 7: Build + commit.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go build ./...` then:
 
@@ -1275,6 +1284,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 9: wiring — MultiHandler routing + centralized Services + asynq handler
 
 **Files:**
+
 - Modify: `backend/internal/infrastructure/telegram/multitenant.go`
 - Modify: `backend/internal/delivery/http/app.go`
 - Modify: `backend/cmd/server/main.go`
@@ -1464,7 +1474,7 @@ and register it in the `NewServer` map:
 ```
 
 - [ ] **Step 4: Build + vet.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go build ./... && env -u GOROOT go vet ./...`
-Expected: clean. Fix any unused-import errors the compiler reports (see notes in Steps 1–2).
+      Expected: clean. Fix any unused-import errors the compiler reports (see notes in Steps 1–2).
 
 - [ ] **Step 5: Commit.**
 
@@ -1479,10 +1489,11 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 10: full verification + docs
 
 **Files:**
+
 - Modify: `docs/MEETINGS.md`
 
 - [ ] **Step 1: Run the full suite.** Run: `cd /Users/temirlan/Workspace/in-house/lead-cat && make test && make lint && make build`
-Expected: all green. (Fallback if `make` is unavailable: `cd backend && env -u GOROOT go test ./... && env -u GOROOT go vet ./... && env -u GOROOT go build ./...`.) If anything fails, STOP and report it.
+      Expected: all green. (Fallback if `make` is unavailable: `cd backend && env -u GOROOT go test ./... && env -u GOROOT go vet ./... && env -u GOROOT go build ./...`.) If anything fails, STOP and report it.
 
 - [ ] **Step 2: Document the feature.** In `docs/MEETINGS.md`, in the "Backend (planned)" blockquote list, after the "Meeting-created notification (§5a, done)" line, add:
 
@@ -1505,4 +1516,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - **Spec coverage:** identity/scope (Tasks 2,6,9) · layering: application command + FSM package (Tasks 5,6,8) · FSM states/UX/input (Tasks 7,8) · `UpdateEvent` Patch + repo + command (Tasks 1,2,6) · `meeting:updated` notification (Tasks 3,4,9) · testing (Tasks 1,4,5,7,8,10) · docs (Task 10). Out-of-scope items (participants, series, admin-edit, conflicts) are recorded in the spec and Task 10 doc note. All covered.
 - **Type consistency:** `UpdateMeetingInput{Dept,Type,Host,Date,Start,End,Recurrence,Description *string}` defined in Task 5, used identically in Tasks 6, 8. `applyMeetingUpdate(cur, in, loc)` (Task 5) called by `UpdateMeeting` (Task 6). `MeetingWithTZ{Meeting; TZ}` (Task 2) returned by `ListMeetingsByOrganizerTelegram`/`ListEditableMeetings` (Tasks 2,6) and consumed by `meetingedit` (Task 8). `meetingedit.Backend{ListEditableMeetings, UpdateMeeting}` (Task 8) satisfied by `*application.Services` (Task 6) and injected via `NewMultiHandler` (Task 9). `UpdateEvent(ctx, eventID, CalendarEvent)` (Task 1) called by `UpdateMeeting` (Task 6). `EnqueueMeetingUpdated`/`ParseMeetingUpdated`/`TaskMeetingUpdated` (Task 3) used in Tasks 6, 9. `Reply`/`Button` (Task 8) consumed by `toMeditMarkup`/`sendEditorReply` (Task 9).
 - **No placeholders:** every code/command step is concrete. The only conditional instructions are the "remove unused imports if the compiler reports them" notes in Task 9, which are explicit and build-checked.
+
+```
+
 ```

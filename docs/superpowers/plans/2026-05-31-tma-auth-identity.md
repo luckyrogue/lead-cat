@@ -45,6 +45,7 @@
 ## Task 1: TMA token (mint/verify)
 
 **Files:**
+
 - Create: `backend/internal/platform/auth/tma.go`
 - Test: `backend/internal/platform/auth/tma_test.go`
 
@@ -224,6 +225,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 2: initData `AuthDate` + `FreshAuthDate`
 
 **Files:**
+
 - Modify: `backend/internal/infrastructure/telegram/initdata.go`
 - Test: `backend/internal/infrastructure/telegram/initdata_test.go`
 
@@ -316,6 +318,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 3: TMA exchange handler + API fields
 
 **Files:**
+
 - Modify: `backend/internal/delivery/http/handlers/handlers.go` (API struct fields)
 - Create: `backend/internal/delivery/http/handlers/tma_auth.go`
 
@@ -424,6 +427,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 4: TMA auth middleware
 
 **Files:**
+
 - Create: `backend/internal/delivery/http/middleware/tma_auth.go`
 
 Build-verified. Reuses the `context` import pattern of the existing `auth.go` in this package.
@@ -497,6 +501,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 5: `/api/tma/me` handler + app.go wiring
 
 **Files:**
+
 - Create: `backend/internal/delivery/http/handlers/tma_me.go`
 - Modify: `backend/internal/delivery/http/app.go`
 
@@ -582,6 +587,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 6: Frontend auth client + provider
 
 **Files:**
+
 - Create: `frontend/src/shared/tma/auth.ts`
 - Create: `frontend/src/shared/tma/auth-context.tsx`
 
@@ -603,13 +609,20 @@ export type TmaUser = {
 
 type TmaAuthResponse = {
   token: string
-  user: { telegram_id: number; name: string; email: string; role: "user" | "admin" }
+  user: {
+    telegram_id: number
+    name: string
+    email: string
+    role: "user" | "admin"
+  }
 }
 
 // tmaLogin exchanges Telegram initData for a TMA JWT and sets it as the axios
 // bearer token. Returns the authenticated user.
 export async function tmaLogin(initData: string): Promise<TmaUser> {
-  const res = await api.post<TmaAuthResponse>("/auth/tma", { init_data: initData })
+  const res = await api.post<TmaAuthResponse>("/auth/tma", {
+    init_data: initData,
+  })
   const { token, user } = res.data
   setAuthToken(token)
   return {
@@ -626,7 +639,9 @@ export function getInitData(): string {
   if (import.meta.env.VITE_AUTH_DEV_MODE === "true") {
     return import.meta.env.VITE_TMA_DEV_TG_ID ?? ""
   }
-  const tg = (window as unknown as { Telegram?: { WebApp?: { initData?: string } } }).Telegram
+  const tg = (
+    window as unknown as { Telegram?: { WebApp?: { initData?: string } } }
+  ).Telegram
   return tg?.WebApp?.initData ?? ""
 }
 ```
@@ -636,7 +651,13 @@ export function getInitData(): string {
 Create `frontend/src/shared/tma/auth-context.tsx`:
 
 ```tsx
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react"
 import { isAxiosError } from "axios"
 import { getInitData, tmaLogin, type TmaUser } from "./auth"
 
@@ -667,7 +688,9 @@ export function TmaAuthProvider({ children }: { children: ReactNode }) {
         setStatus("authed")
       })
       .catch((e) => {
-        const code = isAxiosError(e) ? (e.response?.data as { code?: string })?.code : undefined
+        const code = isAxiosError(e)
+          ? (e.response?.data as { code?: string })?.code
+          : undefined
         setStatus(code === "not_registered" ? "not_registered" : "error")
       })
   }
@@ -711,6 +734,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 7: Auth gate + identity swap in screens
 
 **Files:**
+
 - Modify: `frontend/src/features/tma/tma-app.tsx`
 - Modify: `frontend/src/features/tma/screens/home-screen.tsx`
 - Modify: `frontend/src/features/tma/screens/profile-screen.tsx`
@@ -763,7 +787,11 @@ function TmaAuthGate() {
         <>
           <p>Сначала зарегистрируйтесь в боте командой /start.</p>
           {botUsername && (
-            <a href={`https://t.me/${botUsername}?start`} target="_blank" rel="noreferrer">
+            <a
+              href={`https://t.me/${botUsername}?start`}
+              target="_blank"
+              rel="noreferrer"
+            >
               Открыть бота
             </a>
           )}
@@ -785,18 +813,20 @@ function TmaAuthGate() {
 - [ ] **Step 2: Swap `ME` → `useTmaAuth().user` in `home-screen.tsx`**
 
 In `frontend/src/features/tma/screens/home-screen.tsx`:
+
 - Remove the `ME` import from `@/shared/tma/mock-data` (keep any other imports from that module).
 - Add `import { useTmaAuth } from "@/shared/tma/auth-context"`.
 - Inside the component, add `const { user } = useTmaAuth()`.
 - Replace `const firstName = ME.name.split(" ")[0]` with:
 
 ```tsx
-  const firstName = (user?.name ?? "").split(" ")[0]
+const firstName = (user?.name ?? "").split(" ")[0]
 ```
 
 - [ ] **Step 3: Swap `ME` → `useTmaAuth().user` in `profile-screen.tsx`**
 
 In `frontend/src/features/tma/screens/profile-screen.tsx`:
+
 - Remove the `ME` import from `@/shared/tma/mock-data` (keep `EMPLOYEES` and others still used).
 - Add `import { useTmaAuth } from "@/shared/tma/auth-context"`.
 - Inside the profile component (the one using `ME` at lines ~163/174/186/350), add `const { user } = useTmaAuth()`.
@@ -811,13 +841,14 @@ In `frontend/src/features/tma/screens/profile-screen.tsx`:
 - [ ] **Step 4: Swap `ME` → `useTmaAuth().user` in `meetings-screen.tsx`**
 
 In `frontend/src/features/tma/screens/meetings-screen.tsx`:
+
 - Remove the `ME` import from `@/shared/tma/mock-data` (keep others).
 - Add `import { useTmaAuth } from "@/shared/tma/auth-context"`.
 - In the component containing line ~179, add `const { user } = useTmaAuth()`.
 - Replace `const canManage = m.organizer === ME.email || ME.role === "admin"` with:
 
 ```tsx
-  const canManage = m.organizer === user?.email || user?.role === "admin"
+const canManage = m.organizer === user?.email || user?.role === "admin"
 ```
 
 - [ ] **Step 5: Typecheck + format + build**
@@ -841,6 +872,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 8: Docs + env + final verification
 
 **Files:**
+
 - Modify: `docs/MEETINGS.md`
 - Modify: `docs/REQUIREMENTS.md`
 - Modify: `deploy/.env.example`
@@ -895,4 +927,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - **Spec coverage:** `POST /api/auth/tma` exchange (initData validate + freshness + bot_users + mint) → Tasks 2,3,5; TMA JWT distinct type with `typ` guard → Task 1; freshness ≤24h → Task 2; `not_registered` vs `invalid_init_data` codes → Task 3; TMA middleware re-resolving bot_user → Task 4; `GET /api/tma/me` → Task 5; route wiring (public exchange + guarded group, no skip-list edit) → Task 5; frontend bootstrap/gate state machine + 401-handling → Tasks 6,7; replace mock `ME` (identity screens only) → Task 7; dev mode (HMAC bypass, `VITE_TMA_DEV_TG_ID`) → Tasks 3,6,8; docs/env → Task 8. Out-of-scope items (meetings/employees wiring, refresh tokens, in-app registration, admin views) are intentionally absent.
 - **Type consistency:** backend `TMAToken`/`TMAClaims{TelegramID,Email,Role,Typ}` (Task 1) used by handler (Task 3) and middleware (Task 4); `tmaUser{TelegramID,Name,Email,Role}` defined once in `tma_auth.go` (Task 3), reused by `tma_me.go` (Task 5); `c.Locals("bot_user")` set in Task 4, read in Task 5. Frontend `TmaUser{telegramId,name,email,role}` (Task 6) consumed by the gate + screens (Task 7); response code `not_registered` produced in Task 3, matched in Task 6.
 - **Known approximations:** TMA token and platform JWT share `JWT_SECRET` (acceptable; `typ` prevents cross-use). The frontend uses the shared axios `setAuthToken`, which is fine because the Mini App has no competing platform JWT; `LinkTelegramBanner` (platform-authed) is out of scope. `me` identity is exposed via `useTmaAuth()` and read with optional chaining in screens (no null guards needed since screens render only when `authed`). Per-request `GetBotUserByTelegramID` in the middleware is a cheap single lookup.
+
+```
+
 ```

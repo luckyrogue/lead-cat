@@ -305,6 +305,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - [ ] **Step 1: Reword the scope screen + add the delete button.** In `service.go`:
 
 (a) Reword `scopeReply` (neutral text; callbacks unchanged):
+
 ```go
 func scopeReply() Reply {
 	return Reply{
@@ -319,6 +320,7 @@ func scopeReply() Reply {
 ```
 
 (b) Add a `{🗑 Удалить}` row to BOTH branches of `menuKeyboard(scope)`, immediately before the `{Применить}{Отмена}` row. For the series branch:
+
 ```go
 		return [][]Button{
 			{{Text: "🕒 Время", Data: "medit:field:datetime"}},
@@ -328,7 +330,9 @@ func scopeReply() Reply {
 			{{Text: "✅ Применить", Data: "medit:apply"}, {Text: "✖ Отмена", Data: "medit:cancel"}},
 		}
 ```
+
 For the "one" branch:
+
 ```go
 	return [][]Button{
 		{{Text: "📅 Дата/время", Data: "medit:field:datetime"}},
@@ -342,6 +346,7 @@ For the "one" branch:
 ```
 
 - [ ] **Step 2: Route the delete callbacks.** In `OnCallback`, add (before the final `return Reply{}, false`):
+
 ```go
 	case data == "medit:delete":
 		return s.confirmDelete(ctx, telegramID), true
@@ -350,6 +355,7 @@ For the "one" branch:
 ```
 
 - [ ] **Step 3: Implement `confirmDelete` + `doDelete`.** Add (near `apply`):
+
 ```go
 func (s *Service) confirmDelete(ctx context.Context, telegramID int64) Reply {
 	st, err := s.sessions.Get(ctx, telegramID)
@@ -409,12 +415,14 @@ func (s *Service) deleteErrReply(ctx context.Context, telegramID int64, err erro
 ```
 
 - [ ] **Step 4: Extend the Backend interface.** Add to `Backend`:
+
 ```go
 	CancelMeeting(ctx context.Context, workspaceID, userID, meetingID uuid.UUID) error
 	CancelSeries(ctx context.Context, workspaceID, userID, meetingID uuid.UUID) (int, error)
 ```
 
 - [ ] **Step 5: Tests.** In `service_test.go`, extend `fakeBackend` with `cancelledOne bool`, `cancelledSeries int`, and the methods:
+
 ```go
 func (f *fakeBackend) CancelMeeting(_ context.Context, _, _, _ uuid.UUID) error {
 	f.cancelledOne = true
@@ -425,7 +433,9 @@ func (f *fakeBackend) CancelSeries(_ context.Context, _, _, _ uuid.UUID) (int, e
 	return 4, nil
 }
 ```
+
 Add tests:
+
 ```go
 func TestDeleteFlow_Single(t *testing.T) {
 	ctx := context.Background()
@@ -464,6 +474,7 @@ func TestDeleteFlow_Series(t *testing.T) {
 	}
 }
 ```
+
 (`sampleMeeting` / `seriesMeeting` already exist in this test file.)
 
 - [ ] **Step 6: Run + build.** `cd /Users/temirlan/Workspace/in-house/lead-cat/backend && env -u GOROOT go test ./internal/platform/meetingedit/ -v && env -u GOROOT go build ./...` → all PASS, build OK.
@@ -541,4 +552,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - **Spec coverage:** `meeting:cancelled` queue (Task 1) · notifier message + handler (Task 2) · `CancelSeriesOccurrences` (Task 3) · `CancelMeeting` retrofit + `CancelSeries` + `enqueueCancelled` (Task 4) · FSM delete button + confirm + scope-aware + scope reword + Backend methods (Task 5) · handler wiring (Task 6) · testing (Tasks 2,5,7) · docs (Task 7). Out-of-scope (past occurrences, restore) recorded in spec + Task 7 note. All covered.
 - **Type consistency:** `TaskMeetingCancelled`/`MeetingCancelledPayload`/`EnqueueMeetingCancelled`/`ParseMeetingCancelled` (Task 1) used in Tasks 4,6. `HandleCancelled` + `buildCancelledMessage` (Task 2) called in Task 6. `CancelSeriesOccurrences` (Task 3) called by `CancelSeries` (Task 4). `enqueueCancelled` (Task 4) used by `CancelMeeting`+`CancelSeries`. `meetingedit.Backend.CancelMeeting/CancelSeries` (Task 5) satisfied by `*application.Services` (CancelMeeting retrofit + CancelSeries in Task 4). `deleteEventsBestEffort`/`ListSeriesOccurrences` reused. Scope `one`/`series` from §4.4.2 drives `doDelete`.
 - **No placeholders:** every code/command step is concrete. `deleteErrReply` is a shared helper for both delete branches.
+
+```
+
 ```

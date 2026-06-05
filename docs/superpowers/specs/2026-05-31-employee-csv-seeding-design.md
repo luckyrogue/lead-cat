@@ -34,12 +34,14 @@ Dependencies point inward; the seeder is a small `platform` orchestrator over a 
 ### Component 1 — `internal/platform/employeedir` (new package)
 
 Files:
+
 - `employees.csv` — the embedded directory. Header `full_name,email,department`. A small starter set lands in the repo; real data is edited here.
 - `employeedir.go` — `//go:embed employees.csv` `var csvData []byte`, plus `Seed`.
 - `parse.go` — pure parser.
 - `parse_test.go` — unit tests.
 
 **`Record`**
+
 ```go
 type Record struct {
     FullName string
@@ -49,12 +51,14 @@ type Record struct {
 ```
 
 **`Parse(data []byte) ([]Record, error)`** — pure.
+
 - `encoding/csv` reader; `FieldsPerRecord = -1` tolerated but validate the header.
 - Require the header row to be exactly `full_name,email,department` (trim/lowercase comparison); error `invalid header` otherwise.
 - For each data row: trim all fields; lower-case email; **skip** rows with empty email (log-free; the caller logs counts) and rows that are entirely blank.
 - Returns records in file order. No DB, no I/O beyond the passed bytes. Handles `\r\n` (encoding/csv does this natively).
 
 **`Seed(ctx context.Context, store *postgres.Store, log *zap.Logger)`** — orchestration.
+
 1. `records, err := Parse(csvData)`; on error log `employee_csv_parse_failed` (Error) and return.
 2. **Guard:** `if len(records) == 0 { log Warn "employee_csv_empty"; return }`.
 3. `wsIDs, err := store.ListWorkspacesWithGoogle(ctx)`; on error log `employee_seed_failed` (Error) and return.
@@ -64,11 +68,13 @@ type Record struct {
 ### Component 2 — repo queries (in `employee_repo.go`, build-verified)
 
 **`ListWorkspacesWithGoogle(ctx) ([]uuid.UUID, error)`**
+
 ```sql
 SELECT id FROM workspaces WHERE google_sa_json_enc IS NOT NULL ORDER BY id
 ```
 
 **`SyncEmployees(ctx, workspaceID uuid.UUID, seeds []EmployeeSeed) (added, updated, deleted int, err error)`** where `EmployeeSeed{FullName, Email, Dept string}` is a small struct defined in the `postgres` package (see "Dependency direction").
+
 - One `pgx` transaction (`pool.Begin` / `tx.Rollback` deferred / `tx.Commit`).
 - Collect `emails := []string{...}` from seeds (already lower-cased).
 - **Delete missing:** `DELETE FROM employees WHERE workspace_id=$1 AND email <> ALL($2)` → `deleted = rows affected`.
@@ -87,9 +93,11 @@ SELECT id FROM workspaces WHERE google_sa_json_enc IS NOT NULL ORDER BY id
 ### Component 3 — wiring (`cmd/server/main.go`)
 
 After `store := postgres.New(pool, logger)` and before the HTTP/bot start:
+
 ```go
 employeedir.Seed(ctx, store, logger)
 ```
+
 Synchronous (fast: a handful of workspaces × small CSV), best-effort, before serving so the directory is ready on first request. No new config, no env.
 
 ## Data flow
@@ -113,13 +121,13 @@ boot → migrations → store
 
 ## Error handling
 
-| Failure | Handling |
-| --- | --- |
-| CSV parse error / bad header | Log `employee_csv_parse_failed` (Error); skip seeding; server continues. |
-| 0 records parsed | Log `employee_csv_empty` (Warn); **skip sync entirely** (guard); server continues. |
-| `ListWorkspacesWithGoogle` error | Log `employee_seed_failed` (Error); skip; server continues. |
-| `SyncEmployees` error for one workspace | Log `employee_sync_failed` (Error, `workspace_id`); continue to next workspace. |
-| No Google-configured workspaces | `wsIDs` empty; loop is a no-op; `employee_seed_done{workspaces:0}` (Info). |
+| Failure                                 | Handling                                                                           |
+| --------------------------------------- | ---------------------------------------------------------------------------------- |
+| CSV parse error / bad header            | Log `employee_csv_parse_failed` (Error); skip seeding; server continues.           |
+| 0 records parsed                        | Log `employee_csv_empty` (Warn); **skip sync entirely** (guard); server continues. |
+| `ListWorkspacesWithGoogle` error        | Log `employee_seed_failed` (Error); skip; server continues.                        |
+| `SyncEmployees` error for one workspace | Log `employee_sync_failed` (Error, `workspace_id`); continue to next workspace.    |
+| No Google-configured workspaces         | `wsIDs` empty; loop is a no-op; `employee_seed_done{workspaces:0}` (Info).         |
 
 No secrets in logs (emails are corporate directory data already stored in plaintext in the table; counts + workspace_id only at Info, full email never logged).
 

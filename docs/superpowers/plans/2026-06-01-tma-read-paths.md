@@ -46,6 +46,7 @@
 ## Task 1: Backend pure helpers + DTOs
 
 **Files:**
+
 - Create: `backend/internal/delivery/http/handlers/tma_read.go`
 - Test: `backend/internal/delivery/http/handlers/tma_read_test.go`
 
@@ -232,6 +233,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 2: Meeting-list handlers (my meetings + colleague schedule) + routes
 
 **Files:**
+
 - Modify: `backend/internal/delivery/http/handlers/tma_read.go`
 - Modify: `backend/internal/delivery/http/app.go`
 
@@ -310,6 +312,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 3: Employees search + free-slots handlers + routes
 
 **Files:**
+
 - Modify: `backend/internal/delivery/http/handlers/tma_read.go`
 - Modify: `backend/internal/delivery/http/app.go`
 
@@ -406,6 +409,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 4: Frontend typed fetchers
 
 **Files:**
+
 - Create: `frontend/src/shared/tma/api.ts`
 
 Typecheck-verified.
@@ -436,7 +440,13 @@ type MeetingDTO = {
   meet_link: string
   status: string
 }
-type EmployeeDTO = { id: string; name: string; email: string; dept: string; tg: boolean }
+type EmployeeDTO = {
+  id: string
+  name: string
+  email: string
+  dept: string
+  tg: boolean
+}
 type FreeSlotDTO = { iso: string; start: string; end: string; mins: number }
 
 function toMeeting(d: MeetingDTO): Meeting {
@@ -456,18 +466,33 @@ function toMeeting(d: MeetingDTO): Meeting {
 }
 
 export async function fetchMyMeetings(scope: Scope): Promise<Meeting[]> {
-  const res = await api.get<{ meetings: MeetingDTO[] }>("/tma/meetings", { params: { scope } })
+  const res = await api.get<{ meetings: MeetingDTO[] }>("/tma/meetings", {
+    params: { scope },
+  })
   return res.data.meetings.map(toMeeting)
 }
 
-export async function fetchColleagueSchedule(email: string, scope: Scope): Promise<Meeting[]> {
-  const res = await api.get<{ meetings: MeetingDTO[] }>("/tma/schedule", { params: { email, scope } })
+export async function fetchColleagueSchedule(
+  email: string,
+  scope: Scope
+): Promise<Meeting[]> {
+  const res = await api.get<{ meetings: MeetingDTO[] }>("/tma/schedule", {
+    params: { email, scope },
+  })
   return res.data.meetings.map(toMeeting)
 }
 
 export async function searchEmployees(q: string): Promise<Employee[]> {
-  const res = await api.get<{ employees: EmployeeDTO[] }>("/tma/employees", { params: { q } })
-  return res.data.employees.map((e) => ({ id: e.id, name: e.name, email: e.email, dept: e.dept, tg: e.tg }))
+  const res = await api.get<{ employees: EmployeeDTO[] }>("/tma/employees", {
+    params: { q },
+  })
+  return res.data.employees.map((e) => ({
+    id: e.id,
+    name: e.name,
+    email: e.email,
+    dept: e.dept,
+    tg: e.tg,
+  }))
 }
 
 export type FreeSlotsParams = {
@@ -477,7 +502,10 @@ export type FreeSlotsParams = {
   durationMins: number
 }
 
-export async function fetchFreeSlots(params: FreeSlotsParams, lang: Lang): Promise<FreeSlot[]> {
+export async function fetchFreeSlots(
+  params: FreeSlotsParams,
+  lang: Lang
+): Promise<FreeSlot[]> {
   const res = await api.post<{ slots: FreeSlotDTO[] }>("/tma/free-slots", {
     participants: params.participants,
     from: params.from,
@@ -513,6 +541,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 5: React Query hooks
 
 **Files:**
+
 - Create: `frontend/src/shared/tma/queries.ts`
 
 Typecheck-verified.
@@ -534,7 +563,10 @@ import {
 } from "./api"
 
 export function useMyMeetings(scope: Scope) {
-  return useQuery({ queryKey: ["tma", "meetings", scope], queryFn: () => fetchMyMeetings(scope) })
+  return useQuery({
+    queryKey: ["tma", "meetings", scope],
+    queryFn: () => fetchMyMeetings(scope),
+  })
 }
 
 export function useEmployeeSearch(q: string) {
@@ -555,7 +587,9 @@ export function useColleagueSchedule(email: string, scope: Scope) {
 
 export function useFreeSlots() {
   const { lang } = useTmaApp()
-  return useMutation({ mutationFn: (params: FreeSlotsParams) => fetchFreeSlots(params, lang) })
+  return useMutation({
+    mutationFn: (params: FreeSlotsParams) => fetchFreeSlots(params, lang),
+  })
 }
 ```
 
@@ -578,6 +612,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 6: 401 → re-login axios interceptor
 
 **Files:**
+
 - Modify: `frontend/src/shared/tma/auth.ts`
 - Modify: `frontend/src/shared/tma/auth-context.tsx`
 
@@ -601,7 +636,11 @@ export function installTmaAuthInterceptor(): void {
     if (!isAxiosError(error) || !error.config) return Promise.reject(error)
     const cfg = error.config as typeof error.config & { __tmaRetried?: boolean }
     const url = cfg.url ?? ""
-    if (error.response?.status === 401 && url.startsWith("/tma/") && !cfg.__tmaRetried) {
+    if (
+      error.response?.status === 401 &&
+      url.startsWith("/tma/") &&
+      !cfg.__tmaRetried
+    ) {
       cfg.__tmaRetried = true
       try {
         await tmaLogin(getInitData())
@@ -622,7 +661,12 @@ export function installTmaAuthInterceptor(): void {
 In `frontend/src/shared/tma/auth-context.tsx`, import and call the installer once. Add to the import from `./auth`:
 
 ```tsx
-import { getInitData, installTmaAuthInterceptor, tmaLogin, type TmaUser } from "./auth"
+import {
+  getInitData,
+  installTmaAuthInterceptor,
+  tmaLogin,
+  type TmaUser,
+} from "./auth"
 ```
 
 and call it at the very start of the `run()` function (before `getInitData()`), so it's installed before any `/tma/*` request:
@@ -653,6 +697,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 7: Wire screens to live data
 
 **Files:**
+
 - Modify: `frontend/src/features/tma/tma-app.tsx`
 - Modify: `frontend/src/features/tma/screens/checker-screen.tsx`
 - Modify: `frontend/src/features/tma/screens/profile-screen.tsx`
@@ -662,6 +707,7 @@ Typecheck + build verified. Home and meetings screens stay prop-driven (no edits
 - [ ] **Step 1: `tma-app.tsx` — feed the meetings list from the backend**
 
 In the `TmaContent` component (~line 140):
+
 1. Add imports:
    ```tsx
    import { useQueryClient } from "@tanstack/react-query"
@@ -675,11 +721,16 @@ In the `TmaContent` component (~line 140):
    (Remove the now-unused `INITIAL_MEETINGS` import if `INITIAL_SCENARIOS` is still imported from the same module, keep `INITIAL_SCENARIOS`.)
 3. The create handler (`completeCreate`, which did `setMeetings((arr) => [...arr, nm])`) — replace the `setMeetings(...)` call with an optimistic cache prepend (interim; real POST is sub-project 3):
    ```tsx
-   queryClient.setQueryData<Meeting[]>(["tma", "meetings", "all"], (old = []) => [nm, ...old])
+   queryClient.setQueryData<Meeting[]>(
+     ["tma", "meetings", "all"],
+     (old = []) => [nm, ...old]
+   )
    ```
 4. The delete handler (`deleteMeeting`, which did `setMeetings((arr) => arr.filter(...))`) — replace the `setMeetings(...)` call with:
    ```tsx
-   queryClient.setQueryData<Meeting[]>(["tma", "meetings", "all"], (old = []) => old.filter((m) => m.id !== id))
+   queryClient.setQueryData<Meeting[]>(["tma", "meetings", "all"], (old = []) =>
+     old.filter((m) => m.id !== id)
+   )
    ```
    Keep the surrounding toast/sheet-close logic unchanged.
 
@@ -688,6 +739,7 @@ In the `TmaContent` component (~line 140):
 - [ ] **Step 2: `checker-screen.tsx` — live employee search + free-slots**
 
 Read the file first. Replace the mock-data usage:
+
 - Remove imports of `EMPLOYEES` and `FREE_SLOTS` from `@/shared/tma/mock-data`.
 - Add `import { useEmployeeSearch, useFreeSlots } from "@/shared/tma/queries"`.
 - For the participant picker's search box: drive matches from `useEmployeeSearch(query).data ?? []` instead of filtering the `EMPLOYEES` mock (keep the existing selected-participants UI/state).
@@ -698,6 +750,7 @@ Read the file first. Replace the mock-data usage:
 - [ ] **Step 3: `profile-screen.tsx` — live colleague schedule**
 
 Read the colleague-schedule sub-view. Replace its mock data:
+
 - Use `useEmployeeSearch(query)` for the colleague picker (instead of filtering the `EMPLOYEES` mock).
 - Once a colleague is picked, use `useColleagueSchedule(picked.email, "all")` for their meetings (instead of filtering the mock `meetings` by email). Render its `data ?? []`; show loading/empty states.
 - Add `import { useColleagueSchedule, useEmployeeSearch } from "@/shared/tma/queries"`; remove the now-unused `EMPLOYEES`/meetings-mock references in this sub-view (keep any still used by other parts of the profile screen).
@@ -723,6 +776,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 8: Docs + final verification
 
 **Files:**
+
 - Modify: `docs/MEETINGS.md`
 
 - [ ] **Step 1: Update `docs/MEETINGS.md`**
@@ -754,4 +808,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - **Spec coverage:** 4 endpoints → Tasks 2,3; UI-shaped DTO + organizer/participant resolution + Almaty split → Task 1 (`toMeetingDTO`, `splitMeetingTime`); scope enum windows → Task 1 (`tmaScopeWindow`); fetchers/hooks → Tasks 4,5; 401 interceptor → Task 6; screen wiring (meetings list, checker, colleague schedule; home stays prop-fed) → Tasks 1-step1 fed `tma-app`, 7; writes-stay-client-side (optimistic cache) → Task 7; docs → Task 8. Detail endpoint intentionally omitted (detail renders from the list item, per spec Decision 3).
 - **Type consistency:** backend `tmaMeetingDTO`/`tmaEmployeeDTO`/`tmaFreeSlotDTO` (Task 1) produced by handlers (Tasks 2,3); `toMeetingDTO`/`toMeetingDTOs`/`botUserEmail`/`tmaScopeWindow`/`splitMeetingTime` defined Task 1, used Tasks 2,3. Frontend `MeetingDTO`/`EmployeeDTO`/`FreeSlotDTO` (Task 4) map to `Meeting`/`Employee`/`FreeSlot`; `Scope`/`FreeSlotsParams` (Task 4) consumed by hooks (Task 5); query key `["tma","meetings","all"]` used in Task 5 hook and Task 7 optimistic updates (must match exactly).
 - **Known approximations:** N+1 `GetUserByID`/`ListParticipants` per meeting in `toMeetingDTO` (fine at personal scale); the frontend fetches `scope=all` for the list and filters client-side (existing behavior); create/delete are optimistic-cache-only until sub-project 3; the free-slots handler duplicates the workspace-scoped `meeting_availability.go` logic under TMA auth (acceptable — different auth scope).
+
+```
+
 ```

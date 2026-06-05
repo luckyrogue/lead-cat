@@ -27,6 +27,7 @@ Mirrors `meetingedit`: Redis session (key `sched:<telegramID>`, 15m TTL), `Reply
 **State:** `{ Step, EmployeeEmail string, AwaitingKind string ("search"|"date"|"range"), Cands []string }`.
 
 **Flow:**
+
 1. `/schedule` → `AwaitingKind="search"`, prompt "Введи email сотрудника или часть имени:".
 2. **OnText (search):** `SearchEmployeesGlobal(query)` → buttons per match (`sched:pick:<i>`, text "ФИО — email") + (if `query` is a valid email) a "Расписание <email>" button (`sched:pick:<i>`); candidates stored in `Cands`. Empty → "Ничего не найдено…". Stays awaiting (re-typing re-searches).
 3. **`sched:pick:<i>`** → `EmployeeEmail = Cands[i]` (index is length-safe for callback_data, per Increment B) → show the period menu (Edit).
@@ -41,10 +42,12 @@ Mirrors `meetingedit`: Redis session (key `sched:<telegramID>`, 15m TTL), `Reply
 ### Repo + application
 
 **Repo:**
+
 - `SearchEmployeesGlobal(ctx, query string) ([]Employee, error)` — `... WHERE full_name ILIKE '%'||$1||'%' OR email ILIKE '%'||$1||'%' ORDER BY full_name LIMIT 20` (parameterized).
 - `ListScheduleForEmail(ctx, email string, from, to time.Time) ([]Meeting, error)` — the DISTINCT LEFT-JOIN query above, scanning `meetingColsM`.
 
 **Application (thin delegates):**
+
 - `SearchEmployeesGlobal(ctx, query) ([]postgres.Employee, error)` → Store.
 - `EmployeeSchedule(ctx, email string, from, to time.Time) ([]postgres.Meeting, error)` → Store.ListScheduleForEmail.
 

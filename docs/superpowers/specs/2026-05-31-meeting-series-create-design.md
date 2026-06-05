@@ -8,6 +8,7 @@
 When a meeting is created with `recurrence != once`, expand the series into **N individual meeting rows** linked by a `series_id`; each occurrence is an ordinary single meeting (its own Google event, its own reminders). The series is bounded by a required `recurrence_until` date plus a defensive cap (≤100 occurrences). This reuses the entire existing engine (reminders, notifications, edit, delete operate per-row).
 
 **Accepted tradeoffs of materialization (vs a true Google RRULE event):**
+
 - Each occurrence has its **own Google event and its own Meet link** (not a single recurring series in attendees' calendars).
 - N synchronous `CreateEvent` calls in one HTTP request — latency grows with N; the ≤100 cap bounds the worst case (realistic weekly series are ~12–52).
 - No "infinite" series — only up to `until`; re-materialization of open-ended series is a deferred follow-up.
@@ -35,6 +36,7 @@ func Occurrences(start, end time.Time, r Recurrence, until time.Time) ([]Span, e
 ## Migration + model + repo
 
 **Migration** `20260531130000_meeting_series.sql`:
+
 ```sql
 -- +goose Up
 ALTER TABLE meetings ADD COLUMN series_id UUID;
@@ -43,14 +45,17 @@ CREATE INDEX meetings_series_idx ON meetings (series_id);
 DROP INDEX IF EXISTS meetings_series_idx;
 ALTER TABLE meetings DROP COLUMN IF EXISTS series_id;
 ```
+
 (`recurrence_until DATE` already exists in the meetings table.)
 
 **Model:** `postgres.Meeting` gains `SeriesID *uuid.UUID` and `RecurrenceUntil *time.Time`. `meetingCols`, `meetingColsM`, `scanMeeting`, and the `CreateMeeting` INSERT all extend by `series_id, recurrence_until` (appended at the end of the column list and the scan, keeping every `scanMeeting`-based query consistent).
 
 **Repo:** a transactional batch insert (DB all-or-nothing):
+
 ```go
 func (s *Store) CreateMeetingSeries(ctx context.Context, ms []Meeting, ps []MeetingParticipant) ([]Meeting, error)
 ```
+
 - `pool.Begin(ctx)` → for each meeting: `INSERT ... RETURNING <cols>` (scan into the result); for each participant: `INSERT meeting_participants (...) ON CONFLICT DO NOTHING` against the just-inserted meeting's ID — all within the tx → `Commit` (or `Rollback` on any error). Returns the inserted rows (with IDs) in order.
 
 ## CreateMeeting flow (`application`)
@@ -58,6 +63,7 @@ func (s *Store) CreateMeetingSeries(ctx context.Context, ms []Meeting, ps []Meet
 `CreateMeetingInput` gains `RecurrenceUntil string` (YYYY-MM-DD). The HTTP handler (`delivery/http/handlers/meetings.go`) maps the new field from the request body.
 
 `Services.CreateMeeting`:
+
 1. Parse `start`/`end` (as today) and `until` (if provided) in the workspace TZ; domain-validate, including "`until` required when `recurrence != once`" and `until.date >= start.date` (wrap `ErrInvalidInput`).
 2. `spans, err := meeting.Occurrences(start, end, rec, until)` (one span for `once`).
 3. `seriesID`: `nil` when `once` (single span); otherwise `uuid.New()`.
