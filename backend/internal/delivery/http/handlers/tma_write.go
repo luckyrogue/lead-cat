@@ -156,3 +156,78 @@ func (a *API) TMAConflicts(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{"conflicts": out})
 }
+
+// editableWorkspace returns the workspace of a meeting the TMA user may edit,
+// or false if the meeting is not in their editable set (not theirs / not
+// scheduled / past). Used by edit + delete.
+func (a *API) editableWorkspace(c *fiber.Ctx, telegramID int64, meetingID uuid.UUID) (uuid.UUID, bool, error) {
+	ms, err := a.App.ListEditableMeetings(c.Context(), telegramID)
+	if err != nil {
+		return uuid.Nil, false, err
+	}
+	for _, m := range ms {
+		if m.ID == meetingID {
+			return m.WorkspaceID, true, nil
+		}
+	}
+	return uuid.Nil, false, nil
+}
+
+type tmaUpdateRequest struct {
+	Dept  *string `json:"dept"`
+	Type  *string `json:"type"`
+	Host  *string `json:"host"`
+	Date  *string `json:"date"`
+	Start *string `json:"start"`
+	End   *string `json:"end"`
+	Desc  *string `json:"desc"`
+}
+
+// TMAUpdateMeeting edits a single meeting the authed TMA user organizes (§4.4).
+func (a *API) TMAUpdateMeeting(c *fiber.Ctx) error {
+	bu, ok := botUser(c)
+	if !ok {
+		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
+	}
+	meetingID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid meeting id")
+	}
+	var req tmaUpdateRequest
+	if err := c.BodyParser(&req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
+	}
+	workspaceID, found, err := a.editableWorkspace(c, bu.TelegramID, meetingID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	if !found {
+		return fiber.NewError(fiber.StatusNotFound, "not_found")
+	}
+	organizerID, err := a.App.EnsureTMAOrganizer(c.Context(), bu.Email, bu.TelegramID)
+	if err != nil {
+		if errors.Is(err, application.ErrTelegramLinkedToOtherAccount) {
+			return fiber.NewError(fiber.StatusConflict, "telegram_linked_to_other_account")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	m, err := a.App.UpdateMeeting(c.Context(), workspaceID, organizerID, meetingID, application.UpdateMeetingInput{
+		Dept: req.Dept, Type: req.Type, Host: req.Host,
+		Date: req.Date, Start: req.Start, End: req.End, Description: req.Desc,
+	})
+	if err != nil {
+		switch {
+		case errors.Is(err, application.ErrForbidden):
+			return fiber.NewError(fiber.StatusForbidden, "forbidden")
+		case errors.Is(err, application.ErrInvalidInput):
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, "internal")
+		}
+	}
+	a.App.Log.Info("tma_meeting_updated",
+		zap.Int64("telegram_id", bu.TelegramID),
+		zap.String("meeting_id", meetingID.String()),
+		zap.String("workspace_id", workspaceID.String()))
+	return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m)})
+}
