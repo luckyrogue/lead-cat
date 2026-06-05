@@ -1,5 +1,4 @@
 import { useState, type ReactNode } from "react"
-import { Link } from "@tanstack/react-router"
 import { I18N } from "@/shared/tma/i18n"
 import { EMPLOYEES } from "@/shared/tma/mock-data"
 import { useColleagueSchedule, useEmployeeSearch } from "@/shared/tma/queries"
@@ -13,7 +12,6 @@ import {
   CatToggle,
   Segmented,
 } from "@/shared/ui/cat/primitives"
-import { useWorkspaceId } from "@/shared/hooks/use-workspace-id"
 import { EmptyState, MeetingCard } from "../meeting-ui"
 
 function SettingsGroup({
@@ -132,7 +130,6 @@ export function ProfileScreen({
   const p = useTmaApp()
   const { user } = useTmaAuth()
   const t = p.t
-  const workspaceId = useWorkspaceId()
   const intervals = [
     { v: "10m", l: `10 ${t("min")}` },
     { v: "15m", l: `15 ${t("min")}` },
@@ -141,16 +138,6 @@ export function ProfileScreen({
     { v: "2h", l: `2 ${t("hour")}` },
     { v: "1d", l: "1 день" },
   ]
-
-  const legacyLinkStyle = {
-    display: "flex" as const,
-    alignItems: "center" as const,
-    gap: 6,
-    color: p.muted,
-    fontWeight: 700,
-    fontSize: 14,
-    textDecoration: "none" as const,
-  }
 
   return (
     <div style={{ padding: "16px 16px 28px" }}>
@@ -300,53 +287,6 @@ export function ProfileScreen({
               Алматы UTC+5
               <CatIcon name="chevR" size={16} color={p.faint} sw={2.2} />
             </span>
-          }
-          last
-        />
-      </SettingsGroup>
-
-      <SettingsGroup title="Инструменты">
-        <Row
-          icon="settings"
-          hue={95}
-          label={t("legacyWorkspaces")}
-          onClick={() => {}}
-          right={
-            <Link to="/workspaces" style={legacyLinkStyle}>
-              <CatIcon name="chevR" size={16} color={p.faint} sw={2.2} />
-            </Link>
-          }
-        />
-        <Row
-          icon="users"
-          hue={300}
-          label={t("legacyTeam")}
-          right={
-            workspaceId ? (
-              <Link to="/team" search={{ workspaceId }} style={legacyLinkStyle}>
-                <CatIcon name="chevR" size={16} color={p.faint} sw={2.2} />
-              </Link>
-            ) : (
-              <CatIcon name="chevR" size={16} color={p.faint} sw={2.2} />
-            )
-          }
-        />
-        <Row
-          icon="link"
-          hue={180}
-          label="Привязка Telegram"
-          right={
-            workspaceId ? (
-              <Link
-                to="/chat-link"
-                search={{ workspaceId }}
-                style={legacyLinkStyle}
-              >
-                <CatIcon name="chevR" size={16} color={p.faint} sw={2.2} />
-              </Link>
-            ) : (
-              <CatIcon name="chevR" size={16} color={p.faint} sw={2.2} />
-            )
           }
           last
         />

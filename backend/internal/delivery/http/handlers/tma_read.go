@@ -101,7 +101,7 @@ func (a *API) toMeetingDTOs(ctx context.Context, ms []postgres.Meeting) []tmaMee
 
 // botUserEmail returns the authed TMA user's email, or "" if absent.
 func botUserEmail(c *fiber.Ctx) (string, bool) {
-	bu, ok := c.Locals("bot_user").(postgres.BotUser)
+	bu, ok := botUser(c)
 	if !ok {
 		return "", false
 	}

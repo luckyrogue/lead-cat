@@ -8,9 +8,12 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/Jaryq-Lab/notify-bot/internal/application"
+	"github.com/Jaryq-Lab/notify-bot/internal/domain/meeting"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
 )
 
+// tmaCreateRequest is the create-meeting payload. No recurrence_until field: the
+// Mini App only supports once-only meetings in this slice (recurring is deferred).
 type tmaCreateRequest struct {
 	Dept         string   `json:"dept"`
 	Type         string   `json:"type"`
@@ -60,7 +63,7 @@ func (a *API) TMACreateMeeting(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
 	}
-	if rec := strings.TrimSpace(req.Recurrence); rec != "" && rec != "once" {
+	if rec := strings.TrimSpace(req.Recurrence); rec != "" && rec != string(meeting.Once) {
 		return fiber.NewError(fiber.StatusBadRequest, "meetings_recurring_unsupported")
 	}
 	wsIDs, err := a.App.Store.ListWorkspacesWithGoogle(c.Context())
@@ -70,6 +73,7 @@ func (a *API) TMACreateMeeting(c *fiber.Ctx) error {
 	if len(wsIDs) == 0 {
 		return fiber.NewError(fiber.StatusBadRequest, "meetings_not_configured")
 	}
+	// Use the first Google-configured workspace; multi-workspace targeting is deferred.
 	workspaceID := wsIDs[0]
 	organizerID, err := a.App.EnsureTMAOrganizer(c.Context(), bu.Email, bu.TelegramID)
 	if err != nil {
