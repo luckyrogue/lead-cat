@@ -119,3 +119,80 @@ export async function fetchFreeSlots(
     mins: s.mins,
   }))
 }
+
+export type MeetingInput = {
+  dept: string
+  type: string
+  host: string
+  date: string // YYYY-MM-DD
+  start: string // HH:MM
+  end: string // HH:MM
+  recurrence: string
+  desc: string
+  participants: string[] // emails
+}
+
+export type MeetingPatch = Partial<{
+  dept: string
+  type: string
+  host: string
+  date: string
+  start: string
+  end: string
+  desc: string
+}>
+
+export type Conflict = {
+  email: string
+  name: string
+  title: string
+  start: string
+  end: string
+}
+
+export type ConflictsParams = {
+  participants: string[]
+  date: string
+  start: string
+  end: string
+  excludeId?: string
+}
+
+export async function createMeeting(input: MeetingInput): Promise<Meeting> {
+  const data = await apiFetch<{ meeting: MeetingDTO }>("/tma/meetings", {
+    method: "POST",
+    body: input,
+  })
+  return toMeeting(data.meeting)
+}
+
+export async function updateMeeting(
+  id: string,
+  patch: MeetingPatch
+): Promise<Meeting> {
+  const data = await apiFetch<{ meeting: MeetingDTO }>(`/tma/meetings/${id}`, {
+    method: "PATCH",
+    body: patch,
+  })
+  return toMeeting(data.meeting)
+}
+
+export async function deleteMeeting(id: string): Promise<void> {
+  await apiFetch<void>(`/tma/meetings/${id}`, { method: "DELETE" })
+}
+
+export async function fetchConflicts(
+  params: ConflictsParams
+): Promise<Conflict[]> {
+  const data = await apiFetch<{ conflicts: Conflict[] }>("/tma/conflicts", {
+    method: "POST",
+    body: {
+      participants: params.participants,
+      date: params.date,
+      start: params.start,
+      end: params.end,
+      exclude_id: params.excludeId ?? "",
+    },
+  })
+  return data.conflicts
+}
