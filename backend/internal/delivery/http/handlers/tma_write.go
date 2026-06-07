@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -12,6 +13,30 @@ import (
 	"github.com/Jaryq-Lab/notify-bot/internal/application"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
 )
+
+// parseScope reads ?scope=this|whole; default "this". Returns error for any other value.
+func parseScope(c *fiber.Ctx) (string, error) {
+	switch s := c.Query("scope", "this"); s {
+	case "this", "whole":
+		return s, nil
+	default:
+		return "", fmt.Errorf("invalid scope %q", s)
+	}
+}
+
+// mapToSeriesUpdateInput converts the wire request into a SeriesUpdateInput.
+// Date is intentionally NOT carried — whole-series edits don't change the date
+// of each occurrence (that's locked when the series is created).
+func mapToSeriesUpdateInput(req tmaUpdateRequest) application.SeriesUpdateInput {
+	return application.SeriesUpdateInput{
+		Dept:        req.Dept,
+		Type:        req.Type,
+		Host:        req.Host,
+		Description: req.Desc,
+		Start:       req.Start,
+		End:         req.End,
+	}
+}
 
 // tmaCreateRequest is the create-meeting payload. Recurrence fields are optional:
 // the domain Validate() enforces the per-recurrence rules (until required for
@@ -205,6 +230,10 @@ func (a *API) TMAUpdateMeeting(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
 	}
+	scope, err := parseScope(c)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
 	workspaceID, found, err := a.editableWorkspace(c, bu.TelegramID, meetingID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
@@ -219,10 +248,32 @@ func (a *API) TMAUpdateMeeting(c *fiber.Ctx) error {
 		}
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
-	m, err := a.App.UpdateMeeting(c.Context(), workspaceID, organizerID, meetingID, application.UpdateMeetingInput{
-		Dept: req.Dept, Type: req.Type, Host: req.Host,
-		Date: req.Date, Start: req.Start, End: req.End, Description: req.Desc,
-	})
+	if scope == "this" {
+		m, err := a.App.UpdateMeeting(c.Context(), workspaceID, organizerID, meetingID, application.UpdateMeetingInput{
+			Dept: req.Dept, Type: req.Type, Host: req.Host,
+			Date: req.Date, Start: req.Start, End: req.End, Description: req.Desc,
+		})
+		if err != nil {
+			switch {
+			case errors.Is(err, application.ErrForbidden):
+				return fiber.NewError(fiber.StatusForbidden, "forbidden")
+			case errors.Is(err, application.ErrInvalidInput):
+				return fiber.NewError(fiber.StatusBadRequest, err.Error())
+			default:
+				return fiber.NewError(fiber.StatusInternalServerError, "internal")
+			}
+		}
+		a.App.Log.Info("tma_meeting_updated",
+			zap.Int64("telegram_id", bu.TelegramID),
+			zap.String("meeting_id", meetingID.String()),
+			zap.String("workspace_id", workspaceID.String()))
+		return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m)})
+	}
+	// scope == "whole"
+	if req.Date != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "date cannot be changed for whole-series edit")
+	}
+	n, err := a.App.UpdateWholeSeries(c.Context(), workspaceID, organizerID, meetingID, mapToSeriesUpdateInput(req))
 	if err != nil {
 		switch {
 		case errors.Is(err, application.ErrForbidden):
@@ -233,10 +284,16 @@ func (a *API) TMAUpdateMeeting(c *fiber.Ctx) error {
 			return fiber.NewError(fiber.StatusInternalServerError, "internal")
 		}
 	}
-	a.App.Log.Info("tma_meeting_updated",
+	a.App.Log.Info("tma_meeting_whole_series_updated",
 		zap.Int64("telegram_id", bu.TelegramID),
 		zap.String("meeting_id", meetingID.String()),
-		zap.String("workspace_id", workspaceID.String()))
+		zap.String("workspace_id", workspaceID.String()),
+		zap.Int("count", n))
+	// Refetch the picked occurrence so the response shape mirrors scope=this.
+	m, err := a.App.GetMeeting(c.Context(), workspaceID, meetingID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
 	return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m)})
 }
 
@@ -250,6 +307,10 @@ func (a *API) TMADeleteMeeting(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid meeting id")
 	}
+	scope, err := parseScope(c)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
 	workspaceID, found, err := a.editableWorkspace(c, bu.TelegramID, meetingID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
@@ -264,15 +325,35 @@ func (a *API) TMADeleteMeeting(c *fiber.Ctx) error {
 		}
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
-	if err := a.App.CancelMeeting(c.Context(), workspaceID, organizerID, meetingID); err != nil {
-		if errors.Is(err, application.ErrForbidden) {
-			return fiber.NewError(fiber.StatusForbidden, "forbidden")
+	if scope == "this" {
+		if err := a.App.CancelMeeting(c.Context(), workspaceID, organizerID, meetingID); err != nil {
+			if errors.Is(err, application.ErrForbidden) {
+				return fiber.NewError(fiber.StatusForbidden, "forbidden")
+			}
+			return fiber.NewError(fiber.StatusInternalServerError, "internal")
 		}
-		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+		a.App.Log.Info("tma_meeting_cancelled",
+			zap.Int64("telegram_id", bu.TelegramID),
+			zap.String("meeting_id", meetingID.String()),
+			zap.String("workspace_id", workspaceID.String()))
+		return c.SendStatus(fiber.StatusNoContent)
 	}
-	a.App.Log.Info("tma_meeting_cancelled",
+	// scope == "whole"
+	n, err := a.App.CancelWholeSeries(c.Context(), workspaceID, organizerID, meetingID)
+	if err != nil {
+		switch {
+		case errors.Is(err, application.ErrForbidden):
+			return fiber.NewError(fiber.StatusForbidden, "forbidden")
+		case errors.Is(err, application.ErrInvalidInput):
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, "internal")
+		}
+	}
+	a.App.Log.Info("tma_meeting_cancelled_whole_series",
 		zap.Int64("telegram_id", bu.TelegramID),
 		zap.String("meeting_id", meetingID.String()),
-		zap.String("workspace_id", workspaceID.String()))
+		zap.String("workspace_id", workspaceID.String()),
+		zap.Int("count", n))
 	return c.SendStatus(fiber.StatusNoContent)
 }
