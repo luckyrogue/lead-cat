@@ -117,6 +117,68 @@
             }
           }
         }
+      },
+      "post": {
+        "operationId": "tmaCreateMeeting",
+        "tags": ["tma"],
+        "summary": "Create a meeting (once or recurring series)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TmaMeetingCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created meeting",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["meeting"],
+                  "properties": {
+                    "meeting": { "$ref": "#/components/schemas/TmaMeeting" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body / validation_failed / meetings_not_configured",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "409": {
+            "description": "telegram_linked_to_other_account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        }
       }
     },
     "/api/tma/schedule": {
@@ -217,6 +279,12 @@
             "in": "path",
             "required": true,
             "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["this", "whole"], "default": "this" }
           }
         ],
         "requestBody": {
@@ -303,6 +371,12 @@
             "in": "path",
             "required": true,
             "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["this", "whole"], "default": "this" }
           }
         ],
         "responses": {
@@ -373,11 +447,11 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["conflicts"],
+                  "required": ["occurrences"],
                   "properties": {
-                    "conflicts": {
+                    "occurrences": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/TmaConflict" }
+                      "items": { "$ref": "#/components/schemas/TmaOccurrenceConflicts" }
                     }
                   }
                 }
@@ -594,7 +668,13 @@
           "date":  { "type": "string", "description": "YYYY-MM-DD" },
           "start": { "type": "string", "description": "HH:MM Almaty" },
           "end":   { "type": "string", "description": "HH:MM Almaty" },
-          "exclude_id": { "type": "string", "format": "uuid" }
+          "exclude_id": { "type": "string", "format": "uuid" },
+          "recurrence": { "type": "string", "enum": ["once", "daily", "weekly", "custom", "monthly"] },
+          "recurrence_until": { "type": "string", "format": "date" },
+          "recurrence_days": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 1, "maximum": 7 }
+          }
         }
       },
       "TmaConflict": {
@@ -606,6 +686,39 @@
           "title": { "type": "string" },
           "start": { "type": "string", "description": "HH:MM Almaty" },
           "end":   { "type": "string", "description": "HH:MM Almaty" }
+        }
+      },
+      "TmaOccurrenceConflicts": {
+        "type": "object",
+        "required": ["date", "start", "end", "conflicts"],
+        "properties": {
+          "date":  { "type": "string", "format": "date" },
+          "start": { "type": "string", "example": "10:00" },
+          "end":   { "type": "string", "example": "11:00" },
+          "conflicts": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TmaConflict" }
+          }
+        }
+      },
+      "TmaMeetingCreateRequest": {
+        "type": "object",
+        "required": ["dept", "type", "date", "start", "end", "recurrence", "participants"],
+        "properties": {
+          "dept":  { "type": "string" },
+          "type":  { "type": "string" },
+          "host":  { "type": "string" },
+          "date":  { "type": "string", "description": "YYYY-MM-DD" },
+          "start": { "type": "string", "description": "HH:MM" },
+          "end":   { "type": "string", "description": "HH:MM" },
+          "recurrence": { "type": "string", "enum": ["once", "daily", "weekly", "custom", "monthly"] },
+          "desc":  { "type": "string" },
+          "participants": { "type": "array", "items": { "type": "string", "format": "email" } },
+          "recurrence_until": { "type": "string", "format": "date" },
+          "recurrence_days": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 1, "maximum": 7 }
+          }
         }
       }
     }
