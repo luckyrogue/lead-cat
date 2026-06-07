@@ -32,7 +32,6 @@ export function CreateWizard({
     endTime,
     canNext,
     go,
-    conflictPeople,
     finalMeeting,
     pSearch,
     setPSearch,
@@ -67,7 +66,7 @@ export function CreateWizard({
             draft={draft}
             endTime={endTime}
             finalMeeting={finalMeeting}
-            conflictPeople={conflictPeople}
+            conflictOccurrences={wizard.conflictOccurrences}
           />
         )}
       </div>
@@ -96,7 +95,7 @@ export function CreateWizard({
           onClick={() => go(1)}
         >
           {step === WIZARD_STEPS.length - 1
-            ? conflictPeople.length
+            ? wizard.conflictOccurrences.length
               ? `🐾 ${t("proceed")}`
               : `🐾 ${t("confirmCreate")}`
             : t("next")}

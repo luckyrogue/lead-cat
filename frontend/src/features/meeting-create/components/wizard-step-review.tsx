@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import { buildTitle, fmtDate } from "@/entities/meeting/lib/format"
+import type { OccurrenceConflicts } from "@/entities/meeting/scheduling-api"
 import { useTmaApp } from "@/shared/tma/context"
 import type { MeetingDraft } from "@/shared/tma/types"
 import { DetailRow } from "@/components/meetings/detail-row"
@@ -31,12 +32,12 @@ export function WizardStepReview({
   draft,
   endTime,
   finalMeeting,
-  conflictPeople,
+  conflictOccurrences,
 }: {
   draft: MeetingDraft
   endTime: string
   finalMeeting: MeetingDraft & { end: string; organizer: string }
-  conflictPeople: string[]
+  conflictOccurrences: OccurrenceConflicts[]
 }) {
   const { t, lang } = useTmaApp()
 
@@ -82,9 +83,52 @@ export function WizardStepReview({
           </div>
         </div>
       </CatCard>
-      {conflictPeople.length > 0 && (
-        <AlertBanner title={t("conflict")}>
-          {t("conflictSub")} {conflictPeople.join(", ")}
+      {conflictOccurrences.length > 0 &&
+        draft.rec === "once" &&
+        (() => {
+          const names = Array.from(
+            new Set(
+              (conflictOccurrences[0]?.conflicts ?? []).map((c) => {
+                const parts = c.name.split(" ")
+                return parts[0] + " " + (parts[1] ? `${parts[1][0]}.` : "")
+              })
+            )
+          )
+          if (!names.length) return null
+          return (
+            <AlertBanner title={t("conflict")}>
+              {t("conflictSub")} {names.join(", ")}
+            </AlertBanner>
+          )
+        })()}
+      {conflictOccurrences.length > 0 && draft.rec !== "once" && (
+        <AlertBanner title={t("seriesConflicts")}>
+          <div className="space-y-1">
+            {conflictOccurrences.slice(0, 5).map((oc) => {
+              const names = Array.from(
+                new Set(
+                  oc.conflicts.map((c) => {
+                    const parts = c.name.split(" ")
+                    return parts[0] + " " + (parts[1] ? `${parts[1][0]}.` : "")
+                  })
+                )
+              )
+              return (
+                <div key={`${oc.date}-${oc.start}`}>
+                  <strong>{oc.date}</strong> {oc.start}–{oc.end}:{" "}
+                  {names.join(", ")}
+                </div>
+              )
+            })}
+            {conflictOccurrences.length > 5 && (
+              <div className="text-tma-text/70 mt-1.5">
+                {t("seriesConflictsMore").replace(
+                  "{count}",
+                  String(conflictOccurrences.length - 5)
+                )}
+              </div>
+            )}
+          </div>
         </AlertBanner>
       )}
     </div>

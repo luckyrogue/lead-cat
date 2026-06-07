@@ -127,16 +127,6 @@ export function useCreateWizard({
     draft.recDays,
   ])
 
-  const conflictPeople = useMemo(() => {
-    const list = conflictsMut.data?.[0]?.conflicts ?? []
-    const names = new Set<string>()
-    list.forEach((c) => {
-      const parts = c.name.split(" ")
-      names.add(parts[0] + " " + (parts[1] ? `${parts[1][0]}.` : ""))
-    })
-    return [...names]
-  }, [conflictsMut.data])
-
   const conflictOccurrences = conflictsMut.data ?? []
 
   const finalMeeting = { ...draft, end: endTime, organizer: ME.email }
@@ -148,7 +138,6 @@ export function useCreateWizard({
     endTime,
     canNext,
     go,
-    conflictPeople,
     conflictOccurrences,
     finalMeeting,
     pSearch,
