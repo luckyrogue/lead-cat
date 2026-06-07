@@ -9,11 +9,11 @@ and mirrored to the generated TypeScript client at `frontend/src/shared/api/gene
 
 ## Public
 
-| Method | Path | Notes |
-| ------ | ---- | ----- |
-| `GET` | `/api/health` | Postgres, Redis, bot liveness, version |
-| `GET` | `/metrics` | Prometheus text (optional `METRICS_TOKEN`) |
-| `GET` | `/openapi.json` | OpenAPI 3.1 spec (embedded from `backend/openapi/openapi.json`) |
+| Method | Path            | Notes                                                           |
+| ------ | --------------- | --------------------------------------------------------------- |
+| `GET`  | `/api/health`   | Postgres, Redis, bot liveness, version                          |
+| `GET`  | `/metrics`      | Prometheus text (optional `METRICS_TOKEN`)                      |
+| `GET`  | `/openapi.json` | OpenAPI 3.1 spec (embedded from `backend/openapi/openapi.json`) |
 
 ---
 
@@ -39,14 +39,19 @@ Token type `typ:tma`, TTL 24 h.
 
 All routes require `Authorization: Bearer <tma_jwt>`.
 
-| Method | Path | Purpose |
-| ------ | ---- | ------- |
-| `GET` | `/api/tma/me` | Current bot-user identity (name, email, role) |
-| `GET` | `/api/tma/meetings?scope=upcoming\|past\|all` | Authenticated user's own meetings |
-| `GET` | `/api/tma/schedule?email=&scope=` | Read a colleague's schedule (view-only) |
-| `GET` | `/api/tma/employees?q=` | Employee directory search / autocomplete |
-| `POST` | `/api/tma/free-slots` | Common free-time checker across participants |
-| `POST` | `/api/tma/meetings` | Create a non-recurring meeting (requires Google-configured workspace) |
+| Method   | Path                                          | Purpose                                                               |
+| -------- | --------------------------------------------- | --------------------------------------------------------------------- |
+| `GET`    | `/api/tma/me`                                 | Current bot-user identity (name, email, role)                         |
+| `GET`    | `/api/tma/meetings?scope=upcoming\|past\|all` | Authenticated user's own meetings                                     |
+| `GET`    | `/api/tma/schedule?email=&scope=`             | Read a colleague's schedule (view-only)                               |
+| `GET`    | `/api/tma/employees?q=`                       | Employee directory search / autocomplete                              |
+| `POST`   | `/api/tma/free-slots`                         | Common free-time checker across participants                          |
+| `POST`   | `/api/tma/meetings`                           | Create a non-recurring meeting (requires Google-configured workspace) |
+| `PATCH`  | `/api/tma/meetings/:id`                       | Edit a single meeting field-by-field (organizer-only, 403)            |
+| `DELETE` | `/api/tma/meetings/:id`                       | Cancel a single meeting (organizer-only, 403)                         |
+| `POST`   | `/api/tma/conflicts`                          | Conflict-warning check for the scheduling wizard                      |
+
+Write-path error codes: `meetings_not_configured` (Google integration missing), `meetings_recurring_unsupported` (recurring series not yet supported — slice B), `forbidden` (not the organizer / not admin), `validation_failed` (bad input).
 
 ---
 
@@ -54,12 +59,9 @@ All routes require `Authorization: Bearer <tma_jwt>`.
 
 > **Not yet implemented.** These routes are planned but do not exist in the codebase.
 
-| Method | Path | Purpose |
-| ------ | ---- | ------- |
-| `PATCH` | `/api/tma/meetings/:id` | Edit a single meeting field-by-field |
-| `DELETE` | `/api/tma/meetings/:id` | Cancel / delete a single meeting |
-| `POST` | `/api/tma/conflicts` | Conflict-warning check for the scheduling wizard |
-| `*` | `/api/tma/admin/*` | In-Mini-App admin setup (replace alpha curl flows) |
+| Method | Path               | Purpose                                            |
+| ------ | ------------------ | -------------------------------------------------- |
+| `*`    | `/api/tma/admin/*` | In-Mini-App admin setup (replace alpha curl flows) |
 
 Admin spec: [`docs/superpowers/specs/2026-06-05-tma-setup-replacement-design.md`](superpowers/specs/2026-06-05-tma-setup-replacement-design.md).
 

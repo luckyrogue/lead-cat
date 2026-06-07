@@ -2,7 +2,7 @@
 
 A Telegram Mini App feature for scheduling and managing **Google Meet** meetings inside an organization, layered on top of the existing Lead Cat platform. The full specification (the source of truth for behavior) is **[NEW-FEATURES.md](NEW-FEATURES.md)** (ТЗ). This page is the engineering summary and status.
 
-> **Status:** TMA auth + all read paths are live. Meeting creation (`POST /api/tma/meetings`) is done. Edit, delete, and conflict warning are planned (next increment). Frontend still uses mock fixtures in a few places; see `frontend/README.md` for layout.
+> **Status:** TMA auth, all read paths, and all non-recurring write paths are live. Create, edit, delete, and conflict warning go through `/api/tma/*` end-to-end. Recurring meetings (series) are not yet supported — the wizard blocks confirm when `rec !== "once"`. Frontend still uses mock fixtures in a few places; see `frontend/README.md` for layout.
 
 ## Concept (per ТЗ)
 
@@ -17,13 +17,13 @@ A Telegram Mini App feature for scheduling and managing **Google Meet** meetings
 
 Telegram Mini App under `frontend/src/routes/_tma/` + feature slices + `components/tma-shell/`. Five tabs (`TabKey`):
 
-| Tab        | Route / page                              | Purpose                                     |
-| ---------- | ----------------------------------------- | ------------------------------------------- |
-| `home`     | `/` → `features/home/pages/home-page`     | Overview / quick actions                    |
-| `meetings` | `/meetings` → `meetings-list-page`        | List & view meetings (detail-as-sheet)      |
-| `checker`  | `/checker` → `checker-page`               | Common free-slot finder                     |
-| `auto`     | `/auto` → `auto-page` (not in TabBar)     | Automation rules (mock fixtures)              |
-| `profile`  | `/profile` → `profile-page`               | User profile & settings                     |
+| Tab        | Route / page                          | Purpose                                |
+| ---------- | ------------------------------------- | -------------------------------------- |
+| `home`     | `/` → `features/home/pages/home-page` | Overview / quick actions               |
+| `meetings` | `/meetings` → `meetings-list-page`    | List & view meetings (detail-as-sheet) |
+| `checker`  | `/checker` → `checker-page`           | Common free-slot finder                |
+| `auto`     | `/auto` → `auto-page` (not in TabBar) | Automation rules (mock fixtures)       |
+| `profile`  | `/profile` → `profile-page`           | User profile & settings                |
 
 Meeting creation: `/meetings/create` → `features/meeting-create/pages/create-page.tsx`. Cat design: [DESIGN-CATS.md](DESIGN-CATS.md). i18n: `shared/tma/i18n.ts` (`ru` / `kk` / `en`).
 
@@ -41,23 +41,25 @@ Create meeting (fields, meeting types, recurrence, naming standard), view meetin
 
 ### Auth & read paths (done)
 
-| Route | Status |
-| ----- | ------ |
-| `POST /api/auth/tma` | Done |
-| `GET /api/tma/me` | Done |
-| `GET /api/tma/meetings` | Done |
-| `GET /api/tma/schedule` | Done |
-| `GET /api/tma/employees` | Done |
-| `POST /api/tma/free-slots` | Done |
+| Route                      | Status |
+| -------------------------- | ------ |
+| `POST /api/auth/tma`       | Done   |
+| `GET /api/tma/me`          | Done   |
+| `GET /api/tma/meetings`    | Done   |
+| `GET /api/tma/schedule`    | Done   |
+| `GET /api/tma/employees`   | Done   |
+| `POST /api/tma/free-slots` | Done   |
 
 ### Write paths
 
-| Route | Status |
-| ----- | ------ |
-| `POST /api/tma/meetings` | Done |
-| `PATCH /api/tma/meetings/:id` | Planned |
-| `DELETE /api/tma/meetings/:id` | Planned |
-| `POST /api/tma/conflicts` | Planned |
+| Route                          | Status                      |
+| ------------------------------ | --------------------------- |
+| `POST /api/tma/meetings`       | Done (non-recurring)        |
+| `PATCH /api/tma/meetings/:id`  | Done (organizer-only, 403)  |
+| `DELETE /api/tma/meetings/:id` | Done (organizer-only, 403)  |
+| `POST /api/tma/conflicts`      | Done                        |
+
+Recurring series (PATCH/DELETE with scope=this/forward/series) ships in slice B.
 
 ### Setup cutover (planned)
 
