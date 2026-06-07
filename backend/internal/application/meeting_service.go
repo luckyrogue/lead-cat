@@ -26,6 +26,7 @@ type CreateMeetingInput struct {
 	End             string // HH:MM
 	Recurrence      string
 	RecurrenceUntil string // YYYY-MM-DD; required when Recurrence != once
+	RecurrenceDays  []int  // 1..7 (Mon..Sun); required when Recurrence == "custom"
 	Description     string
 	Participants    []postgres.MeetingParticipant
 }
@@ -76,7 +77,9 @@ func (s *Services) CreateMeeting(ctx context.Context, workspaceID, organizerID u
 	rec := meeting.Recurrence(orDefault(in.Recurrence, string(meeting.Once)))
 	dom := meeting.Input{
 		Dept: in.Dept, Type: in.Type, Host: in.Host,
-		StartsAt: startsAt, EndsAt: endsAt, Recurrence: rec, Description: in.Description,
+		StartsAt: startsAt, EndsAt: endsAt,
+		Recurrence: rec, RecurrenceDays: in.RecurrenceDays,
+		Description: in.Description,
 	}
 	if err := dom.Validate(); err != nil {
 		return postgres.Meeting{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
@@ -89,7 +92,7 @@ func (s *Services) CreateMeeting(ctx context.Context, workspaceID, organizerID u
 			return postgres.Meeting{}, fmt.Errorf("%w: bad recurrence_until", ErrInvalidInput)
 		}
 	}
-	spansList, err := meeting.Occurrences(startsAt, endsAt, rec, until)
+	spansList, err := meeting.Occurrences(startsAt, endsAt, rec, in.RecurrenceDays, until)
 	if err != nil {
 		return postgres.Meeting{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
 	}

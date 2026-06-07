@@ -22,5 +22,13 @@ func (in Input) Validate() error {
 	if !in.Recurrence.Valid() {
 		return fmt.Errorf("unknown recurrence: %q", in.Recurrence)
 	}
+	if in.Recurrence == Custom && len(in.RecurrenceDays) == 0 {
+		return ErrRecurrenceDays
+	}
+	for _, d := range in.RecurrenceDays {
+		if d < 1 || d > 7 {
+			return fmt.Errorf("recurrence_days values must be 1..7, got %d", d)
+		}
+	}
 	return nil
 }

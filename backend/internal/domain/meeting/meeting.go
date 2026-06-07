@@ -8,19 +8,19 @@ import "time"
 type Recurrence string
 
 const (
-	Once     Recurrence = "once"
-	Daily    Recurrence = "daily"
-	Weekly   Recurrence = "weekly"
-	Biweekly Recurrence = "biweekly"
-	Monthly  Recurrence = "monthly"
+	Once    Recurrence = "once"
+	Daily   Recurrence = "daily"
+	Weekly  Recurrence = "weekly"
+	Custom  Recurrence = "custom"
+	Monthly Recurrence = "monthly"
 )
 
 var recurrenceLabels = map[Recurrence]string{
-	Once:     "",
-	Daily:    "Ежедневно",
-	Weekly:   "Еженедельно",
-	Biweekly: "Раз в 2 недели",
-	Monthly:  "Ежемесячно",
+	Once:    "",
+	Daily:   "Ежедневно",
+	Weekly:  "Еженедельно",
+	Custom:  "По выбранным дням",
+	Monthly: "Ежемесячно",
 }
 
 // Valid reports whether r is a known recurrence value.
@@ -34,11 +34,12 @@ func (r Recurrence) Label() string { return recurrenceLabels[r] }
 
 // Input is the validated, parsed payload for creating a meeting.
 type Input struct {
-	Dept        string
-	Type        string
-	Host        string
-	StartsAt    time.Time
-	EndsAt      time.Time
-	Recurrence  Recurrence
-	Description string
+	Dept           string
+	Type           string
+	Host           string
+	StartsAt       time.Time
+	EndsAt         time.Time
+	Recurrence     Recurrence
+	RecurrenceDays []int // 1=Mon..7=Sun; required when Recurrence == Custom.
+	Description    string
 }

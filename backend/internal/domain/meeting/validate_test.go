@@ -1,6 +1,7 @@
 package meeting
 
 import (
+	"errors"
 	"testing"
 	"time"
 )
@@ -44,5 +45,27 @@ func TestValidate_BadRecurrence(t *testing.T) {
 	in.Recurrence = "yearly"
 	if err := in.Validate(); err == nil {
 		t.Fatal("expected error for unknown recurrence")
+	}
+}
+
+func TestValidate_CustomRequiresDays(t *testing.T) {
+	in := base()
+	in.Recurrence = Custom
+	in.RecurrenceDays = nil
+	if !errors.Is(in.Validate(), ErrRecurrenceDays) {
+		t.Fatal("expected ErrRecurrenceDays")
+	}
+}
+
+func TestValidate_CustomDaysOutOfRange(t *testing.T) {
+	in := base()
+	in.Recurrence = Custom
+	in.RecurrenceDays = []int{0, 3}
+	if err := in.Validate(); err == nil {
+		t.Fatal("expected error for day out of range")
+	}
+	in.RecurrenceDays = []int{1, 8}
+	if err := in.Validate(); err == nil {
+		t.Fatal("expected error for day out of range")
 	}
 }
