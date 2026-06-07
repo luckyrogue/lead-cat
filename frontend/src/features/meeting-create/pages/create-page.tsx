@@ -1,17 +1,17 @@
 import { useMemo } from "react"
 import { useNavigate, useParams } from "@tanstack/react-router"
 import { CreateWizard } from "@/features/meeting-create/components/create-wizard"
-import { useMyMeetings } from "@/entities/meeting/queries"
+import { detailToDraft } from "@/entities/meeting/lib/format"
+import { writeErrorKey } from "@/entities/meeting/lib/write-error"
 import {
   useCreateMeeting,
   useUpdateMeeting,
-} from "@/features/meetings/queries"
-import { detailToDraft } from "@/entities/meeting/lib/format"
-import { writeErrorKey } from "@/features/meetings/lib/write-error"
+} from "@/entities/meeting/mutations"
+import { useMyMeetings } from "@/entities/meeting/queries"
 import { useTmaApp } from "@/shared/tma/context"
 import { toastError, toastSuccess } from "@/shared/lib/toast"
 import type { MeetingDraft } from "@/entities/meeting/types"
-import type { MeetingInput, MeetingPatch } from "@/features/meetings/api"
+import type { MeetingInput, MeetingPatch } from "@/entities/meeting/write-api"
 import { Overlay } from "@/components/tma-shell"
 
 export function CreateMeetingPage() {

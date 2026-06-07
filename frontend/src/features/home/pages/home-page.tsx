@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router"
 import { cn } from "@/shared/lib/cn"
 import { TMA_NOW } from "@/entities/meeting/constants"
-import { useTmaAuth } from "@/features/auth/auth-context"
+import { useTmaAuth } from "@/shared/auth/auth-context"
 import { useTmaApp } from "@/shared/tma/context"
 import { useMyMeetings } from "@/entities/meeting/queries"
 import { hueSurfaceVars } from "@/shared/tma/surface-vars"

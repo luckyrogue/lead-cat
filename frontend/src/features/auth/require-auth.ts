@@ -1,6 +1,6 @@
 import { redirect } from "@tanstack/react-router"
 
-import { fetchCurrentUser, getInitData, tmaLogin } from "@/features/auth/api"
+import { fetchCurrentUser, getInitData, tmaLogin } from "@/shared/auth/tma-api"
 import { getSession } from "@/shared/auth/session"
 import { ApiError } from "@/shared/api/types"
 

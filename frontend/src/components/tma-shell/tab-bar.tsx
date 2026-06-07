@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router"
-import { useTmaAuth } from "@/features/auth/auth-context"
+import { useTmaAuth } from "@/shared/auth/auth-context"
 import { useTmaApp } from "@/shared/tma/context"
 import { getVisibleTabBarModules } from "@/shared/auth/module-policies"
 import { cn } from "@/shared/lib/cn"

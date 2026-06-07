@@ -1,4 +1,4 @@
-import { getInitData, tmaLogin } from "@/features/auth/api"
+import { getInitData, tmaLogin } from "@/shared/auth/tma-api"
 import { getSession } from "@/shared/auth/session"
 import { ApiError } from "@/shared/api/types"
 

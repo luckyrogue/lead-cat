@@ -128,7 +128,7 @@ api.interceptors.response.use(
       config._retry = true
 
       const { refreshTmaSessionIfNeeded } =
-        await import("@/features/auth/refresh-session")
+        await import("@/shared/auth/refresh-session")
       const token = await refreshTmaSessionIfNeeded({ force: true })
 
       if (token) {

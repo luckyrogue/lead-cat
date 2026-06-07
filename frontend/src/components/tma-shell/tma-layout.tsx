@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Outlet, useRouterState } from "@tanstack/react-router"
 import { useTheme } from "next-themes"
-import { TmaAuthProvider, useTmaAuth } from "@/features/auth/auth-context"
+import { TmaAuthProvider, useTmaAuth } from "@/shared/auth/auth-context"
 import { isTelegramMiniApp } from "@/shared/tma/telegram-env"
 import { useTelegramViewport } from "@/shared/tma/use-telegram-viewport"
 import { TmaAppProvider } from "@/shared/tma/context"

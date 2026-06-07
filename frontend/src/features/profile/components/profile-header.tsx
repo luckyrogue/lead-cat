@@ -1,4 +1,4 @@
-import { useTmaAuth } from "@/features/auth/auth-context"
+import { useTmaAuth } from "@/shared/auth/auth-context"
 import { useTmaApp } from "@/shared/tma/context"
 import { Avatar } from "@/shared/ui/cat/primitives"
 

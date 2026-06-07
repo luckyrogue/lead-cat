@@ -2,8 +2,7 @@ import { DEPARTMENTS } from "@/entities/employee/fixtures"
 import { MEETING_TYPES, typeAccent } from "@/entities/meeting/constants"
 import { useTmaApp } from "@/shared/tma/context"
 import type { MeetingDraft } from "@/shared/tma/types"
-import { Field } from "@/shared/ui/cat/primitives"
-import { ChipGrid } from "./chip-grid"
+import { ChipGrid, Field } from "@/shared/ui/cat/primitives"
 import { WizardStepTitle } from "./wizard-step-title"
 
 export function WizardStepWhat({

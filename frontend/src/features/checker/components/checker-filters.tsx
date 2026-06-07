@@ -1,6 +1,5 @@
 import { useTmaApp } from "@/shared/tma/context"
-import { DurationPicker } from "@/components/duration-picker"
-import { Field, Segmented } from "@/shared/ui/cat/primitives"
+import { DurationPicker, Field, Segmented } from "@/shared/ui/cat/primitives"
 
 export function CheckerFilters({
   range,

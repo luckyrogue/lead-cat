@@ -11,9 +11,9 @@ import {
   buildMeetingsSearchParams,
   parseMeetingsScopeFilter,
 } from "@/features/meetings/list-url"
-import { writeErrorKey } from "@/features/meetings/lib/write-error"
+import { writeErrorKey } from "@/entities/meeting/lib/write-error"
+import { useDeleteMeeting } from "@/entities/meeting/mutations"
 import { useMyMeetings } from "@/entities/meeting/queries"
-import { useDeleteMeeting } from "@/features/meetings/queries"
 import { MeetingDetail } from "@/features/meetings/components/meeting-detail"
 import {
   EmptyState,

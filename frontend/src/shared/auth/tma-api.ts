@@ -1,6 +1,5 @@
 import { apiFetch } from "@/shared/api/client"
 import type { TmaAuthResponse } from "@/shared/api/types"
-
 import {
   clearSession,
   getSession,
@@ -8,6 +7,7 @@ import {
   setSession,
 } from "@/shared/auth/session"
 import type { TmaUser } from "@/shared/auth/types"
+import { getTelegramWebApp } from "@/shared/tma/telegram-env"
 
 export type { TmaUser } from "@/shared/auth/types"
 
@@ -53,9 +53,7 @@ export async function tmaLogin(initData: string): Promise<TmaUser> {
 }
 
 export function getInitData(): string {
-  const fromTelegram = (
-    window as unknown as { Telegram?: { WebApp?: { initData?: string } } }
-  ).Telegram?.WebApp?.initData
+  const fromTelegram = getTelegramWebApp()?.initData
   if (fromTelegram) return fromTelegram
   if (import.meta.env.VITE_AUTH_DEV_MODE === "true") {
     return import.meta.env.VITE_TMA_DEV_TG_ID ?? ""

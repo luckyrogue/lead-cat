@@ -5,7 +5,8 @@ import {
   useState,
   type ReactNode,
 } from "react"
-import { getInitData, tmaLogin, type TmaUser } from "@/features/auth/api"
+import { getInitData, tmaLogin } from "@/shared/auth/tma-api"
+import type { TmaUser } from "@/shared/auth/types"
 import { ApiError } from "@/shared/api/types"
 
 export type TmaAuthStatus = "loading" | "authed" | "not_registered" | "error"

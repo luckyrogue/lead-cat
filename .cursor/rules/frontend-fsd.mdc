@@ -22,21 +22,21 @@ Canonical reference: `frontend/README.md` (mirrors sadu/admin/app layout).
 
 ```
 features/
-  auth/          — api, refresh-session, require-auth, auth-context (session → shared/auth)
+  auth/          — require-auth (route guard only)
   home/pages/
-  meetings/{api,queries,search-schema,pages/,list-url,meeting-detail*}/
-  # meetings/queries — mutations + URL filters only; read hooks → entities/meeting/queries
+  meetings/{queries,search-schema,pages/,list-url,meeting-detail*}/
+  # meetings/queries — URL scope filters only; reads/mutations → entities/meeting
   meeting-create/{components/,lib/,pages/}/
   checker/{components/,queries.ts,pages/} — useFreeSlots only; employee search → entities/employee
   auto/{fixtures.ts,pages}/
   profile/{components,pages}/
 entities/
   employee/      — types, fixtures, api (searchEmployees), queries (useEmployeeSearch)
-  meeting/       — types, constants, lib/format, api (reads), queries, scheduling-api
+  meeting/       — api, queries, write-api, mutations, scheduling-api, lib/write-error
   scenario/      — types
 shared/
   api/           — client, types, query-client, query-keys, list-params, health, generated/schema.ts
-  auth/          — types, session, module-policies, permissions, permission-requirement, route-access
+  auth/          — types, session, tma-api, auth-context, refresh-session, module-policies, …
   lib/           — cn, list-url-params, use-list-url-state, route-revalidation, toast, format-datetime
   tma/           — i18n, palette, context, surface-vars, telegram-env
 components/      — tma-shell/*, meetings/{detail-row,meeting-title-preview,meeting-ui/*}, employee-picker, …
@@ -52,8 +52,8 @@ Hand-written `.ts`/`.tsx` files **≤300 lines** (exception: generated `routeTre
 ## Data loading
 
 - `apiFetch` + `ApiError` in `shared/api/client.ts`; Bearer via `getSession()`
-- 401 single-flight: `features/auth/refresh-session.ts`
-- `queryOptions` in `entities/*/queries.ts` (reads) and `features/*/queries.ts` (mutations); keys in `shared/api/query-keys.ts`
+- 401 single-flight: `shared/auth/refresh-session.ts`
+- `queryOptions` in `entities/*/queries.ts`; mutations in `entities/meeting/mutations.ts`; keys in `shared/api/query-keys.ts`
 - Route `loader` + `shouldReload: shouldReloadExceptSearch` + `loaderDeps: () => ({})`
 - List filters: `shared/lib/use-list-url-state.ts` + `TmaListPageShell`
 - Health gate: `app/app-content.tsx` + `useAppHealth()`; Toaster inside gate

@@ -1,5 +1,5 @@
 import { TMA_NOW } from "@/entities/meeting/constants"
-import { useTmaAuth } from "@/features/auth/auth-context"
+import { useTmaAuth } from "@/shared/auth/auth-context"
 import { useTmaApp } from "@/shared/tma/context"
 import { RECURRENCE } from "@/entities/meeting/constants"
 import { buildTitle, fmtDate } from "@/entities/meeting/lib/format"

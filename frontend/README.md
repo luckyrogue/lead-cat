@@ -31,10 +31,9 @@ src/
 │   ├── tma-shell/          # tg-bar, tab-bar, sheet, overlay, index barrel
 │   ├── meetings/           # detail-row, meeting-title-preview, meeting-ui/*
 │   ├── employee-picker.tsx
-│   ├── duration-picker.tsx
 │   └── tma-list-page-shell, maintenance-screen, auth/
 ├── features/               # vertical slices
-│   ├── auth/               # api, require-auth, refresh-session, auth-context
+│   ├── auth/               # require-auth (route guard)
 │   ├── home|meetings|meeting-create|checker|auto|profile/
 │   │   meeting-create/     # wizard steps, mini-calendar, use-create-wizard
 │   │   meetings/           # meeting-detail*, pages/, search-schema, list-url
@@ -42,14 +41,14 @@ src/
 │   │   profile/            # settings-group, profile-header
 ├── entities/
 │   ├── employee/           # types, fixtures, api, queries (search)
-│   ├── meeting/            # types, constants, lib/format, api, queries, scheduling-api
+│   ├── meeting/            # api, queries, write-api, mutations, scheduling-api, lib/
 │   └── scenario/           # types
 └── shared/
     ├── api/
-    ├── auth/               # types, session, module-policies, permissions, …
+    ├── auth/               # types, session, tma-api, auth-context, refresh-session, …
     ├── lib/                # cn, toast, use-list-url-state, …
     ├── tma/                # i18n, palette, context, surface-vars
-    └── ui/cat/             # avatar, cat-btn, field, … + primitives.tsx barrel
+    └── ui/cat/             # ChipGrid, DurationPicker, Segmented, … + primitives.tsx
 ```
 
 Imports: `@/features/...`, `@/shared/...`, `@/entities/...`.
@@ -85,7 +84,7 @@ Spec source: `backend/openapi/openapi.json`.
 |--------|----------|
 | Login | `POST /api/auth/tma` `{ init_data }` |
 | Session | `shared/auth/session.ts` |
-| Refresh | `features/auth/refresh-session.ts` (re-login via initData) |
+| Refresh | `shared/auth/refresh-session.ts` (re-login via initData) |
 | Me | `GET /api/tma/me` |
 
 ## Sadu mapping

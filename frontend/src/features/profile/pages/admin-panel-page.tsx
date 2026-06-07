@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router"
 import { AdminPanel } from "@/features/profile/components/admin-panel"
-import { useTmaAuth } from "@/features/auth/auth-context"
+import { useTmaAuth } from "@/shared/auth/auth-context"
 import { useMyMeetings } from "@/entities/meeting/queries"
 import { RequireTmaRole } from "@/shared/auth/require-permission"
 import { translate } from "@/shared/tma/i18n"
