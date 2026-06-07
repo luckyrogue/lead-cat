@@ -4,12 +4,40 @@ import type { MeetingDraft } from "@/shared/tma/types"
 import { useConflicts } from "@/entities/meeting/mutations"
 import { WIZARD_STEPS } from "./wizard-constants"
 
+function defaultUntil(date: string, rec: string): string {
+  if (!date || rec === "once") return ""
+  const [y, m, d] = date.split("-").map(Number)
+  const dt = new Date(y, m - 1, d)
+  switch (rec) {
+    case "daily":
+      dt.setDate(dt.getDate() + 30)
+      break
+    case "weekly":
+    case "custom":
+      dt.setDate(dt.getDate() + 7 * 12)
+      break
+    case "monthly":
+      dt.setMonth(dt.getMonth() + 12)
+      break
+    default:
+      return ""
+  }
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`
+}
+
 export function useCreateWizard({
   initial,
   onComplete,
+  lockedFields,
 }: {
   initial?: Partial<MeetingDraft>
   onComplete: (m: MeetingDraft & { end: string }) => void
+  lockedFields?: {
+    date?: boolean
+    rec?: boolean
+    until?: boolean
+    participants?: boolean
+  }
 }) {
   const [step, setStep] = useState(0)
   const [draft, setDraft] = useState<MeetingDraft>(() => ({
@@ -29,7 +57,15 @@ export function useCreateWizard({
   const [pSearch, setPSearch] = useState("")
 
   const set = <K extends keyof MeetingDraft>(k: K, v: MeetingDraft[K]) =>
-    setDraft((d) => ({ ...d, [k]: v }))
+    setDraft((d) => {
+      const nd = { ...d, [k]: v }
+      if (k === "rec") {
+        nd.until = defaultUntil(nd.date, nd.rec)
+      } else if (k === "date" && d.rec !== "once" && !d.until) {
+        nd.until = defaultUntil(nd.date, nd.rec)
+      }
+      return nd
+    })
 
   const endTime = useMemo(() => {
     const [h, mn] = draft.start.split(":").map(Number)
@@ -37,13 +73,22 @@ export function useCreateWizard({
     return `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`
   }, [draft.start, draft.dur])
 
-  const canNext =
-    {
-      what: Boolean(draft.dept && draft.type),
-      when: Boolean(draft.date && draft.start),
-      who: Boolean(draft.host),
-      review: true,
-    }[WIZARD_STEPS[step]] ?? false
+  const canNext = (() => {
+    const step_ = WIZARD_STEPS[step]
+    if (step_ === "what") return Boolean(draft.dept && draft.type)
+    if (step_ === "when") {
+      if (!draft.date || !draft.start) return false
+      if (draft.rec !== "once") {
+        if (!draft.until) return false
+        if (draft.until < draft.date) return false
+        if (draft.rec === "custom" && draft.recDays.length === 0) return false
+      }
+      return true
+    }
+    if (step_ === "who") return Boolean(draft.host)
+    if (step_ === "review") return true
+    return false
+  })()
 
   const go = (dir: number) => {
     if (dir > 0 && step === WIZARD_STEPS.length - 1) {
@@ -65,10 +110,22 @@ export function useCreateWizard({
       date: draft.date,
       start: draft.start,
       end: endTime,
+      recurrence: draft.rec !== "once" ? draft.rec : undefined,
+      recurrenceUntil: draft.rec !== "once" ? draft.until : undefined,
+      recurrenceDays: draft.rec === "custom" ? draft.recDays : undefined,
     })
     // intentionally NOT including conflictsMut in deps — useMutation's mutate is stable
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, draft.date, draft.start, endTime, draft.participants])
+  }, [
+    step,
+    draft.date,
+    draft.start,
+    endTime,
+    draft.participants,
+    draft.rec,
+    draft.until,
+    draft.recDays,
+  ])
 
   const conflictPeople = useMemo(() => {
     const list = conflictsMut.data?.[0]?.conflicts ?? []
@@ -80,7 +137,7 @@ export function useCreateWizard({
     return [...names]
   }, [conflictsMut.data])
 
-  const recurringBlocked = draft.rec !== "once"
+  const conflictOccurrences = conflictsMut.data ?? []
 
   const finalMeeting = { ...draft, end: endTime, organizer: ME.email }
 
@@ -92,9 +149,10 @@ export function useCreateWizard({
     canNext,
     go,
     conflictPeople,
-    recurringBlocked,
+    conflictOccurrences,
     finalMeeting,
     pSearch,
     setPSearch,
+    lockedFields: lockedFields ?? {},
   }
 }

@@ -12,12 +12,19 @@ import { WizardStepWho } from "./wizard-step-who"
 export function CreateWizard({
   initial,
   onComplete,
+  lockedFields,
 }: {
   initial?: Partial<MeetingDraft>
   onComplete: (m: MeetingDraft & { end: string }) => void
+  lockedFields?: {
+    date?: boolean
+    rec?: boolean
+    until?: boolean
+    participants?: boolean
+  }
 }) {
   const { t } = useTmaApp()
-  const wizard = useCreateWizard({ initial, onComplete })
+  const wizard = useCreateWizard({ initial, onComplete, lockedFields })
   const {
     step,
     draft,
@@ -26,7 +33,6 @@ export function CreateWizard({
     canNext,
     go,
     conflictPeople,
-    recurringBlocked,
     finalMeeting,
     pSearch,
     setPSearch,
@@ -41,7 +47,12 @@ export function CreateWizard({
           <WizardStepWhat draft={draft} set={set} />
         )}
         {WIZARD_STEPS[step] === "when" && (
-          <WizardStepWhen draft={draft} set={set} endTime={endTime} />
+          <WizardStepWhen
+            draft={draft}
+            set={set}
+            endTime={endTime}
+            lockedFields={wizard.lockedFields}
+          />
         )}
         {WIZARD_STEPS[step] === "who" && (
           <WizardStepWho
@@ -57,12 +68,11 @@ export function CreateWizard({
             endTime={endTime}
             finalMeeting={finalMeeting}
             conflictPeople={conflictPeople}
-            recurringBlocked={recurringBlocked}
           />
         )}
       </div>
 
-      <div className="flex shrink-0 gap-2.5 border-t border-tma-border bg-tma-tg-bar px-4 pt-3 pb-[max(12px,var(--tma-safe-bottom,0px))]">
+      <div className="border-tma-border bg-tma-tg-bar flex shrink-0 gap-2.5 border-t px-4 pb-[max(12px,var(--tma-safe-bottom,0px))] pt-3">
         {step > 0 && (
           <CatBtn
             variant="outline"
@@ -82,9 +92,7 @@ export function CreateWizard({
         <CatBtn
           variant="primary"
           full
-          disabled={
-            !canNext || (WIZARD_STEPS[step] === "review" && recurringBlocked)
-          }
+          disabled={!canNext}
           onClick={() => go(1)}
         >
           {step === WIZARD_STEPS.length - 1
