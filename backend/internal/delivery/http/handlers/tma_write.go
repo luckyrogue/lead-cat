@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/Jaryq-Lab/notify-bot/internal/application"
+	"github.com/Jaryq-Lab/notify-bot/internal/domain/meeting"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
 )
 
@@ -150,15 +151,48 @@ func toConflictDTO(c application.Conflict, loc *time.Location) tmaConflictDTO {
 	}
 }
 
+// tmaOccurrenceConflictsDTO is one occurrence's date/time + its conflicts list,
+// rendered in Almaty TZ. Always wrapped in {"occurrences":[...]} on the wire.
+type tmaOccurrenceConflictsDTO struct {
+	Date      string           `json:"date"`  // YYYY-MM-DD
+	Start     string           `json:"start"` // HH:MM Almaty
+	End       string           `json:"end"`   // HH:MM Almaty
+	Conflicts []tmaConflictDTO `json:"conflicts"`
+}
+
+// toOccurrenceConflicts maps an application OccurrenceConflicts + locale into
+// the wire DTO. Pure.
+func toOccurrenceConflicts(oc application.OccurrenceConflicts, loc *time.Location) tmaOccurrenceConflictsDTO {
+	startLocal := oc.Span.Start.In(loc)
+	endLocal := oc.Span.End.In(loc)
+	cs := make([]tmaConflictDTO, 0, len(oc.Conflicts))
+	for _, c := range oc.Conflicts {
+		cs = append(cs, toConflictDTO(c, loc))
+	}
+	return tmaOccurrenceConflictsDTO{
+		Date:      startLocal.Format("2006-01-02"),
+		Start:     startLocal.Format("15:04"),
+		End:       endLocal.Format("15:04"),
+		Conflicts: cs,
+	}
+}
+
 type tmaConflictRequest struct {
-	Participants []string `json:"participants"`
-	Date         string   `json:"date"`  // YYYY-MM-DD
-	Start        string   `json:"start"` // HH:MM
-	End          string   `json:"end"`   // HH:MM
-	ExcludeID    string   `json:"exclude_id"`
+	Participants    []string `json:"participants"`
+	Date            string   `json:"date"`  // YYYY-MM-DD
+	Start           string   `json:"start"` // HH:MM
+	End             string   `json:"end"`   // HH:MM
+	ExcludeID       string   `json:"exclude_id"`
+	Recurrence      *string  `json:"recurrence,omitempty"`
+	RecurrenceUntil *string  `json:"recurrence_until,omitempty"` // YYYY-MM-DD
+	RecurrenceDays  *[]int   `json:"recurrence_days,omitempty"`  // 1..7 (Mon..Sun)
 }
 
 // TMAConflicts reports cross-participant conflicts for a pending meeting (§4.7).
+// Response is always occurrence-grouped: {"occurrences":[{date,start,end,conflicts:[]}]}.
+// For once (or absent recurrence) it's a one-element array with the single check;
+// for daily/weekly/custom/monthly the series is expanded and only occurrences with
+// ≥1 conflict are returned.
 func (a *API) TMAConflicts(c *fiber.Ctx) error {
 	if _, ok := botUser(c); !ok {
 		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
@@ -173,21 +207,56 @@ func (a *API) TMAConflicts(c *fiber.Ctx) error {
 	if err1 != nil || err2 != nil || !end.After(start) || len(req.Participants) == 0 {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid range/participants")
 	}
-	exclude := uuid.Nil
-	if s := strings.TrimSpace(req.ExcludeID); s != "" {
-		if id, perr := uuid.Parse(s); perr == nil {
-			exclude = id
+	rec := ""
+	if req.Recurrence != nil {
+		rec = *req.Recurrence
+	}
+	if rec == "" || rec == string(meeting.Once) {
+		exclude := uuid.Nil
+		if s := strings.TrimSpace(req.ExcludeID); s != "" {
+			if id, perr := uuid.Parse(s); perr == nil {
+				exclude = id
+			}
 		}
+		conflicts, err := a.App.MeetingConflicts(c.Context(), req.Participants, start, end, exclude)
+		if err != nil {
+			return fiber.NewError(fiber.StatusInternalServerError, "internal")
+		}
+		out := make([]tmaConflictDTO, 0, len(conflicts))
+		for _, cf := range conflicts {
+			out = append(out, toConflictDTO(cf, loc))
+		}
+		return c.JSON(fiber.Map{"occurrences": []tmaOccurrenceConflictsDTO{{
+			Date:      req.Date,
+			Start:     req.Start,
+			End:       req.End,
+			Conflicts: out,
+		}}})
 	}
-	conflicts, err := a.App.MeetingConflicts(c.Context(), req.Participants, start, end, exclude)
+	// Recurring series: expand and per-occurrence check.
+	var until time.Time
+	if req.RecurrenceUntil != nil && strings.TrimSpace(*req.RecurrenceUntil) != "" {
+		u, uerr := time.ParseInLocation("2006-01-02", strings.TrimSpace(*req.RecurrenceUntil), loc)
+		if uerr != nil {
+			return fiber.NewError(fiber.StatusBadRequest, "invalid recurrence_until")
+		}
+		until = u
+	}
+	var days []int
+	if req.RecurrenceDays != nil {
+		days = *req.RecurrenceDays
+	}
+	ocs, err := a.App.MeetingSeriesConflicts(c.Context(), req.Participants, start, end, meeting.Recurrence(rec), days, until)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+		// Domain errors from meeting.Occurrences (ErrRecurrenceDays,
+		// ErrRecurrenceWindow, ErrTooManyOccurrences, …) surface as 400.
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	out := make([]tmaConflictDTO, 0, len(conflicts))
-	for _, cf := range conflicts {
-		out = append(out, toConflictDTO(cf, loc))
+	occurrences := make([]tmaOccurrenceConflictsDTO, 0, len(ocs))
+	for _, oc := range ocs {
+		occurrences = append(occurrences, toOccurrenceConflicts(oc, loc))
 	}
-	return c.JSON(fiber.Map{"conflicts": out})
+	return c.JSON(fiber.Map{"occurrences": occurrences})
 }
 
 // editableWorkspace returns the workspace of a meeting the TMA user may edit,
