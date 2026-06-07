@@ -1,21 +1,23 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router"
-import { useQueryClient } from "@tanstack/react-query"
 import { TmaListPageShell } from "@/components/tma-list-page-shell"
-import { toastSuccess } from "@/shared/lib/toast"
+import { toastError, toastSuccess } from "@/shared/lib/toast"
 import { TMA_NOW } from "@/shared/tma/constants"
 import { useTmaApp } from "@/shared/tma/context"
 import { fmtDate } from "@/shared/tma/meeting-utils"
 import type { Meeting } from "@/entities/meeting/types"
-import { tmaKeys } from "@/shared/api/query-keys"
 import { useListUrlState } from "@/shared/lib/use-list-url-state"
 import {
   buildMeetingsSearchParams,
   parseMeetingsScopeFilter,
 } from "@/features/meetings/list-url"
-import { useMyMeetings } from "@/features/meetings/queries"
+import { writeErrorKey } from "@/features/meetings/lib/write-error"
+import { useDeleteMeeting, useMyMeetings } from "@/features/meetings/queries"
 import { MeetingDetail } from "@/features/meetings/components/meeting-detail-sheet"
-import { EmptyState, MeetingCard } from "@/features/meetings/components/meeting-ui"
+import {
+  EmptyState,
+  MeetingCard,
+} from "@/features/meetings/components/meeting-ui"
 import { MeetingCreatedSuccess } from "@/features/meetings/pages/meeting-created-success"
 import { Segmented } from "@/shared/ui/cat/primitives"
 import { Sheet, PawBurst } from "@/components/tma-shell"
@@ -25,7 +27,6 @@ export function MeetingsListPage() {
   const p = useTmaApp()
   const t = p.t
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const search = useSearch({ strict: false }) as MeetingsSearch
   const params = useParams({ strict: false })
   const meetingId =
@@ -37,6 +38,7 @@ export function MeetingsListPage() {
   })
 
   const { data: meetings = [], isLoading } = useMyMeetings("all")
+  const deleteMut = useDeleteMeeting()
   const [burst, setBurst] = useState(false)
 
   const sorted = useMemo(
@@ -68,11 +70,11 @@ export function MeetingsListPage() {
   }, [list])
 
   const detail = meetingId
-    ? meetings.find((m) => m.id === meetingId) ?? null
+    ? (meetings.find((m) => m.id === meetingId) ?? null)
     : null
 
   const successMeeting = search.success
-    ? meetings.find((m) => m.id === search.success) ?? null
+    ? (meetings.find((m) => m.id === search.success) ?? null)
     : null
 
   useEffect(() => {
@@ -112,18 +114,14 @@ export function MeetingsListPage() {
     void navigate({ to: "/meetings", search: preserveSearch() })
   }
 
-  const deleteMeeting = (id: string) => {
-    queryClient.setQueryData<Meeting[]>(tmaKeys.meetings("all"), (old = []) =>
-      old.filter((m) => m.id !== id)
-    )
-    closeDetail()
-    toastSuccess(
-      p.lang === "en"
-        ? "Meeting deleted"
-        : p.lang === "kk"
-          ? "Кездесу жойылды"
-          : "Встреча удалена"
-    )
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteMut.mutateAsync(id)
+      closeDetail()
+      toastSuccess(t("deleted"))
+    } catch (err) {
+      toastError(err, t(writeErrorKey(err)))
+    }
   }
 
   return (
@@ -158,7 +156,7 @@ export function MeetingsListPage() {
                       params: { editId: detail.id },
                     })
                   }}
-                  onDelete={() => deleteMeeting(detail.id)}
+                  onDelete={() => void handleDelete(detail.id)}
                 />
               )}
             </Sheet>
@@ -197,7 +195,11 @@ export function MeetingsListPage() {
                 style={{ display: "flex", flexDirection: "column", gap: 11 }}
               >
                 {g.items.map((m) => (
-                  <MeetingCard key={m.id} m={m} onClick={() => openMeeting(m)} />
+                  <MeetingCard
+                    key={m.id}
+                    m={m}
+                    onClick={() => openMeeting(m)}
+                  />
                 ))}
               </div>
             </div>
