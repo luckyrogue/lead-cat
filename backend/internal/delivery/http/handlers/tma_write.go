@@ -10,22 +10,24 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/Jaryq-Lab/notify-bot/internal/application"
-	"github.com/Jaryq-Lab/notify-bot/internal/domain/meeting"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
 )
 
-// tmaCreateRequest is the create-meeting payload. No recurrence_until field: the
-// Mini App only supports once-only meetings in this slice (recurring is deferred).
+// tmaCreateRequest is the create-meeting payload. Recurrence fields are optional:
+// the domain Validate() enforces the per-recurrence rules (until required for
+// non-once, days required for custom, etc.).
 type tmaCreateRequest struct {
-	Dept         string   `json:"dept"`
-	Type         string   `json:"type"`
-	Host         string   `json:"host"`
-	Date         string   `json:"date"`  // YYYY-MM-DD
-	Start        string   `json:"start"` // HH:MM
-	End          string   `json:"end"`   // HH:MM
-	Recurrence   string   `json:"recurrence"`
-	Desc         string   `json:"desc"`
-	Participants []string `json:"participants"` // emails
+	Dept            string   `json:"dept"`
+	Type            string   `json:"type"`
+	Host            string   `json:"host"`
+	Date            string   `json:"date"`  // YYYY-MM-DD
+	Start           string   `json:"start"` // HH:MM
+	End             string   `json:"end"`   // HH:MM
+	Recurrence      string   `json:"recurrence"`
+	Desc            string   `json:"desc"`
+	Participants    []string `json:"participants"`               // emails
+	RecurrenceUntil *string  `json:"recurrence_until,omitempty"` // YYYY-MM-DD; required when recurrence != once
+	RecurrenceDays  *[]int   `json:"recurrence_days,omitempty"`  // 1..7 (Mon..Sun); required when recurrence == custom
 }
 
 // toCreateMeetingInput maps the TMA request to the application input. Pure: host
@@ -41,12 +43,19 @@ func toCreateMeetingInput(req tmaCreateRequest, hostFallback string) application
 			parts = append(parts, postgres.MeetingParticipant{Email: e})
 		}
 	}
-	return application.CreateMeetingInput{
+	in := application.CreateMeetingInput{
 		Dept: req.Dept, Type: req.Type, Host: host,
 		Date: req.Date, Start: req.Start, End: req.End,
 		Recurrence: req.Recurrence, Description: req.Desc,
 		Participants: parts,
 	}
+	if req.RecurrenceUntil != nil {
+		in.RecurrenceUntil = *req.RecurrenceUntil
+	}
+	if req.RecurrenceDays != nil {
+		in.RecurrenceDays = *req.RecurrenceDays
+	}
+	return in
 }
 
 // botUser returns the authed TMA bot_user from locals.
@@ -55,7 +64,9 @@ func botUser(c *fiber.Ctx) (postgres.BotUser, bool) {
 	return bu, ok
 }
 
-// TMACreateMeeting creates a non-recurring meeting for the authed TMA user.
+// TMACreateMeeting creates a meeting (once or recurring series) for the authed TMA user.
+// Recurrence rules are enforced by the domain Validate() inside CreateMeeting and
+// surface as 400 validation_failed via ErrInvalidInput.
 func (a *API) TMACreateMeeting(c *fiber.Ctx) error {
 	bu, ok := botUser(c)
 	if !ok {
@@ -64,9 +75,6 @@ func (a *API) TMACreateMeeting(c *fiber.Ctx) error {
 	var req tmaCreateRequest
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
-	}
-	if rec := strings.TrimSpace(req.Recurrence); rec != "" && rec != string(meeting.Once) {
-		return fiber.NewError(fiber.StatusBadRequest, "meetings_recurring_unsupported")
 	}
 	wsIDs, err := a.App.Store.ListWorkspacesWithGoogle(c.Context())
 	if err != nil {
