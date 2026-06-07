@@ -13,11 +13,13 @@ export function WizardStepReview({
   endTime,
   finalMeeting,
   conflictPeople,
+  recurringBlocked,
 }: {
   draft: MeetingDraft
   endTime: string
   finalMeeting: MeetingDraft & { end: string; organizer: string }
   conflictPeople: string[]
+  recurringBlocked: boolean
 }) {
   const p = useTmaApp()
   const t = p.t
@@ -84,6 +86,42 @@ export function WizardStepReview({
           </div>
         </div>
       </CatCard>
+      {recurringBlocked && (
+        <div
+          style={{
+            marginTop: 14,
+            background: p.dangerSoft,
+            borderRadius: 16,
+            padding: "13px 15px",
+            border: `1px solid ${hexToRgba(p.danger, 0.3)}`,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 7,
+              color: p.danger,
+              fontWeight: 800,
+              fontFamily: "var(--font-display)",
+              fontSize: 14.5,
+              marginBottom: 6,
+            }}
+          >
+            ⚠️ {t("recurringSoon")}
+          </div>
+          <div
+            style={{
+              fontSize: 13,
+              color: p.text,
+              opacity: 0.85,
+              lineHeight: 1.4,
+            }}
+          >
+            {t("recurringSoon")}
+          </div>
+        </div>
+      )}
       {conflictPeople.length > 0 && (
         <div
           style={{

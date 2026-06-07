@@ -1,15 +1,14 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { ME } from "@/shared/tma/mock-data"
-import type { Meeting, MeetingDraft } from "@/shared/tma/types"
+import type { MeetingDraft } from "@/shared/tma/types"
+import { useConflicts } from "@/features/meetings/queries"
 import { WIZARD_STEPS } from "./wizard-constants"
 
 export function useCreateWizard({
   initial,
-  meetings,
   onComplete,
 }: {
   initial?: Partial<MeetingDraft>
-  meetings: Meeting[]
   onComplete: (m: MeetingDraft & { end: string }) => void
 }) {
   const [step, setStep] = useState(0)
@@ -53,25 +52,34 @@ export function useCreateWizard({
     setStep((s) => Math.max(0, Math.min(WIZARD_STEPS.length - 1, s + dir)))
   }
 
+  const conflictsMut = useConflicts()
+
+  useEffect(() => {
+    if (WIZARD_STEPS[step] !== "review") return
+    if (!draft.date || !draft.start || !endTime) return
+    if (!draft.participants.length) return
+    const emails = draft.participants.map((p) => p.email)
+    conflictsMut.mutate({
+      participants: emails,
+      date: draft.date,
+      start: draft.start,
+      end: endTime,
+    })
+    // intentionally NOT including conflictsMut in deps — useMutation's mutate is stable
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, draft.date, draft.start, endTime, draft.participants])
+
   const conflictPeople = useMemo(() => {
-    if (WIZARD_STEPS[step] !== "review" || !draft.date) return [] as string[]
-    const overlaps = (s1: string, e1: string, s2: string, e2: string) =>
-      s1 < e2 && s2 < e1
+    const list = conflictsMut.data ?? []
     const names = new Set<string>()
-    draft.participants.forEach((pp) => {
-      meetings.forEach((m) => {
-        if (
-          m.date === draft.date &&
-          (m.organizer === pp.email || m.participants.includes(pp.email)) &&
-          overlaps(draft.start, endTime, m.start, m.end)
-        ) {
-          const parts = pp.name.split(" ")
-          names.add(parts[0] + " " + (parts[1] ? `${parts[1][0]}.` : ""))
-        }
-      })
+    list.forEach((c) => {
+      const parts = c.name.split(" ")
+      names.add(parts[0] + " " + (parts[1] ? `${parts[1][0]}.` : ""))
     })
     return [...names]
-  }, [step, draft, endTime, meetings])
+  }, [conflictsMut.data])
+
+  const recurringBlocked = draft.rec !== "once"
 
   const finalMeeting = { ...draft, end: endTime, organizer: ME.email }
 
@@ -83,6 +91,7 @@ export function useCreateWizard({
     canNext,
     go,
     conflictPeople,
+    recurringBlocked,
     finalMeeting,
     pSearch,
     setPSearch,

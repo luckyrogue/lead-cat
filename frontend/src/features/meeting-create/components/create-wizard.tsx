@@ -1,5 +1,5 @@
 import { useTmaApp } from "@/shared/tma/context"
-import type { Meeting, MeetingDraft } from "@/shared/tma/types"
+import type { MeetingDraft } from "@/shared/tma/types"
 import { CatBtn, CatIcon } from "@/shared/ui/cat/primitives"
 import { useCreateWizard } from "../lib/use-create-wizard"
 import { WIZARD_STEPS } from "../lib/wizard-constants"
@@ -12,15 +12,13 @@ import { WizardStepWho } from "./wizard-step-who"
 export function CreateWizard({
   initial,
   onComplete,
-  meetings,
 }: {
   initial?: Partial<MeetingDraft>
   onComplete: (m: MeetingDraft & { end: string }) => void
-  meetings: Meeting[]
 }) {
   const p = useTmaApp()
   const t = p.t
-  const wizard = useCreateWizard({ initial, meetings, onComplete })
+  const wizard = useCreateWizard({ initial, onComplete })
   const {
     step,
     draft,
@@ -29,6 +27,7 @@ export function CreateWizard({
     canNext,
     go,
     conflictPeople,
+    recurringBlocked,
     finalMeeting,
     pSearch,
     setPSearch,
@@ -69,6 +68,7 @@ export function CreateWizard({
             endTime={endTime}
             finalMeeting={finalMeeting}
             conflictPeople={conflictPeople}
+            recurringBlocked={recurringBlocked}
           />
         )}
       </div>
@@ -92,7 +92,14 @@ export function CreateWizard({
             {t("back")}
           </CatBtn>
         )}
-        <CatBtn variant="primary" full disabled={!canNext} onClick={() => go(1)}>
+        <CatBtn
+          variant="primary"
+          full
+          disabled={
+            !canNext || (WIZARD_STEPS[step] === "review" && recurringBlocked)
+          }
+          onClick={() => go(1)}
+        >
           {step === WIZARD_STEPS.length - 1
             ? conflictPeople.length
               ? `🐾 ${t("proceed")}`

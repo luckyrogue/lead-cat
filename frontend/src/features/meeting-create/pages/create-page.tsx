@@ -68,11 +68,7 @@ export function CreateMeetingPage() {
       onBack={goBack}
       title={translate(p.lang, "create")}
     >
-      <CreateWizard
-        initial={initial}
-        meetings={meetings}
-        onComplete={completeCreate}
-      />
+      <CreateWizard initial={initial} onComplete={completeCreate} />
     </Overlay>
   )
 }
