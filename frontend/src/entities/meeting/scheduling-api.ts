@@ -41,26 +41,42 @@ export type Conflict = {
   end: string
 }
 
+export type OccurrenceConflicts = {
+  date: string
+  start: string
+  end: string
+  conflicts: Conflict[]
+}
+
 export type ConflictsParams = {
   participants: string[]
   date: string
   start: string
   end: string
   excludeId?: string
+  recurrence?: string
+  recurrenceUntil?: string
+  recurrenceDays?: number[]
 }
 
 export async function fetchConflicts(
   params: ConflictsParams
-): Promise<Conflict[]> {
-  const data = await apiFetch<{ conflicts: Conflict[] }>("/tma/conflicts", {
-    method: "POST",
-    body: {
-      participants: params.participants,
-      date: params.date,
-      start: params.start,
-      end: params.end,
-      exclude_id: params.excludeId ?? "",
-    },
-  })
-  return data.conflicts
+): Promise<OccurrenceConflicts[]> {
+  const data = await apiFetch<{ occurrences: OccurrenceConflicts[] }>(
+    "/tma/conflicts",
+    {
+      method: "POST",
+      body: {
+        participants: params.participants,
+        date: params.date,
+        start: params.start,
+        end: params.end,
+        exclude_id: params.excludeId ?? "",
+        recurrence: params.recurrence,
+        recurrence_until: params.recurrenceUntil,
+        recurrence_days: params.recurrenceDays,
+      },
+    }
+  )
+  return data.occurrences
 }

@@ -16,6 +16,8 @@ type MeetingDTO = {
   desc: string
   meet_link: string
   status: string
+  series_id?: string
+  recurrence_until?: string
 }
 
 export type MeetingInput = {
@@ -28,6 +30,8 @@ export type MeetingInput = {
   recurrence: string
   desc: string
   participants: string[] // emails
+  recurrence_until?: string
+  recurrence_days?: number[]
 }
 
 export type MeetingPatch = Partial<{
@@ -50,15 +54,25 @@ export async function createMeeting(input: MeetingInput): Promise<Meeting> {
 
 export async function updateMeeting(
   id: string,
-  patch: MeetingPatch
+  patch: MeetingPatch,
+  opts?: { scope?: "this" | "whole" }
 ): Promise<Meeting> {
+  const scope = opts?.scope ?? "this"
   const data = await apiFetch<{ meeting: MeetingDTO }>(`/tma/meetings/${id}`, {
     method: "PATCH",
     body: patch,
+    params: { scope },
   })
   return toMeeting(data.meeting)
 }
 
-export async function deleteMeeting(id: string): Promise<void> {
-  await apiFetch<void>(`/tma/meetings/${id}`, { method: "DELETE" })
+export async function deleteMeeting(
+  id: string,
+  opts?: { scope?: "this" | "whole" }
+): Promise<void> {
+  const scope = opts?.scope ?? "this"
+  await apiFetch<void>(`/tma/meetings/${id}`, {
+    method: "DELETE",
+    params: { scope },
+  })
 }

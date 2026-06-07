@@ -13,6 +13,8 @@ export type Meeting = {
   organizer: string
   participants: string[]
   desc?: string
+  seriesId?: string
+  recurrenceUntil?: string
 }
 
 export type FreeSlot = {
@@ -32,6 +34,7 @@ export type MeetingDraft = {
   dur: number
   rec: string
   recDays: number[]
+  until: string
   participants: Employee[]
   desc: string
   end?: string

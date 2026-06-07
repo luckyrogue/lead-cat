@@ -18,6 +18,8 @@ type MeetingDTO = {
   desc: string
   meet_link: string
   status: string
+  series_id?: string
+  recurrence_until?: string
 }
 
 export function toMeeting(d: MeetingDTO): Meeting {
@@ -33,6 +35,8 @@ export function toMeeting(d: MeetingDTO): Meeting {
     organizer: d.organizer,
     participants: d.participants,
     desc: d.desc,
+    seriesId: d.series_id,
+    recurrenceUntil: d.recurrence_until,
   }
 }
 

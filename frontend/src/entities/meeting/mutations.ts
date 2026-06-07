@@ -23,8 +23,15 @@ export function useCreateMeeting() {
 export function useUpdateMeeting() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, patch }: { id: string; patch: MeetingPatch }) =>
-      updateMeeting(id, patch),
+    mutationFn: ({
+      id,
+      patch,
+      scope,
+    }: {
+      id: string
+      patch: MeetingPatch
+      scope?: "this" | "whole"
+    }) => updateMeeting(id, patch, { scope }),
     onSuccess: () => qc.invalidateQueries({ queryKey: tmaKeys.all }),
   })
 }
@@ -32,7 +39,10 @@ export function useUpdateMeeting() {
 export function useDeleteMeeting() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => deleteMeeting(id),
+    mutationFn: (args: string | { id: string; scope?: "this" | "whole" }) => {
+      if (typeof args === "string") return deleteMeeting(args)
+      return deleteMeeting(args.id, { scope: args.scope })
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: tmaKeys.all }),
   })
 }

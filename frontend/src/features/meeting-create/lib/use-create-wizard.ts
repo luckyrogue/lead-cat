@@ -21,6 +21,7 @@ export function useCreateWizard({
     dur: 30,
     rec: "once",
     recDays: [],
+    until: "",
     participants: [],
     desc: "",
     ...initial,
@@ -70,7 +71,7 @@ export function useCreateWizard({
   }, [step, draft.date, draft.start, endTime, draft.participants])
 
   const conflictPeople = useMemo(() => {
-    const list = conflictsMut.data ?? []
+    const list = conflictsMut.data?.[0]?.conflicts ?? []
     const names = new Set<string>()
     list.forEach((c) => {
       const parts = c.name.split(" ")
