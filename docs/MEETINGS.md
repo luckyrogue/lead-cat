@@ -2,7 +2,7 @@
 
 A Telegram Mini App feature for scheduling and managing **Google Meet** meetings inside an organization, layered on top of the existing Lead Cat platform. The full specification (the source of truth for behavior) is **[NEW-FEATURES.md](NEW-FEATURES.md)** (ТЗ). This page is the engineering summary and status.
 
-> **Status:** TMA auth, all read paths, and all non-recurring write paths are live. Create, edit, delete, and conflict warning go through `/api/tma/*` end-to-end. Recurring meetings (series) are not yet supported — the wizard blocks confirm when `rec !== "once"`. Frontend still uses mock fixtures in a few places; see `frontend/README.md` for layout.
+> **Status:** TMA auth, all read paths, and all write paths (incl. recurring series) are live. Create, edit, delete, and conflict warning go through `/api/tma/*` end-to-end. Recurring meetings support daily, weekly, custom-weekdays, and monthly kinds with a required end date; edit/cancel are scope-aware (`this` single occurrence vs `whole` series). Frontend still uses mock fixtures in a few places; see `frontend/README.md` for layout.
 
 ## Concept (per ТЗ)
 
@@ -52,14 +52,16 @@ Create meeting (fields, meeting types, recurrence, naming standard), view meetin
 
 ### Write paths
 
-| Route                          | Status                      |
-| ------------------------------ | --------------------------- |
-| `POST /api/tma/meetings`       | Done (non-recurring)        |
-| `PATCH /api/tma/meetings/:id`  | Done (organizer-only, 403)  |
-| `DELETE /api/tma/meetings/:id` | Done (organizer-only, 403)  |
-| `POST /api/tma/conflicts`      | Done                        |
+| Route                                       | Status                                                  |
+| ------------------------------------------- | ------------------------------------------------------- |
+| `POST /api/tma/meetings`                    | Done (incl. recurring; `recurrence_until` / `_days`)    |
+| `PATCH /api/tma/meetings/:id?scope=this`    | Done (organizer-only, 403) — single occurrence          |
+| `PATCH /api/tma/meetings/:id?scope=whole`   | Done (organizer-only, 403) — entire series              |
+| `DELETE /api/tma/meetings/:id?scope=this`   | Done (organizer-only, 403) — single occurrence          |
+| `DELETE /api/tma/meetings/:id?scope=whole`  | Done (organizer-only, 403) — entire series              |
+| `POST /api/tma/conflicts`                   | Done (occurrence-grouped response; series-aware)        |
 
-Recurring series (PATCH/DELETE with scope=this/forward/series) ships in slice B.
+Recurrence kinds: `once`, `daily`, `weekly`, `custom` (with `recurrence_days: [1..7]`, Mon=1..Sun=7), `monthly`. Non-once requires `recurrence_until` (YYYY-MM-DD).
 
 ### Setup cutover (planned)
 

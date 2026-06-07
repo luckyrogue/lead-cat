@@ -46,12 +46,14 @@ All routes require `Authorization: Bearer <tma_jwt>`.
 | `GET`    | `/api/tma/schedule?email=&scope=`             | Read a colleague's schedule (view-only)                               |
 | `GET`    | `/api/tma/employees?q=`                       | Employee directory search / autocomplete                              |
 | `POST`   | `/api/tma/free-slots`                         | Common free-time checker across participants                          |
-| `POST`   | `/api/tma/meetings`                           | Create a non-recurring meeting (requires Google-configured workspace) |
-| `PATCH`  | `/api/tma/meetings/:id`                       | Edit a single meeting field-by-field (organizer-only, 403)            |
-| `DELETE` | `/api/tma/meetings/:id`                       | Cancel a single meeting (organizer-only, 403)                         |
-| `POST`   | `/api/tma/conflicts`                          | Conflict-warning check for the scheduling wizard                      |
+| `POST`   | `/api/tma/meetings`                           | Create a meeting (recurring supported via `recurrence_until` + `recurrence_days`) |
+| `PATCH`  | `/api/tma/meetings/:id?scope=this\|whole`     | Edit a meeting (organizer-only, 403); `scope` default `this`          |
+| `DELETE` | `/api/tma/meetings/:id?scope=this\|whole`     | Cancel a meeting (organizer-only, 403); `scope` default `this`        |
+| `POST`   | `/api/tma/conflicts`                          | Conflict check (single or expanded series); response: `occurrences[]` |
 
-Write-path error codes: `meetings_not_configured` (Google integration missing), `meetings_recurring_unsupported` (recurring series not yet supported — slice B), `forbidden` (not the organizer / not admin), `validation_failed` (bad input).
+Recurrence kinds: `once`, `daily`, `weekly`, `custom` (with `recurrence_days: [1..7]`, Mon=1..Sun=7), `monthly`. Non-once requires `recurrence_until` (YYYY-MM-DD).
+
+Write-path error codes: `meetings_not_configured` (Google integration missing), `forbidden` (not the organizer / not admin), `validation_failed` (bad input, incl. bad recurrence / scope).
 
 ---
 
