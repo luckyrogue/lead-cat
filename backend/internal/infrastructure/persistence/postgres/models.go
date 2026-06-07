@@ -95,6 +95,7 @@ type Meeting struct {
 	Status          string               `json:"status"`
 	SeriesID        *uuid.UUID           `json:"series_id,omitempty"`
 	RecurrenceUntil *time.Time           `json:"recurrence_until,omitempty"`
+	RecurrenceDays  []int                `json:"recurrence_days,omitempty"`
 	Participants    []MeetingParticipant `json:"participants"`
 }
 

@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -14,13 +15,13 @@ var ErrMeetingNotEditable = errors.New("meeting not found or not editable")
 
 const meetingCols = `id, workspace_id, organizer_user_id, dept, type, host,
 	starts_at, ends_at, recurrence, name, description, google_event_id, meet_link, status,
-	series_id, recurrence_until`
+	series_id, recurrence_until, recurrence_days`
 
 // meetingColsM is meetingCols qualified with the `m` alias for joins.
 // Keep its columns (and the scanMeeting scan order) in sync with meetingCols.
 const meetingColsM = `m.id, m.workspace_id, m.organizer_user_id, m.dept, m.type, m.host,
 	m.starts_at, m.ends_at, m.recurrence, m.name, m.description, m.google_event_id, m.meet_link, m.status,
-	m.series_id, m.recurrence_until`
+	m.series_id, m.recurrence_until, m.recurrence_days`
 
 // MeetingWithTZ is a meeting plus its workspace timezone (for bot rendering).
 type MeetingWithTZ struct {
@@ -32,24 +33,33 @@ func scanMeeting(row interface {
 	Scan(dest ...any) error
 }) (Meeting, error) {
 	var m Meeting
+	var daysRaw []byte
 	err := row.Scan(&m.ID, &m.WorkspaceID, &m.OrganizerUserID, &m.Dept, &m.Type, &m.Host,
 		&m.StartsAt, &m.EndsAt, &m.Recurrence, &m.Name, &m.Description, &m.GoogleEventID, &m.MeetLink, &m.Status,
-		&m.SeriesID, &m.RecurrenceUntil)
+		&m.SeriesID, &m.RecurrenceUntil, &daysRaw)
+	if err == nil && len(daysRaw) > 0 {
+		err = json.Unmarshal(daysRaw, &m.RecurrenceDays)
+	}
 	return m, err
 }
 
 const insertMeetingSQL = `
 	INSERT INTO meetings (workspace_id, organizer_user_id, dept, type, host,
 		starts_at, ends_at, recurrence, name, description, google_event_id, meet_link,
-		series_id, recurrence_until)
-	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+		series_id, recurrence_until, recurrence_days)
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
 	RETURNING ` + meetingCols
 
-// meetingInsertArgs returns the args for insertMeetingSQL; order MUST match its $1..$14.
+// meetingInsertArgs returns the args for insertMeetingSQL; order MUST match its $1..$15.
 func meetingInsertArgs(m Meeting) []any {
+	var daysJSON any
+	if len(m.RecurrenceDays) > 0 {
+		b, _ := json.Marshal(m.RecurrenceDays)
+		daysJSON = b
+	}
 	return []any{m.WorkspaceID, m.OrganizerUserID, m.Dept, m.Type, m.Host,
 		m.StartsAt, m.EndsAt, m.Recurrence, m.Name, m.Description, m.GoogleEventID, m.MeetLink,
-		m.SeriesID, m.RecurrenceUntil}
+		m.SeriesID, m.RecurrenceUntil, daysJSON}
 }
 
 const updateMeetingSQL = `
@@ -171,6 +181,16 @@ func (s *Store) ListSeriesOccurrences(ctx context.Context, workspaceID, seriesID
 		ORDER BY starts_at`, seriesID, workspaceID, fromStart)
 }
 
+// ListSeriesAllOccurrences returns ALL scheduled occurrences of a series in the
+// workspace, regardless of start time, ordered by start. Used for whole-series
+// edit (slice B). Past occurrences are included.
+func (s *Store) ListSeriesAllOccurrences(ctx context.Context, workspaceID, seriesID uuid.UUID) ([]Meeting, error) {
+	return s.queryMeetings(ctx, `
+		SELECT `+meetingCols+` FROM meetings
+		WHERE series_id = $1 AND workspace_id = $2 AND status = 'scheduled'
+		ORDER BY starts_at`, seriesID, workspaceID)
+}
+
 func (s *Store) GetMeeting(ctx context.Context, workspaceID, id uuid.UUID) (Meeting, error) {
 	row := s.pool.QueryRow(ctx, `SELECT `+meetingCols+` FROM meetings WHERE id = $1 AND workspace_id = $2`, id, workspaceID)
 	return scanMeeting(row)
@@ -225,11 +245,17 @@ func (s *Store) ListMeetingsByOrganizerTelegram(ctx context.Context, telegramID 
 	var out []MeetingWithTZ
 	for rows.Next() {
 		var mt MeetingWithTZ
+		var daysRaw []byte
 		if err := rows.Scan(&mt.ID, &mt.WorkspaceID, &mt.OrganizerUserID, &mt.Dept, &mt.Type, &mt.Host,
 			&mt.StartsAt, &mt.EndsAt, &mt.Recurrence, &mt.Name, &mt.Description, &mt.GoogleEventID, &mt.MeetLink, &mt.Status,
-			&mt.SeriesID, &mt.RecurrenceUntil,
+			&mt.SeriesID, &mt.RecurrenceUntil, &daysRaw,
 			&mt.TZ); err != nil {
 			return nil, err
+		}
+		if len(daysRaw) > 0 {
+			if err := json.Unmarshal(daysRaw, &mt.RecurrenceDays); err != nil {
+				return nil, err
+			}
 		}
 		out = append(out, mt)
 	}
@@ -282,6 +308,20 @@ func (s *Store) CancelSeriesOccurrences(ctx context.Context, workspaceID, series
 		UPDATE meetings SET status = 'cancelled', updated_at = now()
 		WHERE series_id = $1 AND workspace_id = $2 AND starts_at >= $3 AND status = 'scheduled'`,
 		seriesID, workspaceID, fromStart)
+	if err != nil {
+		return 0, err
+	}
+	return int(ct.RowsAffected()), nil
+}
+
+// CancelAllSeriesOccurrences cancels (status='cancelled') ALL scheduled
+// occurrences of a series in the workspace, in one atomic statement.
+// Returns the count.
+func (s *Store) CancelAllSeriesOccurrences(ctx context.Context, workspaceID, seriesID uuid.UUID) (int, error) {
+	ct, err := s.pool.Exec(ctx, `
+		UPDATE meetings SET status = 'cancelled', updated_at = now()
+		WHERE series_id = $1 AND workspace_id = $2 AND status = 'scheduled'`,
+		seriesID, workspaceID)
 	if err != nil {
 		return 0, err
 	}
