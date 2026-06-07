@@ -1,21 +1,22 @@
 import { useMemo } from "react"
 import { useNavigate, useParams } from "@tanstack/react-router"
-import { useQueryClient } from "@tanstack/react-query"
 import { CreateWizard } from "@/features/meeting-create/components/create-wizard"
-import { useTmaAuth } from "@/features/auth/auth-context"
-import { useMyMeetings } from "@/features/meetings/queries"
-import { draftToMeeting, detailToDraft } from "@/entities/meeting/lib/format"
-import { translate } from "@/shared/tma/i18n"
+import {
+  useCreateMeeting,
+  useMyMeetings,
+  useUpdateMeeting,
+} from "@/features/meetings/queries"
+import { detailToDraft } from "@/entities/meeting/lib/format"
+import { writeErrorKey } from "@/features/meetings/lib/write-error"
 import { useTmaApp } from "@/shared/tma/context"
-import type { Meeting, MeetingDraft } from "@/entities/meeting/types"
-import { tmaKeys } from "@/shared/api/query-keys"
+import { toastError, toastSuccess } from "@/shared/lib/toast"
+import type { MeetingDraft } from "@/entities/meeting/types"
+import type { MeetingInput, MeetingPatch } from "@/features/meetings/api"
 import { Overlay } from "@/components/tma-shell"
 
 export function CreateMeetingPage() {
   const p = useTmaApp()
-  const { user } = useTmaAuth()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const params = useParams({ strict: false })
   const editId = "editId" in params ? (params.editId as string) : undefined
   const slotInitial = useMemo(() => {
@@ -41,33 +42,53 @@ export function CreateMeetingPage() {
     [editing, slotInitial]
   )
 
+  const createMut = useCreateMeeting()
+  const updateMut = useUpdateMeeting()
+
   const goBack = () => {
     void navigate({ to: "/meetings", search: { scope: "upcoming" } })
   }
 
-  const completeCreate = (m: MeetingDraft & { end: string }) => {
-    const nm = draftToMeeting(
-      m,
-      editId ?? `new-${Date.now()}`,
-      user?.email ?? ""
-    )
-    queryClient.setQueryData<Meeting[]>(tmaKeys.meetings("all"), (old = []) => {
-      if (editId) return old.map((x) => (x.id === editId ? nm : x))
-      return [nm, ...old]
-    })
-    void navigate({
-      to: "/meetings",
-      search: { scope: "upcoming", success: nm.id },
-    })
+  const completeCreate = async (m: MeetingDraft & { end: string }) => {
+    try {
+      if (editId) {
+        const patch: MeetingPatch = {
+          dept: m.dept,
+          type: m.type,
+          host: m.host,
+          date: m.date,
+          start: m.start,
+          end: m.end,
+          desc: m.desc,
+        }
+        await updateMut.mutateAsync({ id: editId, patch })
+        toastSuccess(p.t("updated"))
+        void navigate({ to: "/meetings", search: { scope: "upcoming" } })
+      } else {
+        const input: MeetingInput = {
+          dept: m.dept,
+          type: m.type,
+          host: m.host,
+          date: m.date,
+          start: m.start,
+          end: m.end,
+          recurrence: m.rec,
+          desc: m.desc,
+          participants: m.participants.map((x) => x.email),
+        }
+        const created = await createMut.mutateAsync(input)
+        void navigate({
+          to: "/meetings",
+          search: { scope: "upcoming", success: created.id },
+        })
+      }
+    } catch (err) {
+      toastError(err, p.t(writeErrorKey(err)))
+    }
   }
 
   return (
-    <Overlay
-      open
-      onClose={goBack}
-      onBack={goBack}
-      title={translate(p.lang, "create")}
-    >
+    <Overlay open onClose={goBack} onBack={goBack} title={p.t("create")}>
       <CreateWizard initial={initial} onComplete={completeCreate} />
     </Overlay>
   )
