@@ -1,6 +1,7 @@
 export { TgBar } from "./tg-bar"
 export { LangDropdown } from "./lang-dropdown"
 export { TabBar } from "./tab-bar"
+export { BottomSheet } from "./bottom-sheet"
 export { Sheet } from "./sheet"
 export { Overlay } from "./overlay"
 export { TmaToast } from "./tma-toast"

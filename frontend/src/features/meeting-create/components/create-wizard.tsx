@@ -16,8 +16,7 @@ export function CreateWizard({
   initial?: Partial<MeetingDraft>
   onComplete: (m: MeetingDraft & { end: string }) => void
 }) {
-  const p = useTmaApp()
-  const t = p.t
+  const { t } = useTmaApp()
   const wizard = useCreateWizard({ initial, onComplete })
   const {
     step,
@@ -34,20 +33,10 @@ export function CreateWizard({
   } = wizard
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        minHeight: 0,
-      }}
-    >
+    <div className="flex h-full min-h-0 flex-col">
       <WizardStepProgress step={step} />
 
-      <div
-        className="lc-scroll"
-        style={{ flex: 1, overflow: "auto", padding: "10px 16px 16px" }}
-      >
+      <div className="lc-scroll flex-1 overflow-auto px-4 pb-4 pt-2.5">
         {WIZARD_STEPS[step] === "what" && (
           <WizardStepWhat draft={draft} set={set} />
         )}
@@ -73,21 +62,19 @@ export function CreateWizard({
         )}
       </div>
 
-      <div
-        style={{
-          flexShrink: 0,
-          padding: "12px 16px max(12px, var(--tma-safe-bottom, 0px))",
-          borderTop: `1px solid ${p.border}`,
-          background: p.tgBar,
-          display: "flex",
-          gap: 10,
-        }}
-      >
+      <div className="flex shrink-0 gap-2.5 border-t border-tma-border bg-tma-tg-bar px-4 pt-3 pb-[max(12px,var(--tma-safe-bottom,0px))]">
         {step > 0 && (
           <CatBtn
             variant="outline"
             onClick={() => go(-1)}
-            icon={<CatIcon name="chevL" size={18} color={p.text} sw={2.2} />}
+            icon={
+              <CatIcon
+                name="chevL"
+                size={18}
+                className="text-tma-text"
+                sw={2.2}
+              />
+            }
           >
             {t("back")}
           </CatBtn>

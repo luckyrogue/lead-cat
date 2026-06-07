@@ -1,12 +1,31 @@
-import { buildTitle, fmtDate } from "@/shared/tma/meeting-utils"
+import type { ReactNode } from "react"
+import { buildTitle, fmtDate } from "@/entities/meeting/lib/format"
 import { useTmaApp } from "@/shared/tma/context"
 import type { MeetingDraft } from "@/shared/tma/types"
-import { hexToRgba } from "@/shared/tma/palette"
 import { DetailRow } from "@/components/meetings/detail-row"
 import { MeetingTitlePreview } from "@/components/meetings/meeting-title-preview"
-import { ParticipantStack } from "@/features/meetings/components/meeting-ui"
+import { ParticipantStack } from "@/components/meetings/meeting-ui"
 import { CatCard, CatIcon } from "@/shared/ui/cat/primitives"
 import { WizardStepTitle } from "./wizard-step-title"
+
+function AlertBanner({
+  title,
+  children,
+}: {
+  title: string
+  children: ReactNode
+}) {
+  return (
+    <div className="mt-3.5 rounded-2xl border border-tma-danger/30 bg-tma-danger-soft px-[15px] py-[13px]">
+      <div className="font-display mb-1.5 flex items-center gap-[7px] text-[14.5px] font-extrabold text-tma-danger">
+        ⚠️ {title}
+      </div>
+      <div className="text-[13px] leading-snug text-tma-text/85">
+        {children}
+      </div>
+    </div>
+  )
+}
 
 export function WizardStepReview({
   draft,
@@ -21,8 +40,7 @@ export function WizardStepReview({
   conflictPeople: string[]
   recurringBlocked: boolean
 }) {
-  const p = useTmaApp()
-  const t = p.t
+  const { t, lang } = useTmaApp()
 
   return (
     <div>
@@ -30,11 +48,11 @@ export function WizardStepReview({
       <MeetingTitlePreview
         label={t("autoName")}
         title={buildTitle({ ...finalMeeting, type: draft.type })}
-        marginBottom={14}
+        className="mb-3.5"
       />
       <CatCard>
         <DetailRow icon="calendar" label={t("dateT")}>
-          {fmtDate(draft.date, p.lang)}
+          {fmtDate(draft.date, lang)}
         </DetailRow>
         <DetailRow icon="clock" label={t("timeT")}>
           {draft.start} – {endTime} · UTC+5
@@ -42,37 +60,17 @@ export function WizardStepReview({
         <DetailRow icon="user" label={t("host")}>
           {draft.host}
         </DetailRow>
-        <div
-          style={{
-            display: "flex",
-            gap: 12,
-            padding: "12px 0 0",
-            alignItems: "center",
-          }}
-        >
-          <div
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 10,
-              background: p.accentSoft,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <CatIcon name="users" size={18} color={p.accent} sw={2} />
+        <div className="flex items-center gap-3 pt-3">
+          <div className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] bg-tma-accent-soft">
+            <CatIcon
+              name="users"
+              size={18}
+              className="text-tma-accent"
+              sw={2}
+            />
           </div>
-          <div style={{ flex: 1 }}>
-            <div
-              style={{
-                fontSize: 12,
-                color: p.muted,
-                fontWeight: 600,
-                marginBottom: 4,
-              }}
-            >
+          <div className="flex-1">
+            <div className="mb-1 text-xs font-semibold text-tma-muted">
               {t("addPeople")}
             </div>
             {draft.participants.length ? (
@@ -81,82 +79,18 @@ export function WizardStepReview({
                 max={6}
               />
             ) : (
-              <span style={{ color: p.faint, fontSize: 14 }}>—</span>
+              <span className="text-sm text-tma-faint">—</span>
             )}
           </div>
         </div>
       </CatCard>
       {recurringBlocked && (
-        <div
-          style={{
-            marginTop: 14,
-            background: p.dangerSoft,
-            borderRadius: 16,
-            padding: "13px 15px",
-            border: `1px solid ${hexToRgba(p.danger, 0.3)}`,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 7,
-              color: p.danger,
-              fontWeight: 800,
-              fontFamily: "var(--font-display)",
-              fontSize: 14.5,
-              marginBottom: 6,
-            }}
-          >
-            ⚠️ {t("recurringSoon")}
-          </div>
-          <div
-            style={{
-              fontSize: 13,
-              color: p.text,
-              opacity: 0.85,
-              lineHeight: 1.4,
-            }}
-          >
-            {t("recurringSoon")}
-          </div>
-        </div>
+        <AlertBanner title={t("recurringSoon")}>{t("recurringSoon")}</AlertBanner>
       )}
       {conflictPeople.length > 0 && (
-        <div
-          style={{
-            marginTop: 14,
-            background: p.dangerSoft,
-            borderRadius: 16,
-            padding: "13px 15px",
-            border: `1px solid ${hexToRgba(p.danger, 0.3)}`,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 7,
-              color: p.danger,
-              fontWeight: 800,
-              fontFamily: "var(--font-display)",
-              fontSize: 14.5,
-              marginBottom: 6,
-            }}
-          >
-            ⚠️ {t("conflict")}
-          </div>
-          <div
-            style={{
-              fontSize: 13,
-              color: p.text,
-              opacity: 0.85,
-              lineHeight: 1.4,
-            }}
-          >
-            {t("conflictSub")} {conflictPeople.join(", ")}
-          </div>
-        </div>
+        <AlertBanner title={t("conflict")}>
+          {t("conflictSub")} {conflictPeople.join(", ")}
+        </AlertBanner>
       )}
     </div>
   )

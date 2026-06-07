@@ -1,10 +1,17 @@
 import { useEffect } from "react"
 
-type SafeAreaInset = { top?: number; bottom?: number; left?: number; right?: number }
+type SafeAreaInset = {
+  top?: number
+  bottom?: number
+  left?: number
+  right?: number
+}
 
 type TgWebApp = {
   ready: () => void
   expand: () => void
+  isExpanded?: boolean
+  disableVerticalSwipes?: () => void
   viewportHeight?: number
   viewportStableHeight?: number
   safeAreaInset?: SafeAreaInset
@@ -14,9 +21,8 @@ type TgWebApp = {
 }
 
 function getWebApp(): TgWebApp | undefined {
-  return (
-    window as unknown as { Telegram?: { WebApp?: TgWebApp } }
-  ).Telegram?.WebApp
+  return (window as unknown as { Telegram?: { WebApp?: TgWebApp } }).Telegram
+    ?.WebApp
 }
 
 function applyViewportHeight() {
@@ -46,15 +52,26 @@ export function useTelegramViewport() {
     const tg = getWebApp()
     tg?.ready()
     tg?.expand()
+    // Stop the swipe-down-to-minimize gesture: it drags the whole webview and
+    // pushes the top/bottom bars out of the visible area.
+    tg?.disableVerticalSwipes?.()
     applyViewportHeight()
 
-    const onResize = () => applyViewportHeight()
-    window.addEventListener("resize", onResize)
-    tg?.onEvent?.("viewportChanged", onResize)
+    const onViewport = () => {
+      // Telegram collapses the app on swipe; re-expand so chrome stays in view.
+      if (tg && tg.isExpanded === false) tg.expand()
+      applyViewportHeight()
+    }
+    window.addEventListener("resize", onViewport)
+    tg?.onEvent?.("viewportChanged", onViewport)
+    tg?.onEvent?.("safeAreaChanged", applyViewportHeight)
+    tg?.onEvent?.("contentSafeAreaChanged", applyViewportHeight)
 
     return () => {
-      window.removeEventListener("resize", onResize)
-      tg?.offEvent?.("viewportChanged", onResize)
+      window.removeEventListener("resize", onViewport)
+      tg?.offEvent?.("viewportChanged", onViewport)
+      tg?.offEvent?.("safeAreaChanged", applyViewportHeight)
+      tg?.offEvent?.("contentSafeAreaChanged", applyViewportHeight)
       document.body.classList.remove("tma-mode")
       document.documentElement.style.removeProperty("--tma-vh")
     }

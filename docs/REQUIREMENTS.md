@@ -14,28 +14,28 @@ Lead Cat is a Telegram-native meetings-management tool for a single organisation
 
 ## 2. Actors
 
-| Role | Description | Provisioned |
-| ---- | ----------- | ----------- |
-| **User** | Any registered employee. Can create meetings, manage their own meetings, add/remove participants from their own meetings. | Automatically on `/start` |
-| **Main Administrator** | Full access: view/edit/delete any meeting, manage users, assign/revoke admin rights. | Manually by another admin, or first admin set via deploy-time config (TG ID). |
+| Role                   | Description                                                                                                               | Provisioned                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| **User**               | Any registered employee. Can create meetings, manage their own meetings, add/remove participants from their own meetings. | Automatically on `/start`                                                     |
+| **Main Administrator** | Full access: view/edit/delete any meeting, manage users, assign/revoke admin rights.                                      | Manually by another admin, or first admin set via deploy-time config (TG ID). |
 
 Access matrix summary (from ТЗ §2):
 
-| Action | User | Admin |
-| ------ | :--: | :---: |
-| Create meeting | ✅ | ✅ |
-| View own meetings | ✅ | ✅ |
-| View all meetings | ❌ | ✅ |
-| View any colleague's schedule | ✅ | ✅ |
-| Edit own meeting | ✅ | ✅ |
-| Edit any meeting | ❌ | ✅ |
-| Delete own meeting | ✅ | ✅ |
-| Delete any meeting | ❌ | ✅ |
-| Add/remove participants (own meeting) | ✅ | ✅ |
-| Add/remove participants (any meeting) | ❌ | ✅ |
-| Conflict warning (automatic) | ✅ | ✅ |
-| Free-time checker | ✅ | ✅ |
-| Assign admins / view user list | ❌ | ✅ |
+| Action                                | User | Admin |
+| ------------------------------------- | :--: | :---: |
+| Create meeting                        |  ✅  |  ✅   |
+| View own meetings                     |  ✅  |  ✅   |
+| View all meetings                     |  ❌  |  ✅   |
+| View any colleague's schedule         |  ✅  |  ✅   |
+| Edit own meeting                      |  ✅  |  ✅   |
+| Edit any meeting                      |  ❌  |  ✅   |
+| Delete own meeting                    |  ✅  |  ✅   |
+| Delete any meeting                    |  ❌  |  ✅   |
+| Add/remove participants (own meeting) |  ✅  |  ✅   |
+| Add/remove participants (any meeting) |  ❌  |  ✅   |
+| Conflict warning (automatic)          |  ✅  |  ✅   |
+| Free-time checker                     |  ✅  |  ✅   |
+| Assign admins / view user list        |  ❌  |  ✅   |
 
 ---
 
@@ -107,14 +107,14 @@ Access matrix summary (from ТЗ §2):
 
 ### 3.10 Notifications (§5)
 
-| Event | Recipients | Channel |
-| ----- | ---------- | ------- |
-| Meeting created | Organiser + all participants | Telegram + Google Calendar (email) |
-| Participant added | Added participant | Telegram (if registered) + Google Calendar (email) |
-| Participant removed | Removed participant | Telegram (if registered) + Google Calendar (email) |
-| Meeting edited | All participants | Telegram + Google Calendar (email) |
-| Meeting cancelled/deleted | All participants | Telegram + Google Calendar (email) |
-| Reminder before meeting | All participants | Telegram (user-configured) |
+| Event                     | Recipients                   | Channel                                            |
+| ------------------------- | ---------------------------- | -------------------------------------------------- |
+| Meeting created           | Organiser + all participants | Telegram + Google Calendar (email)                 |
+| Participant added         | Added participant            | Telegram (if registered) + Google Calendar (email) |
+| Participant removed       | Removed participant          | Telegram (if registered) + Google Calendar (email) |
+| Meeting edited            | All participants             | Telegram + Google Calendar (email)                 |
+| Meeting cancelled/deleted | All participants             | Telegram + Google Calendar (email)                 |
+| Reminder before meeting   | All participants             | Telegram (user-configured)                         |
 
 **Reminder settings (§5.2):** user configures in Settings — intervals: 10 min / 15 min / 30 min / 1 h / 2 h / 1 day; multiple intervals allowed; can be fully disabled. Applied globally to all meetings.
 
@@ -128,27 +128,27 @@ Access matrix summary (from ТЗ §2):
 
 ### 3.12 User settings (§7)
 
-| Setting | Default |
-| ------- | ------- |
-| Timezone | UTC+5 (Almaty) |
-| Reminder intervals | Off |
+| Setting            | Default                    |
+| ------------------ | -------------------------- |
+| Timezone           | UTC+5 (Almaty)             |
+| Reminder intervals | Off                        |
 | Interface language | Russian (English optional) |
 
 ### 3.13 Commands and navigation (§8)
 
 **Bot commands:**
 
-| Command | Description |
-| ------- | ----------- |
-| `/start` | Launch bot; register if unknown, else open main menu. |
-| `/menu` | Open main menu. |
-| `/new` | Create a new meeting. |
-| `/my_meetings` | View own meetings. |
-| `/schedule` | View a colleague's schedule. |
-| `/checker` | Free-time checker. |
-| `/settings` | User settings. |
-| `/help` | Command reference. |
-| `/admin` | Admin panel (admins only). |
+| Command        | Description                                           |
+| -------------- | ----------------------------------------------------- |
+| `/start`       | Launch bot; register if unknown, else open main menu. |
+| `/menu`        | Open main menu.                                       |
+| `/new`         | Create a new meeting.                                 |
+| `/my_meetings` | View own meetings.                                    |
+| `/schedule`    | View a colleague's schedule.                          |
+| `/checker`     | Free-time checker.                                    |
+| `/settings`    | User settings.                                        |
+| `/help`        | Command reference.                                    |
+| `/admin`       | Admin panel (admins only).                            |
 
 **Main menu buttons:** Create meeting, My meetings, Colleague schedule, Free-time checker, Settings, Help, Admin panel (admins only).
 
@@ -156,16 +156,16 @@ Access matrix summary (from ТЗ §2):
 
 ## 4. Prerequisites / stack
 
-| Tool / Service | Version | Notes |
-| -------------- | ------- | ----- |
-| Go | 1.26.x | `backend/go.mod` pins `go 1.26.3`; toolchain auto-fetches if newer. |
-| Node.js | 22.x | Frontend build (Vite). Dockerfile uses `node:22-alpine`. |
-| pnpm | 9.x | Frontend package manager (`frontend/pnpm-lock.yaml`). |
-| Docker + Compose | recent | Local Postgres + Redis via `deploy/docker-compose.yml`. |
-| PostgreSQL | 18 | `postgres:18-alpine` in local compose and CI smoke. |
-| Redis | 8 | `redis:8-alpine`; asynq queues and scheduler leader-lock. |
-| golangci-lint | 2.x | `make lint` / `make fmt` (config in `config/.golangci.yml`). |
-| air (optional) | latest | `make backend-watch` hot reload. |
+| Tool / Service   | Version | Notes                                                               |
+| ---------------- | ------- | ------------------------------------------------------------------- |
+| Go               | 1.26.x  | `backend/go.mod` pins `go 1.26.3`; toolchain auto-fetches if newer. |
+| Node.js          | 22.x    | Frontend build (Vite). Dockerfile uses `node:22-alpine`.            |
+| pnpm             | 9.x     | Frontend package manager (`frontend/pnpm-lock.yaml`).               |
+| Docker + Compose | recent  | Local Postgres + Redis via `deploy/docker-compose.yml`.             |
+| PostgreSQL       | 18      | `postgres:18-alpine` in local compose and CI smoke.                 |
+| Redis            | 8       | `redis:8-alpine`; asynq queues and scheduler leader-lock.           |
+| golangci-lint    | 2.x     | `make lint` / `make fmt` (config in `config/.golangci.yml`).        |
+| air (optional)   | latest  | `make backend-watch` hot reload.                                    |
 
 **Backend:** Go, Fiber (`gofiber/fiber/v2`), asynq, pgx, goose migrations. Clean architecture — `domain` ← `application` ← `infrastructure` / `delivery` / `platform`.
 
@@ -180,19 +180,19 @@ Default ports: API `:8080`, frontend `:3000`, Postgres `5432`, Redis `6379`.
 
 ### 4.1 Key environment variables
 
-| Variable | Required | Purpose |
-| -------- | -------- | ------- |
-| `BOT_TOKEN` | prod | Telegram bot token. |
-| `DATABASE_URL` | yes | Postgres DSN (source of truth). |
-| `REDIS_URL` | yes | Redis DSN for asynq queues. |
-| `MASTER_ENCRYPTION_KEY` | yes | ≥32 chars; encrypts service-account JSON at rest. |
-| `JWT_SECRET` | yes | ≥16 chars; signs session JWTs. |
-| `JWT_ISSUER`, `JWT_TTL_HOURS` | no | JWT issuer / lifetime (defaults: `lead-cat`, 168 h). |
-| `AUTH_DEV_MODE` | dev | `true` → any bearer token maps to a dev user. |
-| `WEBAPP_URL`, `CORS_ALLOWED_ORIGINS` | yes | Frontend origin(s) for links & CORS. |
-| `LOG_LEVEL`, `LOG_FORMAT` | no | Structured logging (zap). |
-| `AUTO_MIGRATE` | no | `true` → run migrations on boot. |
-| `CALENDAR_STUB` | dev/CI | `true` → use Google Calendar stub (no real credentials needed). |
+| Variable                             | Required | Purpose                                                         |
+| ------------------------------------ | -------- | --------------------------------------------------------------- |
+| `BOT_TOKEN`                          | prod     | Telegram bot token.                                             |
+| `DATABASE_URL`                       | yes      | Postgres DSN (source of truth).                                 |
+| `REDIS_URL`                          | yes      | Redis DSN for asynq queues.                                     |
+| `MASTER_ENCRYPTION_KEY`              | yes      | ≥32 chars; encrypts service-account JSON at rest.               |
+| `JWT_SECRET`                         | yes      | ≥16 chars; signs session JWTs.                                  |
+| `JWT_ISSUER`, `JWT_TTL_HOURS`        | no       | JWT issuer / lifetime (defaults: `lead-cat`, 168 h).            |
+| `AUTH_DEV_MODE`                      | dev      | `true` → any bearer token maps to a dev user.                   |
+| `WEBAPP_URL`, `CORS_ALLOWED_ORIGINS` | yes      | Frontend origin(s) for links & CORS.                            |
+| `LOG_LEVEL`, `LOG_FORMAT`            | no       | Structured logging (zap).                                       |
+| `AUTO_MIGRATE`                       | no       | `true` → run migrations on boot.                                |
+| `CALENDAR_STUB`                      | dev/CI   | `true` → use Google Calendar stub (no real credentials needed). |
 
 **Google service-account credentials** are configured per workspace via `PATCH /api/workspaces/:id/integrations` (no env var). Without credentials, meeting creation returns 400.
 

@@ -3,10 +3,7 @@ import {
   buildMeetingsSearchParams,
   parseMeetingsScopeFilter,
 } from "@/features/meetings/list-url"
-import {
-  filterToScope,
-  scopeToFilter,
-} from "@/features/meetings/queries"
+import { filterToScope, scopeToFilter } from "@/features/meetings/queries"
 
 describe("meetings list URL helpers", () => {
   it("maps scope query param to filter", () => {

@@ -540,14 +540,14 @@ Confirm the catalog shape: a typed key union (e.g. `I18nKey`) and per-language r
 
 Add each key to the `I18nKey` union (if explicit) and to all three language records (ru, kk, en). Exact copy:
 
-| Key | ru | kk | en |
-|---|---|---|---|
-| `errNotConfigured` | "Создание встреч не настроено" | "Кездесулерді жоспарлау бапталмаған" | "Meeting creation isn't configured" |
-| `errNotYours` | "Это не ваша встреча" | "Бұл сіздің кездесуіңіз емес" | "Not your meeting" |
-| `recurringSoon` | "Повторяющиеся встречи скоро будут доступны" | "Қайталанатын кездесулер жақында қол жетімді болады" | "Recurring meetings coming soon" |
-| `errGeneric` | "Что-то пошло не так" | "Бір нәрсе дұрыс болмады" | "Something went wrong" |
-| `updated` | "Встреча обновлена" | "Кездесу жаңартылды" | "Meeting updated" |
-| `deleted` | "Встреча удалена" | "Кездесу жойылды" | "Meeting deleted" |
+| Key                | ru                                           | kk                                                   | en                                  |
+| ------------------ | -------------------------------------------- | ---------------------------------------------------- | ----------------------------------- |
+| `errNotConfigured` | "Создание встреч не настроено"               | "Кездесулерді жоспарлау бапталмаған"                 | "Meeting creation isn't configured" |
+| `errNotYours`      | "Это не ваша встреча"                        | "Бұл сіздің кездесуіңіз емес"                        | "Not your meeting"                  |
+| `recurringSoon`    | "Повторяющиеся встречи скоро будут доступны" | "Қайталанатын кездесулер жақында қол жетімді болады" | "Recurring meetings coming soon"    |
+| `errGeneric`       | "Что-то пошло не так"                        | "Бір нәрсе дұрыс болмады"                            | "Something went wrong"              |
+| `updated`          | "Встреча обновлена"                          | "Кездесу жаңартылды"                                 | "Meeting updated"                   |
+| `deleted`          | "Встреча удалена"                            | "Кездесу жойылды"                                    | "Meeting deleted"                   |
 
 > If any of these keys already exist (e.g. `deleted` may exist from earlier delete-toast wiring), do NOT duplicate; leave the existing copy and continue.
 
@@ -584,9 +584,9 @@ export type MeetingInput = {
   dept: string
   type: string
   host: string
-  date: string  // YYYY-MM-DD
+  date: string // YYYY-MM-DD
   start: string // HH:MM
-  end: string   // HH:MM
+  end: string // HH:MM
   recurrence: string
   desc: string
   participants: string[] // emails
@@ -903,12 +903,14 @@ const completeCreate = async (m: MeetingDraft & { end: string }) => {
 ```
 
 Add imports:
+
 ```ts
 import { useCreateMeeting, useUpdateMeeting } from "@/features/meetings/queries"
 import { writeErrorKey } from "@/features/meetings/lib/write-error"
 ```
 
 Remove these now-unused imports:
+
 - `useQueryClient`
 - `draftToMeeting` (still used by `slotInitial`? if not, remove)
 - `tmaKeys`
@@ -962,6 +964,7 @@ In whichever component renders the Edit/Delete actions:
    ```
    (Adjust the auth import path if `useTmaAuth` is re-exported from `@/shared/tma/auth-context`.)
 2. Add state + handler:
+
    ```ts
    const { user } = useTmaAuth()
    const p = useTmaApp()
@@ -978,6 +981,7 @@ In whichever component renders the Edit/Delete actions:
      }
    }
    ```
+
 3. Gate the Edit and Delete buttons in render: render them only when `canModify` is true.
 
 - [ ] **Step 3: Typecheck + format + build**
@@ -1010,6 +1014,7 @@ Find the row(s) noting `PATCH /api/tma/meetings/:id`, `DELETE /api/tma/meetings/
 - [ ] **Step 2: `docs/API.md` — move planned → present**
 
 Move the three routes out of the "TMA — planned" section into the "TMA — present" table with one-line purposes:
+
 - `PATCH /api/tma/meetings/:id` — edit a single meeting (organizer/owner only).
 - `DELETE /api/tma/meetings/:id` — cancel a single meeting (organizer/owner only).
 - `POST /api/tma/conflicts` — cross-participant conflict warning for the create wizard's review step.

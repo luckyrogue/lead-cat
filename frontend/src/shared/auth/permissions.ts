@@ -1,4 +1,4 @@
-import type { TmaUser, TmaUserRole } from "@/features/auth/session"
+import type { TmaUser, TmaUserRole } from "@/shared/auth/types"
 
 import {
   getRoleDeniedCode,

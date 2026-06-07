@@ -8,24 +8,23 @@ export function MeetingDetailActions({
   onEdit: () => void
   onDelete: () => void
 }) {
-  const p = useTmaApp()
-  const t = p.t
+  const { t } = useTmaApp()
 
   return (
-    <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+    <div className="mt-[18px] flex gap-2.5">
       <CatBtn
         variant="outline"
         full
-        icon={<CatIcon name="pencil" size={18} color={p.text} sw={2} />}
+        icon={<CatIcon name="pencil" size={18} className="text-tma-text" sw={2} />}
         onClick={onEdit}
       >
         {t("edit")}
       </CatBtn>
       <CatBtn
         variant="danger"
-        icon={<CatIcon name="trash" size={18} color={p.danger} sw={2} />}
+        icon={<CatIcon name="trash" size={18} className="text-tma-danger" sw={2} />}
         onClick={onDelete}
-        style={{ flex: "0 0 auto" }}
+        className="shrink-0 grow-0 basis-auto"
       >
         {t("del")}
       </CatBtn>

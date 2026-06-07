@@ -19,6 +19,7 @@ The project is beta when all of the following hold:
 Compact map informing the slice boundaries (full details in the brainstorming Explore report; see also `docs/MEETINGS.md`).
 
 **Done:**
+
 - TMA auth (`POST /api/auth/tma`), TMA reads (`GET /me`, `/meetings`, `/schedule`, `/employees`, `POST /free-slots`).
 - TMA create (`POST /meetings`) — once-only; recurrence rejected with `meetings_recurring_unsupported`.
 - Bot FSMs: `/start` registration (`botreg`), `/edit` (`meetingedit`), `/schedule` (`scheduleview`), `/checker` (`checker`); `botsettings` reminders toggle (RU only, no persistence).
@@ -30,6 +31,7 @@ Compact map informing the slice boundaries (full details in the brainstorming Ex
 - Docs: meetings-only doc set (`docs/README.md` index, ТЗ pointer, `SETUP.md`, `API.md` with planned/present split, deprecated alpha-setup appendix).
 
 **Gaps to beta:**
+
 - TMA write surface incomplete: `PATCH /meetings/:id`, `DELETE /meetings/:id`, `POST /conflicts` missing.
 - Recurrence: wizard collects `rec`/`recDays` but no `until` input; backend requires it for non-once.
 - User settings (§7): no `/api/tma/settings` route; UI is mock.

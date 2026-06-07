@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
+import { cn } from "@/shared/lib/cn"
 import { toastSuccess } from "@/shared/lib/toast"
 import { I18N } from "@/shared/tma/i18n"
 import { useTmaApp } from "@/shared/tma/context"
@@ -27,7 +28,7 @@ export function ProfilePage() {
   ]
 
   return (
-    <div style={{ padding: "16px 16px 28px" }}>
+    <div className="px-4 pb-7">
       <ProfileHeader />
 
       <SettingsGroup title={t("reminders")}>
@@ -40,14 +41,7 @@ export function ProfilePage() {
         />
       </SettingsGroup>
       {remOn && (
-        <div
-          style={{
-            margin: "-12px 4px 20px",
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 8,
-          }}
-        >
+        <div className="-mt-3 mx-1 mb-5 flex flex-wrap gap-2">
           {intervals.map((it) => {
             const on = reminders.includes(it.v)
             return (
@@ -61,17 +55,12 @@ export function ProfilePage() {
                       : [...reminders, it.v]
                   )
                 }
-                style={{
-                  padding: "8px 13px",
-                  borderRadius: 11,
-                  border: `1.5px solid ${on ? p.accent : p.border}`,
-                  background: on ? p.accentSoft : p.card,
-                  color: on ? p.accent : p.muted,
-                  fontWeight: 700,
-                  fontSize: 13.5,
-                  fontFamily: "var(--font-display)",
-                  cursor: "pointer",
-                }}
+                className={cn(
+                  "font-display cursor-pointer rounded-[11px] border-[1.5px] px-[13px] py-2 text-[13.5px] font-bold",
+                  on
+                    ? "border-tma-accent bg-tma-accent-soft text-tma-accent"
+                    : "border-tma-border bg-tma-card text-tma-muted"
+                )}
               >
                 {on ? "✓ " : ""}
                 {it.l}
@@ -88,18 +77,11 @@ export function ProfilePage() {
           label={t("language")}
           onClick={p.openLangPicker}
           right={
-            <span
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                color: p.muted,
-                fontWeight: 700,
-                fontSize: 14,
-              }}
-            >
+            <span className="flex items-center gap-1.5 text-sm font-bold text-tma-muted">
               {I18N[p.lang]._flag} {I18N[p.lang]._label}
-              <CatIcon name="chevR" size={16} color={p.faint} sw={2.2} />
+              <span className="text-tma-faint">
+                <CatIcon name="chevR" size={16} sw={2.2} />
+              </span>
             </span>
           }
         />
@@ -108,18 +90,11 @@ export function ProfilePage() {
           hue={300}
           label={t("timezone")}
           right={
-            <span
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                color: p.muted,
-                fontWeight: 700,
-                fontSize: 14,
-              }}
-            >
+            <span className="flex items-center gap-1.5 text-sm font-bold text-tma-muted">
               Алматы UTC+5
-              <CatIcon name="chevR" size={16} color={p.faint} sw={2.2} />
+              <span className="text-tma-faint">
+                <CatIcon name="chevR" size={16} sw={2.2} />
+              </span>
             </span>
           }
           last
@@ -133,7 +108,11 @@ export function ProfilePage() {
             hue={25}
             label={t("admin")}
             onClick={() => void navigate({ to: "/profile/admin" })}
-            right={<CatIcon name="chevR" size={18} color={p.faint} sw={2.2} />}
+            right={
+              <span className="text-tma-faint">
+                <CatIcon name="chevR" size={18} sw={2.2} />
+              </span>
+            }
             last
           />
         </SettingsGroup>
@@ -145,20 +124,16 @@ export function ProfilePage() {
           hue={95}
           label={t("help")}
           onClick={() => toastSuccess("Мяу! Чем помочь? 🐾")}
-          right={<CatIcon name="chevR" size={18} color={p.faint} sw={2.2} />}
+          right={
+            <span className="text-tma-faint">
+              <CatIcon name="chevR" size={18} sw={2.2} />
+            </span>
+          }
           last
         />
       </SettingsGroup>
 
-      <div
-        style={{
-          textAlign: "center",
-          marginTop: 8,
-          color: p.faint,
-          fontSize: 12,
-          fontWeight: 600,
-        }}
-      >
+      <div className="mt-2 text-center text-xs font-semibold text-tma-faint">
         Lead Cat · v2.0 · {I18N[p.lang].appSub} 🐾
       </div>
     </div>

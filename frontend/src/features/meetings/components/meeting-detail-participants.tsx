@@ -1,97 +1,50 @@
+import { cn } from "@/shared/lib/cn"
 import { useTmaApp } from "@/shared/tma/context"
-import { emailsToPeople } from "@/shared/tma/mock-data"
-import { partWord } from "@/shared/tma/meeting-utils"
+import { emailsToPeople } from "@/entities/employee/fixtures"
+import { partWord } from "@/entities/meeting/lib/format"
 import type { Meeting } from "@/entities/meeting/types"
 import { Avatar, CatCard } from "@/shared/ui/cat/primitives"
 
 export function MeetingDetailParticipants({ m }: { m: Meeting }) {
-  const p = useTmaApp()
-  const t = p.t
+  const t = useTmaApp().t
   const allPeople = emailsToPeople([m.organizer, ...m.participants])
 
   return (
-    <div style={{ marginTop: 18 }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 10,
-        }}
-      >
-        <span
-          style={{
-            fontFamily: "var(--font-display)",
-            fontWeight: 800,
-            fontSize: 16,
-            color: p.text,
-          }}
-        >
-          {t("addPeople")}
-        </span>
-        <span style={{ fontSize: 13, color: p.muted, fontWeight: 700 }}>
+    <div className="mt-[18px]">
+      <div className="mb-2.5 flex items-center justify-between">
+        <span className="tma-heading text-base">{t("addPeople")}</span>
+        <span className="text-[13px] font-bold text-tma-muted">
           {allPeople.length} {partWord(allPeople.length, t)}
         </span>
       </div>
-      <CatCard pad={6}>
+      <CatCard className="p-1.5">
         {allPeople.map((per, i) => (
           <div
             key={i}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 11,
-              padding: "8px 8px",
-              borderBottom:
-                i < allPeople.length - 1 ? `1px solid ${p.border}` : "none",
-            }}
+            className={cn(
+              "flex items-center gap-[11px] p-2",
+              i < allPeople.length - 1 && "border-b border-tma-border"
+            )}
           >
             <Avatar name={per.name} size={36} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div
-                style={{
-                  fontWeight: 700,
-                  fontSize: 14.5,
-                  color: p.text,
-                  fontFamily: "var(--font-display)",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
+            <div className="min-w-0 flex-1">
+              <div className="truncate font-display text-[14.5px] font-bold text-tma-text">
                 {per.name}
               </div>
-              <div
-                style={{
-                  fontSize: 12,
-                  color: p.muted,
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
+              <div className="truncate text-xs text-tma-muted">
                 {per.email}
               </div>
             </div>
             {per.email === m.organizer ? (
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 800,
-                  color: p.accent,
-                  background: p.accentSoft,
-                  padding: "3px 8px",
-                  borderRadius: 999,
-                }}
-              >
+              <span className="rounded-full bg-tma-accent-soft px-2 py-[3px] text-[11px] font-extrabold text-tma-accent">
                 👑
               </span>
             ) : per.tg ? (
-              <span style={{ fontSize: 15 }} title="Telegram">
+              <span className="text-[15px]" title="Telegram">
                 ✈️
               </span>
             ) : (
-              <span style={{ fontSize: 11, color: p.faint, fontWeight: 700 }}>
+              <span className="text-[11px] font-bold text-tma-faint">
                 email
               </span>
             )}

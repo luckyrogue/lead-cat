@@ -11,12 +11,10 @@ type TgWebApp = {
 }
 
 export function getTelegramWebApp(): TgWebApp | undefined {
-  return (
-    window as unknown as { Telegram?: { WebApp?: TgWebApp } }
-  ).Telegram?.WebApp
+  return (window as unknown as { Telegram?: { WebApp?: TgWebApp } }).Telegram
+    ?.WebApp
 }
 
-/** True when opened inside Telegram (native header is shown — skip mock chrome). */
 export function isTelegramMiniApp(): boolean {
   const tg = getTelegramWebApp()
   return Boolean(tg?.initData || tg?.platform)

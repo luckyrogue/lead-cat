@@ -1,4 +1,4 @@
-import { useTmaApp } from "@/shared/tma/context"
+import { cn } from "@/shared/lib/cn"
 
 export function CatToggle({
   on,
@@ -7,40 +7,20 @@ export function CatToggle({
   on: boolean
   onChange: (v: boolean) => void
 }) {
-  const p = useTmaApp()
   return (
     <button
       type="button"
       onClick={() => onChange(!on)}
-      style={{
-        width: 50,
-        height: 30,
-        borderRadius: 999,
-        border: "none",
-        cursor: "pointer",
-        background: on
-          ? p.accent
-          : p.dark
-            ? "rgba(255,255,255,0.16)"
-            : "#E4D7C8",
-        position: "relative",
-        transition: "background .22s ease",
-        flexShrink: 0,
-        padding: 0,
-      }}
+      className={cn(
+        "relative h-[30px] w-[50px] shrink-0 cursor-pointer rounded-full border-none p-0 transition-colors duration-[220ms] ease-out",
+        on ? "bg-tma-accent" : "bg-[var(--tma-toggle-off)]"
+      )}
     >
       <span
-        style={{
-          position: "absolute",
-          top: 3,
-          left: on ? 23 : 3,
-          width: 24,
-          height: 24,
-          borderRadius: "50%",
-          background: "#fff",
-          transition: "left .22s cubic-bezier(.34,1.56,.64,1)",
-          boxShadow: "0 1px 4px rgba(0,0,0,0.25)",
-        }}
+        className={cn(
+          "absolute top-[3px] size-6 rounded-full bg-white shadow-[0_1px_4px_rgba(0,0,0,0.25)] transition-[left] duration-[220ms] ease-[cubic-bezier(.34,1.56,.64,1)]",
+          on ? "left-[23px]" : "left-[3px]"
+        )}
       />
     </button>
   )

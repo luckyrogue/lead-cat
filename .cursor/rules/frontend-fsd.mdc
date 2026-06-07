@@ -22,20 +22,24 @@ Canonical reference: `frontend/README.md` (mirrors sadu/admin/app layout).
 
 ```
 features/
-  auth/          — api, session, refresh-session, require-auth, me-cache, schemas, auth-context
+  auth/          — api, refresh-session, require-auth, auth-context (session → shared/auth)
   home/pages/
-  meetings/{api,queries,components/meeting-ui/,pages/,list-url}/
+  meetings/{api,queries,search-schema,pages/,list-url,meeting-detail*}/
+  # meetings/queries — mutations + URL filters only; read hooks → entities/meeting/queries
   meeting-create/{components/,lib/,pages/}/
-  checker/{components/,queries.ts,pages/}/
+  checker/{components/,queries.ts,pages/} — useFreeSlots only; employee search → entities/employee
   auto/{fixtures.ts,pages}/
   profile/{components,pages}/
-entities/{meeting,employee,scenario}/
+entities/
+  employee/      — types, fixtures, api (searchEmployees), queries (useEmployeeSearch)
+  meeting/       — types, constants, lib/format, api (reads), queries, scheduling-api
+  scenario/      — types
 shared/
   api/           — client, types, query-client, query-keys, list-params, health, generated/schema.ts
-  auth/          — module-policies, permissions, permission-requirement, route-access, require-permission
-  lib/           — list-url-params, use-list-url-state, route-revalidation, toast, format-datetime
-  tma/           — i18n, palette, context, constants (re-exports), mock-data (legacy fixtures)
-components/      — tma-shell/*, meetings/*, employee-picker, duration-picker, tma-list-page-shell, auth/
+  auth/          — types, session, module-policies, permissions, permission-requirement, route-access
+  lib/           — cn, list-url-params, use-list-url-state, route-revalidation, toast, format-datetime
+  tma/           — i18n, palette, context, surface-vars, telegram-env
+components/      — tma-shell/*, meetings/{detail-row,meeting-title-preview,meeting-ui/*}, employee-picker, …
 app/             — providers, app-content, router, router-context
 ```
 
@@ -49,7 +53,7 @@ Hand-written `.ts`/`.tsx` files **≤300 lines** (exception: generated `routeTre
 
 - `apiFetch` + `ApiError` in `shared/api/client.ts`; Bearer via `getSession()`
 - 401 single-flight: `features/auth/refresh-session.ts`
-- `queryOptions` in `features/*/queries.ts`; keys in `shared/api/query-keys.ts`
+- `queryOptions` in `entities/*/queries.ts` (reads) and `features/*/queries.ts` (mutations); keys in `shared/api/query-keys.ts`
 - Route `loader` + `shouldReload: shouldReloadExceptSearch` + `loaderDeps: () => ({})`
 - List filters: `shared/lib/use-list-url-state.ts` + `TmaListPageShell`
 - Health gate: `app/app-content.tsx` + `useAppHealth()`; Toaster inside gate

@@ -1,4 +1,3 @@
-import { useTmaApp } from "@/shared/tma/context"
 import { CatIcon } from "@/shared/ui/cat/primitives"
 
 export function DetailRow({
@@ -10,44 +9,16 @@ export function DetailRow({
   label: string
   children: React.ReactNode
 }) {
-  const p = useTmaApp()
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: 12,
-        padding: "12px 0",
-        borderBottom: `1px solid ${p.border}`,
-      }}
-    >
-      <div
-        style={{
-          width: 34,
-          height: 34,
-          borderRadius: 10,
-          background: p.accentSoft,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        <CatIcon name={icon} size={18} color={p.accent} sw={2} />
+    <div className="flex gap-3 border-b border-tma-border py-3">
+      <div className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] bg-tma-accent-soft">
+        <CatIcon name={icon} size={18} className="text-tma-accent" sw={2} />
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            fontSize: 12,
-            color: p.muted,
-            fontWeight: 600,
-            marginBottom: 2,
-          }}
-        >
+      <div className="min-w-0 flex-1">
+        <div className="mb-0.5 text-xs font-semibold text-tma-muted">
           {label}
         </div>
-        <div style={{ fontSize: 15, color: p.text, fontWeight: 600 }}>
-          {children}
-        </div>
+        <div className="text-[15px] font-semibold text-tma-text">{children}</div>
       </div>
     </div>
   )

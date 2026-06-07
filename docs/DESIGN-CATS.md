@@ -31,13 +31,13 @@ The SPA is TMA-only at `/`. Platform setup uses the REST API directly — see [A
 
 ### Sadu admin mapping
 
-| Sadu | Lead Cat |
-|------|----------|
-| `components/app-sidebar.tsx` | `components/tma-shell/` TabBar |
-| `getVisibleSidebarModules` | `getVisibleTabBarModules` |
-| `shared/auth/module-policies.ts` | same path (TMA roles) |
-| `features/auth/session.ts` | `features/auth/session.ts` |
-| `shared/api/generated/schema.ts` | same (from `/openapi.json`) |
+| Sadu                             | Lead Cat                       |
+| -------------------------------- | ------------------------------ |
+| `components/app-sidebar.tsx`     | `components/tma-shell/` TabBar |
+| `getVisibleSidebarModules`       | `getVisibleTabBarModules`      |
+| `shared/auth/module-policies.ts` | same path (TMA roles)          |
+| `features/auth/session.ts`       | `shared/auth/session.ts`       |
+| `shared/api/generated/schema.ts` | same (from `/openapi.json`)    |
 
 ## Components
 

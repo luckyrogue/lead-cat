@@ -3,6 +3,5 @@ export { ParticipantStack } from "./participant-stack"
 export { MeetingCard } from "./meeting-card"
 export { EmptyState } from "./empty-state"
 
-export { meetCount, fmtDate, partWord } from "@/shared/tma/meeting-utils"
+export { meetCount, fmtDate, partWord } from "@/entities/meeting/lib/format"
 export { Paw } from "@/shared/ui/cat/paw"
-export { hexToRgba } from "@/shared/tma/palette"

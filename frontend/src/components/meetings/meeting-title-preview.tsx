@@ -1,47 +1,24 @@
-import { useTmaApp } from "@/shared/tma/context"
+import { cn } from "@/shared/lib/cn"
 
 export function MeetingTitlePreview({
   label,
   title,
-  marginBottom = 16,
+  className,
 }: {
   label: string
   title: string
-  marginBottom?: number
+  className?: string
 }) {
-  const p = useTmaApp()
   return (
     <div
-      style={{
-        background: p.cardAlt,
-        borderRadius: 16,
-        padding: "13px 15px",
-        marginBottom,
-        border: `1px dashed ${p.borderStrong}`,
-      }}
+      className={cn(
+        "mb-4 rounded-2xl border border-dashed border-tma-border-strong",
+        "bg-tma-card-alt px-[15px] py-[13px]",
+        className
+      )}
     >
-      <div
-        style={{
-          fontSize: 11,
-          color: p.faint,
-          fontWeight: 700,
-          marginBottom: 5,
-          letterSpacing: 0.3,
-          textTransform: "uppercase",
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          fontFamily: "var(--font-display)",
-          fontWeight: 800,
-          fontSize: 17,
-          color: p.text,
-          lineHeight: 1.25,
-          wordBreak: "break-word",
-        }}
-      >
+      <div className="tma-label mb-[5px] tracking-wide">{label}</div>
+      <div className="tma-heading break-words text-[17px] leading-snug">
         {title}
       </div>
     </div>

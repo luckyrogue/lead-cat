@@ -1,7 +1,7 @@
 import { createRouter } from "@tanstack/react-router"
 
 import type { RouterContext } from "@/app/router-context"
-import { setSession } from "@/features/auth/session"
+import { setSession } from "@/shared/auth/session"
 import { setAuthToken } from "@/shared/api/client"
 import { getQueryClient } from "@/shared/api/query-client"
 import { routeTree } from "../routeTree.gen"

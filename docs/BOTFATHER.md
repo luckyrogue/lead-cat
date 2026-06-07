@@ -65,10 +65,10 @@ See `docs/AUTH.md` for the full authentication and identity-linking flow.
 
 Use a **separate BotFather token** for local development and staging:
 
-| Environment | `BOT_TOKEN`            | `WEBAPP_URL`                     |
-| ----------- | ---------------------- | -------------------------------- |
-| Production  | `<prod token>`         | `https://meetings.example.com`   |
-| Dev / CI    | `<dev token>`          | `https://localhost:5173` (or ngrok URL) |
+| Environment | `BOT_TOKEN`    | `WEBAPP_URL`                            |
+| ----------- | -------------- | --------------------------------------- |
+| Production  | `<prod token>` | `https://meetings.example.com`          |
+| Dev / CI    | `<dev token>`  | `https://localhost:5173` (or ngrok URL) |
 
 This prevents test traffic from hitting production users and allows webhook re-registration
 without downtime.

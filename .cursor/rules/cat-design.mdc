@@ -7,3 +7,13 @@ alwaysApply: false
 # Cat design
 
 Use cat tokens from `frontend/src/shared/theme/cat-tokens.css`. Evil cats are part of the product identity — see `docs/DESIGN-CATS.md`.
+
+## Styling convention (Tailwind-first)
+
+- **Layout / spacing / typography** → Tailwind classes + `cn()` from `@/lib/utils`.
+- **TMA runtime colors** (accent, dark/light) → `bg-tma-*`, `text-tma-*`, `border-tma-*` via CSS vars set on `.tma-frame` (`paletteCssVars` in `shared/tma/palette-to-css-vars.ts`).
+- **Static screens** (outside TMA shell) → shadcn tokens (`bg-primary`, `text-cat-secondary`) or `bg-cat-bg`.
+- **`useTmaApp()`** → `t()`, `lang`, accent logic — not `p.bg` / `p.accent` on every leaf `div`.
+- **Inline `style`** only when truly dynamic: drag `translateY`, pointer-driven transforms, or values not yet mapped to a CSS var.
+
+Shared utilities: `frontend/src/shared/theme/tma-tailwind.css` (`.font-display`, `.tma-heading`, `.tma-label`, `.tg-icon-btn`).

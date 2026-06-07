@@ -1,4 +1,4 @@
-import type { TmaUser } from "@/features/auth/session"
+import type { TmaUser } from "@/shared/auth/types"
 import { ApiError } from "@/shared/api/types"
 import {
   getTmaModuleAccessRequirement,

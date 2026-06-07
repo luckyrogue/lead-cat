@@ -1,43 +1,20 @@
 import {
-  queryOptions,
   useMutation,
-  useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
+import type { Scope } from "@/entities/meeting/api"
+import {
+  fetchConflicts,
+  type ConflictsParams,
+} from "@/entities/meeting/scheduling-api"
 import {
   createMeeting,
   deleteMeeting,
-  fetchColleagueSchedule,
-  fetchConflicts,
-  fetchMyMeetings,
-  type ConflictsParams,
   type MeetingInput,
   type MeetingPatch,
-  type Scope,
   updateMeeting,
 } from "@/features/meetings/api"
 import { tmaKeys } from "@/shared/api/query-keys"
-
-export const myMeetingsQuery = (scope: Scope) =>
-  queryOptions({
-    queryKey: tmaKeys.meetings(scope),
-    queryFn: () => fetchMyMeetings(scope),
-  })
-
-export const colleagueScheduleQuery = (email: string, scope: Scope) =>
-  queryOptions({
-    queryKey: tmaKeys.schedule(email, scope),
-    queryFn: () => fetchColleagueSchedule(email, scope),
-    enabled: email.trim().length > 0,
-  })
-
-export function useMyMeetings(scope: Scope) {
-  return useQuery(myMeetingsQuery(scope))
-}
-
-export function useColleagueSchedule(email: string, scope: Scope) {
-  return useQuery(colleagueScheduleQuery(email, scope))
-}
 
 export type MeetingsFilter = "up" | "past" | "all"
 

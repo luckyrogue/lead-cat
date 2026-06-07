@@ -48,11 +48,11 @@ Three thin TMA handlers append to `tma_write.go`, each (a) reads the `bot_user` 
 
 ### Backend — endpoints to add (under the `/api/tma` group, TMA-auth)
 
-| Method & path | Reuses | Returns |
-| --- | --- | --- |
-| `PATCH /api/tma/meetings/:id` | `editableWorkspace` + `EnsureTMAOrganizer` + `UpdateMeeting` | `200 {meeting: tmaMeetingDTO}` |
-| `DELETE /api/tma/meetings/:id` | `editableWorkspace` + `EnsureTMAOrganizer` + `CancelMeeting` | `204` |
-| `POST /api/tma/conflicts` | `MeetingConflicts` | `200 {conflicts: tmaConflictDTO[]}` |
+| Method & path                  | Reuses                                                       | Returns                             |
+| ------------------------------ | ------------------------------------------------------------ | ----------------------------------- |
+| `PATCH /api/tma/meetings/:id`  | `editableWorkspace` + `EnsureTMAOrganizer` + `UpdateMeeting` | `200 {meeting: tmaMeetingDTO}`      |
+| `DELETE /api/tma/meetings/:id` | `editableWorkspace` + `EnsureTMAOrganizer` + `CancelMeeting` | `204`                               |
+| `POST /api/tma/conflicts`      | `MeetingConflicts`                                           | `200 {conflicts: tmaConflictDTO[]}` |
 
 **New helper (`tma_write.go`):**
 
@@ -127,16 +127,16 @@ delete → useDeleteMeeting(id) → DELETE /api/tma/meetings/:id
    → editableWorkspace → EnsureTMAOrganizer → CancelMeeting → 204 → invalidate → toast "deleted"
 ```
 
-| Case | Backend | Frontend |
-| --- | --- | --- |
-| OK create/edit | `201`/`200 {meeting}` | invalidate + success UI |
-| OK delete | `204` | invalidate + toast |
-| No Google workspace | `400 meetings_not_configured` | `errNotConfigured` toast |
-| Recurring create attempted | `400 meetings_recurring_unsupported` | `recurringSoon` toast (UI also pre-blocks) |
-| Bad input | `400` (`ErrInvalidInput`, e.g. bad time) | `errGeneric` toast |
+| Case                        | Backend                                  | Frontend                                       |
+| --------------------------- | ---------------------------------------- | ---------------------------------------------- |
+| OK create/edit              | `201`/`200 {meeting}`                    | invalidate + success UI                        |
+| OK delete                   | `204`                                    | invalidate + toast                             |
+| No Google workspace         | `400 meetings_not_configured`            | `errNotConfigured` toast                       |
+| Recurring create attempted  | `400 meetings_recurring_unsupported`     | `recurringSoon` toast (UI also pre-blocks)     |
+| Bad input                   | `400` (`ErrInvalidInput`, e.g. bad time) | `errGeneric` toast                             |
 | Edit/delete others' meeting | `403` (`ErrForbidden`) / `404` not_found | `errNotYours` toast (UI also hides the action) |
-| Expired TMA JWT | `401` | existing interceptor re-login |
-| DB / Google error | `500` | `errGeneric` toast |
+| Expired TMA JWT             | `401`                                    | existing interceptor re-login                  |
+| DB / Google error           | `500`                                    | `errGeneric` toast                             |
 
 Logging: one `Info` per successful write — `tma_meeting_updated` / `tma_meeting_cancelled` + `zap.Int64("telegram_id",…)`, `zap.String("meeting_id",…)`, `zap.String("workspace_id",…)`. No email/initData/JWT/PII fields.
 

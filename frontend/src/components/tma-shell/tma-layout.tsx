@@ -7,12 +7,7 @@ import { useTelegramViewport } from "@/shared/tma/use-telegram-viewport"
 import { TmaAppProvider } from "@/shared/tma/context"
 import { DEFAULT_ACCENT, makePalette } from "@/shared/tma/palette"
 import type { Lang } from "@/shared/tma/types"
-import {
-  LangDropdown,
-  TabBar,
-  TgBar,
-  TmaFrame,
-} from "@/components/tma-shell"
+import { LangDropdown, TabBar, TgBar, TmaFrame } from "@/components/tma-shell"
 
 const OVERLAY_PREFIXES = [
   "/meetings/create",
@@ -37,18 +32,7 @@ function TmaAuthGate() {
         ? "Сессия Telegram недействительна. Закройте и откройте Mini App заново."
         : "Не удалось войти. Проверьте, что backend запущен (make dev)."
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 16,
-        padding: 24,
-        textAlign: "center",
-      }}
-    >
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
       {status === "loading" && <p>Загрузка…</p>}
       {status === "not_registered" && (
         <>
@@ -58,6 +42,7 @@ function TmaAuthGate() {
               href={`https://t.me/${botUsername}?start`}
               target="_blank"
               rel="noreferrer"
+              className="text-primary underline"
             >
               Открыть бота
             </a>
@@ -67,7 +52,11 @@ function TmaAuthGate() {
       {status === "error" && (
         <>
           <p>{errorMessage}</p>
-          <button type="button" onClick={retry}>
+          <button
+            type="button"
+            onClick={retry}
+            className="cursor-pointer rounded-xl border-none bg-primary px-[18px] py-2.5 font-bold text-white"
+          >
             Повторить
           </button>
         </>
@@ -116,7 +105,7 @@ function TmaAppShell() {
           {!overlayOpen && (
             <TgBar native={inTelegram} onLang={() => setLangOpen(true)} />
           )}
-          <div className="tma-shell__main lc-scroll lc-screen">
+          <div className="tma-shell__main lc-scroll animate-lc-screen-in">
             <Outlet />
           </div>
           {!overlayOpen && <TabBar />}

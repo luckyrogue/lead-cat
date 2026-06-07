@@ -8,30 +8,10 @@ export function PermissionDenied({
   message = "У вашей роли нет прав на этот раздел.",
 }: PermissionDeniedProps) {
   return (
-    <div
-      style={{
-        padding: 24,
-        textAlign: "center",
-        display: "flex",
-        flexDirection: "column",
-        gap: 12,
-        alignItems: "center",
-      }}
-    >
-      <div style={{ fontSize: 40 }}>🙀</div>
-      <h2
-        style={{
-          margin: 0,
-          fontFamily: "var(--font-display)",
-          fontSize: 20,
-          fontWeight: 800,
-        }}
-      >
-        {title}
-      </h2>
-      <p style={{ margin: 0, color: "var(--cat-secondary, #5B6B7A)" }}>
-        {message}
-      </p>
+    <div className="flex flex-col items-center gap-3 p-6 text-center">
+      <div className="text-[40px]">🙀</div>
+      <h2 className="font-display m-0 text-xl font-extrabold">{title}</h2>
+      <p className="m-0 text-cat-secondary">{message}</p>
     </div>
   )
 }

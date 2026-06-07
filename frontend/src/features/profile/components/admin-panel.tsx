@@ -1,18 +1,18 @@
 import { useState } from "react"
-import { EMPLOYEES } from "@/shared/tma/mock-data"
+import { cn } from "@/shared/lib/cn"
+import { EMPLOYEES } from "@/entities/employee/fixtures"
 import { useTmaApp } from "@/shared/tma/context"
 import type { Meeting } from "@/entities/meeting/types"
 import { Avatar, CatCard, Segmented } from "@/shared/ui/cat/primitives"
-import { MeetingCard } from "@/features/meetings/components/meeting-ui"
+import { MeetingCard } from "@/components/meetings/meeting-ui"
 
 export function AdminPanel({ meetings }: { meetings: Meeting[] }) {
-  const p = useTmaApp()
-  const t = p.t
+  const t = useTmaApp().t
   const [tab, setTab] = useState<"meetings" | "users">("meetings")
 
   return (
-    <div style={{ padding: "16px 16px 28px" }}>
-      <div style={{ marginBottom: 18 }}>
+    <div className="px-4 pb-7">
+      <div className="mb-[18px]">
         <Segmented
           value={tab}
           onChange={setTab}
@@ -27,17 +27,10 @@ export function AdminPanel({ meetings }: { meetings: Meeting[] }) {
       </div>
       {tab === "meetings" ? (
         <div>
-          <div
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              color: p.muted,
-              margin: "0 4px 10px",
-            }}
-          >
+          <div className="tma-section-title mx-1 mb-2.5 font-bold">
             {meetings.length} {t("allMeetings").toLowerCase()}
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+          <div className="flex flex-col gap-[11px]">
             {[...meetings]
               .sort((a, b) =>
                 (a.date + a.start).localeCompare(b.date + b.start)
@@ -48,53 +41,29 @@ export function AdminPanel({ meetings }: { meetings: Meeting[] }) {
           </div>
         </div>
       ) : (
-        <CatCard pad={6}>
+        <CatCard className="p-1.5">
           {EMPLOYEES.map((e, i) => (
             <div
               key={e.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 11,
-                padding: "9px 8px",
-                borderBottom:
-                  i < EMPLOYEES.length - 1 ? `1px solid ${p.border}` : "none",
-              }}
+              className={cn(
+                "flex items-center gap-[11px] px-2 py-[9px]",
+                i < EMPLOYEES.length - 1 && "border-b border-tma-border"
+              )}
             >
               <Avatar name={e.name} size={38} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                  style={{
-                    fontWeight: 700,
-                    fontSize: 14.5,
-                    color: p.text,
-                    fontFamily: "var(--font-display)",
-                  }}
-                >
+              <div className="min-w-0 flex-1">
+                <div className="font-display text-[14.5px] font-bold text-tma-text">
                   {e.name}
                 </div>
-                <div
-                  style={{
-                    fontSize: 12,
-                    color: p.muted,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {e.email}
-                </div>
+                <div className="truncate text-xs text-tma-muted">{e.email}</div>
               </div>
               <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 800,
-                  padding: "3px 9px",
-                  borderRadius: 999,
-                  fontFamily: "var(--font-display)",
-                  color: e.id === "u1" ? p.accent : p.muted,
-                  background: e.id === "u1" ? p.accentSoft : p.cardAlt,
-                }}
+                className={cn(
+                  "font-display rounded-full px-[9px] py-[3px] text-[11px] font-extrabold",
+                  e.id === "u1"
+                    ? "bg-tma-accent-soft text-tma-accent"
+                    : "bg-tma-card-alt text-tma-muted"
+                )}
               >
                 {e.id === "u1" ? `👑 ${t("role_admin")}` : t("role_user")}
               </span>

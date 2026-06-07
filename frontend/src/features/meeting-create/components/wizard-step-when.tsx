@@ -1,13 +1,11 @@
-import { WEEKDAYS } from "@/shared/tma/constants"
+import { WEEKDAYS } from "@/entities/meeting/constants"
 import { useTmaApp } from "@/shared/tma/context"
-import { RECURRENCE } from "@/shared/tma/mock-data"
+import { RECURRENCE } from "@/entities/meeting/constants"
 import type { MeetingDraft } from "@/shared/tma/types"
 import { DurationPicker } from "@/components/duration-picker"
+import { cn } from "@/shared/lib/cn"
 import { Field } from "@/shared/ui/cat/primitives"
-import {
-  DURATION_OPTIONS,
-  TIME_SLOTS,
-} from "../lib/wizard-constants"
+import { DURATION_OPTIONS, TIME_SLOTS } from "../lib/wizard-constants"
 import { ChipGrid } from "./chip-grid"
 import { MiniCalendar } from "./mini-calendar"
 import { WizardStepTitle } from "./wizard-step-title"
@@ -21,8 +19,7 @@ export function WizardStepWhen({
   set: <K extends keyof MeetingDraft>(k: K, v: MeetingDraft[K]) => void
   endTime: string
 }) {
-  const p = useTmaApp()
-  const t = p.t
+  const { t } = useTmaApp()
 
   return (
     <div>
@@ -30,19 +27,11 @@ export function WizardStepWhen({
       <Field label={t("dateT")}>
         <MiniCalendar value={draft.date} onChange={(v) => set("date", v)} />
       </Field>
-      <div style={{ height: 18 }} />
+      <div className="h-[18px]" />
       <Field
         label={`${t("timeT")} — ${t("from")} ${draft.start}, ${t("to")} ${endTime}`}
       >
-        <div
-          className="lc-scroll"
-          style={{
-            display: "flex",
-            gap: 8,
-            overflowX: "auto",
-            paddingBottom: 4,
-          }}
-        >
+        <div className="lc-scroll flex gap-2 overflow-x-auto pb-1">
           {TIME_SLOTS.map((tm) => {
             const active = tm === draft.start
             return (
@@ -50,18 +39,12 @@ export function WizardStepWhen({
                 key={tm}
                 type="button"
                 onClick={() => set("start", tm)}
-                style={{
-                  flexShrink: 0,
-                  padding: "9px 13px",
-                  borderRadius: 11,
-                  border: `1.5px solid ${active ? p.accent : p.border}`,
-                  background: active ? p.accent : p.card,
-                  color: active ? p.accentText : p.text,
-                  fontWeight: 700,
-                  fontSize: 14,
-                  fontFamily: "var(--font-display)",
-                  cursor: "pointer",
-                }}
+                className={cn(
+                  "font-display shrink-0 cursor-pointer rounded-[11px] border-[1.5px] px-[13px] py-[9px] text-sm font-bold",
+                  active
+                    ? "border-tma-accent bg-tma-accent text-tma-accent-text"
+                    : "border-tma-border bg-tma-card text-tma-text"
+                )}
               >
                 {tm}
               </button>
@@ -69,7 +52,7 @@ export function WizardStepWhen({
           })}
         </div>
       </Field>
-      <div style={{ height: 16 }} />
+      <div className="h-4" />
       <Field label={t("duration")}>
         <DurationPicker
           value={draft.dur}
@@ -78,7 +61,7 @@ export function WizardStepWhen({
           t={t}
         />
       </Field>
-      <div style={{ height: 18 }} />
+      <div className="h-[18px]" />
       <Field label={t("recur")}>
         <ChipGrid
           value={draft.rec}
@@ -90,7 +73,7 @@ export function WizardStepWhen({
           }))}
         />
         {draft.rec === "custom" && (
-          <div style={{ display: "flex", gap: 7, marginTop: 11 }}>
+          <div className="mt-[11px] flex gap-[7px]">
             {WEEKDAYS.map((w, i) => {
               const on = draft.recDays.includes(i + 1)
               return (
@@ -105,18 +88,12 @@ export function WizardStepWhen({
                         : [...draft.recDays, i + 1]
                     )
                   }
-                  style={{
-                    flex: 1,
-                    aspectRatio: "1",
-                    borderRadius: 11,
-                    border: `1.5px solid ${on ? p.accent : p.border}`,
-                    background: on ? p.accent : p.card,
-                    color: on ? p.accentText : p.muted,
-                    fontWeight: 800,
-                    fontSize: 12.5,
-                    fontFamily: "var(--font-display)",
-                    cursor: "pointer",
-                  }}
+                  className={cn(
+                    "font-display aspect-square flex-1 cursor-pointer rounded-[11px] border-[1.5px] text-[12.5px] font-extrabold",
+                    on
+                      ? "border-tma-accent bg-tma-accent text-tma-accent-text"
+                      : "border-tma-border bg-tma-card text-tma-muted"
+                  )}
                 >
                   {w}
                 </button>

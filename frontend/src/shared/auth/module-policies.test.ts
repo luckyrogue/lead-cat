@@ -3,7 +3,6 @@ import {
   canAccessTmaAdmin,
   getVisibleTabBarModules,
   tmaModulePolicies,
-  visibleTmaTabs,
 } from "@/shared/auth/module-policies"
 
 describe("module-policies", () => {
@@ -47,7 +46,9 @@ describe("module-policies", () => {
     ])
   })
 
-  it("returns all tabs for any authed user", () => {
-    expect(visibleTmaTabs(null)).toHaveLength(5)
+  it("excludes auto from tab bar modules", () => {
+    expect(getVisibleTabBarModules(null).map((m) => m.key)).not.toContain(
+      "auto"
+    )
   })
 })

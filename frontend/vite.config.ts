@@ -24,7 +24,7 @@ export default defineConfig({
     proxy: {
       "/api": "http://localhost:8080",
     },
-    allowedHosts: ['4b92-91-231-66-51.ngrok-free.app']
+    allowedHosts: ['038b-91-231-66-51.ngrok-free.app']
   },
   build: {
     outDir: "dist",

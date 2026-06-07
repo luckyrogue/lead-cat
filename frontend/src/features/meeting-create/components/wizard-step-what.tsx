@@ -1,6 +1,6 @@
-import { typeAccent } from "@/shared/tma/constants"
+import { DEPARTMENTS } from "@/entities/employee/fixtures"
+import { MEETING_TYPES, typeAccent } from "@/entities/meeting/constants"
 import { useTmaApp } from "@/shared/tma/context"
-import { DEPARTMENTS, MEETING_TYPES } from "@/shared/tma/mock-data"
 import type { MeetingDraft } from "@/shared/tma/types"
 import { Field } from "@/shared/ui/cat/primitives"
 import { ChipGrid } from "./chip-grid"
@@ -13,8 +13,7 @@ export function WizardStepWhat({
   draft: MeetingDraft
   set: <K extends keyof MeetingDraft>(k: K, v: MeetingDraft[K]) => void
 }) {
-  const p = useTmaApp()
-  const t = p.t
+  const { dark, t } = useTmaApp()
 
   return (
     <div>
@@ -26,7 +25,7 @@ export function WizardStepWhat({
           options={DEPARTMENTS.map((d) => ({ value: d, label: d }))}
         />
       </Field>
-      <div style={{ height: 20 }} />
+      <div className="h-5" />
       <Field label={t("mType")}>
         <ChipGrid
           value={draft.type}
@@ -34,7 +33,7 @@ export function WizardStepWhat({
           options={MEETING_TYPES.map((m) => ({
             value: m.key,
             label: m.label,
-            emoji: typeAccent(m.key, p.dark).emoji,
+            emoji: typeAccent(m.key, dark).emoji,
           }))}
         />
       </Field>

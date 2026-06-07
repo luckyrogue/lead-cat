@@ -1,7 +1,24 @@
-import { useState, type CSSProperties, type ReactNode } from "react"
-import { useTmaApp } from "@/shared/tma/context"
+import type { ReactNode } from "react"
+import { cn } from "@/shared/lib/cn"
 
 type BtnVariant = "primary" | "soft" | "ghost" | "outline" | "danger" | "dark"
+
+const variantClasses: Record<BtnVariant, string> = {
+  primary:
+    "bg-tma-accent text-tma-accent-text shadow-tma-sm active:shadow-none",
+  soft: "bg-tma-accent-soft text-tma-accent",
+  ghost: "bg-transparent text-tma-text",
+  outline:
+    "border-[1.5px] border-tma-border-strong bg-transparent text-tma-text",
+  danger: "bg-tma-danger-soft text-tma-danger",
+  dark: "bg-tma-text text-tma-bg",
+}
+
+const sizeClasses = {
+  sm: "h-[38px] rounded-xl px-3.5 text-sm",
+  md: "h-[50px] rounded-[15px] px-5 text-base",
+  lg: "h-[58px] rounded-[18px] px-6 text-[17px]",
+}
 
 export function CatBtn({
   children,
@@ -10,8 +27,8 @@ export function CatBtn({
   size = "md",
   full = false,
   disabled = false,
-  style = {},
   icon = null,
+  className,
 }: {
   children: ReactNode
   onClick?: () => void
@@ -19,59 +36,22 @@ export function CatBtn({
   size?: "sm" | "md" | "lg"
   full?: boolean
   disabled?: boolean
-  style?: CSSProperties
   icon?: ReactNode
+  className?: string
 }) {
-  const p = useTmaApp()
-  const [press, setPress] = useState(false)
-  const sizes = {
-    sm: { h: 38, px: 14, fs: 14, r: 12 },
-    md: { h: 50, px: 20, fs: 16, r: 15 },
-    lg: { h: 58, px: 24, fs: 17, r: 18 },
-  }[size]
-  const base: CSSProperties = {
-    height: sizes.h,
-    padding: `0 ${sizes.px}px`,
-    borderRadius: sizes.r,
-    fontSize: sizes.fs,
-    fontWeight: 700,
-    fontFamily: "var(--font-display)",
-    border: "none",
-    cursor: disabled ? "default" : "pointer",
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    width: full ? "100%" : "auto",
-    whiteSpace: "nowrap",
-    transition: "transform .12s ease, box-shadow .2s ease, background .2s ease",
-    transform: press && !disabled ? "scale(0.96)" : "scale(1)",
-    opacity: disabled ? 0.5 : 1,
-  }
-  const variants: Record<BtnVariant, CSSProperties> = {
-    primary: {
-      background: p.accent,
-      color: p.accentText,
-      boxShadow: press ? "none" : p.shadowSm,
-    },
-    soft: { background: p.accentSoft, color: p.accent },
-    ghost: { background: "transparent", color: p.text },
-    outline: {
-      background: "transparent",
-      color: p.text,
-      border: `1.5px solid ${p.borderStrong}`,
-    },
-    danger: { background: p.dangerSoft, color: p.danger },
-    dark: { background: p.text, color: p.bg },
-  }
   return (
     <button
       type="button"
       onClick={disabled ? undefined : onClick}
-      onPointerDown={() => setPress(true)}
-      onPointerUp={() => setPress(false)}
-      onPointerLeave={() => setPress(false)}
-      style={{ ...base, ...variants[variant], ...style }}
+      disabled={disabled}
+      className={cn(
+        "font-display inline-flex items-center justify-center gap-2 whitespace-nowrap border-none font-bold transition-[transform,box-shadow,background] duration-150 ease-out active:scale-[0.96]",
+        sizeClasses[size],
+        variantClasses[variant],
+        full ? "w-full" : "w-auto",
+        disabled ? "cursor-default opacity-50" : "cursor-pointer",
+        className
+      )}
     >
       {icon}
       {children}

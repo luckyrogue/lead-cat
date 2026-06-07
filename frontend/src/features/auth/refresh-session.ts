@@ -1,5 +1,5 @@
 import { getInitData, tmaLogin } from "@/features/auth/api"
-import { getSession } from "@/features/auth/session"
+import { getSession } from "@/shared/auth/session"
 import { ApiError } from "@/shared/api/types"
 
 let inflightRefresh: Promise<string | null> | null = null

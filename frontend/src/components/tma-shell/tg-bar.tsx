@@ -1,6 +1,6 @@
 import { I18N } from "@/shared/tma/i18n"
 import { useTmaApp } from "@/shared/tma/context"
-import { CatIcon, tgIconBtn } from "@/shared/ui/cat/primitives"
+import { CatIcon } from "@/shared/ui/cat/primitives"
 
 export function TgBar({
   onLang,
@@ -10,75 +10,19 @@ export function TgBar({
   /** Inside Telegram: no fake ⋮/✕ — native header already provides them. */
   native?: boolean
 }) {
-  const p = useTmaApp()
+  const { lang } = useTmaApp()
   return (
-    <div
-      style={{
-        height: 52,
-        flexShrink: 0,
-        display: "flex",
-        alignItems: "center",
-        padding: "0 12px 0 16px",
-        background: p.tgBar,
-        position: "relative",
-        zIndex: 6,
-        borderBottom: `1px solid ${p.border}`,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          flex: 1,
-          minWidth: 0,
-        }}
-      >
-        <div
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: "50%",
-            background: p.accent,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            boxShadow: p.shadowSm,
-          }}
-        >
-          <span style={{ fontSize: 19 }}>🐱</span>
+    <div className="relative z-[6] flex h-[52px] shrink-0 items-center border-b border-tma-border bg-tma-tg-bar py-0 pl-4 pr-3">
+      <div className="flex min-w-0 flex-1 items-center gap-2.5">
+        <div className="flex size-[34px] shrink-0 items-center justify-center rounded-full bg-tma-accent shadow-tma-sm">
+          <span className="text-[19px]">🐱</span>
         </div>
-        <div style={{ minWidth: 0 }}>
-          <div
-            style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 800,
-              fontSize: 16,
-              color: p.tgBarText,
-              lineHeight: 1.05,
-            }}
-          >
+        <div className="min-w-0">
+          <div className="font-display text-base font-extrabold leading-[1.05] text-tma-tg-bar-text">
             Lead&nbsp;Cat
           </div>
-          <div
-            style={{
-              fontSize: 11,
-              color: p.muted,
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-            }}
-          >
-            <span
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: 3,
-                background: p.ok,
-                display: "inline-block",
-              }}
-            />
+          <div className="flex items-center gap-1 text-[11px] text-tma-muted">
+            <span className="inline-block size-1.5 rounded-[3px] bg-tma-ok" />
             mini app
           </div>
         </div>
@@ -86,39 +30,34 @@ export function TgBar({
       <button
         type="button"
         onClick={onLang}
-        style={tgIconBtn(p)}
+        className="tg-icon-btn"
         aria-label="language"
       >
-        <span style={{ fontSize: 16 }}>{I18N[p.lang]._flag}</span>
-        <CatIcon name="chevD" size={13} color={p.muted} sw={2.4} />
+        <span className="text-base">{I18N[lang]._flag}</span>
+        <CatIcon name="chevD" size={13} className="text-tma-muted" sw={2.4} />
       </button>
       {!native && (
         <>
           <button
             type="button"
-            style={{ ...tgIconBtn(p), width: 34, gap: 0 }}
+            className="tg-icon-btn w-[34px] gap-0"
             aria-label="menu"
           >
-            <span style={{ display: "flex", gap: 3 }}>
+            <span className="flex gap-[3px]">
               {[0, 1, 2].map((i) => (
                 <span
                   key={i}
-                  style={{
-                    width: 3.4,
-                    height: 3.4,
-                    borderRadius: 2,
-                    background: p.muted,
-                  }}
+                  className="size-[3.4px] rounded-[2px] bg-tma-muted"
                 />
               ))}
             </span>
           </button>
           <button
             type="button"
-            style={{ ...tgIconBtn(p), width: 34 }}
+            className="tg-icon-btn w-[34px]"
             aria-label="close"
           >
-            <CatIcon name="x" size={18} color={p.muted} sw={2.2} />
+            <CatIcon name="x" size={18} className="text-tma-muted" sw={2.2} />
           </button>
         </>
       )}

@@ -7,13 +7,13 @@
 
 ## Problem
 
-| Setup task | Current API | TMA today |
-| ---------- | ----------- | --------- |
-| Google Calendar / Meet | `PATCH …/integrations` | Read-only; create fails with `meetings_not_configured` |
-| Notify chat binding | `POST …/chat/link` | Not exposed |
-| Team / VCS tokens | `…/members/*`, `PATCH …/vcs` | Not exposed |
-| Scenarios (notify-bot) | `…/scenarios/*` | Auto tab uses client mock |
-| Workspace create | `POST /api/workspaces` | Not exposed |
+| Setup task             | Current API                  | TMA today                                              |
+| ---------------------- | ---------------------------- | ------------------------------------------------------ |
+| Google Calendar / Meet | `PATCH …/integrations`       | Read-only; create fails with `meetings_not_configured` |
+| Notify chat binding    | `POST …/chat/link`           | Not exposed                                            |
+| Team / VCS tokens      | `…/members/*`, `PATCH …/vcs` | Not exposed                                            |
+| Scenarios (notify-bot) | `…/scenarios/*`              | Auto tab uses client mock                              |
+| Workspace create       | `POST /api/workspaces`       | Not exposed                                            |
 
 Alpha operators use curl + platform JWT. End users never need platform login.
 
@@ -56,38 +56,38 @@ flowchart TB
 
 Phase 1 — **meetings unblock** (highest priority):
 
-| Method | Path | Maps to | UI |
-| ------ | ---- | ------- | -- |
-| `GET` | `/api/tma/admin/workspace` | First Google-configured workspace summary + integration flags | Admin home status |
-| `PATCH` | `/api/tma/admin/integrations` | `PatchIntegrations` (same body as platform) | Form: Google SA JSON, subject, calendar id |
-| `POST` | `/api/tma/admin/integrations/verify` | `VerifyIntegrations` | “Test connection” button |
+| Method  | Path                                 | Maps to                                                       | UI                                         |
+| ------- | ------------------------------------ | ------------------------------------------------------------- | ------------------------------------------ |
+| `GET`   | `/api/tma/admin/workspace`           | First Google-configured workspace summary + integration flags | Admin home status                          |
+| `PATCH` | `/api/tma/admin/integrations`        | `PatchIntegrations` (same body as platform)                   | Form: Google SA JSON, subject, calendar id |
+| `POST`  | `/api/tma/admin/integrations/verify` | `VerifyIntegrations`                                          | “Test connection” button                   |
 
 Phase 2 — **notify-bot ops**:
 
-| Method | Path | Maps to | UI |
-| ------ | ---- | ------- | -- |
-| `GET` | `/api/tma/admin/chat/status` | `ChatStatus` | Chat linked? |
-| `POST` | `/api/tma/admin/chat/link` | `LinkChat` | Paste chat id / forward flow |
-| `GET` | `/api/tma/admin/members` | `ListMembers` | Read-only team list |
-| `POST` | `/api/tma/admin/members/sync-chat` | `SyncChatMembers` | Sync from Telegram chat |
+| Method | Path                               | Maps to           | UI                           |
+| ------ | ---------------------------------- | ----------------- | ---------------------------- |
+| `GET`  | `/api/tma/admin/chat/status`       | `ChatStatus`      | Chat linked?                 |
+| `POST` | `/api/tma/admin/chat/link`         | `LinkChat`        | Paste chat id / forward flow |
+| `GET`  | `/api/tma/admin/members`           | `ListMembers`     | Read-only team list          |
+| `POST` | `/api/tma/admin/members/sync-chat` | `SyncChatMembers` | Sync from Telegram chat      |
 
 Phase 3 — **scenarios (minimal)**:
 
-| Method | Path | Maps to | UI |
-| ------ | ---- | ------- | -- |
-| `GET` | `/api/tma/admin/scenarios` | `ListScenarios` | Auto tab: real list + enable toggle |
-| `PATCH` | `/api/tma/admin/scenarios/:id` | `UpdateScenario` (enabled + schedule only) | Toggle in Auto tab |
-| `POST` | `/api/tma/admin/scenarios/:id/run` | `RunScenario` | Manual run (admin) |
+| Method  | Path                               | Maps to                                    | UI                                  |
+| ------- | ---------------------------------- | ------------------------------------------ | ----------------------------------- |
+| `GET`   | `/api/tma/admin/scenarios`         | `ListScenarios`                            | Auto tab: real list + enable toggle |
+| `PATCH` | `/api/tma/admin/scenarios/:id`     | `UpdateScenario` (enabled + schedule only) | Toggle in Auto tab                  |
+| `POST`  | `/api/tma/admin/scenarios/:id/run` | `RunScenario`                              | Manual run (admin)                  |
 
 **Workspace selection:** alpha assumes **one Google-configured workspace** (same as `ListWorkspacesWithGoogle` in create meeting). Multi-workspace picker is out of scope until product needs it.
 
 ## Frontend placement
 
-| Surface | Change |
-| ------- | ------ |
+| Surface              | Change                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------- |
 | `profile-screen.tsx` | Admin section already exists for meetings admin; add “Integrations” row → new overlay |
-| `auto-screen.tsx` | Replace mock `INITIAL_SCENARIOS` with `GET /api/tma/admin/scenarios` when admin |
-| New | `integrations-screen.tsx` in admin overlay — Google SA upload (paste JSON), verify |
+| `auto-screen.tsx`    | Replace mock `INITIAL_SCENARIOS` with `GET /api/tma/admin/scenarios` when admin       |
+| New                  | `integrations-screen.tsx` in admin overlay — Google SA upload (paste JSON), verify    |
 
 Non-admin users: no setup UI; integrations status can show read-only banner on create failure (“ask admin to configure Google”).
 
@@ -100,12 +100,12 @@ Non-admin users: no setup UI; integrations status can show read-only banner on c
 
 ## Migration / deprecation timeline
 
-| Milestone | Platform route | Action |
-| --------- | -------------- | ------ |
-| Phase 1 shipped | `PATCH …/integrations` | Document deprecated for human use; keep for scripts |
-| Phase 2 shipped | `…/chat/*`, `…/members/*` | Same |
-| Phase 3 shipped | `…/scenarios/*` (read/toggle) | Same |
-| All phases + 1 release | Platform setup routes | Optional: require `X-Setup-Token` or remove from public deploy |
+| Milestone              | Platform route                | Action                                                         |
+| ---------------------- | ----------------------------- | -------------------------------------------------------------- |
+| Phase 1 shipped        | `PATCH …/integrations`        | Document deprecated for human use; keep for scripts            |
+| Phase 2 shipped        | `…/chat/*`, `…/members/*`     | Same                                                           |
+| Phase 3 shipped        | `…/scenarios/*` (read/toggle) | Same                                                           |
+| All phases + 1 release | Platform setup routes         | Optional: require `X-Setup-Token` or remove from public deploy |
 
 `POST /api/me/link-telegram` — **removed (410)** in current release.
 

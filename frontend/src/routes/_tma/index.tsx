@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { HomePage } from "@/features/home/pages/home-page"
-import { myMeetingsQuery } from "@/features/meetings/queries"
+import { myMeetingsQuery } from "@/entities/meeting/queries"
 import { shouldReloadExceptSearch } from "@/shared/lib/route-revalidation"
 
 export const Route = createFileRoute("/_tma/")({

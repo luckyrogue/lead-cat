@@ -2,7 +2,7 @@ import type { Employee } from "@/entities/employee/types"
 import { useTmaApp } from "@/shared/tma/context"
 import { EmployeePicker } from "@/components/employee-picker"
 import { Field } from "@/shared/ui/cat/primitives"
-import { useEmployeeSearch } from "@/features/checker/queries"
+import { useEmployeeSearch } from "@/entities/employee/queries"
 
 export function CheckerPeopleSection({
   people,

@@ -1,9 +1,9 @@
 import { useMemo } from "react"
 import { useNavigate, useParams } from "@tanstack/react-router"
 import { CreateWizard } from "@/features/meeting-create/components/create-wizard"
+import { useMyMeetings } from "@/entities/meeting/queries"
 import {
   useCreateMeeting,
-  useMyMeetings,
   useUpdateMeeting,
 } from "@/features/meetings/queries"
 import { detailToDraft } from "@/entities/meeting/lib/format"

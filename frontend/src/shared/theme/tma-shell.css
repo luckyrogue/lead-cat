@@ -6,7 +6,10 @@ html:has(body.tma-mode) {
 }
 
 body.tma-mode {
-  height: var(--tma-vh, 100dvh);
+  /* Clamp to the smaller of the real webview height (100%) and the height
+     Telegram reports (--tma-vh). Either one alone can overshoot the visible
+     area on Telegram Desktop/iOS and push the top/bottom bars off-screen. */
+  height: min(100%, var(--tma-vh, 100%));
   overflow: hidden;
 }
 
@@ -24,7 +27,7 @@ body.tma-mode #root {
   flex-direction: column;
   width: 100%;
   max-width: 480px;
-  height: var(--tma-vh, 100dvh);
+  height: min(100%, var(--tma-vh, 100%));
   margin-inline: auto;
   overflow: hidden;
 }

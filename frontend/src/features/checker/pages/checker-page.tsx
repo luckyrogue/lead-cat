@@ -8,8 +8,7 @@ import { CheckerPeopleSection } from "../components/checker-people-section"
 import { CheckerSlotsResults } from "../components/checker-slots-results"
 
 export function CheckerPage() {
-  const p = useTmaApp()
-  const t = p.t
+  const t = useTmaApp().t
   const [people, setPeople] = useState<Employee[]>([])
   const [search, setSearch] = useState("")
   const [range, setRange] = useState("7")
@@ -19,19 +18,11 @@ export function CheckerPage() {
   const slots = (mutation.data ?? []).filter((s) => s.mins >= dur)
 
   return (
-    <div style={{ padding: "16px 16px 28px" }}>
-      <h2
-        style={{
-          margin: "2px 4px 4px",
-          fontFamily: "var(--font-display)",
-          fontWeight: 800,
-          fontSize: 26,
-          color: p.text,
-        }}
-      >
+    <div className="px-4 pb-7">
+      <h2 className="tma-heading mx-1 mt-0.5 mb-1 text-[26px]">
         {t("findTime")} 🔍
       </h2>
-      <p style={{ margin: "0 4px 18px", color: p.muted, fontSize: 14 }}>
+      <p className="mx-1 mb-[18px] text-sm text-tma-muted">
         Кот найдёт окно, когда все свободны
       </p>
 
@@ -49,7 +40,7 @@ export function CheckerPage() {
         onDurChange={setDur}
       />
 
-      <div style={{ height: 22 }} />
+      <div className="h-[22px]" />
       <CatBtn
         variant="primary"
         full
@@ -68,18 +59,13 @@ export function CheckerPage() {
             durationMins: dur,
           })
         }}
-        icon={<CatIcon name="search" size={20} color={p.accentText} sw={2.2} />}
+        icon={<CatIcon name="search" size={20} sw={2.2} />}
       >
         {mutation.isPending ? "…" : t("findSlots")}
       </CatBtn>
 
       {mutation.isError && (
-        <CheckerSlotsResults
-          people={people}
-          dur={dur}
-          slots={[]}
-          isError
-        />
+        <CheckerSlotsResults people={people} dur={dur} slots={[]} isError />
       )}
 
       {mutation.isSuccess && (

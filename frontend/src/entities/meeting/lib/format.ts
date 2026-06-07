@@ -1,13 +1,10 @@
-import {
-  MEETING_TYPES,
-  RECURRENCE,
-} from "@/entities/meeting/constants"
+import { MEETING_TYPES, RECURRENCE } from "@/entities/meeting/constants"
 import type { Meeting, MeetingDraft } from "@/entities/meeting/types"
 import type { Employee } from "@/entities/employee/types"
 import { emailsToPeople } from "@/entities/employee/fixtures"
-import type { I18nKey } from "@/shared/tma/i18n"
-
 export type Lang = "ru" | "kk" | "en"
+
+export type PartWordKey = "part1" | "part24" | "participants"
 
 export function buildTitle(
   m: Pick<Meeting, "type" | "dept" | "host" | "date" | "rec">
@@ -35,7 +32,7 @@ export function fmtDate(iso: string, lang: Lang): string {
   return lang === "en" ? `${dowEn} ${dd}.${mm}` : `${dd}.${mm}, ${dow}`
 }
 
-export function partWord(n: number, t: (k: I18nKey) => string): string {
+export function partWord(n: number, t: (k: PartWordKey) => string): string {
   const last = n % 10
   const last2 = n % 100
   if (last === 1 && last2 !== 11) return t("part1")

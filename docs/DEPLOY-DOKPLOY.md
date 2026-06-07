@@ -78,24 +78,24 @@ STATIC_DIR=frontend/dist
 
 #### Variable reference
 
-| Variable                  | Purpose                                                                 |
-| ------------------------- | ----------------------------------------------------------------------- |
-| `BOT_TOKEN`               | Telegram Bot API token; required in production.                         |
-| `BOT_ADMIN_TELEGRAM_IDS`  | Comma-separated Telegram user IDs granted the `admin` role in the app.  |
-| `DATABASE_URL`            | Postgres connection string (source of truth for all data).              |
-| `REDIS_URL`               | Redis connection string used by the asynq job queue.                    |
-| `JWT_SECRET`              | HMAC secret for signing JWT access tokens.                              |
-| `JWT_ISSUER`              | `iss` claim embedded in issued JWTs.                                    |
-| `JWT_TTL_HOURS`           | Token lifetime in hours (default 168 = 7 days).                         |
-| `MASTER_ENCRYPTION_KEY`   | AES key for encrypting credentials at rest (Google SA JSON, etc.).      |
-| `CALENDAR_STUB`           | When `true`, bypasses real Google Calendar/Meet API (for staging).      |
-| `WEBAPP_URL`              | Public HTTPS base URL of the app; used in bot deep links and CORS.      |
-| `STATIC_DIR`              | Directory for embedded frontend assets (default `frontend/dist`).       |
-| `HTTP_ADDR`               | TCP address the server listens on (default `:8080`).                    |
-| `AUTO_MIGRATE`            | When `true`, runs forward-only SQL migrations on startup.               |
-| `CORS_ALLOWED_ORIGINS`    | Comma-separated allowed origins for CORS; defaults to `WEBAPP_URL`.     |
-| `LOG_LEVEL`               | Structured log verbosity passed to zap.                                 |
-| `LOG_FORMAT`              | `json` for production; `console` for human-readable local output.       |
+| Variable                 | Purpose                                                                |
+| ------------------------ | ---------------------------------------------------------------------- |
+| `BOT_TOKEN`              | Telegram Bot API token; required in production.                        |
+| `BOT_ADMIN_TELEGRAM_IDS` | Comma-separated Telegram user IDs granted the `admin` role in the app. |
+| `DATABASE_URL`           | Postgres connection string (source of truth for all data).             |
+| `REDIS_URL`              | Redis connection string used by the asynq job queue.                   |
+| `JWT_SECRET`             | HMAC secret for signing JWT access tokens.                             |
+| `JWT_ISSUER`             | `iss` claim embedded in issued JWTs.                                   |
+| `JWT_TTL_HOURS`          | Token lifetime in hours (default 168 = 7 days).                        |
+| `MASTER_ENCRYPTION_KEY`  | AES key for encrypting credentials at rest (Google SA JSON, etc.).     |
+| `CALENDAR_STUB`          | When `true`, bypasses real Google Calendar/Meet API (for staging).     |
+| `WEBAPP_URL`             | Public HTTPS base URL of the app; used in bot deep links and CORS.     |
+| `STATIC_DIR`             | Directory for embedded frontend assets (default `frontend/dist`).      |
+| `HTTP_ADDR`              | TCP address the server listens on (default `:8080`).                   |
+| `AUTO_MIGRATE`           | When `true`, runs forward-only SQL migrations on startup.              |
+| `CORS_ALLOWED_ORIGINS`   | Comma-separated allowed origins for CORS; defaults to `WEBAPP_URL`.    |
+| `LOG_LEVEL`              | Structured log verbosity passed to zap.                                |
+| `LOG_FORMAT`             | `json` for production; `console` for human-readable local output.      |
 
 ### Domains
 
@@ -125,15 +125,15 @@ Redeploy the previous image tag in Dokploy. Migrations are forward-only — test
 
 The following variables were used during the initial notify-bot alpha and are **not required** for the meetings-only deployment. They remain accepted by the binary for backward compatibility but should be omitted from new deployments.
 
-| Variable                  | Status                                                              |
-| ------------------------- | ------------------------------------------------------------------- |
-| `GITHUB_OAUTH_CLIENT_ID`  | Alpha GitHub OAuth login — no UI in Mini App; omit.                 |
+| Variable                     | Status                                                           |
+| ---------------------------- | ---------------------------------------------------------------- |
+| `GITHUB_OAUTH_CLIENT_ID`     | Alpha GitHub OAuth login — no UI in Mini App; omit.              |
 | `GITHUB_OAUTH_CLIENT_SECRET` | Alpha GitHub OAuth login — no UI in Mini App; omit.              |
-| `GITLAB_OAUTH_CLIENT_ID`  | Alpha GitLab OAuth login — no UI in Mini App; omit.                 |
+| `GITLAB_OAUTH_CLIENT_ID`     | Alpha GitLab OAuth login — no UI in Mini App; omit.              |
 | `GITLAB_OAUTH_CLIENT_SECRET` | Alpha GitLab OAuth login — no UI in Mini App; omit.              |
-| `WEBAUTHN_RP_ID`          | Passkey relying-party ID — passkey UI not shipped; omit.            |
-| `WEBAUTHN_RP_ORIGIN`      | Passkey relying-party origin — passkey UI not shipped; omit.        |
-| `AUTH_DEV_MODE`           | Dev bypass — **must not be set in production**.                     |
-| `AUTH_DEV_USER_SUB`       | Dev bypass user sub — dev only.                                     |
-| `AUTH_DEV_EMAIL`          | Dev bypass email — dev only.                                        |
-| `AUTH_OTP_LOG`            | Logs OTP codes to stdout — dev only; never enable in production.    |
+| `WEBAUTHN_RP_ID`             | Passkey relying-party ID — passkey UI not shipped; omit.         |
+| `WEBAUTHN_RP_ORIGIN`         | Passkey relying-party origin — passkey UI not shipped; omit.     |
+| `AUTH_DEV_MODE`              | Dev bypass — **must not be set in production**.                  |
+| `AUTH_DEV_USER_SUB`          | Dev bypass user sub — dev only.                                  |
+| `AUTH_DEV_EMAIL`             | Dev bypass email — dev only.                                     |
+| `AUTH_OTP_LOG`               | Logs OTP codes to stdout — dev only; never enable in production. |

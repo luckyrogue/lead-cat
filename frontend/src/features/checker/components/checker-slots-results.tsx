@@ -1,16 +1,9 @@
 import { useNavigate } from "@tanstack/react-router"
 import type { Employee } from "@/entities/employee/types"
+import type { FreeSlot } from "@/entities/meeting/types"
 import { useTmaApp } from "@/shared/tma/context"
-import { EmptyState } from "@/features/meetings/components/meeting-ui"
+import { EmptyState } from "@/components/meetings/meeting-ui"
 import { CatCard, CatIcon } from "@/shared/ui/cat/primitives"
-
-type FreeSlot = {
-  iso: string
-  start: string
-  end: string
-  day: string
-  mins: number
-}
 
 export function CheckerSlotsResults({
   people,
@@ -22,21 +15,12 @@ export function CheckerSlotsResults({
   slots: FreeSlot[]
   isError: boolean
 }) {
-  const p = useTmaApp()
-  const t = p.t
+  const t = useTmaApp().t
   const navigate = useNavigate()
 
   if (isError) {
     return (
-      <div
-        style={{
-          marginTop: 12,
-          color: p.muted,
-          fontSize: 14,
-          fontWeight: 600,
-          textAlign: "center",
-        }}
-      >
+      <div className="mt-3 text-center text-sm font-semibold text-tma-muted">
         Не удалось найти слоты. Попробуй ещё раз.
       </div>
     )
@@ -44,15 +28,8 @@ export function CheckerSlotsResults({
 
   if (slots.length === 0) {
     return (
-      <div style={{ marginTop: 22 }}>
-        <div
-          style={{
-            background: p.card,
-            borderRadius: 20,
-            border: `1px solid ${p.border}`,
-            overflow: "hidden",
-          }}
-        >
+      <div className="mt-[22px]">
+        <div className="overflow-hidden rounded-[20px] border border-tma-border bg-tma-card">
           <EmptyState
             emoji="🙀"
             title={t("noSlots")}
@@ -64,22 +41,11 @@ export function CheckerSlotsResults({
   }
 
   return (
-    <div style={{ marginTop: 22 }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 7,
-          color: p.ok,
-          fontWeight: 800,
-          fontFamily: "var(--font-display)",
-          fontSize: 15,
-          margin: "0 4px 12px",
-        }}
-      >
+    <div className="mt-[22px]">
+      <div className="font-display mx-1 mb-3 flex items-center gap-[7px] text-[15px] font-extrabold text-tma-ok">
         ✅ {t("freeFor")} {people.length} {t("people")}
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div className="flex flex-col gap-2.5">
         {slots.map((s, i) => (
           <CatCard
             key={i}
@@ -96,58 +62,22 @@ export function CheckerSlotsResults({
               )
               void navigate({ to: "/meetings/create" })
             }}
-            pad={14}
-            style={{ display: "flex", alignItems: "center", gap: 13 }}
+            className="flex items-center gap-[13px] p-3.5"
           >
-            <div
-              style={{
-                width: 46,
-                height: 46,
-                borderRadius: 13,
-                background: p.okSoft,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <span style={{ fontSize: 16 }}>📅</span>
+            <div className="flex size-[46px] shrink-0 flex-col items-center justify-center rounded-[13px] bg-tma-ok-soft">
+              <span className="text-base">📅</span>
             </div>
-            <div style={{ flex: 1 }}>
-              <div
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontWeight: 800,
-                  fontSize: 15.5,
-                  color: p.text,
-                }}
-              >
+            <div className="flex-1">
+              <div className="font-display text-[15.5px] font-extrabold text-tma-text">
                 {s.start} – {s.end}
               </div>
-              <div
-                style={{
-                  fontSize: 13,
-                  color: p.muted,
-                  fontWeight: 600,
-                }}
-              >
+              <div className="text-[13px] font-semibold text-tma-muted">
                 {s.day} · {s.mins} {t("min")}
               </div>
             </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                color: p.accent,
-                fontWeight: 700,
-                fontSize: 13,
-                fontFamily: "var(--font-display)",
-              }}
-            >
+            <div className="font-display flex items-center gap-1 text-[13px] font-bold text-tma-accent">
               {t("createHere")}
-              <CatIcon name="chevR" size={15} color={p.accent} sw={2.4} />
+              <CatIcon name="chevR" size={15} sw={2.4} />
             </div>
           </CatCard>
         ))}

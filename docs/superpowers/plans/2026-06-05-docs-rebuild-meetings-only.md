@@ -61,6 +61,7 @@
 ## Task 1: Deletes + index page
 
 **Files:**
+
 - Delete: `docs/SCENARIOS.md`, `docs/ALPHA-SMOKE.md`, `.cursor/rules/scenarios.mdc`
 - Create: `docs/README.md`
 
@@ -410,6 +411,7 @@ grep -rnE "SCENARIOS\.md|ALPHA-SMOKE\.md|ONBOARDING-WORKSPACE\.md|scenarios\.mdc
 grep -rniE "n8n|scenario engine|notify-bot|multi-tenant" docs/*.md AGENTS.md .cursor/rules/ \
   | grep -viE "deprecated|no longer|removed|out of scope"
 ```
+
 Expect no output (investigate/fix any hit).
 
 - [ ] **Step 4: Sanity — code untouched** — confirm this project staged no code: `git diff --name-only HEAD~12..HEAD | grep -vE "^(docs/|AGENTS.md|README.md|.cursor/)" || echo "docs-only OK"` (adjust the range to this project's commits). Optionally `make build` to confirm nothing code-side broke.
@@ -432,4 +434,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - **Accuracy guardrails:** route lists from `app.go` + `docs/openapi.json` (TMA PATCH/DELETE/conflicts/admin marked planned); env from config + `deploy/.env.example`; no secrets.
 - **Commit hygiene:** every task stages only its named docs/agent-guide files — never `git add -A`, never code, never `frontend/vite.config.ts`. If the working tree's concurrent code changes cause a staging surprise, STOP and report rather than broadening the add.
 - **Known approximation:** where backend code is mid-refactor, docs describe the intended contract (ТЗ + setup-replacement design) and label not-yet-built routes "planned" rather than asserting them as present.
+
+```
+
 ```

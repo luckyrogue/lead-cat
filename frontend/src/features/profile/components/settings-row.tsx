@@ -1,3 +1,5 @@
+import { cn } from "@/shared/lib/cn"
+import { hueSurfaceVars } from "@/shared/tma/surface-vars"
 import { useTmaApp } from "@/shared/tma/context"
 import { CatIcon } from "@/shared/ui/cat/primitives"
 
@@ -16,52 +18,24 @@ export function SettingsRow({
   onClick?: () => void
   last?: boolean
 }) {
-  const p = useTmaApp()
+  const { dark } = useTmaApp()
   return (
     <button
       type="button"
       onClick={onClick}
-      style={{
-        width: "100%",
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        padding: "13px 14px",
-        border: "none",
-        borderBottom: last ? "none" : `1px solid ${p.border}`,
-        background: "transparent",
-        cursor: onClick ? "pointer" : "default",
-        textAlign: "left",
-      }}
+      className={cn(
+        "flex w-full items-center gap-3 border-none bg-transparent px-3.5 py-[13px] text-left",
+        !last && "border-b border-tma-border",
+        onClick ? "cursor-pointer" : "cursor-default"
+      )}
     >
       <div
-        style={{
-          width: 34,
-          height: 34,
-          borderRadius: 10,
-          background: `oklch(${p.dark ? 0.36 : 0.94} ${p.dark ? 0.08 : 0.06} ${hue})`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
+        className="tma-hue-surface flex size-[34px] shrink-0 items-center justify-center rounded-[10px]"
+        style={hueSurfaceVars(hue, dark)}
       >
-        <CatIcon
-          name={icon}
-          size={18}
-          color={`oklch(${p.dark ? 0.82 : 0.52} 0.15 ${hue})`}
-          sw={2}
-        />
+        <CatIcon name={icon} size={18} className="text-tma-hue-fg" sw={2} />
       </div>
-      <span
-        style={{
-          flex: 1,
-          fontWeight: 700,
-          fontSize: 15,
-          color: p.text,
-          fontFamily: "var(--font-display)",
-        }}
-      >
+      <span className="font-display flex-1 text-[15px] font-bold text-tma-text">
         {label}
       </span>
       {right}

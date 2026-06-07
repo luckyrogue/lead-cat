@@ -1,4 +1,4 @@
-import type { TmaUser } from "@/features/auth/session"
+import type { TmaUser } from "@/shared/auth/types"
 import type { TabKey } from "@/shared/tma/types"
 import {
   getRoleDeniedCode,
@@ -85,11 +85,6 @@ export const tmaModulePolicies: TmaModulePolicy[] = [
   },
 ]
 
-/** @deprecated use tmaModulePolicies */
-export const tmaTabPolicies = tmaModulePolicies.filter((p) =>
-  ["home", "meetings", "checker", "auto", "profile"].includes(p.key)
-)
-
 export function getTmaModulePolicy(key: TmaModuleKey): TmaModulePolicy {
   const policy = tmaModulePolicies.find((item) => item.key === key)
   if (!policy) {
@@ -131,15 +126,6 @@ export function getVisibleTabBarModules(
   return tmaModulePolicies.filter(
     (policy) =>
       policy.showInTabBar !== false && canAccessTmaModule(user, policy.key)
-  )
-}
-
-/** @deprecated use getVisibleTabBarModules */
-export function visibleTmaTabs(user: TmaUser | null | undefined): TmaModulePolicy[] {
-  return tmaModulePolicies.filter(
-    (policy) =>
-      ["home", "meetings", "checker", "auto", "profile"].includes(policy.key) &&
-      canAccessTmaModule(user, policy.key)
   )
 }
 

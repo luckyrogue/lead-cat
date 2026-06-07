@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 
-import type { TmaUser } from "@/features/auth/session"
+import type { TmaUser } from "@/shared/auth/types"
 import { PermissionDenied } from "@/components/auth/permission-denied"
 import { hasRole } from "@/shared/auth/permissions"
 import type { RoleRequirement } from "@/shared/auth/permission-requirement"

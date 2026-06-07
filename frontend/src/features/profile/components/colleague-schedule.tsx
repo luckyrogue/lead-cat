@@ -1,16 +1,15 @@
 import { useState } from "react"
-import { useEmployeeSearch } from "@/features/checker/queries"
-import { useColleagueSchedule } from "@/features/meetings/queries"
+import { useEmployeeSearch } from "@/entities/employee/queries"
+import { useColleagueSchedule } from "@/entities/meeting/queries"
 import { useTmaApp } from "@/shared/tma/context"
 import { Avatar, CatCard, CatIcon } from "@/shared/ui/cat/primitives"
 import {
   EmptyState,
   MeetingCard,
-} from "@/features/meetings/components/meeting-ui"
+} from "@/components/meetings/meeting-ui"
 
 export function ColleagueSchedule() {
-  const p = useTmaApp()
-  const t = p.t
+  const t = useTmaApp().t
   const [picked, setPicked] = useState<{
     id: string
     name: string
@@ -30,86 +29,32 @@ export function ColleagueSchedule() {
       (a.date + a.start).localeCompare(b.date + b.start)
     )
     return (
-      <div style={{ padding: "16px 16px 28px" }}>
+      <div className="px-4 pb-7">
         <button
           type="button"
           onClick={() => setPicked(null)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-            background: "none",
-            border: "none",
-            color: p.accent,
-            fontWeight: 700,
-            fontSize: 14,
-            cursor: "pointer",
-            marginBottom: 14,
-            fontFamily: "var(--font-display)",
-          }}
+          className="font-display mb-3.5 flex cursor-pointer items-center gap-1 border-none bg-transparent text-sm font-bold text-tma-accent"
         >
-          <CatIcon name="chevL" size={16} color={p.accent} sw={2.4} />{" "}
-          {t("searchColleague")}
+          <CatIcon name="chevL" size={16} sw={2.4} /> {t("searchColleague")}
         </button>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            marginBottom: 8,
-          }}
-        >
+        <div className="mb-2 flex items-center gap-3">
           <Avatar name={picked.name} size={52} />
           <div>
-            <div
-              style={{
-                fontFamily: "var(--font-display)",
-                fontWeight: 800,
-                fontSize: 19,
-                color: p.text,
-              }}
-            >
+            <div className="font-display text-[19px] font-extrabold text-tma-text">
               {picked.name}
             </div>
-            <div style={{ fontSize: 13, color: p.muted }}>{picked.dept}</div>
+            <div className="text-[13px] text-tma-muted">{picked.dept}</div>
           </div>
         </div>
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            background: p.cardAlt,
-            padding: "5px 11px",
-            borderRadius: 999,
-            fontSize: 12,
-            fontWeight: 700,
-            color: p.muted,
-            marginBottom: 18,
-          }}
-        >
+        <div className="mb-[18px] inline-flex items-center gap-1.5 rounded-full bg-tma-card-alt px-[11px] py-[5px] text-xs font-bold text-tma-muted">
           👁️ {t("viewOnly")}
         </div>
         {loadingSchedule ? (
-          <div
-            style={{
-              textAlign: "center",
-              color: p.muted,
-              fontSize: 14,
-              padding: 20,
-            }}
-          >
+          <div className="p-5 text-center text-sm text-tma-muted">
             Загрузка…
           </div>
         ) : list.length === 0 ? (
-          <div
-            style={{
-              background: p.card,
-              borderRadius: 20,
-              border: `1px solid ${p.border}`,
-              overflow: "hidden",
-            }}
-          >
+          <div className="overflow-hidden rounded-[20px] border border-tma-border bg-tma-card">
             <EmptyState
               emoji="😺"
               title="Свободен"
@@ -117,7 +62,7 @@ export function ColleagueSchedule() {
             />
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+          <div className="flex flex-col gap-[11px]">
             {list.map((m) => (
               <MeetingCard key={m.id} m={m} compact />
             ))}
@@ -128,68 +73,29 @@ export function ColleagueSchedule() {
   }
 
   return (
-    <div style={{ padding: "16px 16px 28px" }}>
-      <h2
-        style={{
-          margin: "0 0 6px",
-          fontFamily: "var(--font-display)",
-          fontWeight: 800,
-          fontSize: 23,
-          color: p.text,
-        }}
-      >
-        {t("searchColleague")}
-      </h2>
-      <p style={{ margin: "0 0 18px", color: p.muted, fontSize: 14 }}>
+    <div className="px-4 pb-7">
+      <h2 className="tma-heading mb-1.5 text-[23px]">{t("searchColleague")}</h2>
+      <p className="mb-[18px] text-sm text-tma-muted">
         Посмотри расписание любого сотрудника
       </p>
-      <div style={{ position: "relative" }}>
+      <div className="relative">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t("searchPeople")}
-          style={{
-            width: "100%",
-            boxSizing: "border-box",
-            height: 50,
-            padding: "0 14px 0 42px",
-            borderRadius: 14,
-            border: `1.5px solid ${p.border}`,
-            background: p.dark ? p.cardAlt : "#fff",
-            color: p.text,
-            fontSize: 16,
-          }}
+          className="tma-input pl-[42px]"
           autoFocus
         />
-        <CatIcon
-          name="search"
-          size={19}
-          color={p.faint}
-          style={{ position: "absolute", left: 13, top: 15 }}
-          sw={2}
-        />
+        <span className="pointer-events-none absolute left-[13px] top-[15px] text-tma-faint">
+          <CatIcon name="search" size={19} sw={2} />
+        </span>
       </div>
       {search === "" ? (
-        <div
-          style={{
-            marginTop: 16,
-            color: p.faint,
-            fontSize: 14,
-            textAlign: "center",
-            padding: 20,
-          }}
-        >
+        <div className="mt-4 p-5 text-center text-sm text-tma-faint">
           {t("typeToSearch")} 🐾
         </div>
       ) : (
-        <div
-          style={{
-            marginTop: 12,
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
-          }}
-        >
+        <div className="mt-3 flex flex-col gap-2">
           {matches.map((e) => (
             <CatCard
               key={e.id}
@@ -198,26 +104,20 @@ export function ColleagueSchedule() {
                 setPicked(e)
                 setSearch("")
               }}
-              pad={12}
-              style={{ display: "flex", alignItems: "center", gap: 11 }}
+              className="flex items-center gap-[11px] p-3"
             >
               <Avatar name={e.name} size={40} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                  style={{
-                    fontWeight: 700,
-                    fontSize: 15,
-                    color: p.text,
-                    fontFamily: "var(--font-display)",
-                  }}
-                >
+              <div className="min-w-0 flex-1">
+                <div className="font-display text-[15px] font-bold text-tma-text">
                   {e.name}
                 </div>
-                <div style={{ fontSize: 12.5, color: p.muted }}>
+                <div className="text-[12.5px] text-tma-muted">
                   {e.dept} · {e.email}
                 </div>
               </div>
-              <CatIcon name="chevR" size={18} color={p.faint} sw={2.2} />
+              <span className="text-tma-faint">
+                <CatIcon name="chevR" size={18} sw={2.2} />
+              </span>
             </CatCard>
           ))}
         </div>

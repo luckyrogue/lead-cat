@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
-import { getSession } from "@/features/auth/session"
+import { getSession } from "@/shared/auth/session"
 import { AdminPanelPage } from "@/features/profile/pages/admin-panel-page"
-import { myMeetingsQuery } from "@/features/meetings/queries"
+import { myMeetingsQuery } from "@/entities/meeting/queries"
 import { canAccessTmaRoute } from "@/shared/auth/route-access"
 import { shouldReloadExceptSearch } from "@/shared/lib/route-revalidation"
 

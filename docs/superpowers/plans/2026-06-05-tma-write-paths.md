@@ -752,7 +752,12 @@ In `create-wizard.tsx`:
 - When the wizard reaches the review step, fire the mutation once with the current draft. Use an effect keyed on the review step + relevant draft fields:
   ```tsx
   useEffect(() => {
-    if (STEPS[step] !== "review" || !draft.date || draft.participants.length === 0) return
+    if (
+      STEPS[step] !== "review" ||
+      !draft.date ||
+      draft.participants.length === 0
+    )
+      return
     conflictsMut.mutate({
       participants: draft.participants.map((x) => x.email),
       date: draft.date,
@@ -925,7 +930,10 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 - **Spec coverage:** identity bridge (`EnsureTMAOrganizer`) → Task 1; `POST /meetings` create + once-only guard + Google-workspace resolution → Task 2; `PATCH`/`DELETE /meetings/:id` single edit/cancel + `ListEditableMeetings` ownership guard → Task 3; `POST /conflicts` → Task 4; write fetchers → Task 5; mutation + conflicts hooks (invalidate) → Task 6; wizard real-user + live conflicts + recurring guard → Task 7; mutation wiring + `editId` threading + organizer-only actions → Task 8; docs → Task 9.
 - **Type consistency:** backend `tmaCreateRequest`/`tmaUpdateRequest`/`tmaConflictRequest`/`tmaConflictDTO` + `toCreateMeetingInput`/`toConflictDTO`/`editableWorkspace`/`botUser` (Tasks 2-4) reuse `tmaMeetingDTO` + `toMeetingDTO` + `almatyLoc` from `tma_read.go`. Frontend `MeetingInput`/`MeetingPatch`/`Conflict`/`ConflictsParams` (Task 5) consumed by hooks (Task 6); query key `["tma","meetings"]` (prefix) invalidates the `["tma","meetings","all"]` list. `OverlayState.editId` (Task 8) read in `completeCreate`.
-- **Identity model:** every TMA write resolves the organizer via `EnsureTMAOrganizer` (idempotent by `auth_sub="email:<email>"`), so editing/deleting authorizes correctly against `ownerOrOrganizer` for meetings the user organized via TMA *or* the web (same row). Participant-only meetings → `ownerOrOrganizer` false → `403` (and they aren't in `ListEditableMeetings`, so they `404` first).
+- **Identity model:** every TMA write resolves the organizer via `EnsureTMAOrganizer` (idempotent by `auth_sub="email:<email>"`), so editing/deleting authorizes correctly against `ownerOrOrganizer` for meetings the user organized via TMA _or_ the web (same row). Participant-only meetings → `ownerOrOrganizer` false → `403` (and they aren't in `ListEditableMeetings`, so they `404` first).
 - **Known deferrals (in scope as 400/UX guards, full feature later):** recurring create (`rec != once` → 400 + disabled confirm), whole-series edit/delete (single only), participant edit (UpdateMeetingInput carries none), multi-workspace targeting (first Google workspace), reminder settings (sub-project 4).
 - **Known approximations:** create uses `wsIDs[0]` when multiple Google workspaces exist (documented); `editableWorkspace` does an N-row scan of the user's editable meetings per edit/delete (personal-scale, fine); conflicts are advisory (non-blocking), matching §4.7.3.
+
+```
+
 ```

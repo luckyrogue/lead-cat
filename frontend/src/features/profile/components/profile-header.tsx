@@ -3,60 +3,21 @@ import { useTmaApp } from "@/shared/tma/context"
 import { Avatar } from "@/shared/ui/cat/primitives"
 
 export function ProfileHeader() {
-  const p = useTmaApp()
+  const t = useTmaApp().t
   const { user } = useTmaAuth()
-  const t = p.t
 
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 14,
-        marginBottom: 22,
-        padding: "4px 4px",
-      }}
-    >
+    <div className="mb-[22px] flex items-center gap-3.5 p-1">
       <Avatar name={user?.name ?? ""} size={62} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            fontFamily: "var(--font-display)",
-            fontWeight: 800,
-            fontSize: 20,
-            color: p.text,
-            lineHeight: 1.1,
-          }}
-        >
+      <div className="min-w-0 flex-1">
+        <div className="font-display text-xl font-extrabold leading-[1.1] text-tma-text">
           {user?.name ?? ""}
         </div>
-        <div
-          style={{
-            fontSize: 13,
-            color: p.muted,
-            marginBottom: 6,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
+        <div className="mb-1.5 truncate text-[13px] text-tma-muted">
           {user?.email ?? ""}
         </div>
         {user?.role === "admin" && (
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 5,
-              fontSize: 11.5,
-              fontWeight: 800,
-              color: p.accent,
-              background: p.accentSoft,
-              padding: "3px 9px",
-              borderRadius: 999,
-              fontFamily: "var(--font-display)",
-            }}
-          >
+          <span className="font-display inline-flex items-center gap-[5px] rounded-full bg-tma-accent-soft px-[9px] py-[3px] text-[11.5px] font-extrabold text-tma-accent">
             👑 {t("role_admin")}
           </span>
         )}

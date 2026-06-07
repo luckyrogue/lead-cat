@@ -55,12 +55,12 @@ Thin TMA write handlers that (a) bridge identity once via `EnsureTMAOrganizer`, 
 
 ### Backend — new endpoints (under the `/api/tma` group, TMA-auth)
 
-| Method & path                | Reuses                                                          | Returns                       |
-| ---------------------------- | -------------------------------------------------------------- | ----------------------------- |
-| `POST /api/tma/meetings`     | `EnsureTMAOrganizer` + workspace-resolve + `CreateMeeting`     | `201 {meeting: tmaMeetingDTO}` |
-| `PATCH /api/tma/meetings/:id`| `EnsureTMAOrganizer` + meeting→workspace + `UpdateMeeting`     | `200 {meeting: tmaMeetingDTO}` |
-| `DELETE /api/tma/meetings/:id`| `EnsureTMAOrganizer` + meeting→workspace + `CancelMeeting`    | `204` (no body)                |
-| `POST /api/tma/conflicts`    | `MeetingConflicts`                                             | `200 {conflicts: tmaConflictDTO[]}` |
+| Method & path                  | Reuses                                                     | Returns                             |
+| ------------------------------ | ---------------------------------------------------------- | ----------------------------------- |
+| `POST /api/tma/meetings`       | `EnsureTMAOrganizer` + workspace-resolve + `CreateMeeting` | `201 {meeting: tmaMeetingDTO}`      |
+| `PATCH /api/tma/meetings/:id`  | `EnsureTMAOrganizer` + meeting→workspace + `UpdateMeeting` | `200 {meeting: tmaMeetingDTO}`      |
+| `DELETE /api/tma/meetings/:id` | `EnsureTMAOrganizer` + meeting→workspace + `CancelMeeting` | `204` (no body)                     |
+| `POST /api/tma/conflicts`      | `MeetingConflicts`                                         | `200 {conflicts: tmaConflictDTO[]}` |
 
 All read the authed `bot_user` from `c.Locals("bot_user")`.
 
@@ -79,6 +79,7 @@ func (s *Services) EnsureTMAOrganizer(ctx context.Context, email string, telegra
 ```
 
 **Create handler flow:**
+
 1. Read `bot_user` (email, telegram id). 2. Parse body (`tmaCreateRequest`, below); reject `recurrence != "" && != "once"` → `400 meetings_recurring_unsupported`. 3. `EnsureTMAOrganizer`. 4. Resolve workspace via `ListWorkspacesWithGoogle` (zero → `400 meetings_not_configured`; else first). 5. Map body → `CreateMeetingInput` (host defaults to `bot_user.FullName` when empty; participants → `[]postgres.MeetingParticipant{{Email: …}}`). 6. `CreateMeeting`; map `ErrInvalidInput` → `400`. 7. `a.toMeetingDTO` → `201`.
 
 **Edit / delete handler flow:** resolve `:id` (parse UUID → `400`); look up the meeting's workspace from `ListEditableMeetings(telegramID)` (the meeting must be in the caller's editable set, else `403`/`404`); `EnsureTMAOrganizer`; call `UpdateMeeting` / `CancelMeeting`; map `ErrForbidden`→`403`, `ErrInvalidInput`→`400`, not-found→`404`. Edit returns the refreshed DTO; delete returns `204`. _(Using `ListEditableMeetings` both finds the workspace and provides the membership/recency guard for free; it already filters to `telegram_id`-owned scheduled future meetings.)_
@@ -131,16 +132,16 @@ edit  → useUpdateMeeting(id,patch) → PATCH → (ListEditableMeetings→ws) U
 delete→ useDeleteMeeting(id)       → DELETE → CancelMeeting → 204 → invalidate
 ```
 
-| Case                         | Backend                                  | Frontend                          |
-| ---------------------------- | ---------------------------------------- | --------------------------------- |
-| OK create / edit             | `201` / `200` `{meeting}`                | invalidate + success UI           |
-| OK delete                    | `204`                                    | invalidate + toast                |
-| No Google workspace          | `400 meetings_not_configured`            | specific toast                    |
-| Recurring create attempted   | `400 meetings_recurring_unsupported`     | confirm disabled + note (guard)   |
-| Bad input (time/date)        | `400` (`ErrInvalidInput`)                | error toast                       |
-| Edit/delete others' meeting  | `403` (`ErrForbidden`) / `404`           | "not your meeting" toast          |
-| Expired TMA JWT              | `401`                                    | existing interceptor re-login     |
-| DB / Google error            | `500`                                    | generic error toast               |
+| Case                        | Backend                              | Frontend                        |
+| --------------------------- | ------------------------------------ | ------------------------------- |
+| OK create / edit            | `201` / `200` `{meeting}`            | invalidate + success UI         |
+| OK delete                   | `204`                                | invalidate + toast              |
+| No Google workspace         | `400 meetings_not_configured`        | specific toast                  |
+| Recurring create attempted  | `400 meetings_recurring_unsupported` | confirm disabled + note (guard) |
+| Bad input (time/date)       | `400` (`ErrInvalidInput`)            | error toast                     |
+| Edit/delete others' meeting | `403` (`ErrForbidden`) / `404`       | "not your meeting" toast        |
+| Expired TMA JWT             | `401`                                | existing interceptor re-login   |
+| DB / Google error           | `500`                                | generic error toast             |
 
 Logging: write handlers log a single `Info` lifecycle line on success (`tma_meeting_created`/`_updated`/`_cancelled` + `telegram_id`, `meeting_id`, `workspace_id` — no PII/email) and `Warn`/`Error` at the boundary on failure. No initData/JWT/email in fields.
 

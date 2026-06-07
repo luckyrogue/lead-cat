@@ -3,56 +3,24 @@ import { useTmaApp } from "@/shared/tma/context"
 import { CatIcon } from "@/shared/ui/cat/primitives"
 
 export function MeetingDetailMeetLink() {
-  const p = useTmaApp()
-  const t = p.t
+  const { t } = useTmaApp()
 
   return (
     <button
       type="button"
       onClick={() => toastSuccess("🔗 Google Meet")}
-      style={{
-        width: "100%",
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        padding: "13px 15px",
-        borderRadius: 16,
-        border: "none",
-        cursor: "pointer",
-        marginBottom: 16,
-        background: p.accent,
-        color: p.accentText,
-        boxShadow: p.shadowSm,
-      }}
+      className="mb-4 flex w-full cursor-pointer items-center gap-3 rounded-2xl border-none bg-tma-accent px-[15px] py-[13px] text-tma-accent-text shadow-tma-sm"
     >
-      <span
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 11,
-          background: "rgba(255,255,255,0.22)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <CatIcon name="link" size={19} color={p.accentText} sw={2.2} />
+      <span className="flex size-9 items-center justify-center rounded-[11px] bg-white/22">
+        <CatIcon name="link" size={19} className="text-tma-accent-text" sw={2.2} />
       </span>
-      <div style={{ flex: 1, textAlign: "left" }}>
-        <div style={{ fontSize: 12, opacity: 0.85, fontWeight: 600 }}>
-          {t("meetLink")}
-        </div>
-        <div
-          style={{
-            fontFamily: "var(--font-display)",
-            fontWeight: 800,
-            fontSize: 16,
-          }}
-        >
+      <div className="flex-1 text-left">
+        <div className="text-xs font-semibold opacity-85">{t("meetLink")}</div>
+        <div className="font-display text-base font-extrabold">
           {t("joinMeet")}
         </div>
       </div>
-      <CatIcon name="arrowR" size={20} color={p.accentText} sw={2.2} />
+      <CatIcon name="arrowR" size={20} className="text-tma-accent-text" sw={2.2} />
     </button>
   )
 }

@@ -1,5 +1,5 @@
+import { cn } from "@/shared/lib/cn"
 import type { I18nKey } from "@/shared/tma/i18n"
-import { useTmaApp } from "@/shared/tma/context"
 
 export function DurationPicker({
   value,
@@ -12,8 +12,6 @@ export function DurationPicker({
   options: number[]
   t: (key: I18nKey) => string
 }) {
-  const p = useTmaApp()
-
   const label = (d: number) => {
     if (d < 60) return `${d} ${t("min")}`
     if (d === 60) return `1 ${t("hour")}`
@@ -21,7 +19,7 @@ export function DurationPicker({
   }
 
   return (
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+    <div className="flex flex-wrap gap-2">
       {options.map((d) => {
         const active = d === value
         return (
@@ -29,17 +27,12 @@ export function DurationPicker({
             key={d}
             type="button"
             onClick={() => onChange(d)}
-            style={{
-              padding: "9px 14px",
-              borderRadius: 11,
-              border: `1.5px solid ${active ? p.accent : p.border}`,
-              background: active ? p.accentSoft : p.card,
-              color: active ? p.accent : p.text,
-              fontWeight: 700,
-              fontSize: 14,
-              fontFamily: "var(--font-display)",
-              cursor: "pointer",
-            }}
+            className={cn(
+              "font-display cursor-pointer rounded-[11px] border-[1.5px] px-3.5 py-[9px] text-sm font-bold",
+              active
+                ? "border-tma-accent bg-tma-accent-soft text-tma-accent"
+                : "border-tma-border bg-tma-card text-tma-text"
+            )}
           >
             {label(d)}
           </button>

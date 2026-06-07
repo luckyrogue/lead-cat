@@ -60,14 +60,14 @@ When `AUTH_DEV_MODE` is set and `init_data` does not look like a real Telegram `
 
 The token is signed with `JWT_SECRET` using HS256. Key claims:
 
-| Claim | Value |
-|-------|-------|
+| Claim     | Value                                                                 |
+| --------- | --------------------------------------------------------------------- |
 | `tok_typ` | `"tma"` — distinguishes TMA tokens from platform tokens at parse time |
-| `tg_id` | Telegram user ID (integer) |
-| `email` | From `bot_users.email` |
-| `role` | From `bot_users.role` — `"user"` or `"admin"` |
-| `exp` | 24 hours from issuance (configurable via `JWT_TTL_HOURS`) |
-| `iss` | `JWT_ISSUER` (default `"lead-cat"`) |
+| `tg_id`   | Telegram user ID (integer)                                            |
+| `email`   | From `bot_users.email`                                                |
+| `role`    | From `bot_users.role` — `"user"` or `"admin"`                         |
+| `exp`     | 24 hours from issuance (configurable via `JWT_TTL_HOURS`)             |
+| `iss`     | `JWT_ISSUER` (default `"lead-cat"`)                                   |
 
 Source: `backend/internal/platform/auth/tma.go` (`TMAClaims`, `TMAToken`).
 
@@ -76,6 +76,7 @@ Source: `backend/internal/platform/auth/tma.go` (`TMAClaims`, `TMAToken`).
 `backend/internal/delivery/http/middleware/tma_auth.go` guards every route under `/api/tma/*`.
 
 On each request it:
+
 1. Extracts the `Authorization: Bearer <token>` header.
 2. Parses and validates the TMA JWT (signature + `tok_typ` check).
 3. Calls `GetBotUserByTelegramID` against Postgres — live lookup so role or de-registration changes take effect immediately.
@@ -115,15 +116,15 @@ There is no self-service registration form in the Mini App. Unregistered users s
 
 ## Environment variables
 
-| Variable | Purpose |
-|----------|---------|
-| `JWT_SECRET` | HS256 signing key (shared by TMA and platform tokens) — minimum 16 characters |
-| `JWT_ISSUER` | Claim `iss` (default `"lead-cat"`) |
-| `JWT_TTL_HOURS` | TMA token lifetime in hours (default `24`) |
-| `BOT_TOKEN` | Telegram bot token — used for `initData` HMAC validation and bot polling |
-| `BOT_ADMIN_TELEGRAM_IDS` | Comma-separated Telegram IDs to bootstrap as `role="admin"` |
-| `AUTH_DEV_MODE` | Enable dev bypass: raw telegram_id accepted as `init_data` when it lacks `hash=`/`auth_date=` |
-| `VITE_TMA_DEV_TG_ID` | Frontend: telegram_id sent as `init_data` in browser-only dev mode |
+| Variable                 | Purpose                                                                                       |
+| ------------------------ | --------------------------------------------------------------------------------------------- |
+| `JWT_SECRET`             | HS256 signing key (shared by TMA and platform tokens) — minimum 16 characters                 |
+| `JWT_ISSUER`             | Claim `iss` (default `"lead-cat"`)                                                            |
+| `JWT_TTL_HOURS`          | TMA token lifetime in hours (default `24`)                                                    |
+| `BOT_TOKEN`              | Telegram bot token — used for `initData` HMAC validation and bot polling                      |
+| `BOT_ADMIN_TELEGRAM_IDS` | Comma-separated Telegram IDs to bootstrap as `role="admin"`                                   |
+| `AUTH_DEV_MODE`          | Enable dev bypass: raw telegram_id accepted as `init_data` when it lacks `hash=`/`auth_date=` |
+| `VITE_TMA_DEV_TG_ID`     | Frontend: telegram_id sent as `init_data` in browser-only dev mode                            |
 
 ---
 
@@ -136,13 +137,13 @@ There is no self-service registration form in the Mini App. Unregistered users s
 
 The platform auth stack authenticates `platform_users` (workspace operators) using email/phone OTP, WebAuthn passkey, or GitHub/GitLab OAuth. On success it issues a **platform JWT** (distinct from the TMA JWT — no `tok_typ:"tma"` claim) accepted on `/api/workspaces/*` and related operator endpoints.
 
-| Method | Endpoints |
-|--------|-----------|
-| Email OTP | `POST /api/auth/email/send-code`, `.../verify` |
-| Phone OTP | `POST /api/auth/phone/send-code`, `.../verify` |
-| Passkey login | `POST /api/auth/passkey/login/begin`, `.../finish` |
-| Passkey register | `POST /api/auth/passkey/register/begin`, `.../finish` |
-| GitHub / GitLab OAuth | `GET /api/auth/oauth/{github\|gitlab}` → redirect |
+| Method                | Endpoints                                             |
+| --------------------- | ----------------------------------------------------- |
+| Email OTP             | `POST /api/auth/email/send-code`, `.../verify`        |
+| Phone OTP             | `POST /api/auth/phone/send-code`, `.../verify`        |
+| Passkey login         | `POST /api/auth/passkey/login/begin`, `.../finish`    |
+| Passkey register      | `POST /api/auth/passkey/register/begin`, `.../finish` |
+| GitHub / GitLab OAuth | `GET /api/auth/oauth/{github\|gitlab}` → redirect     |
 
 Public config endpoint: `GET /api/auth/config`.
 

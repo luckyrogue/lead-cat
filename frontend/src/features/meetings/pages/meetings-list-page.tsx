@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router"
 import { TmaListPageShell } from "@/components/tma-list-page-shell"
 import { toastError, toastSuccess } from "@/shared/lib/toast"
-import { TMA_NOW } from "@/shared/tma/constants"
+import { TMA_NOW } from "@/entities/meeting/constants"
 import { useTmaApp } from "@/shared/tma/context"
-import { fmtDate } from "@/shared/tma/meeting-utils"
+import { fmtDate } from "@/entities/meeting/lib/format"
 import type { Meeting } from "@/entities/meeting/types"
 import { useListUrlState } from "@/shared/lib/use-list-url-state"
 import {
@@ -12,16 +12,17 @@ import {
   parseMeetingsScopeFilter,
 } from "@/features/meetings/list-url"
 import { writeErrorKey } from "@/features/meetings/lib/write-error"
-import { useDeleteMeeting, useMyMeetings } from "@/features/meetings/queries"
-import { MeetingDetail } from "@/features/meetings/components/meeting-detail-sheet"
+import { useMyMeetings } from "@/entities/meeting/queries"
+import { useDeleteMeeting } from "@/features/meetings/queries"
+import { MeetingDetail } from "@/features/meetings/components/meeting-detail"
 import {
   EmptyState,
   MeetingCard,
-} from "@/features/meetings/components/meeting-ui"
+} from "@/components/meetings/meeting-ui"
 import { MeetingCreatedSuccess } from "@/features/meetings/pages/meeting-created-success"
 import { Segmented } from "@/shared/ui/cat/primitives"
 import { Sheet, PawBurst } from "@/components/tma-shell"
-import type { MeetingsSearch } from "@/routes/_tma/meetings"
+import type { MeetingsSearch } from "@/features/meetings/search-schema"
 
 export function MeetingsListPage() {
   const p = useTmaApp()
@@ -131,7 +132,7 @@ export function MeetingsListPage() {
         isLoading={isLoading}
         empty={list.length === 0}
         filters={
-          <div style={{ marginBottom: 18 }}>
+          <div className="mb-[18px]">
             <Segmented
               value={filter ?? "up"}
               onChange={setFilter}
@@ -176,24 +177,13 @@ export function MeetingsListPage() {
           </>
         }
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div className="flex flex-col gap-5">
           {groups.map((g) => (
             <div key={g.date}>
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 800,
-                  color: p.muted,
-                  margin: "0 4px 9px",
-                  fontFamily: "var(--font-display)",
-                  textTransform: "capitalize",
-                }}
-              >
+              <div className="tma-section-title mb-[9px] px-1">
                 {g.date === TMA_NOW ? t("today") : fmtDate(g.date, p.lang)}
               </div>
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: 11 }}
-              >
+              <div className="flex flex-col gap-[11px]">
                 {g.items.map((m) => (
                   <MeetingCard
                     key={m.id}

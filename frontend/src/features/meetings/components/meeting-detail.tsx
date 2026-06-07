@@ -1,8 +1,8 @@
-import { TMA_NOW } from "@/shared/tma/constants"
+import { TMA_NOW } from "@/entities/meeting/constants"
 import { useTmaAuth } from "@/features/auth/auth-context"
 import { useTmaApp } from "@/shared/tma/context"
-import { RECURRENCE } from "@/shared/tma/mock-data"
-import { buildTitle, fmtDate } from "@/shared/tma/meeting-utils"
+import { RECURRENCE } from "@/entities/meeting/constants"
+import { buildTitle, fmtDate } from "@/entities/meeting/lib/format"
 import type { Meeting } from "@/entities/meeting/types"
 import { DetailRow } from "@/components/meetings/detail-row"
 import { MeetingTitlePreview } from "@/components/meetings/meeting-title-preview"
@@ -37,7 +37,7 @@ export function MeetingDetail({
       </DetailRow>
       <DetailRow icon="clock" label={t("timeT")}>
         {m.start} – {m.end}{" "}
-        <span style={{ color: p.faint, fontWeight: 600, fontSize: 13 }}>
+        <span className="text-[13px] font-semibold text-tma-faint">
           · UTC+5
         </span>
       </DetailRow>

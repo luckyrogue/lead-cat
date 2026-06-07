@@ -6,10 +6,10 @@ import {
   getSession,
   sessionFromAuthResponse,
   setSession,
-  type TmaUser,
-} from "@/features/auth/session"
+} from "@/shared/auth/session"
+import type { TmaUser } from "@/shared/auth/types"
 
-export type { TmaUser } from "@/features/auth/session"
+export type { TmaUser } from "@/shared/auth/types"
 
 const ME_TTL_MS = 60_000
 

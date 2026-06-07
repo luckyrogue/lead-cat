@@ -1,68 +1,37 @@
 import { Link, useRouterState } from "@tanstack/react-router"
 import { useTmaAuth } from "@/features/auth/auth-context"
-import { hexToRgba } from "@/shared/tma/palette"
 import { useTmaApp } from "@/shared/tma/context"
 import { getVisibleTabBarModules } from "@/shared/auth/module-policies"
+import { cn } from "@/shared/lib/cn"
 import { CatIcon } from "@/shared/ui/cat/primitives"
 import { activeTabFromPath, buildTabBarItems } from "./tab-bar-helpers"
 
 export function TabBar() {
-  const p = useTmaApp()
+  const { t } = useTmaApp()
   const { user } = useTmaAuth()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const tab = activeTabFromPath(pathname)
-  const items = buildTabBarItems(getVisibleTabBarModules(user), p.t)
+  const items = buildTabBarItems(getVisibleTabBarModules(user), t)
 
   return (
-    <div
-      className="tma-tabbar"
-      style={{
-        background: p.tgBar,
-        borderTop: `1px solid ${p.border}`,
-        display: "flex",
-        alignItems: "flex-start",
-      }}
-    >
+    <div className="tma-tabbar flex items-start border-t border-tma-border bg-tma-tg-bar">
       {items.map((it) => {
         if (it.key === "_fab") {
           return (
             <div
               key="_fab"
-              style={{
-                flex: 1,
-                display: "flex",
-                justifyContent: "center",
-                position: "relative",
-              }}
+              className="relative flex flex-1 justify-center"
             >
               <Link
                 to="/meetings/create"
-                style={{
-                  position: "absolute",
-                  top: -30,
-                  width: 58,
-                  height: 58,
-                  borderRadius: 20,
-                  background: p.accent,
-                  border: `4px solid ${p.tgBar}`,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: `0 8px 20px ${hexToRgba(p.accent, 0.45)}`,
-                  transition: "transform .15s",
-                }}
-                onPointerDown={(e) => {
-                  e.currentTarget.style.transform = "scale(0.9) rotate(90deg)"
-                }}
-                onPointerUp={(e) => {
-                  e.currentTarget.style.transform = "scale(1)"
-                }}
-                onPointerLeave={(e) => {
-                  e.currentTarget.style.transform = "scale(1)"
-                }}
+                className="absolute -top-[30px] flex size-[58px] cursor-pointer items-center justify-center rounded-[20px] border-4 border-tma-tg-bar bg-tma-accent shadow-[0_8px_20px_var(--tma-accent-glow)] transition-transform duration-150 active:scale-90 active:rotate-90"
               >
-                <CatIcon name="plus" size={28} color={p.accentText} sw={2.6} />
+                <CatIcon
+                  name="plus"
+                  size={28}
+                  className="text-tma-accent-text"
+                  sw={2.6}
+                />
               </Link>
             </div>
           )
@@ -72,41 +41,29 @@ export function TabBar() {
           <Link
             key={it.key}
             to={it.to}
-            style={{
-              flex: 1,
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 3,
-              padding: 0,
-              textDecoration: "none",
-              color: active ? p.accent : p.muted,
-              transition: "color .18s",
-            }}
+            className={cn(
+              "flex flex-1 cursor-pointer flex-col items-center gap-[3px] border-none bg-transparent p-0 no-underline transition-colors duration-[180ms]",
+              active ? "text-tma-accent" : "text-tma-muted"
+            )}
           >
             <div
-              style={{
-                position: "relative",
-                transition: "transform .2s cubic-bezier(.34,1.56,.64,1)",
-                transform: active ? "translateY(-2px)" : "none",
-              }}
+              className={cn(
+                "relative transition-transform duration-200 ease-[cubic-bezier(.34,1.56,.64,1)]",
+                active && "-translate-y-0.5"
+              )}
             >
               <CatIcon
                 name={it.icon}
                 size={24}
-                color={active ? p.accent : p.muted}
+                className={active ? "text-tma-accent" : "text-tma-muted"}
                 sw={active ? 2.3 : 1.9}
               />
             </div>
             <span
-              style={{
-                fontSize: 10.5,
-                fontWeight: active ? 800 : 600,
-                fontFamily: "var(--font-display)",
-              }}
+              className={cn(
+                "font-display text-[10.5px]",
+                active ? "font-extrabold" : "font-semibold"
+              )}
             >
               {it.label}
             </span>

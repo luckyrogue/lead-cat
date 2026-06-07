@@ -1,10 +1,10 @@
 import { useState } from "react"
+import { cn } from "@/shared/lib/cn"
 import { toastSuccess } from "@/shared/lib/toast"
-import { WEEKDAYS } from "@/shared/tma/constants"
+import { WEEKDAYS } from "@/entities/meeting/constants"
 import { INITIAL_SCENARIOS } from "@/features/auto/fixtures"
 import { useTmaApp } from "@/shared/tma/context"
 import type { Lang } from "@/shared/tma/types"
-import { hexToRgba } from "@/shared/tma/palette"
 import { CatCard, CatIcon, CatToggle } from "@/shared/ui/cat/primitives"
 import { Paw } from "@/shared/ui/cat/paw"
 
@@ -27,8 +27,7 @@ const ACTION_META: Record<
 }
 
 export function AutoPage() {
-  const p = useTmaApp()
-  const t = p.t
+  const { t, lang } = useTmaApp()
   const [scenarios, setScenarios] = useState(INITIAL_SCENARIOS)
   const toggleScenario = (id: string) =>
     setScenarios((arr) =>
@@ -36,71 +35,34 @@ export function AutoPage() {
     )
 
   return (
-    <div style={{ padding: "16px 16px 28px" }}>
-      <h2
-        style={{
-          margin: "2px 4px 4px",
-          fontFamily: "var(--font-display)",
-          fontWeight: 800,
-          fontSize: 26,
-          color: p.text,
-        }}
-      >
+    <div className="px-4 pb-7">
+      <h2 className="tma-heading mx-1 mt-0.5 mb-1 text-[26px]">
         {t("nav_auto")} ⚡
       </h2>
-      <p style={{ margin: "0 4px 18px", color: p.muted, fontSize: 14 }}>
+      <p className="mx-1 mb-[18px] text-sm text-tma-muted">
         Кот сам напомнит, пингнёт и пришлёт отчёт
       </p>
 
-      <div
-        style={{
-          position: "relative",
-          overflow: "hidden",
-          borderRadius: 20,
-          padding: "16px 18px",
-          marginBottom: 18,
-          background: `linear-gradient(135deg, oklch(${p.dark ? 0.34 : 0.95} 0.07 25), oklch(${p.dark ? 0.32 : 0.96} 0.05 45))`,
-          border: `1px solid ${p.border}`,
-        }}
-      >
+      <div className="relative mb-[18px] overflow-hidden rounded-[20px] border border-tma-border bg-tma-auto-banner px-[18px] py-4">
         <Paw
           size={90}
-          color={hexToRgba(p.accent, 0.12)}
-          style={{
-            position: "absolute",
-            right: -16,
-            top: -16,
-            transform: "rotate(20deg)",
-          }}
+          tone="auto"
+          className="absolute -top-4 -right-4 rotate-[20deg]"
         />
-        <div
-          style={{
-            position: "relative",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-          }}
-        >
-          <span style={{ fontSize: 30 }}>🤖</span>
+        <div className="relative flex items-center gap-3">
+          <span className="text-[30px]">🤖</span>
           <div>
-            <div
-              style={{
-                fontFamily: "var(--font-display)",
-                fontWeight: 800,
-                fontSize: 15.5,
-                color: p.text,
-              }}
-            >
+            <div className="font-display text-[15.5px] font-extrabold text-tma-text">
               {scenarios.filter((s) => s.enabled).length} активных сценария
             </div>
-            <div style={{ fontSize: 13, color: p.muted, fontWeight: 600 }}>
+            <div className="text-[13px] font-semibold text-tma-muted">
               работают по расписанию в чате команды
             </div>
           </div>
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div className="flex flex-col gap-3">
         {scenarios.map((s) => {
           const days =
             s.trigger.days.length === 5 &&
@@ -110,67 +72,30 @@ export function AutoPage() {
           return (
             <CatCard
               key={s.id}
-              pad={0}
-              style={{ overflow: "hidden", opacity: s.enabled ? 1 : 0.62 }}
+              className={cn("overflow-hidden p-0", !s.enabled && "opacity-[0.62]")}
             >
-              <div style={{ padding: "14px 15px" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: 10,
-                    marginBottom: 12,
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        fontFamily: "var(--font-display)",
-                        fontWeight: 800,
-                        fontSize: 16,
-                        color: p.text,
-                        marginBottom: 4,
-                      }}
-                    >
+              <div className="px-[15px] py-3.5">
+                <div className="mb-3 flex items-start gap-2.5">
+                  <div className="flex-1">
+                    <div className="font-display mb-1 text-base font-extrabold text-tma-text">
                       {s.name}
                     </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        color: p.muted,
-                        fontSize: 13,
-                        fontWeight: 600,
-                      }}
-                    >
-                      <span
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 4,
-                        }}
-                      >
+                    <div className="flex items-center gap-2 text-[13px] font-semibold text-tma-muted">
+                      <span className="inline-flex items-center gap-1">
                         <CatIcon
                           name="clock"
                           size={14}
-                          color={p.muted}
+                          className="text-tma-muted"
                           sw={2}
                         />
                         {String(s.trigger.hour).padStart(2, "0")}:
                         {String(s.trigger.minute).padStart(2, "0")}
                       </span>
-                      <span
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 4,
-                        }}
-                      >
+                      <span className="inline-flex items-center gap-1">
                         <CatIcon
                           name="repeat"
                           size={13}
-                          color={p.muted}
+                          className="text-tma-muted"
                           sw={2}
                         />
                         {days}
@@ -182,39 +107,20 @@ export function AutoPage() {
                     onChange={() => toggleScenario(s.id)}
                   />
                 </div>
-                <div
-                  style={{
-                    fontSize: 13,
-                    color: p.muted,
-                    lineHeight: 1.4,
-                    marginBottom: 12,
-                  }}
-                >
+                <div className="mb-3 text-[13px] leading-snug text-tma-muted">
                   {s.note}
                 </div>
-                <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+                <div className="flex flex-wrap gap-[7px]">
                   {s.actions.map((act) => {
                     const meta = ACTION_META[act]
                     if (!meta) return null
                     return (
                       <span
                         key={act}
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 5,
-                          background: p.cardAlt,
-                          border: `1px solid ${p.border}`,
-                          borderRadius: 999,
-                          padding: "4px 10px",
-                          fontSize: 12.5,
-                          fontWeight: 700,
-                          color: p.text,
-                          fontFamily: "var(--font-display)",
-                        }}
+                        className="font-display inline-flex items-center gap-[5px] rounded-full border border-tma-border bg-tma-card-alt px-2.5 py-1 text-[12.5px] font-bold text-tma-text"
                       >
-                        <span style={{ fontSize: 13 }}>{meta.emoji}</span>
-                        {meta.label[p.lang]}
+                        <span className="text-[13px]">{meta.emoji}</span>
+                        {meta.label[lang]}
                       </span>
                     )
                   })}
@@ -228,26 +134,10 @@ export function AutoPage() {
       <button
         type="button"
         onClick={() => toastSuccess("Конструктор сценариев скоро 🐾")}
-        style={{
-          marginTop: 14,
-          width: "100%",
-          padding: "15px",
-          borderRadius: 16,
-          border: `1.5px dashed ${p.borderStrong}`,
-          background: "transparent",
-          color: p.accent,
-          fontWeight: 800,
-          fontFamily: "var(--font-display)",
-          fontSize: 15,
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 8,
-        }}
+        className="font-display mt-3.5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border-[1.5px] border-dashed border-tma-border-strong bg-transparent px-[15px] py-[15px] text-[15px] font-extrabold text-tma-accent"
       >
-        <CatIcon name="plus" size={20} color={p.accent} sw={2.4} /> Новый
-        сценарий
+        <CatIcon name="plus" size={20} className="text-tma-accent" sw={2.4} />{" "}
+        Новый сценарий
       </button>
     </div>
   )

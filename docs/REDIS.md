@@ -30,13 +30,13 @@ the scheduler lock clients.
 
 The meeting notification worker processes the following asynq task types:
 
-| Task type            | Triggered when                                       |
-| -------------------- | ---------------------------------------------------- |
-| `meeting:created`    | A new meeting is created; notifies participants      |
-| `meeting:updated`    | Meeting details (time, link, name) are edited        |
-| `meeting:cancelled`  | A meeting is cancelled; notifies participants        |
-| `participant:added`  | A participant is added to an existing meeting        |
-| `participant:removed`| A participant is removed from an existing meeting    |
+| Task type             | Triggered when                                    |
+| --------------------- | ------------------------------------------------- |
+| `meeting:created`     | A new meeting is created; notifies participants   |
+| `meeting:updated`     | Meeting details (time, link, name) are edited     |
+| `meeting:cancelled`   | A meeting is cancelled; notifies participants     |
+| `participant:added`   | A participant is added to an existing meeting     |
+| `participant:removed` | A participant is removed from an existing meeting |
 
 All tasks are enqueued with `MaxRetry(5)`. Payloads carry `workspace_id` and
 `meeting_id` (plus `email` for participant tasks).
@@ -52,9 +52,9 @@ The reminder scheduler acquires a Redis `SET NX` lock (TTL 90 s, renewed every
 tick) before doing any work. This ensures only one replica dispatches reminders at
 a time in a multi-instance deployment.
 
-| Lock key                    | Purpose                                              |
-| --------------------------- | ---------------------------------------------------- |
-| `leadcat:reminders:leader`  | Meeting reminder dispatch tick — runs every minute   |
+| Lock key                   | Purpose                                            |
+| -------------------------- | -------------------------------------------------- |
+| `leadcat:reminders:leader` | Meeting reminder dispatch tick — runs every minute |
 
 (An additional `leadcat:scheduler:leader` lock exists for the legacy cron-trigger
 scheduler; that machinery is part of the deprecated alpha layer and not used by

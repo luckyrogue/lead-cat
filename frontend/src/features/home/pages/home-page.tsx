@@ -1,17 +1,18 @@
 import { Link, useNavigate } from "@tanstack/react-router"
-import { TMA_NOW } from "@/shared/tma/constants"
+import { cn } from "@/shared/lib/cn"
+import { TMA_NOW } from "@/entities/meeting/constants"
 import { useTmaAuth } from "@/features/auth/auth-context"
 import { useTmaApp } from "@/shared/tma/context"
-import { useMyMeetings } from "@/features/meetings/queries"
+import { useMyMeetings } from "@/entities/meeting/queries"
+import { hueSurfaceVars } from "@/shared/tma/surface-vars"
 import { CatIcon } from "@/shared/ui/cat/primitives"
 import { Paw } from "@/shared/ui/cat/paw"
-import { hexToRgba } from "@/shared/tma/palette"
 import {
   EmptyState,
   MeetingCard,
   meetCount,
   SectionTitle,
-} from "@/features/meetings/components/meeting-ui"
+} from "@/components/meetings/meeting-ui"
 
 export function HomePage() {
   const p = useTmaApp()
@@ -68,65 +69,25 @@ export function HomePage() {
   }
 
   return (
-    <div
-      style={{
-        padding: "16px 16px 28px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 22,
-      }}
-    >
-      <div
-        style={{
-          position: "relative",
-          overflow: "hidden",
-          borderRadius: 24,
-          padding: "20px 20px 22px",
-          background: `linear-gradient(135deg, ${hexToRgba(p.accent, p.dark ? 0.28 : 0.16)}, ${hexToRgba(p.accent, p.dark ? 0.1 : 0.04)})`,
-          border: `1px solid ${p.accentLine}`,
-        }}
-      >
+    <div className="flex flex-col gap-[22px] px-4 pb-7 pt-4">
+      <div className="bg-tma-hero relative overflow-hidden rounded-3xl border border-tma-accent-line px-5 pb-[22px] pt-5">
         <Paw
           size={150}
-          color={hexToRgba(p.accent, p.dark ? 0.12 : 0.1)}
-          style={{
-            position: "absolute",
-            right: -28,
-            bottom: -34,
-            transform: "rotate(-18deg)",
-          }}
+          className="absolute -bottom-[34px] -right-7 -rotate-[18deg]"
         />
-        <div style={{ position: "relative" }}>
+        <div className="relative">
           <div
-            style={{
-              color: p.dark ? hexToRgba(p.accent, 0.95) : p.accent,
-              fontWeight: 700,
-              fontSize: 13.5,
-              marginBottom: 4,
-            }}
+            className={cn(
+              "mb-1 text-[13.5px] font-bold",
+              p.dark ? "text-tma-accent/95" : "text-tma-accent"
+            )}
           >
             {t("greet_morning")} 🐾
           </div>
-          <div
-            style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 800,
-              fontSize: 28,
-              color: p.text,
-              lineHeight: 1.05,
-              marginBottom: 10,
-            }}
-          >
+          <div className="tma-heading mb-2.5 text-[28px] leading-[1.05]">
             {firstName}!
           </div>
-          <div
-            style={{
-              color: p.text,
-              fontSize: 14.5,
-              fontWeight: 600,
-              opacity: 0.85,
-            }}
-          >
+          <div className="text-[14.5px] font-semibold text-tma-text opacity-85">
             {today.length > 0
               ? `${t("today")}: ${meetCount(today.length, p.lang)}`
               : t("nothingToday")}
@@ -136,55 +97,29 @@ export function HomePage() {
 
       <div>
         <SectionTitle>{t("quick")}</SectionTitle>
-        <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11 }}
-        >
+        <div className="grid grid-cols-2 gap-[11px]">
           {actions.map((a) => (
             <Link
               key={a.key}
               to={a.to}
-              style={{
-                background: p.card,
-                border: `1px solid ${p.border}`,
-                borderRadius: 18,
-                padding: "15px 14px",
-                cursor: "pointer",
-                textAlign: "left",
-                display: "flex",
-                flexDirection: "column",
-                gap: 11,
-                boxShadow: p.shadowSm,
-                transition: "transform .14s",
-                textDecoration: "none",
-              }}
+              className={cn(
+                "flex cursor-pointer flex-col gap-[11px] rounded-[18px]",
+                "border border-tma-border bg-tma-card px-3.5 py-[15px]",
+                "text-left no-underline shadow-tma-sm transition-transform duration-150"
+              )}
             >
               <div
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 13,
-                  background: `oklch(${p.dark ? 0.36 : 0.94} ${p.dark ? 0.08 : 0.06} ${a.hue})`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+                className="tma-hue-surface flex size-[42px] items-center justify-center rounded-[13px]"
+                style={hueSurfaceVars(a.hue, p.dark)}
               >
                 <CatIcon
                   name={a.icon}
                   size={23}
-                  color={`oklch(${p.dark ? 0.82 : 0.52} 0.15 ${a.hue})`}
+                  className="text-tma-hue-fg"
                   sw={2.1}
                 />
               </div>
-              <span
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontWeight: 700,
-                  fontSize: 14.5,
-                  color: p.text,
-                  lineHeight: 1.15,
-                }}
-              >
+              <span className="font-display text-[14.5px] font-bold leading-[1.15] text-tma-text">
                 {a.label}
               </span>
             </Link>
@@ -202,24 +137,13 @@ export function HomePage() {
           {t("today")}
         </SectionTitle>
         {today.length === 0 ? (
-          <div
-            style={{
-              background: p.card,
-              borderRadius: 20,
-              border: `1px solid ${p.border}`,
-              overflow: "hidden",
-            }}
-          >
+          <div className="overflow-hidden rounded-[20px] border border-tma-border bg-tma-card">
             <EmptyState emoji="😴" title={t("nothingToday")} />
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+          <div className="flex flex-col gap-[11px]">
             {today.map((m) => (
-              <MeetingCard
-                key={m.id}
-                m={m}
-                onClick={() => openMeeting(m.id)}
-              />
+              <MeetingCard key={m.id} m={m} onClick={() => openMeeting(m.id)} />
             ))}
           </div>
         )}
@@ -235,13 +159,9 @@ export function HomePage() {
           >
             {t("upcoming")}
           </SectionTitle>
-          <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+          <div className="flex flex-col gap-[11px]">
             {upcoming.map((m) => (
-              <MeetingCard
-                key={m.id}
-                m={m}
-                onClick={() => openMeeting(m.id)}
-              />
+              <MeetingCard key={m.id} m={m} onClick={() => openMeeting(m.id)} />
             ))}
           </div>
         </div>

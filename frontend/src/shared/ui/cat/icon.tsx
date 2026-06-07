@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react"
+import { cn } from "@/shared/lib/cn"
 
 export const ICON_PATHS = {
   home: "M3 11.5 12 4l9 7.5M5.5 10v9.5h13V10",
@@ -37,19 +37,17 @@ export type IconName = keyof typeof ICON_PATHS
 type IconProps = {
   name: IconName
   size?: number
-  color?: string
   sw?: number
   fill?: boolean
-  style?: CSSProperties
+  className?: string
 }
 
 export function CatIcon({
   name,
   size = 22,
-  color = "currentColor",
   sw = 1.9,
   fill = false,
-  style,
+  className,
 }: IconProps) {
   return (
     <svg
@@ -57,13 +55,13 @@ export function CatIcon({
       height={size}
       viewBox="0 0 24 24"
       fill="none"
-      style={style}
+      className={cn("shrink-0", className)}
       aria-hidden
     >
       <path
         d={ICON_PATHS[name] ?? ""}
-        stroke={fill ? "none" : color}
-        fill={fill ? color : "none"}
+        stroke={fill ? "none" : "currentColor"}
+        fill={fill ? "currentColor" : "none"}
         strokeWidth={sw}
         strokeLinecap="round"
         strokeLinejoin="round"

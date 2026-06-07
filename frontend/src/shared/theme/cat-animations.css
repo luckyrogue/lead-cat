@@ -1,16 +1,3 @@
-.lc-scroll {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.lc-scroll::-webkit-scrollbar {
-  display: none;
-}
-
-.lc-screen {
-  animation: lc-screen-in 0.34s cubic-bezier(0.32, 0.72, 0, 1);
-}
-
 @keyframes lc-screen-in {
   from {
     transform: translateY(10px);

@@ -6,10 +6,10 @@ Structured JSON (production) or console (local) via **zap**. All output to stdou
 
 ### Configuration
 
-| Env var      | Values                              | Default  |
-| ------------ | ----------------------------------- | -------- |
-| `LOG_LEVEL`  | `debug` / `info` / `warn` / `error` | `info`   |
-| `LOG_FORMAT` | `json` (prod) / `console` (local)   | `json`   |
+| Env var      | Values                              | Default |
+| ------------ | ----------------------------------- | ------- |
+| `LOG_LEVEL`  | `debug` / `info` / `warn` / `error` | `info`  |
+| `LOG_FORMAT` | `json` (prod) / `console` (local)   | `json`  |
 
 ### Context propagation
 

@@ -1,0 +1,54 @@
+import { apiFetch } from "@/shared/api/client"
+import type { TmaMeetingsScope } from "@/shared/api/types"
+import type { Meeting } from "@/entities/meeting/types"
+
+export type Scope = TmaMeetingsScope
+
+type MeetingDTO = {
+  id: string
+  type: string
+  dept: string
+  host: string
+  date: string
+  start: string
+  end: string
+  rec: string
+  organizer: string
+  participants: string[]
+  desc: string
+  meet_link: string
+  status: string
+}
+
+export function toMeeting(d: MeetingDTO): Meeting {
+  return {
+    id: d.id,
+    type: d.type,
+    dept: d.dept,
+    host: d.host,
+    date: d.date,
+    start: d.start,
+    end: d.end,
+    rec: d.rec,
+    organizer: d.organizer,
+    participants: d.participants,
+    desc: d.desc,
+  }
+}
+
+export async function fetchMyMeetings(scope: Scope): Promise<Meeting[]> {
+  const data = await apiFetch<{ meetings: MeetingDTO[] }>("/tma/meetings", {
+    params: { scope },
+  })
+  return data.meetings.map(toMeeting)
+}
+
+export async function fetchColleagueSchedule(
+  email: string,
+  scope: Scope
+): Promise<Meeting[]> {
+  const data = await apiFetch<{ meetings: MeetingDTO[] }>("/tma/schedule", {
+    params: { email, scope },
+  })
+  return data.meetings.map(toMeeting)
+}

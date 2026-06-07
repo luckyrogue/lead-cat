@@ -67,6 +67,8 @@ export const EMPLOYEES: Employee[] = [
   },
 ]
 
+export const ME = EMPLOYEES[0]
+
 export const DEPARTMENTS = [
   "Разработка",
   "Дизайн",

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { ME } from "@/shared/tma/mock-data"
+import { ME } from "@/entities/employee/fixtures"
 import type { MeetingDraft } from "@/shared/tma/types"
 import { useConflicts } from "@/features/meetings/queries"
 import { WIZARD_STEPS } from "./wizard-constants"

@@ -1,21 +1,7 @@
 import { useState } from "react"
-import { TMA_NOW, WEEKDAYS } from "@/shared/tma/constants"
-import { useTmaApp } from "@/shared/tma/context"
+import { TMA_NOW, WEEKDAYS } from "@/entities/meeting/constants"
+import { cn } from "@/shared/lib/cn"
 import { CatIcon } from "@/shared/ui/cat/primitives"
-
-function calNav(p: ReturnType<typeof useTmaApp>) {
-  return {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    border: "none",
-    background: p.cardAlt,
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  } as const
-}
 
 export function MiniCalendar({
   value,
@@ -24,7 +10,6 @@ export function MiniCalendar({
   value: string
   onChange: (v: string) => void
 }) {
-  const p = useTmaApp()
   const [view, setView] = useState(() => {
     const [y, m] = (value || TMA_NOW).split("-").map(Number)
     return { y, m: m - 1 }
@@ -66,69 +51,43 @@ export function MiniCalendar({
       return { y, m }
     })
 
+  const navBtnClass =
+    "flex size-8 cursor-pointer items-center justify-center rounded-[10px] border-none bg-tma-card-alt"
+
   return (
-    <div
-      style={{
-        background: p.card,
-        borderRadius: 18,
-        border: `1px solid ${p.border}`,
-        padding: 14,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 12,
-        }}
-      >
-        <button type="button" onClick={() => nav(-1)} style={calNav(p)}>
-          <CatIcon name="chevL" size={18} color={p.text} sw={2.2} />
+    <div className="rounded-[18px] border border-tma-border bg-tma-card p-3.5">
+      <div className="mb-3 flex items-center justify-between">
+        <button type="button" onClick={() => nav(-1)} className={navBtnClass}>
+          <CatIcon
+            name="chevL"
+            size={18}
+            className="text-tma-text"
+            sw={2.2}
+          />
         </button>
-        <span
-          style={{
-            fontFamily: "var(--font-display)",
-            fontWeight: 800,
-            fontSize: 16,
-            color: p.text,
-          }}
-        >
+        <span className="font-display text-base font-extrabold text-tma-text">
           {monthNames[view.m]} {view.y}
         </span>
-        <button type="button" onClick={() => nav(1)} style={calNav(p)}>
-          <CatIcon name="chevR" size={18} color={p.text} sw={2.2} />
+        <button type="button" onClick={() => nav(1)} className={navBtnClass}>
+          <CatIcon
+            name="chevR"
+            size={18}
+            className="text-tma-text"
+            sw={2.2}
+          />
         </button>
       </div>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(7,1fr)",
-          gap: 4,
-          marginBottom: 6,
-        }}
-      >
+      <div className="mb-1.5 grid grid-cols-7 gap-1">
         {WEEKDAYS.map((w) => (
           <div
             key={w}
-            style={{
-              textAlign: "center",
-              fontSize: 11,
-              fontWeight: 700,
-              color: p.faint,
-            }}
+            className="text-center text-[11px] font-bold text-tma-faint"
           >
             {w}
           </div>
         ))}
       </div>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(7,1fr)",
-          gap: 4,
-        }}
-      >
+      <div className="grid grid-cols-7 gap-1">
         {cells.map((d, i) => {
           if (!d) return <div key={i} />
           const dIso = iso(d)
@@ -140,33 +99,22 @@ export function MiniCalendar({
               key={i}
               type="button"
               onClick={() => onChange(dIso)}
-              style={{
-                aspectRatio: "1",
-                borderRadius: 11,
-                border: "none",
-                cursor: "pointer",
-                background: active ? p.accent : "transparent",
-                color: active ? p.accentText : isPast ? p.faint : p.text,
-                fontWeight: active || isToday ? 800 : 600,
-                fontSize: 14,
-                fontFamily: "var(--font-display)",
-                position: "relative",
-              }}
+              className={cn(
+                "font-display relative aspect-square cursor-pointer rounded-[11px] border-none text-sm",
+                active
+                  ? "bg-tma-accent font-extrabold text-tma-accent-text"
+                  : cn(
+                      "bg-transparent",
+                      isPast
+                        ? "font-semibold text-tma-faint"
+                        : "font-semibold text-tma-text",
+                      isToday && "font-extrabold"
+                    )
+              )}
             >
               {d}
               {isToday && !active && (
-                <span
-                  style={{
-                    position: "absolute",
-                    bottom: 5,
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    width: 4,
-                    height: 4,
-                    borderRadius: 2,
-                    background: p.accent,
-                  }}
-                />
+                <span className="absolute bottom-[5px] left-1/2 size-1 -translate-x-1/2 rounded-sm bg-tma-accent" />
               )}
             </button>
           )

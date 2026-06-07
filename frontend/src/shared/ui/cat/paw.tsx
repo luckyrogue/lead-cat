@@ -1,21 +1,26 @@
-import type { CSSProperties } from "react"
+import { cn } from "@/shared/lib/cn"
+
+type PawTone = "hero" | "auto"
 
 export function Paw({
   size = 22,
-  color = "currentColor",
-  style,
+  tone = "hero",
+  className,
 }: {
   size?: number
-  color?: string
-  style?: CSSProperties
+  tone?: PawTone
+  className?: string
 }) {
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 0 24 24"
-      fill={color}
-      style={style}
+      fill="currentColor"
+      className={cn(
+        tone === "auto" ? "text-[var(--tma-auto-paw)]" : "text-[var(--tma-hero-paw)]",
+        className
+      )}
       aria-hidden
     >
       <ellipse cx="12" cy="15.5" rx="5.4" ry="4.6" />

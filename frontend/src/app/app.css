@@ -2,6 +2,7 @@
 @import "../shared/theme/cat-tokens.css";
 @import "../shared/theme/cat-animations.css";
 @import "../shared/theme/tma-shell.css";
+@import "../shared/theme/tma-tailwind.css";
 
 @theme inline {
   --color-background: var(--background);
@@ -20,6 +21,38 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-cat-bg: var(--cat-bg);
+  --color-cat-bg-2: var(--cat-bg-2);
+  --color-cat-primary: var(--cat-primary);
+  --color-cat-secondary: var(--cat-secondary);
+  --color-cat-muted: var(--cat-muted);
+  --color-cat-faint: var(--cat-faint);
+  --color-cat-text: var(--cat-text);
+  --color-cat-card: var(--cat-card);
+  --color-cat-border: var(--cat-border);
+  --color-tma-accent: var(--tma-accent);
+  --color-tma-accent-text: var(--tma-accent-text);
+  --color-tma-accent-soft: var(--tma-accent-soft);
+  --color-tma-accent-line: var(--tma-accent-line);
+  --color-tma-bg: var(--tma-bg);
+  --color-tma-bg-2: var(--tma-bg-2);
+  --color-tma-card: var(--tma-card);
+  --color-tma-card-alt: var(--tma-card-alt);
+  --color-tma-text: var(--tma-text);
+  --color-tma-muted: var(--tma-muted);
+  --color-tma-faint: var(--tma-faint);
+  --color-tma-border: var(--tma-border);
+  --color-tma-border-strong: var(--tma-border-strong);
+  --color-tma-tg-bar: var(--tma-tg-bar);
+  --color-tma-tg-bar-text: var(--tma-tg-bar-text);
+  --color-tma-danger: var(--tma-danger);
+  --color-tma-danger-soft: var(--tma-danger-soft);
+  --color-tma-ok: var(--tma-ok);
+  --color-tma-ok-soft: var(--tma-ok-soft);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --shadow-tma: var(--tma-shadow);
+  --shadow-tma-sm: var(--tma-shadow-sm);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

@@ -1,4 +1,4 @@
-import type { TmaUserRole } from "@/features/auth/session"
+import type { TmaUserRole } from "@/shared/auth/types"
 
 export type RoleRequirement =
   | TmaUserRole

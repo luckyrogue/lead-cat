@@ -29,11 +29,11 @@ For full BotFather options (commands menu, description, photo) see [BOTFATHER.md
 Lead Cat creates Google Meet links via a service account with domain-wide delegation.
 You need three values:
 
-| Config key | Description |
-| --- | --- |
-| `google_sa_json` | Full service account JSON (the file from Google Cloud) |
-| `calendar_subject` | Delegated user email the service account impersonates |
-| `calendar_id` | Google Calendar id to create events on (usually the same user email) |
+| Config key         | Description                                                          |
+| ------------------ | -------------------------------------------------------------------- |
+| `google_sa_json`   | Full service account JSON (the file from Google Cloud)               |
+| `calendar_subject` | Delegated user email the service account impersonates                |
+| `calendar_id`      | Google Calendar id to create events on (usually the same user email) |
 
 ### Target (not yet shipped)
 
@@ -81,6 +81,7 @@ backend/internal/platform/employeedir/employees.csv
 ```
 
 **Format (header row required):**
+
 ```
 id,full_name,department,position,telegram_username
 ```
@@ -133,11 +134,11 @@ or terminal access.
 Deprecation schedule follows the phased rollout in the
 [TMA setup-replacement spec](superpowers/specs/2026-06-05-tma-setup-replacement-design.md):
 
-| Phase | Route deprecated for human use |
-| --- | --- |
-| Phase 1 (meetings unblock) | `PATCH /api/workspaces/:id/integrations` |
-| Phase 2 (legacy notify-bot ops) | `…/chat/*`, `…/members/*` |
-| Phase 3 (auto-tab ops) | `…/auto/*` read/toggle |
+| Phase                           | Route deprecated for human use           |
+| ------------------------------- | ---------------------------------------- |
+| Phase 1 (meetings unblock)      | `PATCH /api/workspaces/:id/integrations` |
+| Phase 2 (legacy notify-bot ops) | `…/chat/*`, `…/members/*`                |
+| Phase 3 (auto-tab ops)          | `…/auto/*` read/toggle                   |
 
 After all phases ship, platform setup routes will require a script-only token or be
 removed from public deployments. Do not build new tooling against `/api/workspaces/*`

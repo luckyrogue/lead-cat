@@ -17,7 +17,7 @@ export function CheckerFilters({
 
   return (
     <>
-      <div style={{ height: 18 }} />
+      <div className="h-[18px]" />
       <Field label={t("dateRange")}>
         <Segmented
           value={range}
@@ -29,7 +29,7 @@ export function CheckerFilters({
           ]}
         />
       </Field>
-      <div style={{ height: 16 }} />
+      <div className="h-4" />
       <Field label={t("duration")}>
         <DurationPicker
           value={dur}

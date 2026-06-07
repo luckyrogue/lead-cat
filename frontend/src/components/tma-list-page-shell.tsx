@@ -1,5 +1,4 @@
 import type { ReactNode } from "react"
-import { useTmaApp } from "@/shared/tma/context"
 import { Spinner } from "@/components/ui/spinner"
 
 type TmaListPageShellProps = {
@@ -23,46 +22,19 @@ export function TmaListPageShell({
   children,
   detail,
 }: TmaListPageShellProps) {
-  const p = useTmaApp()
-
   return (
-    <div style={{ padding: "16px 16px 28px" }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          margin: "2px 4px 14px",
-          gap: 12,
-        }}
-      >
-        <h2
-          style={{
-            margin: 0,
-            fontFamily: "var(--font-display)",
-            fontWeight: 800,
-            fontSize: 26,
-            color: p.text,
-          }}
-        >
-          {title}
-        </h2>
+    <div className="px-4 pb-7">
+      <div className="mx-1 mb-3.5 flex items-center justify-between gap-3">
+        <h2 className="tma-heading m-0 text-[26px]">{title}</h2>
         {actions}
       </div>
       {filters}
       {isLoading ? (
-        <div style={{ display: "flex", justifyContent: "center", padding: 32 }}>
+        <div className="flex justify-center p-8">
           <Spinner />
         </div>
       ) : empty ? (
-        <div
-          style={{
-            background: p.card,
-            borderRadius: 20,
-            border: `1px solid ${p.border}`,
-            overflow: "hidden",
-          }}
-        >
+        <div className="overflow-hidden rounded-[20px] border border-tma-border bg-tma-card">
           {emptyState}
         </div>
       ) : (

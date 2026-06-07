@@ -6,7 +6,7 @@ import axios, {
   isAxiosError,
 } from "axios"
 
-import { getSession } from "@/features/auth/session"
+import { getSession } from "@/shared/auth/session"
 import type { ApiErrorBody, ApiFetchOptions } from "@/shared/api/types"
 import { ApiError } from "@/shared/api/types"
 

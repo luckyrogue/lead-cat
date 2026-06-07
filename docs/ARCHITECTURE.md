@@ -49,13 +49,13 @@ backend/internal/
 
 ### Layer responsibilities
 
-| Layer | Responsibility |
-|---|---|
-| `domain/meeting` | Value types, recurrence maths, overlap/free-slot logic. No I/O. |
-| `application` | Orchestrates domain + infrastructure. Commands mutate state (CreateMeeting, UpdateMeeting, CancelMeeting). Queries read state (MeetingConflicts, FreeSlots, EmployeeSchedule). `EnsureTMAOrganizer` bridges identities. |
-| `delivery/http` | Maps HTTP ↔ application calls. Two handler groups: platform (`/api/*`) and TMA (`/api/tma/*`). |
-| `infrastructure` | Implements ports used by `application`: Postgres store, Google Calendar adapter, asynq queue client. |
-| `platform` | Cross-cutting runtime concerns: auth token issuers, bot FSMs, notification workers, reminder scheduler, observability. |
+| Layer            | Responsibility                                                                                                                                                                                                          |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `domain/meeting` | Value types, recurrence maths, overlap/free-slot logic. No I/O.                                                                                                                                                         |
+| `application`    | Orchestrates domain + infrastructure. Commands mutate state (CreateMeeting, UpdateMeeting, CancelMeeting). Queries read state (MeetingConflicts, FreeSlots, EmployeeSchedule). `EnsureTMAOrganizer` bridges identities. |
+| `delivery/http`  | Maps HTTP ↔ application calls. Two handler groups: platform (`/api/*`) and TMA (`/api/tma/*`).                                                                                                                          |
+| `infrastructure` | Implements ports used by `application`: Postgres store, Google Calendar adapter, asynq queue client.                                                                                                                    |
+| `platform`       | Cross-cutting runtime concerns: auth token issuers, bot FSMs, notification workers, reminder scheduler, observability.                                                                                                  |
 
 ---
 
@@ -63,10 +63,10 @@ backend/internal/
 
 Two identity worlds coexist:
 
-| World | Table | Key | Created by |
-|---|---|---|---|
-| **Bot users** | `bot_users` | `telegram_id` + corporate email + role | Telegram bot `/start` FSM (`platform/botreg`) |
-| **Platform users** | `platform_users` | UUID | OTP / passkey / OAuth login; or lazily by `EnsureTMAOrganizer` |
+| World              | Table            | Key                                    | Created by                                                     |
+| ------------------ | ---------------- | -------------------------------------- | -------------------------------------------------------------- |
+| **Bot users**      | `bot_users`      | `telegram_id` + corporate email + role | Telegram bot `/start` FSM (`platform/botreg`)                  |
+| **Platform users** | `platform_users` | UUID                                   | OTP / passkey / OAuth login; or lazily by `EnsureTMAOrganizer` |
 
 **TMA JWT** (`tok_typ: "tma"`, 24 h) — issued by `POST /api/auth/tma` after validating Telegram `initData`. Claims carry the `bot_user` identity.
 
@@ -99,14 +99,14 @@ application.Services  (EnsureTMAOrganizer if write, then meeting command/query)
 
 **TMA route group** (`/api/tma/*`):
 
-| Method | Path | Application call |
-|---|---|---|
-| `GET` | `/api/tma/me` | — (reads `bot_user` from TMAAuth middleware locals) |
-| `GET` | `/api/tma/meetings` | `TMAMyMeetings` |
-| `GET` | `/api/tma/schedule` | `TMASchedule` (colleague schedule) |
-| `GET` | `/api/tma/employees` | `ListEmployees` |
-| `POST` | `/api/tma/free-slots` | `FreeSlots` |
-| `POST` | `/api/tma/meetings` | `CreateMeeting` (via `EnsureTMAOrganizer`) |
+| Method | Path                  | Application call                                    |
+| ------ | --------------------- | --------------------------------------------------- |
+| `GET`  | `/api/tma/me`         | — (reads `bot_user` from TMAAuth middleware locals) |
+| `GET`  | `/api/tma/meetings`   | `TMAMyMeetings`                                     |
+| `GET`  | `/api/tma/schedule`   | `TMASchedule` (colleague schedule)                  |
+| `GET`  | `/api/tma/employees`  | `ListEmployees`                                     |
+| `POST` | `/api/tma/free-slots` | `FreeSlots`                                         |
+| `POST` | `/api/tma/meetings`   | `CreateMeeting` (via `EnsureTMAOrganizer`)          |
 
 ---
 

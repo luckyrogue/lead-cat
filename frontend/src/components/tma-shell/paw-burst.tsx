@@ -2,15 +2,7 @@ export function PawBurst({ show }: { show: boolean }) {
   if (!show) return null
   const bits = Array.from({ length: 14 })
   return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        pointerEvents: "none",
-        overflow: "hidden",
-        zIndex: 95,
-      }}
-    >
+    <div className="pointer-events-none absolute inset-0 z-[95] overflow-hidden">
       {bits.map((_, i) => {
         const ang = (i / bits.length) * Math.PI * 2
         const dist = 90 + (i % 4) * 36

@@ -29,23 +29,26 @@ src/
 ├── routes/_tma/*           # thin routes → feature pages
 ├── components/
 │   ├── tma-shell/          # tg-bar, tab-bar, sheet, overlay, index barrel
-│   ├── meetings/           # detail-row, meeting-title-preview
+│   ├── meetings/           # detail-row, meeting-title-preview, meeting-ui/*
 │   ├── employee-picker.tsx
 │   ├── duration-picker.tsx
 │   └── tma-list-page-shell, maintenance-screen, auth/
 ├── features/               # vertical slices
-│   ├── auth/
+│   ├── auth/               # api, require-auth, refresh-session, auth-context
 │   ├── home|meetings|meeting-create|checker|auto|profile/
 │   │   meeting-create/     # wizard steps, mini-calendar, use-create-wizard
-│   │   meetings/           # meeting-ui/*, meeting-detail*, pages/
+│   │   meetings/           # meeting-detail*, pages/, search-schema, list-url
 │   │   checker/            # checker-* sections
 │   │   profile/            # settings-group, profile-header
-├── entities/               # meeting, employee, scenario types + constants
+├── entities/
+│   ├── employee/           # types, fixtures, api, queries (search)
+│   ├── meeting/            # types, constants, lib/format, api, queries, scheduling-api
+│   └── scenario/           # types
 └── shared/
     ├── api/
-    ├── auth/
-    ├── lib/
-    ├── tma/
+    ├── auth/               # types, session, module-policies, permissions, …
+    ├── lib/                # cn, toast, use-list-url-state, …
+    ├── tma/                # i18n, palette, context, surface-vars
     └── ui/cat/             # avatar, cat-btn, field, … + primitives.tsx barrel
 ```
 
@@ -60,7 +63,7 @@ Imports: `@/features/...`, `@/shared/...`, `@/entities/...`.
 
 ## HTTP client (axios)
 
-`shared/api/client.ts` — axios `api` + `apiFetch`. Bearer from `features/auth/session.ts` (`lc.tma.auth` in sessionStorage). 401 on `/tma/*` → single-flight `refreshTmaSessionIfNeeded`.
+`shared/api/client.ts` — axios `api` + `apiFetch`. Bearer from `shared/auth/session.ts` (`lc.tma.auth` in sessionStorage). 401 on `/tma/*` → single-flight `refreshTmaSessionIfNeeded`.
 
 ## OpenAPI / codegen
 
@@ -81,7 +84,7 @@ Spec source: `backend/openapi/openapi.json`.
 | Action | Endpoint |
 |--------|----------|
 | Login | `POST /api/auth/tma` `{ init_data }` |
-| Session | `features/auth/session.ts` |
+| Session | `shared/auth/session.ts` |
 | Refresh | `features/auth/refresh-session.ts` (re-login via initData) |
 | Me | `GET /api/tma/me` |
 
@@ -92,5 +95,5 @@ Spec source: `backend/openapi/openapi.json`.
 | `components/app-sidebar.tsx` + `getVisibleSidebarModules` | `components/tma-shell/` + `getVisibleTabBarModules` |
 | `admin-list-page-shell` | `tma-list-page-shell` |
 | `root.tsx` health + Toaster | `app/app-content.tsx` |
-| `features/auth/session.ts` | `features/auth/session.ts` |
+| `features/auth/session.ts` | `shared/auth/session.ts` |
 | `shared/auth/route-access.ts` | `shared/auth/route-access.ts` (roles) |

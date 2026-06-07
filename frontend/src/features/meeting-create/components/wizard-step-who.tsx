@@ -1,9 +1,10 @@
 import { useMemo } from "react"
 import { useTmaApp } from "@/shared/tma/context"
-import { EMPLOYEES } from "@/shared/tma/mock-data"
+import { EMPLOYEES } from "@/entities/employee/fixtures"
 import type { MeetingDraft } from "@/shared/tma/types"
 import { EmployeePicker } from "@/components/employee-picker"
-import { Avatar, Field, inputStyle } from "@/shared/ui/cat/primitives"
+import { cn } from "@/shared/lib/cn"
+import { Avatar, Field } from "@/shared/ui/cat/primitives"
 import { WizardStepTitle } from "./wizard-step-title"
 
 export function WizardStepWho({
@@ -17,8 +18,7 @@ export function WizardStepWho({
   pSearch: string
   setPSearch: (q: string) => void
 }) {
-  const p = useTmaApp()
-  const t = p.t
+  const { t } = useTmaApp()
 
   const matches = useMemo(
     () =>
@@ -38,41 +38,17 @@ export function WizardStepWho({
     <div>
       <WizardStepTitle>🧑‍🤝‍🧑 Кто участвует?</WizardStepTitle>
       <Field label={t("host")}>
-        <div
-          style={{
-            ...inputStyle(p),
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            height: 54,
-          }}
-        >
+        <div className="tma-input flex h-[54px] items-center gap-2.5">
           <Avatar name={draft.host} size={32} />
-          <span
-            style={{
-              fontWeight: 700,
-              fontFamily: "var(--font-display)",
-              color: p.text,
-            }}
-          >
+          <span className="font-display font-bold text-tma-text">
             {draft.host}
           </span>
-          <span
-            style={{
-              marginLeft: "auto",
-              fontSize: 11,
-              fontWeight: 700,
-              color: p.accent,
-              background: p.accentSoft,
-              padding: "3px 8px",
-              borderRadius: 999,
-            }}
-          >
+          <span className="ml-auto rounded-full bg-tma-accent-soft px-2 py-[3px] text-[11px] font-bold text-tma-accent">
             я
           </span>
         </div>
       </Field>
-      <div style={{ height: 18 }} />
+      <div className="h-[18px]" />
       <Field label={t("addPeople")}>
         <EmployeePicker
           value={draft.participants}
@@ -84,19 +60,14 @@ export function WizardStepWho({
           showEmail
         />
       </Field>
-      <div style={{ height: 18 }} />
+      <div className="h-[18px]" />
       <Field label={t("descr")}>
         <textarea
           value={draft.desc}
           onChange={(e) => set("desc", e.target.value)}
           rows={3}
           placeholder="—"
-          style={{
-            ...inputStyle(p),
-            height: "auto",
-            padding: "12px 14px",
-            resize: "none",
-          }}
+          className={cn("tma-input h-auto resize-none py-3")}
         />
       </Field>
     </div>
