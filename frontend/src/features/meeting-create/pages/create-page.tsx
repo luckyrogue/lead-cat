@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { useNavigate, useParams } from "@tanstack/react-router"
+import { useNavigate, useParams, useSearch } from "@tanstack/react-router"
 import { CreateWizard } from "@/features/meeting-create/components/create-wizard"
 import { detailToDraft } from "@/entities/meeting/lib/format"
 import { writeErrorKey } from "@/entities/meeting/lib/write-error"
@@ -19,6 +19,12 @@ export function CreateMeetingPage() {
   const navigate = useNavigate()
   const params = useParams({ strict: false })
   const editId = "editId" in params ? (params.editId as string) : undefined
+  const search = useSearch({ strict: false }) as { scope?: "this" | "whole" }
+  const scope: "this" | "whole" = search.scope === "whole" ? "whole" : "this"
+  const lockedFields =
+    scope === "whole"
+      ? { date: true, rec: true, until: true, participants: true }
+      : undefined
   const slotInitial = useMemo(() => {
     const raw = sessionStorage.getItem("tma-create-initial")
     if (!raw) return undefined
@@ -56,12 +62,12 @@ export function CreateMeetingPage() {
           dept: m.dept,
           type: m.type,
           host: m.host,
-          date: m.date,
+          date: scope === "whole" ? undefined : m.date,
           start: m.start,
           end: m.end,
           desc: m.desc,
         }
-        await updateMut.mutateAsync({ id: editId, patch })
+        await updateMut.mutateAsync({ id: editId, patch, scope })
         toastSuccess(p.t("updated"))
         void navigate({ to: "/meetings", search: { scope: "upcoming" } })
       } else {
@@ -75,6 +81,8 @@ export function CreateMeetingPage() {
           recurrence: m.rec,
           desc: m.desc,
           participants: m.participants.map((x) => x.email),
+          recurrence_until: m.rec !== "once" ? m.until : undefined,
+          recurrence_days: m.rec === "custom" ? m.recDays : undefined,
         }
         const created = await createMut.mutateAsync(input)
         void navigate({
@@ -89,7 +97,11 @@ export function CreateMeetingPage() {
 
   return (
     <Overlay open onClose={goBack} onBack={goBack} title={p.t("create")}>
-      <CreateWizard initial={initial} onComplete={completeCreate} />
+      <CreateWizard
+        initial={initial}
+        onComplete={completeCreate}
+        lockedFields={lockedFields}
+      />
     </Overlay>
   )
 }

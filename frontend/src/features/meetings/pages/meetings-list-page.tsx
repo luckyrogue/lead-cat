@@ -15,10 +15,7 @@ import { writeErrorKey } from "@/entities/meeting/lib/write-error"
 import { useDeleteMeeting } from "@/entities/meeting/mutations"
 import { useMyMeetings } from "@/entities/meeting/queries"
 import { MeetingDetail } from "@/features/meetings/components/meeting-detail"
-import {
-  EmptyState,
-  MeetingCard,
-} from "@/components/meetings/meeting-ui"
+import { EmptyState, MeetingCard } from "@/components/meetings/meeting-ui"
 import { MeetingCreatedSuccess } from "@/features/meetings/pages/meeting-created-success"
 import { Segmented } from "@/shared/ui/cat/primitives"
 import { Sheet, PawBurst } from "@/components/tma-shell"
@@ -115,9 +112,9 @@ export function MeetingsListPage() {
     void navigate({ to: "/meetings", search: preserveSearch() })
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, scope: "this" | "whole" = "this") => {
     try {
-      await deleteMut.mutateAsync(id)
+      await deleteMut.mutateAsync({ id, scope })
       closeDetail()
       toastSuccess(t("deleted"))
     } catch (err) {
@@ -151,13 +148,14 @@ export function MeetingsListPage() {
               {detail && (
                 <MeetingDetail
                   m={detail}
-                  onEdit={() => {
+                  onEdit={(scope) => {
                     void navigate({
                       to: "/meetings/create/$editId",
                       params: { editId: detail.id },
+                      search: { scope } as Record<string, unknown>,
                     })
                   }}
-                  onDelete={() => void handleDelete(detail.id)}
+                  onDelete={(scope) => void handleDelete(detail.id, scope)}
                 />
               )}
             </Sheet>

@@ -17,8 +17,8 @@ export function MeetingDetail({
   onDelete,
 }: {
   m: Meeting
-  onEdit: () => void
-  onDelete: () => void
+  onEdit: (scope: "this" | "whole") => void
+  onDelete: (scope: "this" | "whole") => void
 }) {
   const p = useTmaApp()
   const { user } = useTmaAuth()
@@ -26,6 +26,7 @@ export function MeetingDetail({
   const rec = RECURRENCE.find((r) => r.key === m.rec)
   const past = m.date < TMA_NOW
   const canManage = m.organizer === user?.email || user?.role === "admin"
+  const isSeries = Boolean(m.seriesId)
 
   return (
     <div>
@@ -37,7 +38,7 @@ export function MeetingDetail({
       </DetailRow>
       <DetailRow icon="clock" label={t("timeT")}>
         {m.start} – {m.end}{" "}
-        <span className="text-[13px] font-semibold text-tma-faint">
+        <span className="text-tma-faint text-[13px] font-semibold">
           · UTC+5
         </span>
       </DetailRow>
@@ -57,7 +58,11 @@ export function MeetingDetail({
       )}
       <MeetingDetailParticipants m={m} />
       {canManage && !past && (
-        <MeetingDetailActions onEdit={onEdit} onDelete={onDelete} />
+        <MeetingDetailActions
+          isSeries={isSeries}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
       )}
     </div>
   )
