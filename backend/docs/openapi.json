@@ -426,6 +426,758 @@
         }
       }
     },
+    "/api/tma/admin/workspace": {
+      "get": {
+        "operationId": "tmaAdminWorkspaceGet",
+        "tags": ["tma-admin"],
+        "summary": "Get workspace status",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Workspace status",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TmaAdminWorkspaceStatus" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "tmaAdminWorkspacePost",
+        "tags": ["tma-admin"],
+        "summary": "Create workspace",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Created workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["id"],
+                  "properties": {
+                    "id": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tma/admin/integrations": {
+      "get": {
+        "operationId": "tmaAdminIntegrationsGet",
+        "tags": ["tma-admin"],
+        "summary": "Get integrations view",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Integrations",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TmaAdminIntegrationsView" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "tmaAdminIntegrationsPatch",
+        "tags": ["tma-admin"],
+        "summary": "Update integrations settings",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TmaAdminIntegrationsPatchRequest" }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Updated"
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tma/admin/integrations/verify": {
+      "post": {
+        "operationId": "tmaAdminIntegrationsVerify",
+        "tags": ["tma-admin"],
+        "summary": "Verify Google integration",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Verify result",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TmaAdminGoogleVerifyResult" }
+              }
+            }
+          },
+          "400": {
+            "description": "Google verification error (google_sa_invalid | google_subject_invalid | google_calendar_not_accessible | google_api_disabled | google_not_configured)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tma/admin/chat/status": {
+      "get": {
+        "operationId": "tmaAdminChatStatusGet",
+        "tags": ["tma-admin"],
+        "summary": "Get chat link status",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Chat status",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TmaAdminChatStatus" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tma/admin/chat/link": {
+      "post": {
+        "operationId": "tmaAdminChatLink",
+        "tags": ["tma-admin"],
+        "summary": "Link Telegram chat to workspace",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TmaAdminChatLinkRequest" }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Chat linked"
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tma/admin/members": {
+      "get": {
+        "operationId": "tmaAdminMembersGet",
+        "tags": ["tma-admin"],
+        "summary": "List workspace members",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Members list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["members"],
+                  "properties": {
+                    "members": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/TmaAdminMember" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tma/admin/members/sync-chat": {
+      "post": {
+        "operationId": "tmaAdminMembersSyncChat",
+        "tags": ["tma-admin"],
+        "summary": "Sync members from Telegram chat",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Sync result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["added"],
+                  "properties": {
+                    "added": { "type": "integer", "format": "int64" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tma/admin/scenarios": {
+      "get": {
+        "operationId": "tmaAdminScenariosGet",
+        "tags": ["tma-admin"],
+        "summary": "List scenarios",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Scenarios list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["scenarios"],
+                  "properties": {
+                    "scenarios": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/TmaAdminScenario" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tma/admin/scenarios/{id}": {
+      "patch": {
+        "operationId": "tmaAdminScenarioPatch",
+        "tags": ["tma-admin"],
+        "summary": "Update scenario",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TmaAdminScenarioPatchRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated scenario",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TmaAdminScenario" }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tma/admin/scenarios/{id}/run": {
+      "post": {
+        "operationId": "tmaAdminScenarioRun",
+        "tags": ["tma-admin"],
+        "summary": "Trigger scenario run",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Run triggered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["run_id"],
+                  "properties": {
+                    "run_id": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tma/admin/scenarios/{id}/runs": {
+      "get": {
+        "operationId": "tmaAdminScenarioRunsGet",
+        "tags": ["tma-admin"],
+        "summary": "List scenario runs",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Runs list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["runs"],
+                  "properties": {
+                    "runs": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/TmaAdminScenarioRun" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tma/admin/audit": {
+      "get": {
+        "operationId": "tmaAdminAuditGet",
+        "tags": ["tma-admin"],
+        "summary": "List audit log entries",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "actor",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Audit entries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["entries"],
+                  "properties": {
+                    "entries": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/TmaAdminAuditEntry" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/tma/conflicts": {
       "post": {
         "operationId": "tmaConflicts",
@@ -699,6 +1451,126 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/TmaConflict" }
           }
+        }
+      },
+      "TmaAdminWorkspaceStatus": {
+        "type": "object",
+        "required": ["id", "name", "tz", "meet_link", "has_google", "google_subject", "google_calendar_id", "has_chat"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "tz": { "type": "string" },
+          "meet_link": { "type": "string" },
+          "has_google": { "type": "boolean" },
+          "google_subject": { "type": "string" },
+          "google_calendar_id": { "type": "string" },
+          "has_chat": { "type": "boolean" },
+          "chat_id": { "type": "integer", "format": "int64" },
+          "chat_title": { "type": "string" }
+        }
+      },
+      "TmaAdminIntegrationsView": {
+        "type": "object",
+        "required": ["has_google", "google_subject", "google_calendar_id", "meet_link", "tz"],
+        "properties": {
+          "has_google": { "type": "boolean" },
+          "google_subject": { "type": "string" },
+          "google_calendar_id": { "type": "string" },
+          "meet_link": { "type": "string" },
+          "tz": { "type": "string" }
+        }
+      },
+      "TmaAdminIntegrationsPatchRequest": {
+        "type": "object",
+        "properties": {
+          "google_sa_json": { "type": "string" },
+          "google_subject": { "type": "string" },
+          "google_calendar_id": { "type": "string" },
+          "meet_link": { "type": "string" },
+          "tz": { "type": "string" }
+        }
+      },
+      "TmaAdminGoogleVerifyResult": {
+        "type": "object",
+        "required": ["ok"],
+        "properties": {
+          "ok": { "type": "boolean" },
+          "calendar_summary": { "type": "string" },
+          "time_zone": { "type": "string" },
+          "access_role": { "type": "string" }
+        }
+      },
+      "TmaAdminChatStatus": {
+        "type": "object",
+        "required": ["linked"],
+        "properties": {
+          "linked": { "type": "boolean" },
+          "chat_id": { "type": "integer", "format": "int64" },
+          "chat_title": { "type": "string" }
+        }
+      },
+      "TmaAdminChatLinkRequest": {
+        "type": "object",
+        "required": ["chat_id"],
+        "properties": {
+          "chat_id": { "type": "integer", "format": "int64" },
+          "chat_title": { "type": "string" }
+        }
+      },
+      "TmaAdminMember": {
+        "type": "object",
+        "required": ["id", "full_name", "telegram_username", "role"],
+        "properties": {
+          "id": { "type": "string" },
+          "full_name": { "type": "string" },
+          "telegram_username": { "type": "string" },
+          "role": { "type": "string" },
+          "github_login": { "type": "string" },
+          "gitlab_login": { "type": "string" }
+        }
+      },
+      "TmaAdminScenario": {
+        "type": "object",
+        "required": ["id", "name", "enabled", "schedule"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "enabled": { "type": "boolean" },
+          "schedule": { "type": "string" },
+          "last_run_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "TmaAdminScenarioPatchRequest": {
+        "type": "object",
+        "required": ["enabled"],
+        "properties": {
+          "enabled": { "type": "boolean" }
+        }
+      },
+      "TmaAdminScenarioRun": {
+        "type": "object",
+        "required": ["id", "scenario_id", "status", "started_at"],
+        "properties": {
+          "id": { "type": "string" },
+          "scenario_id": { "type": "string" },
+          "status": { "type": "string" },
+          "started_at": { "type": "string", "format": "date-time" },
+          "finished_at": { "type": "string", "format": "date-time" },
+          "error": { "type": "string" }
+        }
+      },
+      "TmaAdminAuditEntry": {
+        "type": "object",
+        "required": ["id", "actor_email", "actor_telegram_id", "action", "target_kind", "target_id", "details", "created_at"],
+        "properties": {
+          "id": { "type": "string" },
+          "actor_email": { "type": "string" },
+          "actor_telegram_id": { "type": "integer", "format": "int64" },
+          "action": { "type": "string" },
+          "target_kind": { "type": "string" },
+          "target_id": { "type": "string" },
+          "details": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" }
         }
       },
       "TmaMeetingCreateRequest": {
