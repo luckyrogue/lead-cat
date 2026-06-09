@@ -168,6 +168,11 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	tmaAdmin.Post("/chat/link", api.TMAAdminChatLink)
 	tmaAdmin.Get("/members", api.TMAAdminListMembers)
 	tmaAdmin.Post("/members/sync-chat", api.TMAAdminMembersSyncChat)
+	tmaAdmin.Get("/scenarios", api.TMAAdminListScenarios)
+	tmaAdmin.Patch("/scenarios/:id", api.TMAAdminPatchScenario)
+	tmaAdmin.Post("/scenarios/:id/run", api.TMAAdminRunScenario)
+	tmaAdmin.Get("/scenarios/:id/runs", api.TMAAdminListScenarioRuns)
+	tmaAdmin.Get("/audit", api.TMAAdminListAudit)
 
 	if stat, err := os.Stat(cfg.StaticDir); err == nil && stat.IsDir() {
 		app.Static("/", cfg.StaticDir, fiber.Static{

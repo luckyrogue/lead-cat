@@ -256,3 +256,93 @@ func (a *API) TMAAdminMembersSyncChat(c *fiber.Ctx) error {
 	})
 	return c.JSON(fiber.Map{"added": n})
 }
+
+// GET /api/tma/admin/scenarios
+func (a *API) TMAAdminListScenarios(c *fiber.Ctx) error {
+	a.withAuditActor(c)
+	id, err := a.adminWorkspaceID(c)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
+	}
+	list, err := a.App.ListScenarios(c.Context(), id)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(fiber.Map{"scenarios": list})
+}
+
+// PATCH /api/tma/admin/scenarios/:id  (only `enabled` is honored)
+func (a *API) TMAAdminPatchScenario(c *fiber.Ctx) error {
+	a.withAuditActor(c)
+	sid, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "validation_failed")
+	}
+	var body struct {
+		Enabled *bool `json:"enabled"`
+	}
+	if err := c.BodyParser(&body); err != nil || body.Enabled == nil {
+		return fiber.NewError(fiber.StatusBadRequest, "validation_failed")
+	}
+	sc, err := a.App.UpdateScenario(c.Context(), sid, "", body.Enabled, nil)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	a.App.Audit(c.UserContext(), "scenario_toggled", "scenario", sid.String(), map[string]any{
+		"name":    sc.Name,
+		"enabled": *body.Enabled,
+	})
+	return c.JSON(sc)
+}
+
+// POST /api/tma/admin/scenarios/:id/run
+func (a *API) TMAAdminRunScenario(c *fiber.Ctx) error {
+	a.withAuditActor(c)
+	sid, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "validation_failed")
+	}
+	wid, err := a.adminWorkspaceID(c)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
+	}
+	sc, _ := a.App.GetScenario(c.Context(), sid)
+	runID, err := a.App.RunScenario(c.Context(), sid, wid)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	a.App.Audit(c.UserContext(), "scenario_run_started", "scenario", sid.String(), map[string]any{
+		"name":          sc.Name,
+		"manual_run_id": runID.String(),
+	})
+	return c.JSON(fiber.Map{"run_id": runID})
+}
+
+// GET /api/tma/admin/scenarios/:id/runs
+func (a *API) TMAAdminListScenarioRuns(c *fiber.Ctx) error {
+	a.withAuditActor(c)
+	sid, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "validation_failed")
+	}
+	runs, err := a.App.ListRuns(c.Context(), sid)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(fiber.Map{"runs": runs})
+}
+
+// GET /api/tma/admin/audit?limit=&action=&actor=
+func (a *API) TMAAdminListAudit(c *fiber.Ctx) error {
+	a.withAuditActor(c)
+	limit := c.QueryInt("limit", 50)
+	entries, err := a.App.Store.ListAuditEntries(c.Context(), postgres.AuditFilter{
+		Action:     c.Query("action"),
+		ActorEmail: c.Query("actor"),
+		Limit:      limit,
+	})
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(fiber.Map{"entries": entries})
+}
