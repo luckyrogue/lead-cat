@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	calendar "google.golang.org/api/calendar/v3"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
+	docalendar "github.com/Jaryq-Lab/notify-bot/internal/domain/calendar"
 )
 
 type adapter struct {
@@ -20,7 +20,7 @@ type adapter struct {
 
 // buildEvent maps a transport-agnostic CalendarEvent to a Google event with a
 // Meet create-request. requestID must be unique per insert.
-func buildEvent(e application.CalendarEvent, requestID string) *calendar.Event {
+func buildEvent(e docalendar.CalendarEvent, requestID string) *calendar.Event {
 	var attendees []*calendar.EventAttendee
 	for _, em := range e.AttendeeEmails {
 		attendees = append(attendees, &calendar.EventAttendee{Email: em})
@@ -40,14 +40,14 @@ func buildEvent(e application.CalendarEvent, requestID string) *calendar.Event {
 	}
 }
 
-func (a *adapter) CreateEvent(ctx context.Context, e application.CalendarEvent) (application.CalendarResult, error) {
+func (a *adapter) CreateEvent(ctx context.Context, e docalendar.CalendarEvent) (docalendar.CalendarResult, error) {
 	created, err := a.svc.Events.
 		Insert(a.calendarID, buildEvent(e, uuid.NewString())).
 		ConferenceDataVersion(1).
 		Context(ctx).
 		Do()
 	if err != nil {
-		return application.CalendarResult{}, err
+		return docalendar.CalendarResult{}, err
 	}
 	link := created.HangoutLink
 	if link == "" && created.ConferenceData != nil {
@@ -58,7 +58,7 @@ func (a *adapter) CreateEvent(ctx context.Context, e application.CalendarEvent) 
 			}
 		}
 	}
-	return application.CalendarResult{EventID: created.Id, MeetLink: link}, nil
+	return docalendar.CalendarResult{EventID: created.Id, MeetLink: link}, nil
 }
 
 func (a *adapter) DeleteEvent(ctx context.Context, eventID string) error {
@@ -68,7 +68,7 @@ func (a *adapter) DeleteEvent(ctx context.Context, eventID string) error {
 // buildPatch maps a CalendarEvent to a partial Google event for Events.Patch.
 // It sets only the fields edited here; omitting Attendees and ConferenceData
 // leaves the guest list and the Meet link untouched.
-func buildPatch(e application.CalendarEvent) *calendar.Event {
+func buildPatch(e docalendar.CalendarEvent) *calendar.Event {
 	return &calendar.Event{
 		Summary:     e.Title,
 		Description: e.Description,
@@ -77,7 +77,7 @@ func buildPatch(e application.CalendarEvent) *calendar.Event {
 	}
 }
 
-func (a *adapter) UpdateEvent(ctx context.Context, eventID string, e application.CalendarEvent) error {
+func (a *adapter) UpdateEvent(ctx context.Context, eventID string, e docalendar.CalendarEvent) error {
 	_, err := a.svc.Events.
 		Patch(a.calendarID, eventID, buildPatch(e)).
 		SendUpdates("all").

@@ -3,37 +3,25 @@ package application
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/google/uuid"
+
+	docalendar "github.com/Jaryq-Lab/notify-bot/internal/domain/calendar"
 )
 
 // CalendarEvent is a calendar event to create (transport-agnostic).
-type CalendarEvent struct {
-	Title          string
-	Description    string
-	Start          time.Time
-	End            time.Time
-	AttendeeEmails []string
-}
+// Type alias for domain/calendar.CalendarEvent.
+type CalendarEvent = docalendar.CalendarEvent
 
 // CalendarResult is what the calendar backend returns after creation.
-type CalendarResult struct {
-	EventID  string
-	MeetLink string
-}
+type CalendarResult = docalendar.CalendarResult
 
 // CalendarService is the port for the calendar backend (Google Calendar in
 // production, a stub in tests/local). Implemented in infrastructure/calendar/*.
-type CalendarService interface {
-	CreateEvent(ctx context.Context, e CalendarEvent) (CalendarResult, error)
-	UpdateEvent(ctx context.Context, eventID string, e CalendarEvent) error
-	UpdateAttendees(ctx context.Context, eventID string, emails []string) error
-	DeleteEvent(ctx context.Context, eventID string) error
-}
+type CalendarService = docalendar.Service
 
 // ErrGoogleNotConfigured is returned when a workspace has no Google credentials.
-var ErrGoogleNotConfigured = errors.New("google not configured")
+var ErrGoogleNotConfigured = docalendar.ErrNotConfigured
 
 // ErrInvalidInput marks client-side input errors (bad fields or times) so the
 // HTTP layer can map them to 400 instead of 500.

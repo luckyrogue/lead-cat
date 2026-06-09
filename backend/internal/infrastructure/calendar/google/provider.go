@@ -11,7 +11,7 @@ import (
 	calendar "google.golang.org/api/calendar/v3"
 	"google.golang.org/api/option"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
+	docalendar "github.com/Jaryq-Lab/notify-bot/internal/domain/calendar"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/crypto"
 	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
 )
@@ -30,13 +30,13 @@ func NewProvider(store *postgres.Store, cipher *crypto.TokenCipher) *Provider {
 	return &Provider{store: store, cipher: cipher}
 }
 
-func (p *Provider) For(ctx context.Context, workspaceID uuid.UUID) (application.CalendarService, error) {
+func (p *Provider) For(ctx context.Context, workspaceID uuid.UUID) (docalendar.Service, error) {
 	enc, subject, calendarID, err := p.store.GetGoogleConfig(ctx, workspaceID)
 	if err != nil {
 		return nil, err
 	}
 	if len(enc) == 0 || subject == "" {
-		return nil, application.ErrGoogleNotConfigured
+		return nil, docalendar.ErrNotConfigured
 	}
 	if calendarID == "" {
 		calendarID = "primary"

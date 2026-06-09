@@ -7,22 +7,22 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
+	docalendar "github.com/Jaryq-Lab/notify-bot/internal/domain/calendar"
 )
 
 type Service struct{}
 
 func New() *Service { return &Service{} }
 
-func (s *Service) CreateEvent(_ context.Context, _ application.CalendarEvent) (application.CalendarResult, error) {
+func (s *Service) CreateEvent(_ context.Context, _ docalendar.CalendarEvent) (docalendar.CalendarResult, error) {
 	id := uuid.NewString()
-	return application.CalendarResult{
+	return docalendar.CalendarResult{
 		EventID:  id,
 		MeetLink: "https://meet.google.com/stub-" + id[:8],
 	}, nil
 }
 
-func (s *Service) UpdateEvent(_ context.Context, _ string, _ application.CalendarEvent) error {
+func (s *Service) UpdateEvent(_ context.Context, _ string, _ docalendar.CalendarEvent) error {
 	return nil
 }
 

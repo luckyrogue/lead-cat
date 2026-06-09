@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
+	docalendar "github.com/Jaryq-Lab/notify-bot/internal/domain/calendar"
 )
 
 // Provider always resolves to the stub Service, regardless of workspace.
@@ -14,6 +14,6 @@ type Provider struct{ svc *Service }
 
 func NewProvider() *Provider { return &Provider{svc: New()} }
 
-func (p *Provider) For(_ context.Context, _ uuid.UUID) (application.CalendarService, error) {
+func (p *Provider) For(_ context.Context, _ uuid.UUID) (docalendar.Service, error) {
 	return p.svc, nil
 }
