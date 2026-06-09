@@ -1,12 +1,14 @@
-import { useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
 import { cn } from "@/shared/lib/cn"
-import { toastSuccess } from "@/shared/lib/toast"
+import { toastError, toastSuccess } from "@/shared/lib/toast"
 import { I18N } from "@/shared/miniapp/i18n"
 import { useMiniApp } from "@/shared/miniapp/context"
 import { canAccessMiniAppAdmin } from "@/shared/auth/module-policies"
 import { useMiniAppAuth } from "@/shared/auth/auth-context"
-import { CatIcon, CatToggle } from "@/shared/ui/cat/primitives"
+import { CatIcon } from "@/shared/ui/cat/primitives"
+import { REMINDER_INTERVALS } from "@/entities/user-settings/constants"
+import { useUserSettings } from "@/entities/user-settings/queries"
+import { useUpdateReminderMinutes } from "@/entities/user-settings/mutations"
 import { ProfileHeader } from "../components/profile-header"
 import { SettingsGroup } from "../components/settings-group"
 import { SettingsRow } from "../components/settings-row"
@@ -16,16 +18,19 @@ export function ProfilePage() {
   const { user } = useMiniAppAuth()
   const navigate = useNavigate()
   const t = p.t
-  const [reminders, setReminders] = useState(["15m"])
-  const [remOn, setRemOn] = useState(true)
-  const intervals = [
-    { v: "10m", l: `10 ${t("min")}` },
-    { v: "15m", l: `15 ${t("min")}` },
-    { v: "30m", l: `30 ${t("min")}` },
-    { v: "1h", l: `1 ${t("hour")}` },
-    { v: "2h", l: `2 ${t("hour")}` },
-    { v: "1d", l: "1 день" },
-  ]
+
+  const { data: settings } = useUserSettings()
+  const updateMut = useUpdateReminderMinutes()
+  const current = settings?.reminderMinutes ?? []
+
+  const toggleInterval = (minutes: number) => {
+    const next = current.includes(minutes)
+      ? current.filter((m) => m !== minutes)
+      : [...current, minutes]
+    updateMut.mutate(next, {
+      onError: (err) => toastError(err, t("settingsSaveFailed")),
+    })
+  }
 
   return (
     <div className="px-4 pb-7">
@@ -36,25 +41,26 @@ export function ProfilePage() {
           icon="bell"
           hue={45}
           label={t("reminders")}
-          right={<CatToggle on={remOn} onChange={setRemOn} />}
+          right={
+            current.length > 0 ? (
+              <span className="text-miniapp-muted text-xs font-bold">{current.length}</span>
+            ) : undefined
+          }
           last
         />
       </SettingsGroup>
-      {remOn && (
-        <div className="mx-1 -mt-3 mb-5 flex flex-wrap gap-2">
-          {intervals.map((it) => {
-            const on = reminders.includes(it.v)
+      <div className="mx-1 -mt-3 mb-5 flex flex-col gap-2">
+        {current.length === 0 && (
+          <p className="text-miniapp-muted px-1 text-xs">{t("remindersOff")}</p>
+        )}
+        <div className="flex flex-wrap gap-2">
+          {REMINDER_INTERVALS.map((it) => {
+            const on = current.includes(it.value)
             return (
               <button
-                key={it.v}
+                key={it.value}
                 type="button"
-                onClick={() =>
-                  setReminders(
-                    on
-                      ? reminders.filter((x) => x !== it.v)
-                      : [...reminders, it.v]
-                  )
-                }
+                onClick={() => toggleInterval(it.value)}
                 className={cn(
                   "font-display cursor-pointer rounded-[11px] border-[1.5px] px-[13px] py-2 text-[13.5px] font-bold",
                   on
@@ -63,12 +69,12 @@ export function ProfilePage() {
                 )}
               >
                 {on ? "✓ " : ""}
-                {it.l}
+                {t(it.labelKey)}
               </button>
             )
           })}
         </div>
-      )}
+      </div>
 
       <SettingsGroup title="Предпочтения">
         <SettingsRow
