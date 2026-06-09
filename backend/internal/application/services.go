@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/go-telegram/bot"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
@@ -19,12 +20,19 @@ import (
 	"github.com/Jaryq-Lab/notify-bot/internal/platform/scenario_scheduler"
 )
 
+// ChatSyncer is a function that syncs chat administrators into workspace_members.
+// It is injected at startup to avoid an import cycle between application and
+// the telegram infrastructure package.
+type ChatSyncer func(ctx context.Context, workspaceID uuid.UUID) (int, error)
+
 type Services struct {
-	Store    *postgres.Store
-	Cipher   *crypto.TokenCipher
-	Queue    *asynqqueue.Client
-	Calendar CalendarProvider
-	Log      *zap.Logger
+	Store      *postgres.Store
+	Cipher     *crypto.TokenCipher
+	Queue      *asynqqueue.Client
+	Calendar   CalendarProvider
+	Log        *zap.Logger
+	Bot        *bot.Bot
+	syncChat   ChatSyncer
 }
 
 var ErrTelegramLinkedToOtherAccount = errors.New("telegram already linked to another account")
@@ -73,6 +81,22 @@ func (s *Services) GetWorkspace(ctx context.Context, id uuid.UUID) (postgres.Wor
 
 func (s *Services) LinkChat(ctx context.Context, workspaceID uuid.UUID, chatID int64) error {
 	return s.Store.LinkChat(ctx, workspaceID, chatID)
+}
+
+// SetChatSyncer injects the ChatSyncer function after bot initialisation.
+// Called from main after bot.New to avoid an import cycle.
+func (s *Services) SetChatSyncer(fn ChatSyncer) {
+	s.syncChat = fn
+}
+
+// SyncChatMembers imports current Telegram chat administrators into the
+// workspace_members table. Thin wrapper around the telegram helper so HTTP
+// handlers don't reach into infrastructure.
+func (s *Services) SyncChatMembers(ctx context.Context, workspaceID uuid.UUID) (int, error) {
+	if s.syncChat == nil {
+		return 0, fmt.Errorf("bot not configured")
+	}
+	return s.syncChat(ctx, workspaceID)
 }
 
 type IntegrationsView struct {

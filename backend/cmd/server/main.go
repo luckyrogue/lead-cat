@@ -99,6 +99,10 @@ func main() {
 	if err != nil {
 		logger.Fatal("telegram", zap.Error(err))
 	}
+	services.Bot = tg
+	services.SetChatSyncer(func(ctx context.Context, workspaceID uuid.UUID) (int, error) {
+		return telegram.SyncChatMembers(ctx, tg, store, workspaceID)
+	})
 	botUsername := "dev"
 	if cfg.RealBotToken() {
 		me, err := tg.GetMe(ctx)

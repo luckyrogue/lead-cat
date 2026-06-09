@@ -180,3 +180,79 @@ func mapVerifyError(err error) (code string, status int) {
 		return "internal_error", fiber.StatusInternalServerError
 	}
 }
+
+// GET /api/tma/admin/chat/status
+func (a *API) TMAAdminChatStatus(c *fiber.Ctx) error {
+	a.withAuditActor(c)
+	id, err := a.adminWorkspaceID(c)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
+	}
+	w, err := a.App.GetWorkspace(c.Context(), id)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	var chatID int64
+	if w.NotifyChatID != nil {
+		chatID = *w.NotifyChatID
+	}
+	return c.JSON(fiber.Map{
+		"linked":  w.NotifyChatID != nil,
+		"chat_id": chatID,
+	})
+}
+
+// POST /api/tma/admin/chat/link
+func (a *API) TMAAdminChatLink(c *fiber.Ctx) error {
+	a.withAuditActor(c)
+	id, err := a.adminWorkspaceID(c)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
+	}
+	var body struct {
+		ChatID    int64  `json:"chat_id"`
+		ChatTitle string `json:"chat_title"`
+	}
+	if err := c.BodyParser(&body); err != nil || body.ChatID == 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "validation_failed")
+	}
+	if err := a.App.LinkChat(c.Context(), id, body.ChatID); err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	a.App.Audit(c.UserContext(), "chat_linked", "workspace", id.String(), map[string]any{
+		"chat_id":    body.ChatID,
+		"chat_title": body.ChatTitle,
+	})
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
+// GET /api/tma/admin/members
+func (a *API) TMAAdminListMembers(c *fiber.Ctx) error {
+	a.withAuditActor(c)
+	id, err := a.adminWorkspaceID(c)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
+	}
+	members, err := a.App.ListMembers(c.Context(), id)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(fiber.Map{"members": members})
+}
+
+// POST /api/tma/admin/members/sync-chat
+func (a *API) TMAAdminMembersSyncChat(c *fiber.Ctx) error {
+	a.withAuditActor(c)
+	id, err := a.adminWorkspaceID(c)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
+	}
+	n, err := a.App.SyncChatMembers(c.Context(), id)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	a.App.Audit(c.UserContext(), "members_synced", "workspace", id.String(), map[string]any{
+		"added": n,
+	})
+	return c.JSON(fiber.Map{"added": n})
+}

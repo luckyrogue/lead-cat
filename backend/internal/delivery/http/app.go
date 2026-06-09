@@ -164,6 +164,10 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	tmaAdmin.Get("/integrations", api.TMAAdminGetIntegrations)
 	tmaAdmin.Patch("/integrations", api.TMAAdminPatchIntegrations)
 	tmaAdmin.Post("/integrations/verify", api.TMAAdminVerifyIntegrations)
+	tmaAdmin.Get("/chat/status", api.TMAAdminChatStatus)
+	tmaAdmin.Post("/chat/link", api.TMAAdminChatLink)
+	tmaAdmin.Get("/members", api.TMAAdminListMembers)
+	tmaAdmin.Post("/members/sync-chat", api.TMAAdminMembersSyncChat)
 
 	if stat, err := os.Stat(cfg.StaticDir); err == nil && stat.IsDir() {
 		app.Static("/", cfg.StaticDir, fiber.Static{
