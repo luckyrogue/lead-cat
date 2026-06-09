@@ -112,3 +112,21 @@ Run against a live environment (local or staging) with a valid Telegram test acc
 6. **(planned)** `PATCH /api/tma/meetings/:id` → updated meeting returned.
 7. **(planned)** `DELETE /api/tma/meetings/:id` → `204`.
 8. **(planned)** `POST /api/tma/conflicts` → conflict report for a given time range.
+
+---
+
+## Master encryption key rotation
+
+Lead Cat encrypts service-account JSON at rest with `MASTER_ENCRYPTION_KEY`. Rotating the key today requires brief downtime:
+
+1. Generate a new 32-byte key: `openssl rand -base64 32`
+2. In Google Cloud Console, revoke the existing SA private key (audit only — the SA itself remains valid)
+3. Stop the service: `dokploy stop lead-cat`
+4. Set the new `MASTER_ENCRYPTION_KEY` env var in Dokploy
+5. Start the service
+6. Open TMA → Profile → Admin → Setup → Integrations → paste a freshly-issued SA JSON
+7. Click "Verify" — confirm calendar metadata returns
+
+The DB column `workspaces.google_sa_json_enc` will be unrecoverable until step 6. Loss of `MASTER_ENCRYPTION_KEY` follows the same recipe: the SA in Google remains valid, you just re-upload through the admin UI.
+
+Zero-downtime rotation (two-key handoff with bulk re-encrypt) is post-beta backlog.

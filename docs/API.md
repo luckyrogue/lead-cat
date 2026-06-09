@@ -57,81 +57,35 @@ Write-path error codes: `meetings_not_configured` (Google integration missing), 
 
 ---
 
-## TMA — planned
+### TMA — admin (slice D)
 
-> **Not yet implemented.** These routes are planned but do not exist in the codebase.
+All routes require `Authorization: Bearer <tma_jwt>` AND `bot_users.role == "admin"`.
 
-| Method | Path               | Purpose                                            |
-| ------ | ------------------ | -------------------------------------------------- |
-| `*`    | `/api/tma/admin/*` | In-Mini-App admin setup (replace alpha curl flows) |
+| Method   | Path                                          | Purpose                                        |
+| -------- | --------------------------------------------- | ---------------------------------------------- |
+| `GET`    | `/api/tma/admin/workspace`                    | Workspace status (auto-create on first call)   |
+| `POST`   | `/api/tma/admin/workspace`                    | Idempotent ensure-workspace                    |
+| `GET`    | `/api/tma/admin/integrations`                 | Google integration view (no secrets)           |
+| `PATCH`  | `/api/tma/admin/integrations`                 | Set SA JSON / subject / calendar id / meet / tz |
+| `POST`   | `/api/tma/admin/integrations/verify`          | Real Google verify (parse → impersonate → Calendars.Get) |
+| `GET`    | `/api/tma/admin/chat/status`                  | Chat-link status                               |
+| `POST`   | `/api/tma/admin/chat/link`                    | Link Telegram chat                             |
+| `GET`    | `/api/tma/admin/members`                      | List workspace members                         |
+| `POST`   | `/api/tma/admin/members/sync-chat`            | Sync members from linked chat                  |
+| `GET`    | `/api/tma/admin/scenarios`                    | List scenarios                                 |
+| `PATCH`  | `/api/tma/admin/scenarios/:id`                | Toggle `enabled` (only)                        |
+| `POST`   | `/api/tma/admin/scenarios/:id/run`            | Manual run                                     |
+| `GET`    | `/api/tma/admin/scenarios/:id/runs`           | Last 30 runs                                   |
+| `GET`    | `/api/tma/admin/audit`                        | Audit log (filters: action, actor, limit≤200)  |
 
-Admin spec: [`docs/superpowers/specs/2026-06-05-tma-setup-replacement-design.md`](superpowers/specs/2026-06-05-tma-setup-replacement-design.md).
+Error codes: `forbidden`, `unauthorized`, `validation_failed`, `workspace_not_found`, `google_sa_invalid`, `google_subject_invalid`, `google_calendar_not_accessible`, `google_api_disabled`, `google_not_configured`.
+
+Mini App UI: **Profile → Admin → Настройка workspace** (`/profile/admin/setup`).
 
 ---
 
-## Appendix — Deprecated: alpha setup (curl)
+## Appendix — Retired platform API (410 Gone)
 
-> These platform endpoints/flows exist only for alpha operator bootstrap and are
-> being replaced by in-Mini-App admin (`/api/tma/admin/*`, see
-> `docs/superpowers/specs/2026-06-05-tma-setup-replacement-design.md`). Not part
-> of the product; slated for removal.
+> Platform JWT bootstrap (`/api/auth/email/*`, passkey, OAuth, `/api/workspaces/*`) returns **410 Gone** with `Deprecation: true`. Use TMA admin routes above and `POST /api/auth/tma` for all operator setup.
 
-All routes below require a platform JWT (`Authorization: Bearer <platform_jwt>`)
-except the public auth endpoints. Operator-only; being retired.
-
-**Auth (public)**
-
-- `GET /api/auth/config`
-- `POST /api/auth/email/send-code`, `POST /api/auth/email/verify`
-- `POST /api/auth/phone/send-code`, `POST /api/auth/phone/verify`
-- `POST /api/auth/passkey/login/begin`, `POST /api/auth/passkey/login/finish`
-- `GET /api/auth/oauth/:provider`, `GET /api/auth/oauth/callback` → redirects to `{WEBAPP_URL}/?access_token=…`
-
-**Auth (platform JWT required)**
-
-- `POST /api/auth/passkey/register/begin`, `POST /api/auth/passkey/register/finish`
-
-**Me**
-
-- `GET /api/me`
-- ~~`POST /api/me/link-telegram`~~ — **deprecated (410)**; use `POST /api/auth/tma` from the Mini App.
-
-**Workspaces**
-
-- `GET /api/workspaces`, `POST /api/workspaces`
-- `GET /api/workspaces/:id`
-- `POST /api/workspaces/:id/chat/link`, `GET /api/workspaces/:id/chat/status`
-
-**Integrations** (Google service account — required before TMA can create meetings)
-
-- `GET /api/workspaces/:id/integrations`
-- `PATCH /api/workspaces/:id/integrations`
-- `POST /api/workspaces/:id/integrations/verify`
-
-**Members**
-
-- `GET /api/workspaces/:id/members`
-- `POST /api/workspaces/:id/members`
-- `DELETE /api/workspaces/:id/members/:memberId`
-- `POST /api/workspaces/:id/members/sync-chat`
-- `PATCH /api/workspaces/:id/members/:username/vcs`
-
-**Scenarios** (legacy — not used by the meetings Mini App)
-
-- `GET /api/workspaces/:id/scenarios`
-- `POST /api/workspaces/:id/scenarios`
-- `GET /api/workspaces/:id/scenarios/:sid`
-- `PATCH /api/workspaces/:id/scenarios/:sid`
-- `DELETE /api/workspaces/:id/scenarios/:sid`
-- `POST /api/workspaces/:id/scenarios/:sid/run`
-- `GET /api/workspaces/:id/scenarios/:sid/runs`
-
-**Workspace meetings** (superseded by TMA for all Mini App clients)
-
-- `GET /api/workspaces/:id/employees`
-- `GET /api/workspaces/:id/meetings`
-- `POST /api/workspaces/:id/meetings`
-- `GET /api/workspaces/:id/meetings/:mid`
-- `DELETE /api/workspaces/:id/meetings/:mid`
-- `POST /api/workspaces/:id/meetings/conflicts`
-- `POST /api/workspaces/:id/meetings/free-slots`
+> `PATCH /api/workspaces/:id/integrations` and `POST /api/workspaces/:id/chat/link` are superseded by `/api/tma/admin/*` (slice D). Kept for scripted operator use; will be removed after first beta release.

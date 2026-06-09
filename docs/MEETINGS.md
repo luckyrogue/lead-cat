@@ -2,7 +2,7 @@
 
 A Telegram Mini App feature for scheduling and managing **Google Meet** meetings inside an organization, layered on top of the existing Lead Cat platform. The full specification (the source of truth for behavior) is **[NEW-FEATURES.md](NEW-FEATURES.md)** (ТЗ). This page is the engineering summary and status.
 
-> **Status:** TMA auth, all read paths, and all write paths (incl. recurring series) are live. Create, edit, delete, and conflict warning go through `/api/tma/*` end-to-end. Recurring meetings support daily, weekly, custom-weekdays, and monthly kinds with a required end date; edit/cancel are scope-aware (`this` single occurrence vs `whole` series). Frontend still uses mock fixtures in a few places; see `frontend/README.md` for layout.
+> **Status:** TMA auth, all read paths, all write paths (incl. recurring series), and admin setup are live. Create, edit, delete, and conflict warning go through `/api/tma/*` end-to-end. Recurring meetings support daily, weekly, custom-weekdays, and monthly kinds with a required end date; edit/cancel are scope-aware (`this` single occurrence vs `whole` series). Admin setup (Google integration, chat link, members sync, scenarios) is live under `/api/tma/admin/*`. Frontend still uses mock fixtures in a few places; see `frontend/README.md` for layout.
 
 ## Concept (per ТЗ)
 
@@ -63,8 +63,8 @@ Create meeting (fields, meeting types, recurrence, naming standard), view meetin
 
 Recurrence kinds: `once`, `daily`, `weekly`, `custom` (with `recurrence_days: [1..7]`, Mon=1..Sun=7), `monthly`. Non-once requires `recurrence_until` (YYYY-MM-DD).
 
-### Setup cutover (planned)
+### Setup cutover (done)
 
-Admin setup (workspace config, Google Calendar credential, employee CSV upload) moves into the Mini App under `/api/tma/admin/*`. See [superpowers/specs/2026-06-05-tma-setup-replacement-design.md](superpowers/specs/2026-06-05-tma-setup-replacement-design.md).
+Admin setup (Google integration, chat link, members sync, scenarios toggle) is live in the Mini App under `/api/tma/admin/*`. Audit log at `GET /api/tma/admin/audit`. See [`docs/superpowers/specs/2026-06-09-slice-d-tma-admin-integrations-design.md`](superpowers/specs/2026-06-09-slice-d-tma-admin-integrations-design.md).
 
 See [API.md](API.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
