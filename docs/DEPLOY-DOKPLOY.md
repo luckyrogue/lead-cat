@@ -1,6 +1,6 @@
 # Deploy on Dokploy
 
-Lead Cat runs as a single Go binary that serves the TMA frontend, REST API, and Telegram bot.
+Lead Cat runs as a single Go binary that serves the Mini App frontend, REST API, and Telegram bot.
 
 ## 1. Postgres
 
@@ -107,7 +107,7 @@ Configure the Dokploy deploy hook to trigger on image push (`.github/workflows/_
 
 ## 5. Google Calendar / Meet integration
 
-The Google service account is configured at runtime — no env var is needed for the credentials themselves. An admin uses the TMA Admin overlay (Profile → Admin → Integrations) to paste the service account JSON and verify the connection. This calls `PATCH /api/tma/admin/integrations` (see `docs/superpowers/specs/2026-06-05-tma-setup-replacement-design.md`). Credentials are encrypted with `MASTER_ENCRYPTION_KEY` before storage.
+The Google service account is configured at runtime — no env var is needed for the credentials themselves. An admin uses the Mini App admin overlay (Profile → Admin → Integrations) to paste the service account JSON and verify the connection. This calls `PATCH /api/miniapp/admin/integrations`. Credentials are encrypted with `MASTER_ENCRYPTION_KEY` before storage.
 
 Set `CALENDAR_STUB=false` (or omit it) in production to use the real Google API.
 

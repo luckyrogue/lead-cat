@@ -16,7 +16,7 @@ Structured JSON (production) or console (local) via **zap**. All output to stdou
 Fields are attached to the context by middleware and passed through the call stack with `log.WithContext`. Standard fields:
 
 - `request_id` — set by Fiber middleware on every HTTP request
-- `workspace_id` — set whenever a workspace is resolved from the TMA session
+- `workspace_id` — set whenever a workspace is resolved from the Mini App session
 - `meeting_id` — set in meeting-scoped handlers and workers
 - `component` — `http`, `bot`, `asynq`, `scheduler`
 
@@ -27,12 +27,12 @@ Stable snake_case event names + structured fields; no interpolated sentences.
 Examples:
 
 ```
-tma_meeting_created   telegram_id=123  meeting_id=456  workspace_id=789
-tma_auth_ok           telegram_id=123  workspace_id=789
-reminder_enqueued     meeting_id=456   fire_at=2026-06-06T09:00:00Z
+miniapp_meeting_created   telegram_id=123  meeting_id=456  workspace_id=789
+miniapp_auth_ok           telegram_id=123  workspace_id=789
+reminder_enqueued         meeting_id=456   fire_at=2026-06-06T09:00:00Z
 ```
 
-**Never log:** secrets, OTP codes, JWT tokens, Telegram `initData`, or any PII.
+**Never log:** secrets, JWT tokens, Telegram `initData`, or any PII.
 
 Errors are wrapped with `%w` up the stack and logged once at the boundary (HTTP handler or asynq worker) — not re-logged at every layer.
 
@@ -102,16 +102,16 @@ Key operational note: `leadcat:scheduler:leader` (TTL 90 s) ensures only one rep
 
 ## Meetings smoke checklist (E2E)
 
-Run against a live environment (local or staging) with a valid Telegram test account. Steps marked **(planned)** require endpoints not yet implemented.
+Run against a live environment (local or staging) with a valid Telegram test account.
 
-1. **(present)** `POST /api/auth/tma` with dev `initData` → receive TMA JWT. Verify `200` and a non-empty `token` field.
-2. **(present)** `GET /api/tma/me` with `Authorization: Bearer <token>` → workspace profile returned.
-3. **(present)** `GET /api/tma/meetings?scope=all` → `200` with an array (empty or non-empty depending on fixture state).
-4. **(present)** `POST /api/tma/meetings` (body: title, start, end, participants) → `201` with meeting body including `id`.
-5. **(present)** `POST /api/tma/free-slots` (body: participants + time window) → `200` with slot list.
-6. **(planned)** `PATCH /api/tma/meetings/:id` → updated meeting returned.
-7. **(planned)** `DELETE /api/tma/meetings/:id` → `204`.
-8. **(planned)** `POST /api/tma/conflicts` → conflict report for a given time range.
+1. `POST /api/auth/miniapp` with dev `initData` → receive Mini App JWT. Verify `200` and a non-empty `token` field.
+2. `GET /api/miniapp/me` with `Authorization: Bearer <token>` → user identity returned.
+3. `GET /api/miniapp/meetings?scope=all` → `200` with an array.
+4. `POST /api/miniapp/meetings` (body: title, start, end, participants) → `201` with meeting body including `id`.
+5. `POST /api/miniapp/free-slots` (body: participants + time window) → `200` with slot list.
+6. `PATCH /api/miniapp/meetings/:id` → updated meeting returned.
+7. `DELETE /api/miniapp/meetings/:id` → `204`.
+8. `POST /api/miniapp/conflicts` → conflict report for a given time range.
 
 ---
 
@@ -124,7 +124,7 @@ Lead Cat encrypts service-account JSON at rest with `MASTER_ENCRYPTION_KEY`. Rot
 3. Stop the service: `dokploy stop lead-cat`
 4. Set the new `MASTER_ENCRYPTION_KEY` env var in Dokploy
 5. Start the service
-6. Open TMA → Profile → Admin → Setup → Integrations → paste a freshly-issued SA JSON
+6. Open Mini App → Profile → Admin → Setup → Integrations → paste a freshly-issued SA JSON
 7. Click "Verify" — confirm calendar metadata returns
 
 The DB column `workspaces.google_sa_json_enc` will be unrecoverable until step 6. Loss of `MASTER_ENCRYPTION_KEY` follows the same recipe: the SA in Google remains valid, you just re-upload through the admin UI.

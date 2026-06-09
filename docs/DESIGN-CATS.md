@@ -10,34 +10,34 @@
 
 Display font: **Baloo 2** (`--font-display`). Body: **Inter** (`--font-body`).
 
-## TMA shell (redesign)
+## Mini App shell
 
 Main app at `/` uses the Telegram Mini App layout:
 
-- `components/tma-shell/` — `TgBar`, `TabBar` + FAB, `Sheet`, `Overlay`, `tma-layout.tsx`
-- `routes/_tma/*` — TanStack Router layout + tab/overlay routes with loaders
-- `features/{home,meetings,meeting-create,checker,auto,profile}/` — vertical slices
-- `features/auth/` — TMA login, session, refresh-session, auth-context
-- `entities/{meeting,employee}/` — domain types + constants
+- `components/miniapp-shell/` — `TgBar`, `TabBar` + FAB, `Sheet`, `Overlay`, `miniapp-layout.tsx`
+- `routes/_miniapp/*` — TanStack Router layout + tab/overlay routes with loaders
+- `features/{home,meetings,meeting-create,checker,profile}/` — vertical slices
+- `features/auth/` — Mini App login, session, refresh-session, auth-context
+- `entities/{meeting,employee,admin}/` — domain types + API hooks
 - `shared/api/` — client, types, query-client, query-keys, list-params, health, generated/
 - `shared/auth/` — module-policies, route-access, permissions, require-permission
 - `shared/lib/` — list-url-params, use-list-url-state, route-revalidation, toast
-- `shared/tma/` — i18n, palette, context (runtime only)
-- `components/tma-list-page-shell.tsx` — list page shell (sadu `admin-list-page-shell`)
+- `shared/miniapp/` — i18n, palette, context (runtime only)
+- `components/miniapp-list-page-shell.tsx` — list page shell (sadu `admin-list-page-shell`)
 - `components/maintenance-screen.tsx` — health gate fallback
 - `app/app-content.tsx` — health + Toaster + router (sadu `root.tsx`)
 
-The SPA is TMA-only at `/`. Platform setup uses the REST API directly — see [API.md](API.md). Frontend structure: [frontend/README.md](../frontend/README.md).
+The SPA is Mini App-only at `/`. Operator setup uses `/api/miniapp/admin/*` inside Telegram — see [API.md](API.md). Frontend structure: [frontend/README.md](../frontend/README.md).
 
 ### Sadu admin mapping
 
-| Sadu                             | Lead Cat                       |
-| -------------------------------- | ------------------------------ |
-| `components/app-sidebar.tsx`     | `components/tma-shell/` TabBar |
-| `getVisibleSidebarModules`       | `getVisibleTabBarModules`      |
-| `shared/auth/module-policies.ts` | same path (TMA roles)          |
-| `features/auth/session.ts`       | `shared/auth/session.ts`       |
-| `shared/api/generated/schema.ts` | same (from `/openapi.json`)    |
+| Sadu                             | Lead Cat                          |
+| -------------------------------- | --------------------------------- |
+| `components/app-sidebar.tsx`     | `components/miniapp-shell/` TabBar |
+| `getVisibleSidebarModules`       | `getVisibleTabBarModules`         |
+| `shared/auth/module-policies.ts` | same path (Mini App roles)        |
+| `features/auth/session.ts`       | `shared/auth/session.ts`          |
+| `shared/api/generated/schema.ts` | same (from `/openapi.json`)       |
 
 ## Components
 
@@ -52,9 +52,9 @@ The SPA is TMA-only at `/`. Platform setup uses the REST API directly — see [A
 
 ## Sign-off checklist
 
-- [x] Main route uses TMA shell + cat tokens
+- [x] Main route uses Mini App shell + cat tokens
 - [x] Primary accent `#E87B35`, paw pattern background
 - [x] Tab bar + create FAB
 - [x] Frontend structure aligned with sadu/admin patterns
-- [ ] Wire meetings/checker fully to backend API (no mocks in UI paths)
-- [ ] TMA header colors match Telegram theme params
+- [x] Meetings/checker wired to backend API
+- [ ] Mini App header colors match Telegram theme params
