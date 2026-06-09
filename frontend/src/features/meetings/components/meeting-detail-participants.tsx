@@ -13,7 +13,7 @@ export function MeetingDetailParticipants({ m }: { m: Meeting }) {
     <div className="mt-[18px]">
       <div className="mb-2.5 flex items-center justify-between">
         <span className="tma-heading text-base">{t("addPeople")}</span>
-        <span className="text-[13px] font-bold text-tma-muted">
+        <span className="text-tma-muted text-[13px] font-bold">
           {allPeople.length} {partWord(allPeople.length, t)}
         </span>
       </div>
@@ -23,20 +23,18 @@ export function MeetingDetailParticipants({ m }: { m: Meeting }) {
             key={i}
             className={cn(
               "flex items-center gap-[11px] p-2",
-              i < allPeople.length - 1 && "border-b border-tma-border"
+              i < allPeople.length - 1 && "border-tma-border border-b"
             )}
           >
             <Avatar name={per.name} size={36} />
             <div className="min-w-0 flex-1">
-              <div className="truncate font-display text-[14.5px] font-bold text-tma-text">
+              <div className="font-display text-tma-text truncate text-[14.5px] font-bold">
                 {per.name}
               </div>
-              <div className="truncate text-xs text-tma-muted">
-                {per.email}
-              </div>
+              <div className="text-tma-muted truncate text-xs">{per.email}</div>
             </div>
             {per.email === m.organizer ? (
-              <span className="rounded-full bg-tma-accent-soft px-2 py-[3px] text-[11px] font-extrabold text-tma-accent">
+              <span className="bg-tma-accent-soft text-tma-accent rounded-full px-2 py-[3px] text-[11px] font-extrabold">
                 👑
               </span>
             ) : per.tg ? (
@@ -44,7 +42,7 @@ export function MeetingDetailParticipants({ m }: { m: Meeting }) {
                 ✈️
               </span>
             ) : (
-              <span className="text-[11px] font-bold text-tma-faint">
+              <span className="text-tma-faint text-[11px] font-bold">
                 email
               </span>
             )}

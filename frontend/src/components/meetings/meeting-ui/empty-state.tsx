@@ -12,7 +12,7 @@ export function EmptyState({
       <div className="animate-lc-bob mb-3 text-[52px]">{emoji}</div>
       <div className="tma-heading mb-1.5 text-[17px]">{title}</div>
       {sub && (
-        <div className="mx-auto max-w-[240px] text-sm leading-snug text-tma-muted">
+        <div className="text-tma-muted mx-auto max-w-[240px] text-sm leading-snug">
           {sub}
         </div>
       )}

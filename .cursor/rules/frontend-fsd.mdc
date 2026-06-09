@@ -27,18 +27,18 @@ features/
   meetings/{queries,search-schema,pages/,list-url,meeting-detail*}/
   # meetings/queries — URL scope filters only; reads/mutations → entities/meeting
   meeting-create/{components/,lib/,pages/}/
-  checker/{components/,queries.ts,pages/} — useFreeSlots only; employee search → entities/employee
+  checker/{components/,pages/} — useFreeSlots → entities/meeting/scheduling-queries
   auto/{fixtures.ts,pages}/
   profile/{components,pages}/
 entities/
   employee/      — types, fixtures, api (searchEmployees), queries (useEmployeeSearch)
-  meeting/       — api, queries, write-api, mutations, scheduling-api, lib/write-error
+  meeting/       — api, queries, write-api, mutations, scheduling-api, scheduling-queries, lib/
   scenario/      — types
 shared/
   api/           — client, types, query-client, query-keys, list-params, health, generated/schema.ts
   auth/          — types, session, tma-api, auth-context, refresh-session, module-policies, …
   lib/           — cn, list-url-params, use-list-url-state, route-revalidation, toast, format-datetime
-  tma/           — i18n, palette, context, surface-vars, telegram-env
+  tma/           — i18n, stored-lang, palette, context, surface-vars, telegram-env
 components/      — tma-shell/*, meetings/{detail-row,meeting-title-preview,meeting-ui/*}, employee-picker, …
 app/             — providers, app-content, router, router-context
 ```
@@ -54,6 +54,7 @@ Hand-written `.ts`/`.tsx` files **≤300 lines** (exception: generated `routeTre
 - `apiFetch` + `ApiError` in `shared/api/client.ts`; Bearer via `getSession()`
 - 401 single-flight: `shared/auth/refresh-session.ts`
 - `queryOptions` in `entities/*/queries.ts`; mutations in `entities/meeting/mutations.ts`; keys in `shared/api/query-keys.ts`
+- Home loader: `myMeetingsQuery("upcoming")`; list default: `upcoming`; detail: `all`
 - Route `loader` + `shouldReload: shouldReloadExceptSearch` + `loaderDeps: () => ({})`
 - List filters: `shared/lib/use-list-url-state.ts` + `TmaListPageShell`
 - Health gate: `app/app-content.tsx` + `useAppHealth()`; Toaster inside gate
@@ -62,4 +63,6 @@ Hand-written `.ts`/`.tsx` files **≤300 lines** (exception: generated `routeTre
 
 - `pnpm openapi:generate` → `shared/api/generated/schema.ts`
 - Route tree: `@tanstack/router-plugin` → `src/routeTree.gen.ts` (do not hand-edit)
+- `pnpm lint` — ESLint + `import/no-restricted-paths` (feature cross-imports, entities/shared boundaries)
+- `pnpm test` — vitest; `*.test.tsx` uses jsdom + Testing Library
 - pnpm only; UI from `@/components/ui/*` and `@/shared/ui/cat/*`

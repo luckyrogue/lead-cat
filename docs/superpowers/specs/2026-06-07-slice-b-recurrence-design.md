@@ -17,12 +17,12 @@ Enable recurring Google Meet meetings end-to-end through the TMA. After this sli
 
 ## Decisions locked
 
-| # | Question | Decision |
-|---|---|---|
-| 1 | Custom weekday recurrence | Add `Custom` to backend `Recurrence` enum; drop unused `Biweekly`. Domain `Input` gains `RecurrenceDays []int` (1=Mon..7=Sun). |
-| 2 | Edit/cancel scope set | `scope=this \| whole` per ТЗ §4.4.2 literal. "whole" operates on the entire series (including past occurrences) keyed by `series_id`. |
-| 3 | Recurrence end date UX | Required date picker with smart defaults per rec kind. Validation: `until >= start_date`. |
-| 4 | Series conflict warning | Full-series check — backend expands occurrences and returns occurrence-grouped conflicts. |
+| #   | Question                  | Decision                                                                                                                              |
+| --- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Custom weekday recurrence | Add `Custom` to backend `Recurrence` enum; drop unused `Biweekly`. Domain `Input` gains `RecurrenceDays []int` (1=Mon..7=Sun).        |
+| 2   | Edit/cancel scope set     | `scope=this \| whole` per ТЗ §4.4.2 literal. "whole" operates on the entire series (including past occurrences) keyed by `series_id`. |
+| 3   | Recurrence end date UX    | Required date picker with smart defaults per rec kind. Validation: `until >= start_date`.                                             |
+| 4   | Series conflict warning   | Full-series check — backend expands occurrences and returns occurrence-grouped conflicts.                                             |
 
 ## ТЗ alignment
 
@@ -36,12 +36,14 @@ Enable recurring Google Meet meetings end-to-end through the TMA. After this sli
 ### Domain — `backend/internal/domain/meeting/`
 
 **`meeting.go` (`Recurrence` enum):**
+
 - Add `Custom Recurrence = "custom"`.
 - Remove `Biweekly` constant and its `recurrenceLabels` entry.
 - `Valid()` derives from the labels map — no extra code change.
 - Add `RecurrenceDays []int` field to `Input` (zero/nil for non-custom; 1..7 ISO weekday for custom).
 
 **`recurrence.go`:**
+
 - `Occurrences(start, end time.Time, r Recurrence, days []int, until time.Time) ([]Span, error)` — signature gains `days`.
 - `r == Custom`: step by one day; emit only when `weekday ∈ days`. Use `time.Weekday()` mapped to 1..7 (Sun=7).
 - `r == Custom` with empty/invalid `days` → new `ErrRecurrenceDays = errors.New("custom recurrence needs at least one weekday")`.
@@ -49,25 +51,31 @@ Enable recurring Google Meet meetings end-to-end through the TMA. After this sli
 - `ErrTooManyOccurrences` cap unchanged.
 
 **`validate.go`:**
+
 - `Custom` requires non-empty `RecurrenceDays` (uses `ErrRecurrenceDays`).
 - All non-once kinds require `until` (existing behavior via `ErrRecurrenceWindow`).
 
 **`naming.go`:**
+
 - `GenerateName(...)` — no change. `Recurrence.Label()` already covers Custom once the labels map has the entry.
 
 **Tests (`recurrence_test.go`, `validate_test.go`):**
+
 - TDD: write the failing tests for Custom (3-day-a-week pattern over a 4-week span) before extending `Occurrences`.
 - Update any existing test referencing `Biweekly` to use Custom or remove if redundant.
 
 ### Persistence — `backend/internal/infrastructure/persistence/postgres/`
 
 **Migration (next available number under `backend/migrations/`):**
+
 ```sql
 ALTER TABLE meetings ADD COLUMN recurrence_days JSONB;
 ```
+
 Nullable; safe online (no rewrite). No backfill needed (existing rows are non-custom → NULL).
 
 **`meetings.go`:**
+
 - `Meeting` struct gains `RecurrenceDays []int` (use `pgtype.JSONB`-style scan/marshal via existing helpers; if none, use `json.RawMessage` + helpers).
 - `CreateMeetingSeries`: persist `recurrence_days` for series whose primary recurrence is Custom.
 - `UpdateMeetingsTx`, `CancelSeriesOccurrences`: unchanged (no field changes).
@@ -77,13 +85,16 @@ Nullable; safe online (no rewrite). No backfill needed (existing rows are non-cu
 ### Application — `backend/internal/application/`
 
 **`meeting_service.go` (`CreateMeeting`):**
+
 - Accept `Input.RecurrenceDays`; pass through to materialization.
 - Pre-existing series materialization stays; just routes Custom days through `Occurrences`.
 
 **`series_edit.go` (existing `UpdateSeries`/`CancelSeries`):**
+
 - No semantic change. Add a one-line `// internal: not exposed via TMA HTTP; slice E admin scope may use this` comment.
 
 **`series_edit.go` (new):**
+
 - `UpdateWholeSeries(ctx, workspaceID, userID uuid.UUID, meetingID uuid.UUID, in SeriesUpdateInput) (int, error)`:
   - Same auth/validation as `UpdateSeries`.
   - Calls `ListSeriesAllOccurrences` (all occurrences, not filtered by `picked.StartsAt`).
@@ -94,6 +105,7 @@ Nullable; safe online (no rewrite). No backfill needed (existing rows are non-cu
   - Best-effort Google delete for all events; enqueue one `MeetingCancelled`.
 
 **`conflict.go` (new):**
+
 - `MeetingSeriesConflicts(ctx context.Context, emails []string, firstStart, firstEnd time.Time, r meeting.Recurrence, days []int, until time.Time) (map[time.Time][]Conflict, error)`:
   - Calls `meeting.Occurrences(firstStart, firstEnd, r, days, until)` to expand.
   - For each `Span`, runs existing per-occurrence conflict query.
@@ -110,6 +122,7 @@ Nullable; safe online (no rewrite). No backfill needed (existing rows are non-cu
 - `TMADeleteMeeting`: same `scope` parsing; `"this"` → existing `CancelMeeting`; `"whole"` → `CancelWholeSeries`. Status 204.
 
 **`tma_write.go` — conflicts (`TMAConflicts`):**
+
 - Request gains optional `Recurrence *string`, `RecurrenceUntil *string`, `RecurrenceDays *[]int`.
 - When `Recurrence` present and `!= "once"`: parse, call `MeetingSeriesConflicts`, return `{"occurrences": [{"date","start","end","conflicts":[…]}, …]}`.
 - When `Recurrence` absent or `"once"`: keep existing single-shot path but **wrap response in the new shape** for uniformity — `{"occurrences": [{"date","start","end","conflicts":[…]}]}` with one entry.
@@ -206,6 +219,7 @@ Nullable; safe online (no rewrite). No backfill needed (existing rows are non-cu
 ### i18n keys (ru/kk/en)
 
 Add to `frontend/src/shared/tma/i18n.ts`:
+
 - `untilLabel`, `untilPlaceholder`, `untilRequired`, `untilBeforeStart`
 - `seriesConflicts`, `seriesConflictsMore`
 - `editThis`, `editSeries`, `delThis`, `delSeries`
@@ -228,22 +242,22 @@ No worker changes; the worker already handles created/updated/cancelled.
 
 ## Task list (~14 sequential)
 
-| # | Task | Layer |
-|---|------|-------|
-| B-T0 | Branch `feat/meetings-recurrence-b` from `main` | git |
-| B-T1 | Domain: `Custom`, drop `Biweekly`, `Input.RecurrenceDays`, `Occurrences` extension, validate + TDD | Go domain |
-| B-T2 | Migration `recurrence_days JSONB` + `postgres.Meeting` field + scan/write | Go infra |
-| B-T3 | Application: `ListSeriesAllOccurrences`, `CancelAllSeriesOccurrences`, `UpdateWholeSeries`, `CancelWholeSeries` | Go application |
-| B-T4 | Application: `MeetingSeriesConflicts` + test | Go application |
-| B-T5 | HTTP: create accepts `recurrence_until`/`recurrence_days`; remove `meetings_recurring_unsupported` block | Go delivery |
-| B-T6 | HTTP: `scope=this\|whole` on PATCH + DELETE | Go delivery |
-| B-T7 | HTTP: conflicts accepts recurrence params; returns occurrence-grouped shape (uniform for once + series) | Go delivery |
-| B-T8 | OpenAPI 3 changes (parallel mirror) + frontend schema regen | docs + ts |
-| B-T9 | Frontend types/mutations: `scope`, `recurrence_until`, `recurrence_days`, `OccurrenceConflicts` | frontend |
-| B-T10 | Wizard: until-picker, smart defaults, validation; drop `recurringBlocked` | frontend |
-| B-T11 | Wizard review: grouped-by-date conflicts + i18n keys | frontend |
-| B-T12 | Meeting detail: dual-scope edit/cancel; series_id DTO field; whole-edit lockedFields + banner | frontend |
-| B-T13 | Docs refresh (`MEETINGS.md`, `API.md`) + `make test/lint/build` + `pnpm typecheck/format/build` | docs + verify |
+| #     | Task                                                                                                            | Layer          |
+| ----- | --------------------------------------------------------------------------------------------------------------- | -------------- |
+| B-T0  | Branch `feat/meetings-recurrence-b` from `main`                                                                 | git            |
+| B-T1  | Domain: `Custom`, drop `Biweekly`, `Input.RecurrenceDays`, `Occurrences` extension, validate + TDD              | Go domain      |
+| B-T2  | Migration `recurrence_days JSONB` + `postgres.Meeting` field + scan/write                                       | Go infra       |
+| B-T3  | Application: `ListSeriesAllOccurrences`, `CancelAllSeriesOccurrences`, `UpdateWholeSeries`, `CancelWholeSeries` | Go application |
+| B-T4  | Application: `MeetingSeriesConflicts` + test                                                                    | Go application |
+| B-T5  | HTTP: create accepts `recurrence_until`/`recurrence_days`; remove `meetings_recurring_unsupported` block        | Go delivery    |
+| B-T6  | HTTP: `scope=this\|whole` on PATCH + DELETE                                                                     | Go delivery    |
+| B-T7  | HTTP: conflicts accepts recurrence params; returns occurrence-grouped shape (uniform for once + series)         | Go delivery    |
+| B-T8  | OpenAPI 3 changes (parallel mirror) + frontend schema regen                                                     | docs + ts      |
+| B-T9  | Frontend types/mutations: `scope`, `recurrence_until`, `recurrence_days`, `OccurrenceConflicts`                 | frontend       |
+| B-T10 | Wizard: until-picker, smart defaults, validation; drop `recurringBlocked`                                       | frontend       |
+| B-T11 | Wizard review: grouped-by-date conflicts + i18n keys                                                            | frontend       |
+| B-T12 | Meeting detail: dual-scope edit/cancel; series_id DTO field; whole-edit lockedFields + banner                   | frontend       |
+| B-T13 | Docs refresh (`MEETINGS.md`, `API.md`) + `make test/lint/build` + `pnpm typecheck/format/build`                 | docs + verify  |
 
 ## Acceptance
 

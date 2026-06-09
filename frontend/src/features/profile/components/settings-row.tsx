@@ -25,7 +25,7 @@ export function SettingsRow({
       onClick={onClick}
       className={cn(
         "flex w-full items-center gap-3 border-none bg-transparent px-3.5 py-[13px] text-left",
-        !last && "border-b border-tma-border",
+        !last && "border-tma-border border-b",
         onClick ? "cursor-pointer" : "cursor-default"
       )}
     >
@@ -35,7 +35,7 @@ export function SettingsRow({
       >
         <CatIcon name={icon} size={18} className="text-tma-hue-fg" sw={2} />
       </div>
-      <span className="font-display flex-1 text-[15px] font-bold text-tma-text">
+      <span className="font-display text-tma-text flex-1 text-[15px] font-bold">
         {label}
       </span>
       {right}

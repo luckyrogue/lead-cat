@@ -16,41 +16,41 @@
 
 ## File structure
 
-| Path | Action | Responsibility |
-|------|--------|----------------|
-| `backend/internal/domain/meeting/meeting.go` | Modify | Add `Custom`, drop `Biweekly`, add `Input.RecurrenceDays`. |
-| `backend/internal/domain/meeting/recurrence.go` | Modify | `Occurrences` accepts `days []int`; custom weekday filter. |
-| `backend/internal/domain/meeting/recurrence_test.go` | Modify | TDD for Custom kind. |
-| `backend/internal/domain/meeting/validate.go` | Modify | Custom requires non-empty `RecurrenceDays`. |
-| `backend/internal/domain/meeting/validate_test.go` | Modify | Drop Biweekly cases; add Custom cases. |
-| `backend/migrations/20260607120000_meeting_recurrence_days.sql` | Create | `ALTER TABLE meetings ADD COLUMN recurrence_days JSONB`. |
-| `backend/internal/infrastructure/persistence/postgres/models.go` | Modify | `Meeting.RecurrenceDays []int`. |
-| `backend/internal/infrastructure/persistence/postgres/meeting_repo.go` | Modify | Scan/write `recurrence_days`; add `ListSeriesAllOccurrences`, `CancelAllSeriesOccurrences`. |
-| `backend/internal/application/conflict.go` | Modify | `CreateMeetingInput.RecurrenceDays`, pass through to `Occurrences`. |
-| `backend/internal/application/meeting_service.go` | Modify | Persist `RecurrenceDays` on series rows. |
-| `backend/internal/application/series_edit.go` | Modify | Add `UpdateWholeSeries`, `CancelWholeSeries`. |
-| `backend/internal/application/series_conflicts.go` | Create | `MeetingSeriesConflicts(ctx, emails, span, r, days, until)`. |
-| `backend/internal/application/series_conflicts_test.go` | Create | Pure expand test. |
-| `backend/internal/delivery/http/handlers/tma_write.go` | Modify | Recurrence params on create; `scope=` on patch/delete; series conflicts on `/tma/conflicts`. |
-| `backend/openapi/openapi.json` | Modify | New params + occurrence-grouped conflicts schema. |
-| `backend/docs/openapi.json` | Modify | Byte-identical mirror. |
-| `frontend/src/shared/api/generated/schema.ts` | Regen | From updated openapi.json. |
-| `frontend/src/features/meetings/api.ts` | Modify | `OccurrenceConflicts`, `recurrence_until`/`recurrence_days`/`scope` plumbing. |
-| `frontend/src/features/meetings/queries.ts` | Modify | `useUpdateMeeting`/`useDeleteMeeting` grow `scope`; `useConflicts` returns groups. |
-| `frontend/src/entities/meeting/types.ts` | Modify | `Meeting.seriesId?`. |
-| `frontend/src/entities/meeting/lib/format.ts` | Modify | `detailToDraft`/`draftToMeeting` preserve `seriesId`. |
-| `frontend/src/features/meeting-create/lib/use-create-wizard.ts` | Modify | Add `until`, smart defaults, drop `recurringBlocked`, support `lockedFields`. |
-| `frontend/src/features/meeting-create/components/wizard-step-when.tsx` | Modify | Until picker for non-once. |
-| `frontend/src/features/meeting-create/components/wizard-step-review.tsx` | Modify | Grouped-by-date conflicts; drop recurringSoon block. |
-| `frontend/src/features/meeting-create/components/create-wizard.tsx` | Modify | Pass `lockedFields`, drop `recurringBlocked`. |
-| `frontend/src/features/meeting-create/pages/create-page.tsx` | Modify | Pass `recurrence_until`/`recurrence_days`; read `scope` from search; pass to mutations. |
-| `frontend/src/shared/tma/i18n.ts` | Modify | Add until + series-edit + grouped-conflicts keys (ru/kk/en). |
-| `frontend/src/features/meetings/components/meeting-detail.tsx` | Modify | Compute `isSeries` from `seriesId`; pass `onEdit(scope)` / `onDelete(scope)`. |
-| `frontend/src/features/meetings/components/meeting-detail-actions.tsx` | Modify | Dual-scope buttons or sheet. |
-| `frontend/src/features/meetings/pages/meetings-list-page.tsx` | Modify | Wire `handleDelete(scope)`; `useDeleteMeeting` takes `{ id, scope }`. |
-| `frontend/src/routes/_tma/meetings.create.$editId.tsx` (or `.create.$editId.tsx`) | Modify | Search-param schema includes `scope?: "this" \| "whole"`. |
-| `docs/MEETINGS.md` | Modify | Status note + write-path table updates (recurring done). |
-| `docs/API.md` | Modify | Document `scope`, recurrence body fields, occurrence-grouped conflicts shape. |
+| Path                                                                              | Action | Responsibility                                                                               |
+| --------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------- |
+| `backend/internal/domain/meeting/meeting.go`                                      | Modify | Add `Custom`, drop `Biweekly`, add `Input.RecurrenceDays`.                                   |
+| `backend/internal/domain/meeting/recurrence.go`                                   | Modify | `Occurrences` accepts `days []int`; custom weekday filter.                                   |
+| `backend/internal/domain/meeting/recurrence_test.go`                              | Modify | TDD for Custom kind.                                                                         |
+| `backend/internal/domain/meeting/validate.go`                                     | Modify | Custom requires non-empty `RecurrenceDays`.                                                  |
+| `backend/internal/domain/meeting/validate_test.go`                                | Modify | Drop Biweekly cases; add Custom cases.                                                       |
+| `backend/migrations/20260607120000_meeting_recurrence_days.sql`                   | Create | `ALTER TABLE meetings ADD COLUMN recurrence_days JSONB`.                                     |
+| `backend/internal/infrastructure/persistence/postgres/models.go`                  | Modify | `Meeting.RecurrenceDays []int`.                                                              |
+| `backend/internal/infrastructure/persistence/postgres/meeting_repo.go`            | Modify | Scan/write `recurrence_days`; add `ListSeriesAllOccurrences`, `CancelAllSeriesOccurrences`.  |
+| `backend/internal/application/conflict.go`                                        | Modify | `CreateMeetingInput.RecurrenceDays`, pass through to `Occurrences`.                          |
+| `backend/internal/application/meeting_service.go`                                 | Modify | Persist `RecurrenceDays` on series rows.                                                     |
+| `backend/internal/application/series_edit.go`                                     | Modify | Add `UpdateWholeSeries`, `CancelWholeSeries`.                                                |
+| `backend/internal/application/series_conflicts.go`                                | Create | `MeetingSeriesConflicts(ctx, emails, span, r, days, until)`.                                 |
+| `backend/internal/application/series_conflicts_test.go`                           | Create | Pure expand test.                                                                            |
+| `backend/internal/delivery/http/handlers/tma_write.go`                            | Modify | Recurrence params on create; `scope=` on patch/delete; series conflicts on `/tma/conflicts`. |
+| `backend/openapi/openapi.json`                                                    | Modify | New params + occurrence-grouped conflicts schema.                                            |
+| `backend/docs/openapi.json`                                                       | Modify | Byte-identical mirror.                                                                       |
+| `frontend/src/shared/api/generated/schema.ts`                                     | Regen  | From updated openapi.json.                                                                   |
+| `frontend/src/features/meetings/api.ts`                                           | Modify | `OccurrenceConflicts`, `recurrence_until`/`recurrence_days`/`scope` plumbing.                |
+| `frontend/src/features/meetings/queries.ts`                                       | Modify | `useUpdateMeeting`/`useDeleteMeeting` grow `scope`; `useConflicts` returns groups.           |
+| `frontend/src/entities/meeting/types.ts`                                          | Modify | `Meeting.seriesId?`.                                                                         |
+| `frontend/src/entities/meeting/lib/format.ts`                                     | Modify | `detailToDraft`/`draftToMeeting` preserve `seriesId`.                                        |
+| `frontend/src/features/meeting-create/lib/use-create-wizard.ts`                   | Modify | Add `until`, smart defaults, drop `recurringBlocked`, support `lockedFields`.                |
+| `frontend/src/features/meeting-create/components/wizard-step-when.tsx`            | Modify | Until picker for non-once.                                                                   |
+| `frontend/src/features/meeting-create/components/wizard-step-review.tsx`          | Modify | Grouped-by-date conflicts; drop recurringSoon block.                                         |
+| `frontend/src/features/meeting-create/components/create-wizard.tsx`               | Modify | Pass `lockedFields`, drop `recurringBlocked`.                                                |
+| `frontend/src/features/meeting-create/pages/create-page.tsx`                      | Modify | Pass `recurrence_until`/`recurrence_days`; read `scope` from search; pass to mutations.      |
+| `frontend/src/shared/tma/i18n.ts`                                                 | Modify | Add until + series-edit + grouped-conflicts keys (ru/kk/en).                                 |
+| `frontend/src/features/meetings/components/meeting-detail.tsx`                    | Modify | Compute `isSeries` from `seriesId`; pass `onEdit(scope)` / `onDelete(scope)`.                |
+| `frontend/src/features/meetings/components/meeting-detail-actions.tsx`            | Modify | Dual-scope buttons or sheet.                                                                 |
+| `frontend/src/features/meetings/pages/meetings-list-page.tsx`                     | Modify | Wire `handleDelete(scope)`; `useDeleteMeeting` takes `{ id, scope }`.                        |
+| `frontend/src/routes/_tma/meetings.create.$editId.tsx` (or `.create.$editId.tsx`) | Modify | Search-param schema includes `scope?: "this" \| "whole"`.                                    |
+| `docs/MEETINGS.md`                                                                | Modify | Status note + write-path table updates (recurring done).                                     |
+| `docs/API.md`                                                                     | Modify | Document `scope`, recurrence body fields, occurrence-grouped conflicts shape.                |
 
 ---
 
@@ -70,24 +70,29 @@ Verify: `git log --oneline -1 main` shows `537db79`. THEN create the slice-B bra
 ## Task B-T0: Create slice-B branch
 
 **Files:**
+
 - No code changes.
 
 - [ ] **Step 1: Verify main is at the spec commit**
 
 Run:
+
 ```bash
 git -C /Users/temirlan/Workspace/in-house/lead-cat log --oneline -1 main
 ```
+
 Expected: `537db79 docs(spec): slice B — recurrence (series everywhere)`.
 
 - [ ] **Step 2: Create and switch to the slice-B branch**
 
 Run:
+
 ```bash
 git -C /Users/temirlan/Workspace/in-house/lead-cat checkout main
 git -C /Users/temirlan/Workspace/in-house/lead-cat checkout -b feat/meetings-recurrence-b
 git -C /Users/temirlan/Workspace/in-house/lead-cat status --short
 ```
+
 Expected: `On branch feat/meetings-recurrence-b`, working tree status mirrors the existing uncommitted user-edits that have been carried across the session (the docs/frontend `M` files). DO NOT touch those.
 
 - [ ] **Step 3: No commit for T0**
@@ -99,6 +104,7 @@ T0 is a branch-only step; nothing to commit.
 ## Task B-T1: Domain — add Custom, drop Biweekly, extend Occurrences (TDD)
 
 **Files:**
+
 - Modify: `backend/internal/domain/meeting/meeting.go`
 - Modify: `backend/internal/domain/meeting/recurrence.go`
 - Modify: `backend/internal/domain/meeting/recurrence_test.go`
@@ -108,9 +114,11 @@ T0 is a branch-only step; nothing to commit.
 - [ ] **Step 1: Grep for any Biweekly callers outside the domain**
 
 Run:
+
 ```bash
 grep -rn "Biweekly\|\"biweekly\"" backend/ --include="*.go"
 ```
+
 Expected: only the three lines in `domain/meeting/meeting.go` and `recurrence.go`. (Earlier exploration confirmed this — re-verify.)
 
 - [ ] **Step 2: Write failing tests for Custom recurrence**
@@ -161,9 +169,11 @@ The test imports `errors` — ensure the import block lists it.
 - [ ] **Step 3: Run tests to verify they fail**
 
 Run:
+
 ```bash
 cd backend && go test ./internal/domain/meeting/... 2>&1 | tail -20
 ```
+
 Expected: compilation error (`Custom` undefined, `ErrRecurrenceDays` undefined, `Occurrences` signature wrong) — or runtime fails for existing tests once compilation passes. Either is OK; we're about to fix it.
 
 - [ ] **Step 4: Update meeting.go — add Custom, drop Biweekly, add RecurrenceDays**
@@ -342,12 +352,15 @@ func TestValidate_CustomRequiresDays(t *testing.T) {
 - [ ] **Step 8: Update all Occurrences callers to pass `days`**
 
 Run:
+
 ```bash
 grep -rn "meeting.Occurrences(" backend/ --include="*.go"
 ```
+
 Expected: one caller at `backend/internal/application/meeting_service.go:92`.
 
 Patch that line to pass `days`:
+
 ```go
 spansList, err := meeting.Occurrences(startsAt, endsAt, rec, in.RecurrenceDays, until)
 ```
@@ -368,6 +381,7 @@ type CreateMeetingInput struct {
 ```
 
 Then patch the `dom := meeting.Input{...}` block in `CreateMeeting` to include:
+
 ```go
 RecurrenceDays: in.RecurrenceDays,
 ```
@@ -375,17 +389,21 @@ RecurrenceDays: in.RecurrenceDays,
 - [ ] **Step 9: Run all backend tests**
 
 Run:
+
 ```bash
 cd backend && go test ./... 2>&1 | tail -30
 ```
+
 Expected: all pass. If any test references `Biweekly`, fix it (replace with Custom or remove if redundant).
 
 - [ ] **Step 10: Run lint**
 
 Run:
+
 ```bash
 make lint 2>&1 | tail -10
 ```
+
 Expected: `0 issues`.
 
 - [ ] **Step 11: Commit B-T1**
@@ -421,6 +439,7 @@ EOF
 ## Task B-T2: Migration + persistence — recurrence_days JSONB column
 
 **Files:**
+
 - Create: `backend/migrations/20260607120000_meeting_recurrence_days.sql`
 - Modify: `backend/internal/infrastructure/persistence/postgres/models.go`
 - Modify: `backend/internal/infrastructure/persistence/postgres/meeting_repo.go`
@@ -442,9 +461,11 @@ Nullable; safe online (no rewrite). Existing rows: NULL = non-custom.
 - [ ] **Step 2: Run the migration locally**
 
 Run:
+
 ```bash
 make migrate
 ```
+
 Expected: migration applied. (If `make migrate` is unavailable in this shell, document it and let the user run it — the integration tests below will surface column-missing errors.)
 
 - [ ] **Step 3: Add RecurrenceDays to the Meeting struct**
@@ -556,17 +577,21 @@ func (s *Store) CancelAllSeriesOccurrences(ctx context.Context, workspaceID, ser
 - [ ] **Step 6: Run backend tests**
 
 Run:
+
 ```bash
 cd backend && go test ./... 2>&1 | tail -20
 ```
+
 Expected: all pass. The postgres-package tests will need the column to exist — if `make migrate` wasn't possible above, ask the user to run it before tests pass.
 
 - [ ] **Step 7: Run lint**
 
 Run:
+
 ```bash
 make lint 2>&1 | tail -5
 ```
+
 Expected: `0 issues`.
 
 - [ ] **Step 8: Commit B-T2**
@@ -595,14 +620,17 @@ EOF
 ## Task B-T3: Application — UpdateWholeSeries + CancelWholeSeries
 
 **Files:**
+
 - Modify: `backend/internal/application/series_edit.go`
 
 - [ ] **Step 1: Read existing UpdateSeries body**
 
 Run:
+
 ```bash
 sed -n '60,135p' backend/internal/application/series_edit.go
 ```
+
 Confirm the existing pattern (auth → load picked → workspace → owner/organizer check → load occurrences → apply → tx update → google patch → enqueue).
 
 - [ ] **Step 2: Add a comment marking UpdateSeries/CancelSeries as internal**
@@ -739,10 +767,12 @@ func (s *Services) CancelWholeSeries(ctx context.Context, workspaceID, userID, m
 - [ ] **Step 5: Build, test, lint**
 
 Run:
+
 ```bash
 cd backend && go build ./... && go test ./... 2>&1 | tail -20
 make lint 2>&1 | tail -5
 ```
+
 Expected: build clean, all tests pass, 0 lint issues.
 
 - [ ] **Step 6: Commit B-T3**
@@ -772,6 +802,7 @@ EOF
 ## Task B-T4: Application — MeetingSeriesConflicts (TDD)
 
 **Files:**
+
 - Create: `backend/internal/application/series_conflicts.go`
 - Create: `backend/internal/application/series_conflicts_test.go`
 
@@ -819,9 +850,11 @@ func TestExpandSeriesSpans_CustomThreeWeeks(t *testing.T) {
 ```
 
 Run:
+
 ```bash
 cd backend && go test ./internal/application/... -run TestExpandSeries 2>&1 | tail -10
 ```
+
 Expected: compile error (`expandSeriesSpans` undefined).
 
 - [ ] **Step 2: Create series_conflicts.go**
@@ -876,18 +909,22 @@ func (s *Services) MeetingSeriesConflicts(ctx context.Context, emails []string, 
 - [ ] **Step 3: Run the test — expect pass**
 
 Run:
+
 ```bash
 cd backend && go test ./internal/application/... -run TestExpandSeries 2>&1 | tail -10
 ```
+
 Expected: both pass.
 
 - [ ] **Step 4: Full backend test + lint**
 
 Run:
+
 ```bash
 cd backend && go test ./... 2>&1 | tail -10
 make lint 2>&1 | tail -5
 ```
+
 Expected: all pass, 0 issues.
 
 - [ ] **Step 5: Commit B-T4**
@@ -915,11 +952,13 @@ EOF
 ## Task B-T5: HTTP — remove recurring block on create; accept until/days
 
 **Files:**
+
 - Modify: `backend/internal/delivery/http/handlers/tma_write.go`
 
 - [ ] **Step 1: Read current tmaCreateRequest + TMACreateMeeting**
 
 Run:
+
 ```bash
 grep -n "tmaCreateRequest\|TMACreateMeeting\|meetings_recurring_unsupported" backend/internal/delivery/http/handlers/tma_write.go | head -20
 ```
@@ -961,9 +1000,11 @@ Locate the early `if rec != meeting.Once { return 400 meetings_recurring_unsuppo
 - [ ] **Step 4: Verify build + tests**
 
 Run:
+
 ```bash
 cd backend && go build ./... && go test ./... 2>&1 | tail -10
 ```
+
 Expected: all pass.
 
 - [ ] **Step 5: Commit B-T5**
@@ -989,11 +1030,13 @@ EOF
 ## Task B-T6: HTTP — scope=this|whole on PATCH + DELETE
 
 **Files:**
+
 - Modify: `backend/internal/delivery/http/handlers/tma_write.go`
 
 - [ ] **Step 1: Locate current TMAUpdateMeeting + TMADeleteMeeting**
 
 Run:
+
 ```bash
 grep -n "TMAUpdateMeeting\|TMADeleteMeeting\|UpdateMeeting(\|CancelMeeting(" backend/internal/delivery/http/handlers/tma_write.go | head -10
 ```
@@ -1053,7 +1096,7 @@ if scope == "this" {
 }
 ```
 
-Where `mapToSeriesUpdateInput(req)` is a small helper that converts the existing tmaUpdateRequest (which has `dept/type/host/date/start/end/desc` *strings) to `application.SeriesUpdateInput` (which does NOT accept `Date`; the date is locked for whole-series). If `req.Date != nil`, return 400 `validation_failed` with message "date cannot be changed for whole-series edit".
+Where `mapToSeriesUpdateInput(req)` is a small helper that converts the existing tmaUpdateRequest (which has `dept/type/host/date/start/end/desc` \*strings) to `application.SeriesUpdateInput` (which does NOT accept `Date`; the date is locked for whole-series). If `req.Date != nil`, return 400 `validation_failed` with message "date cannot be changed for whole-series edit".
 
 ```go
 func mapToSeriesUpdateInput(req tmaUpdateRequest) application.SeriesUpdateInput {
@@ -1093,10 +1136,12 @@ return c.SendStatus(fiber.StatusNoContent)
 - [ ] **Step 5: Verify build + tests + lint**
 
 Run:
+
 ```bash
 cd backend && go build ./... && go test ./... 2>&1 | tail -10
 make lint 2>&1 | tail -5
 ```
+
 Expected: all pass, 0 lint.
 
 - [ ] **Step 6: Commit B-T6**
@@ -1123,11 +1168,13 @@ EOF
 ## Task B-T7: HTTP — conflicts accepts recurrence params; returns occurrence-grouped shape
 
 **Files:**
+
 - Modify: `backend/internal/delivery/http/handlers/tma_write.go`
 
 - [ ] **Step 1: Read current tmaConflictRequest + TMAConflicts**
 
 Run:
+
 ```bash
 grep -n "tmaConflictRequest\|TMAConflicts\|toConflictDTO" backend/internal/delivery/http/handlers/tma_write.go | head -10
 ```
@@ -1224,10 +1271,12 @@ return c.JSON(fiber.Map{"occurrences": occurrences})
 - [ ] **Step 5: Verify build + tests + lint**
 
 Run:
+
 ```bash
 cd backend && go build ./... && go test ./... 2>&1 | tail -10
 make lint 2>&1 | tail -5
 ```
+
 Expected: all pass, 0 lint.
 
 - [ ] **Step 6: Commit B-T7**
@@ -1254,6 +1303,7 @@ EOF
 ## Task B-T8: OpenAPI + frontend schema regen
 
 **Files:**
+
 - Modify: `backend/openapi/openapi.json`
 - Modify: `backend/docs/openapi.json` (parallel byte-identical mirror)
 - Regen: `frontend/src/shared/api/generated/schema.ts`
@@ -1336,21 +1386,25 @@ Keep the existing `TmaConflict` schema unchanged.
 - [ ] **Step 4: Mirror to backend/docs/openapi.json**
 
 Run:
+
 ```bash
 cp /Users/temirlan/Workspace/in-house/lead-cat/backend/openapi/openapi.json \
    /Users/temirlan/Workspace/in-house/lead-cat/backend/docs/openapi.json
 diff /Users/temirlan/Workspace/in-house/lead-cat/backend/openapi/openapi.json \
      /Users/temirlan/Workspace/in-house/lead-cat/backend/docs/openapi.json
 ```
+
 Expected: no diff output (byte-identical).
 
 - [ ] **Step 5: Regen frontend schema**
 
 Run:
+
 ```bash
 cd /Users/temirlan/Workspace/in-house/lead-cat/frontend && \
   pnpm dlx openapi-typescript ../backend/openapi/openapi.json -o src/shared/api/generated/schema.ts
 ```
+
 Expected: schema regenerated. Inspect the diff briefly to confirm the new fields/schemas are present:
 
 ```bash
@@ -1360,10 +1414,12 @@ git -C /Users/temirlan/Workspace/in-house/lead-cat diff --stat frontend/src/shar
 - [ ] **Step 6: Backend build + frontend typecheck**
 
 Run:
+
 ```bash
 cd backend && go build ./...
 cd /Users/temirlan/Workspace/in-house/lead-cat/frontend && pnpm typecheck
 ```
+
 Expected: clean. (Typecheck may flag usage sites where the old conflict response shape was assumed — fix those in B-T9, not here.)
 
 If typecheck fails ONLY at the conflicts response consumer sites, that's expected — those are wired in B-T9. Proceed to commit OpenAPI separately so the regen lands in its own commit.
@@ -1396,6 +1452,7 @@ EOF
 ## Task B-T9: Frontend types + mutations — scope, until, days, OccurrenceConflicts
 
 **Files:**
+
 - Modify: `frontend/src/features/meetings/api.ts`
 - Modify: `frontend/src/features/meetings/queries.ts`
 - Modify: `frontend/src/entities/meeting/types.ts`
@@ -1560,11 +1617,13 @@ Keeping `useDeleteMeeting` callable with either a bare id (slice-A call sites) O
 - [ ] **Step 5: Update existing call sites that break**
 
 Run:
+
 ```bash
 cd /Users/temirlan/Workspace/in-house/lead-cat/frontend && pnpm typecheck 2>&1 | tail -40
 ```
 
 Likely failure points:
+
 - `use-create-wizard.ts` reads `conflictsMut.data` as `Conflict[]` — will become `OccurrenceConflicts[]`. Defer the actual rewrite to B-T10; for now, narrow the read to `conflictsMut.data?.[0]?.conflicts ?? []` so typecheck passes and existing single-occurrence behavior is preserved.
 - `meetings-list-page.tsx` calls `handleDelete(id)` → still works via the string overload above.
 - `create-page.tsx` calls `useUpdateMeeting().mutateAsync({ id, patch })` — still works (scope is optional).
@@ -1581,9 +1640,11 @@ const conflictPeople = useMemo(() => {
 - [ ] **Step 6: Frontend typecheck, format, build**
 
 Run:
+
 ```bash
 cd /Users/temirlan/Workspace/in-house/lead-cat/frontend && pnpm typecheck && pnpm format && pnpm build
 ```
+
 Expected: all clean.
 
 - [ ] **Step 7: Commit B-T9**
@@ -1618,6 +1679,7 @@ EOF
 ## Task B-T10: Wizard — until picker, smart defaults, recurringBlocked drop, lockedFields
 
 **Files:**
+
 - Modify: `frontend/src/features/meeting-create/lib/use-create-wizard.ts`
 - Modify: `frontend/src/features/meeting-create/components/wizard-step-when.tsx`
 - Modify: `frontend/src/features/meeting-create/components/create-wizard.tsx`
@@ -1632,7 +1694,7 @@ export type MeetingDraft = {
   // existing fields
   rec: string
   recDays: number[]
-  until: string  // YYYY-MM-DD; empty when rec === "once"
+  until: string // YYYY-MM-DD; empty when rec === "once"
   participants: Employee[]
   desc: string
 }
@@ -1777,7 +1839,16 @@ useEffect(() => {
     recurrenceDays: draft.rec === "custom" ? draft.recDays : undefined,
   })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [step, draft.date, draft.start, endTime, draft.participants, draft.rec, draft.until, draft.recDays])
+}, [
+  step,
+  draft.date,
+  draft.start,
+  endTime,
+  draft.participants,
+  draft.rec,
+  draft.until,
+  draft.recDays,
+])
 ```
 
 Update `conflictPeople` to flatten across occurrences (drop the temporary `.[0]` shim from B-T9):
@@ -1812,7 +1883,12 @@ export function useCreateWizard({
 }: {
   initial?: Partial<MeetingDraft>
   onComplete: (m: MeetingDraft & { end: string }) => void
-  lockedFields?: { date?: boolean; rec?: boolean; until?: boolean; participants?: boolean }
+  lockedFields?: {
+    date?: boolean
+    rec?: boolean
+    until?: boolean
+    participants?: boolean
+  }
 }) {
   // ...
   return {
@@ -1877,46 +1953,50 @@ seriesEditLockedNote: "Series date and recurrence are not editable",
 After the existing rec selector + recDays chips, add:
 
 ```tsx
-{draft.rec !== "once" && (
-  <div style={{ marginTop: 14 }}>
-    <label style={{
-      display: "block",
-      fontSize: 12,
-      fontWeight: 700,
-      color: p.muted,
-      marginBottom: 6,
-    }}>
-      {t("untilLabel")}
-    </label>
-    <input
-      type="date"
-      value={draft.until}
-      min={draft.date || undefined}
-      onChange={(e) => set("until", e.target.value)}
-      placeholder={t("untilPlaceholder")}
-      disabled={lockedFields?.until}
-      style={{
-        width: "100%",
-        padding: "10px 12px",
-        borderRadius: 12,
-        border: `1px solid ${p.border}`,
-        background: p.tgBar,
-        color: p.text,
-        fontSize: 15,
-      }}
-    />
-    {!draft.until && (
-      <div style={{ color: p.danger, fontSize: 12, marginTop: 6 }}>
-        {t("untilRequired")}
-      </div>
-    )}
-    {draft.until && draft.until < draft.date && (
-      <div style={{ color: p.danger, fontSize: 12, marginTop: 6 }}>
-        {t("untilBeforeStart")}
-      </div>
-    )}
-  </div>
-)}
+{
+  draft.rec !== "once" && (
+    <div style={{ marginTop: 14 }}>
+      <label
+        style={{
+          display: "block",
+          fontSize: 12,
+          fontWeight: 700,
+          color: p.muted,
+          marginBottom: 6,
+        }}
+      >
+        {t("untilLabel")}
+      </label>
+      <input
+        type="date"
+        value={draft.until}
+        min={draft.date || undefined}
+        onChange={(e) => set("until", e.target.value)}
+        placeholder={t("untilPlaceholder")}
+        disabled={lockedFields?.until}
+        style={{
+          width: "100%",
+          padding: "10px 12px",
+          borderRadius: 12,
+          border: `1px solid ${p.border}`,
+          background: p.tgBar,
+          color: p.text,
+          fontSize: 15,
+        }}
+      />
+      {!draft.until && (
+        <div style={{ color: p.danger, fontSize: 12, marginTop: 6 }}>
+          {t("untilRequired")}
+        </div>
+      )}
+      {draft.until && draft.until < draft.date && (
+        <div style={{ color: p.danger, fontSize: 12, marginTop: 6 }}>
+          {t("untilBeforeStart")}
+        </div>
+      )}
+    </div>
+  )
+}
 ```
 
 The component needs `lockedFields` in its props type — add it; pass-through from `create-wizard.tsx`.
@@ -1924,18 +2004,22 @@ The component needs `lockedFields` in its props type — add it; pass-through fr
 If `scope === "whole"` (whole-series edit), add a banner at the top of step-when:
 
 ```tsx
-{lockedFields?.rec && (
-  <div style={{
-    background: p.accentSoft,
-    borderRadius: 12,
-    padding: "10px 12px",
-    marginBottom: 14,
-    fontSize: 13,
-    color: p.text,
-  }}>
-    {t("seriesEditLockedNote")}
-  </div>
-)}
+{
+  lockedFields?.rec && (
+    <div
+      style={{
+        background: p.accentSoft,
+        borderRadius: 12,
+        padding: "10px 12px",
+        marginBottom: 14,
+        fontSize: 13,
+        color: p.text,
+      }}
+    >
+      {t("seriesEditLockedNote")}
+    </div>
+  )
+}
 ```
 
 - [ ] **Step 5: Drop recurringBlocked from create-wizard.tsx**
@@ -1972,9 +2056,11 @@ Pass `lockedFields={wizard.lockedFields}` to the `<WizardStepWhen>` component.
 - [ ] **Step 6: Frontend typecheck + format + build**
 
 Run:
+
 ```bash
 cd /Users/temirlan/Workspace/in-house/lead-cat/frontend && pnpm typecheck && pnpm format && pnpm build
 ```
+
 Expected: all clean.
 
 - [ ] **Step 7: Commit B-T10**
@@ -2014,6 +2100,7 @@ EOF
 ## Task B-T11: Wizard review — grouped-by-date conflicts list
 
 **Files:**
+
 - Modify: `frontend/src/features/meeting-create/components/wizard-step-review.tsx`
 - Modify: `frontend/src/features/meeting-create/components/create-wizard.tsx`
 
@@ -2089,12 +2176,7 @@ Keep the `recurringSoon` key in `i18n.ts` itself — it's still mapped by `write
 Drop the `conflictPeople={conflictPeople}` prop spread (the destructured `conflictPeople` from `wizard` was only used here and in the confirm-button label below — update the label too):
 
 ```tsx
-<CatBtn
-  variant="primary"
-  full
-  disabled={!canNext}
-  onClick={() => go(1)}
->
+<CatBtn variant="primary" full disabled={!canNext} onClick={() => go(1)}>
   {step === WIZARD_STEPS.length - 1
     ? wizard.conflictOccurrences.length
       ? `🐾 ${t("proceed")}`
@@ -2108,9 +2190,11 @@ Drop the `conflictPeople={conflictPeople}` prop spread (the destructured `confli
 - [ ] **Step 4: Typecheck, format, build**
 
 Run:
+
 ```bash
 cd /Users/temirlan/Workspace/in-house/lead-cat/frontend && pnpm typecheck && pnpm format && pnpm build
 ```
+
 Expected: clean.
 
 - [ ] **Step 5: Commit B-T11**
@@ -2140,6 +2224,7 @@ EOF
 ## Task B-T12: Meeting detail — dual-scope edit/cancel + create-page wiring
 
 **Files:**
+
 - Modify: `frontend/src/features/meetings/components/meeting-detail.tsx`
 - Modify: `frontend/src/features/meetings/components/meeting-detail-actions.tsx`
 - Modify: `frontend/src/features/meetings/pages/meetings-list-page.tsx`
@@ -2149,9 +2234,11 @@ EOF
 - [ ] **Step 1: Locate the editId route file**
 
 Run:
+
 ```bash
 ls frontend/src/routes/_tma/ | grep -i create
 ```
+
 Expected: a file like `meetings.create.$editId.tsx` (TanStack Router file route). Read it; note where its `validateSearch` (or equivalent) lives.
 
 - [ ] **Step 2: Add scope to the route's search-param schema**
@@ -2208,21 +2295,63 @@ export function MeetingDetailActions({
         </CatBtn>
       </div>
       <Sheet open={editSheet} onClose={() => setEditSheet(false)} maxH="40%">
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: 16 }}>
-          <CatBtn variant="outline" full onClick={() => { setEditSheet(false); onEdit("this") }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            padding: 16,
+          }}
+        >
+          <CatBtn
+            variant="outline"
+            full
+            onClick={() => {
+              setEditSheet(false)
+              onEdit("this")
+            }}
+          >
             {t("editThis")}
           </CatBtn>
-          <CatBtn variant="primary" full onClick={() => { setEditSheet(false); onEdit("whole") }}>
+          <CatBtn
+            variant="primary"
+            full
+            onClick={() => {
+              setEditSheet(false)
+              onEdit("whole")
+            }}
+          >
             {t("editSeries")}
           </CatBtn>
         </div>
       </Sheet>
       <Sheet open={delSheet} onClose={() => setDelSheet(false)} maxH="40%">
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: 16 }}>
-          <CatBtn variant="outline" full onClick={() => { setDelSheet(false); onDelete("this") }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            padding: 16,
+          }}
+        >
+          <CatBtn
+            variant="outline"
+            full
+            onClick={() => {
+              setDelSheet(false)
+              onDelete("this")
+            }}
+          >
             {t("delThis")}
           </CatBtn>
-          <CatBtn variant="danger" full onClick={() => { setDelSheet(false); onDelete("whole") }}>
+          <CatBtn
+            variant="danger"
+            full
+            onClick={() => {
+              setDelSheet(false)
+              onDelete("whole")
+            }}
+          >
             {t("delSeries")}
           </CatBtn>
         </div>
@@ -2241,13 +2370,15 @@ In `meeting-detail.tsx`:
 ```tsx
 const isSeries = Boolean(m.seriesId)
 // ...
-{canManage && !past && (
-  <MeetingDetailActions
-    isSeries={isSeries}
-    onEdit={(scope) => onEdit(scope)}
-    onDelete={(scope) => onDelete(scope)}
-  />
-)}
+{
+  canManage && !past && (
+    <MeetingDetailActions
+      isSeries={isSeries}
+      onEdit={(scope) => onEdit(scope)}
+      onDelete={(scope) => onDelete(scope)}
+    />
+  )
+}
 ```
 
 Update the props type:
@@ -2299,9 +2430,10 @@ const handleDelete = async (id: string, scope: "this" | "whole" = "this") => {
 ```tsx
 const search = useSearch({ strict: false }) as { scope?: "this" | "whole" }
 const scope: "this" | "whole" = search.scope === "whole" ? "whole" : "this"
-const lockedFields = scope === "whole"
-  ? { date: true, rec: true, until: true, participants: true }
-  : undefined
+const lockedFields =
+  scope === "whole"
+    ? { date: true, rec: true, until: true, participants: true }
+    : undefined
 
 // ...
 
@@ -2313,7 +2445,7 @@ const completeCreate = async (m: MeetingDraft & { end: string }) => {
         dept: m.dept,
         type: m.type,
         host: m.host,
-        date: scope === "whole" ? undefined : m.date,  // backend rejects date for whole
+        date: scope === "whole" ? undefined : m.date, // backend rejects date for whole
         start: m.start,
         end: m.end,
         desc: m.desc,
@@ -2323,9 +2455,15 @@ const completeCreate = async (m: MeetingDraft & { end: string }) => {
       void navigate({ to: "/meetings", search: { scope: "upcoming" } })
     } else {
       const input: MeetingInput = {
-        dept: m.dept, type: m.type, host: m.host,
-        date: m.date, start: m.start, end: m.end,
-        recurrence: m.rec, desc: m.desc, participants,
+        dept: m.dept,
+        type: m.type,
+        host: m.host,
+        date: m.date,
+        start: m.start,
+        end: m.end,
+        recurrence: m.rec,
+        desc: m.desc,
+        participants,
         recurrence_until: m.rec !== "once" ? m.until : undefined,
         recurrence_days: m.rec === "custom" ? m.recDays : undefined,
       }
@@ -2342,7 +2480,11 @@ const completeCreate = async (m: MeetingDraft & { end: string }) => {
 
 return (
   <Overlay open onClose={goBack} onBack={goBack} title={p.t("create")}>
-    <CreateWizard initial={initial} onComplete={completeCreate} lockedFields={lockedFields} />
+    <CreateWizard
+      initial={initial}
+      onComplete={completeCreate}
+      lockedFields={lockedFields}
+    />
   </Overlay>
 )
 ```
@@ -2366,9 +2508,11 @@ It already is `Partial<…>`, so `date: undefined` is fine — `apiFetch` will o
 - [ ] **Step 7: Typecheck, format, build**
 
 Run:
+
 ```bash
 cd /Users/temirlan/Workspace/in-house/lead-cat/frontend && pnpm typecheck && pnpm format && pnpm build
 ```
+
 Expected: clean.
 
 - [ ] **Step 8: Commit B-T12**
@@ -2406,6 +2550,7 @@ EOF
 ## Task B-T13: Docs refresh + final verification
 
 **Files:**
+
 - Modify: `docs/MEETINGS.md`
 - Modify: `docs/API.md`
 
@@ -2418,12 +2563,12 @@ Replace the slice-A status line:
 Update the **Write paths** table:
 
 ```markdown
-| Route                          | Status                                          |
-| ------------------------------ | ----------------------------------------------- |
+| Route                          | Status                                                         |
+| ------------------------------ | -------------------------------------------------------------- |
 | `POST /api/tma/meetings`       | Done (incl. recurring with recurrence_until / recurrence_days) |
-| `PATCH /api/tma/meetings/:id`  | Done (organizer-only; scope=this\|whole)        |
-| `DELETE /api/tma/meetings/:id` | Done (organizer-only; scope=this\|whole)        |
-| `POST /api/tma/conflicts`      | Done (occurrence-grouped response)              |
+| `PATCH /api/tma/meetings/:id`  | Done (organizer-only; scope=this\|whole)                       |
+| `DELETE /api/tma/meetings/:id` | Done (organizer-only; scope=this\|whole)                       |
+| `POST /api/tma/conflicts`      | Done (occurrence-grouped response)                             |
 ```
 
 Delete the slice-A note `Recurring series ... ships in slice B.`
@@ -2444,19 +2589,23 @@ Append a short note below the table:
 - [ ] **Step 3: Backend full verification**
 
 Run from repo root:
+
 ```bash
 make test 2>&1 | tail -15
 make lint 2>&1 | tail -5
 make build 2>&1 | tail -5
 ```
+
 Expected: all green, `0 issues`.
 
 - [ ] **Step 4: Frontend full verification**
 
 Run:
+
 ```bash
 cd /Users/temirlan/Workspace/in-house/lead-cat/frontend && pnpm typecheck && pnpm format && pnpm build && pnpm test -- --run 2>&1 | tail -10
 ```
+
 Expected: all clean.
 
 - [ ] **Step 5: Commit B-T13**
@@ -2502,22 +2651,22 @@ After all 13 tasks land on `feat/meetings-recurrence-b`:
 
 ✅ Each spec section is covered by at least one task — verified mapping:
 
-| Spec section | Tasks |
-|---|---|
-| Domain enum changes | B-T1 |
-| Domain Occurrences extension | B-T1 |
-| Migration + persistence | B-T2 |
-| UpdateWholeSeries / CancelWholeSeries | B-T3 |
-| MeetingSeriesConflicts | B-T4 |
-| HTTP create recurrence body | B-T5 |
-| HTTP scope on PATCH/DELETE | B-T6 |
-| HTTP conflicts series response | B-T7 |
-| OpenAPI + regen | B-T8 |
-| Frontend types/mutations grow | B-T9 |
-| Wizard until + smart defaults | B-T10 |
-| Wizard review grouped conflicts | B-T11 |
-| Meeting detail dual-scope | B-T12 |
-| Docs + verify | B-T13 |
+| Spec section                          | Tasks |
+| ------------------------------------- | ----- |
+| Domain enum changes                   | B-T1  |
+| Domain Occurrences extension          | B-T1  |
+| Migration + persistence               | B-T2  |
+| UpdateWholeSeries / CancelWholeSeries | B-T3  |
+| MeetingSeriesConflicts                | B-T4  |
+| HTTP create recurrence body           | B-T5  |
+| HTTP scope on PATCH/DELETE            | B-T6  |
+| HTTP conflicts series response        | B-T7  |
+| OpenAPI + regen                       | B-T8  |
+| Frontend types/mutations grow         | B-T9  |
+| Wizard until + smart defaults         | B-T10 |
+| Wizard review grouped conflicts       | B-T11 |
+| Meeting detail dual-scope             | B-T12 |
+| Docs + verify                         | B-T13 |
 
 ✅ No placeholders ("TBD", "implement later") — verified.
 ✅ Type/signature consistency — `OccurrenceConflicts` (frontend) ↔ `tmaOccurrenceConflictsDTO` (backend) ↔ `TmaOccurrenceConflicts` (OpenAPI). `Custom` constant used consistently. `scope: "this" | "whole"` consistent.

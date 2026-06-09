@@ -14,6 +14,7 @@ import {
 import { writeErrorKey } from "@/entities/meeting/lib/write-error"
 import { useDeleteMeeting } from "@/entities/meeting/mutations"
 import { useMyMeetings } from "@/entities/meeting/queries"
+import { meetingsScopeFromFilter } from "@/features/meetings/queries"
 import { MeetingDetail } from "@/features/meetings/components/meeting-detail"
 import { EmptyState, MeetingCard } from "@/components/meetings/meeting-ui"
 import { MeetingCreatedSuccess } from "@/features/meetings/pages/meeting-created-success"
@@ -35,7 +36,11 @@ export function MeetingsListPage() {
     buildSearchParams: buildMeetingsSearchParams,
   })
 
-  const { data: meetings = [], isLoading } = useMyMeetings("all")
+  const listScope =
+    meetingId || search.success
+      ? "all"
+      : meetingsScopeFromFilter(filter ?? "up")
+  const { data: meetings = [], isLoading } = useMyMeetings(listScope)
   const deleteMut = useDeleteMeeting()
   const [burst, setBurst] = useState(false)
 
@@ -47,15 +52,7 @@ export function MeetingsListPage() {
     [meetings]
   )
 
-  const list = useMemo(
-    () =>
-      sorted.filter((m) => {
-        if (filter === "up") return m.date >= TMA_NOW
-        if (filter === "past") return m.date < TMA_NOW
-        return true
-      }),
-    [sorted, filter]
-  )
+  const list = sorted
 
   const groups = useMemo(() => {
     const out: { date: string; items: Meeting[] }[] = []

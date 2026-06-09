@@ -41,7 +41,7 @@ export function ProfilePage() {
         />
       </SettingsGroup>
       {remOn && (
-        <div className="-mt-3 mx-1 mb-5 flex flex-wrap gap-2">
+        <div className="mx-1 -mt-3 mb-5 flex flex-wrap gap-2">
           {intervals.map((it) => {
             const on = reminders.includes(it.v)
             return (
@@ -77,7 +77,7 @@ export function ProfilePage() {
           label={t("language")}
           onClick={p.openLangPicker}
           right={
-            <span className="flex items-center gap-1.5 text-sm font-bold text-tma-muted">
+            <span className="text-tma-muted flex items-center gap-1.5 text-sm font-bold">
               {I18N[p.lang]._flag} {I18N[p.lang]._label}
               <span className="text-tma-faint">
                 <CatIcon name="chevR" size={16} sw={2.2} />
@@ -90,7 +90,7 @@ export function ProfilePage() {
           hue={300}
           label={t("timezone")}
           right={
-            <span className="flex items-center gap-1.5 text-sm font-bold text-tma-muted">
+            <span className="text-tma-muted flex items-center gap-1.5 text-sm font-bold">
               Алматы UTC+5
               <span className="text-tma-faint">
                 <CatIcon name="chevR" size={16} sw={2.2} />
@@ -133,7 +133,7 @@ export function ProfilePage() {
         />
       </SettingsGroup>
 
-      <div className="mt-2 text-center text-xs font-semibold text-tma-faint">
+      <div className="text-tma-faint mt-2 text-center text-xs font-semibold">
         Lead Cat · v2.0 · {I18N[p.lang].appSub} 🐾
       </div>
     </div>

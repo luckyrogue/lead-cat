@@ -1,28 +1,28 @@
 import { useState } from "react"
 import { useTmaApp } from "@/shared/tma/context"
 import type { Employee } from "@/entities/employee/types"
-import { useFreeSlots } from "@/features/checker/queries"
+import { useFreeSlots } from "@/entities/meeting/scheduling-queries"
 import { CatBtn, CatIcon } from "@/shared/ui/cat/primitives"
 import { CheckerFilters } from "../components/checker-filters"
 import { CheckerPeopleSection } from "../components/checker-people-section"
 import { CheckerSlotsResults } from "../components/checker-slots-results"
 
 export function CheckerPage() {
-  const t = useTmaApp().t
+  const { t, lang } = useTmaApp()
   const [people, setPeople] = useState<Employee[]>([])
   const [search, setSearch] = useState("")
   const [range, setRange] = useState("7")
   const [dur, setDur] = useState(60)
 
-  const mutation = useFreeSlots()
+  const mutation = useFreeSlots(lang)
   const slots = (mutation.data ?? []).filter((s) => s.mins >= dur)
 
   return (
     <div className="px-4 pb-7">
-      <h2 className="tma-heading mx-1 mt-0.5 mb-1 text-[26px]">
+      <h2 className="tma-heading mx-1 mb-1 mt-0.5 text-[26px]">
         {t("findTime")} 🔍
       </h2>
-      <p className="mx-1 mb-[18px] text-sm text-tma-muted">
+      <p className="text-tma-muted mx-1 mb-[18px] text-sm">
         Кот найдёт окно, когда все свободны
       </p>
 

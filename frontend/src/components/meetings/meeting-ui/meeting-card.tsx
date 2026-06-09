@@ -30,7 +30,7 @@ export function MeetingCard({
     >
       <div className="flex">
         <div
-          className="w-[5px] shrink-0 bg-type-solid"
+          className="bg-type-solid w-[5px] shrink-0"
           style={typeAccentVars(m.type, dark)}
         />
         <div className="min-w-0 flex-1 px-3.5 py-[13px]">
@@ -41,8 +41,13 @@ export function MeetingCard({
               size="sm"
             />
             {rec?.short && (
-              <span className="inline-flex items-center gap-[3px] text-[11.5px] font-bold text-tma-muted">
-                <CatIcon name="repeat" size={12} className="text-tma-muted" sw={2} />
+              <span className="text-tma-muted inline-flex items-center gap-[3px] text-[11.5px] font-bold">
+                <CatIcon
+                  name="repeat"
+                  size={12}
+                  className="text-tma-muted"
+                  sw={2}
+                />
                 {rec.short}
               </span>
             )}
@@ -58,13 +63,23 @@ export function MeetingCard({
             {m.dept} · {tObj ? tObj.label : m.type}
           </div>
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5 text-[13px] font-semibold text-tma-muted">
+            <div className="text-tma-muted flex items-center gap-2.5 text-[13px] font-semibold">
               <span className="inline-flex items-center gap-1">
-                <CatIcon name="calendar" size={14} className="text-tma-muted" sw={2} />
+                <CatIcon
+                  name="calendar"
+                  size={14}
+                  className="text-tma-muted"
+                  sw={2}
+                />
                 {fmtDate(m.date, lang)}
               </span>
               <span className="inline-flex items-center gap-1">
-                <CatIcon name="clock" size={14} className="text-tma-muted" sw={2} />
+                <CatIcon
+                  name="clock"
+                  size={14}
+                  className="text-tma-muted"
+                  sw={2}
+                />
                 {m.start}–{m.end}
               </span>
             </div>

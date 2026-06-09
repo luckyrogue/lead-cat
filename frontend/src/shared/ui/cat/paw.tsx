@@ -18,7 +18,9 @@ export function Paw({
       viewBox="0 0 24 24"
       fill="currentColor"
       className={cn(
-        tone === "auto" ? "text-[var(--tma-auto-paw)]" : "text-[var(--tma-hero-paw)]",
+        tone === "auto"
+          ? "text-[var(--tma-auto-paw)]"
+          : "text-[var(--tma-hero-paw)]",
         className
       )}
       aria-hidden

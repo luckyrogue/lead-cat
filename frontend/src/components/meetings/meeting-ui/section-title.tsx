@@ -20,11 +20,16 @@ export function SectionTitle({
           onClick={onAction}
           className={cn(
             "flex cursor-pointer items-center gap-0.5 border-none bg-transparent",
-            "font-display text-[13.5px] font-bold text-tma-accent"
+            "font-display text-tma-accent text-[13.5px] font-bold"
           )}
         >
           {action}
-          <CatIcon name="chevR" size={14} className="text-tma-accent" sw={2.4} />
+          <CatIcon
+            name="chevR"
+            size={14}
+            className="text-tma-accent"
+            sw={2.4}
+          />
         </button>
       )}
     </div>

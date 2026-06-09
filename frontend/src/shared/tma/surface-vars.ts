@@ -15,10 +15,7 @@ export function hueSurfaceVars(hue: number, dark: boolean): CSSProperties {
 }
 
 /** Per meeting-type accent (TypeTag, meeting card stripe). */
-export function typeAccentVars(
-  typeKey: string,
-  dark: boolean
-): CSSProperties {
+export function typeAccentVars(typeKey: string, dark: boolean): CSSProperties {
   const a = typeAccent(typeKey, dark)
   return {
     "--type-soft": a.soft,

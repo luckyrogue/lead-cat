@@ -26,7 +26,7 @@ export function ParticipantStack({
         <div
           className={cn(
             "tma-stack-badge -ml-2.5 flex items-center justify-center rounded-full",
-            "bg-tma-card-alt font-display font-extrabold text-tma-muted",
+            "bg-tma-card-alt font-display text-tma-muted font-extrabold",
             "shadow-[0_0_0_2px_var(--tma-bg)]"
           )}
           style={stackBadgeVars(size)}

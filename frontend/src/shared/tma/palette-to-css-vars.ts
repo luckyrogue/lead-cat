@@ -30,9 +30,7 @@ export function paletteCssVars(p: CatPalette): CSSProperties {
     "--tma-ok-soft": p.okSoft,
     "--tma-accent-glow": hexToRgba(p.accent, 0.45),
     "--tma-input-bg": p.dark ? p.cardAlt : "#ffffff",
-    "--tma-segmented-track": p.dark
-      ? "rgba(255,255,255,0.06)"
-      : "#F2E6D8",
+    "--tma-segmented-track": p.dark ? "rgba(255,255,255,0.06)" : "#F2E6D8",
     "--tma-icon-btn-bg": p.dark ? "rgba(255,255,255,0.07)" : "#F2E9DE",
     "--tma-toggle-off": p.dark ? "rgba(255,255,255,0.16)" : "#E4D7C8",
     "--tma-toast-bg": p.dark ? "#2A3A48" : "#2D2A26",

@@ -9,12 +9,8 @@ export function SettingsGroup({
 }) {
   return (
     <div className="mb-5">
-      {title && (
-        <div className="tma-section-title mx-1 mb-[9px]">{title}</div>
-      )}
-      <CatCard className="overflow-hidden p-0">
-        {children}
-      </CatCard>
+      {title && <div className="tma-section-title mx-1 mb-[9px]">{title}</div>}
+      <CatCard className="overflow-hidden p-0">{children}</CatCard>
     </div>
   )
 }

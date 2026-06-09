@@ -6,6 +6,11 @@ import { isTelegramMiniApp } from "@/shared/tma/telegram-env"
 import { useTelegramViewport } from "@/shared/tma/use-telegram-viewport"
 import { TmaAppProvider } from "@/shared/tma/context"
 import { DEFAULT_ACCENT, makePalette } from "@/shared/tma/palette"
+import { translate } from "@/shared/tma/i18n"
+import {
+  readStoredLang,
+  writeStoredLang,
+} from "@/shared/tma/stored-lang"
 import type { Lang } from "@/shared/tma/types"
 import { LangDropdown, TabBar, TgBar, TmaFrame } from "@/components/tma-shell"
 
@@ -24,19 +29,21 @@ function isOverlayPath(pathname: string): boolean {
 function TmaAuthGate() {
   const { status, errorCode, retry } = useTmaAuth()
   if (status === "authed") return <TmaAppShell />
+  const lang = readStoredLang()
+  const t = (key: Parameters<typeof translate>[1]) => translate(lang, key)
   const botUsername = import.meta.env.VITE_BOT_USERNAME ?? ""
   const errorMessage =
     errorCode === "no_init_data"
-      ? "Откройте приложение из Telegram."
+      ? t("auth_no_init_data")
       : errorCode === "invalid_init_data"
-        ? "Сессия Telegram недействительна. Закройте и откройте Mini App заново."
-        : "Не удалось войти. Проверьте, что backend запущен (make dev)."
+        ? t("auth_invalid_init_data")
+        : t("auth_login_failed")
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
-      {status === "loading" && <p>Загрузка…</p>}
+      {status === "loading" && <p>{t("auth_loading")}</p>}
       {status === "not_registered" && (
         <>
-          <p>Сначала зарегистрируйтесь в боте командой /start.</p>
+          <p>{t("auth_not_registered")}</p>
           {botUsername && (
             <a
               href={`https://t.me/${botUsername}?start`}
@@ -44,7 +51,7 @@ function TmaAuthGate() {
               rel="noreferrer"
               className="text-primary underline"
             >
-              Открыть бота
+              {t("auth_open_bot")}
             </a>
           )}
         </>
@@ -55,9 +62,9 @@ function TmaAuthGate() {
           <button
             type="button"
             onClick={retry}
-            className="cursor-pointer rounded-xl border-none bg-primary px-[18px] py-2.5 font-bold text-white"
+            className="bg-primary cursor-pointer rounded-xl border-none px-[18px] py-2.5 font-bold text-white"
           >
-            Повторить
+            {t("auth_retry")}
           </button>
         </>
       )}
@@ -73,11 +80,9 @@ function TmaAppShell() {
   )
   const pal = useMemo(() => makePalette(dark, accent), [dark, accent])
 
-  const [lang, setLangState] = useState<Lang>(
-    () => (localStorage.getItem("lc-lang") as Lang) || "ru"
-  )
+  const [lang, setLangState] = useState<Lang>(readStoredLang)
   useEffect(() => {
-    localStorage.setItem("lc-lang", lang)
+    writeStoredLang(lang)
   }, [lang])
   const setLang = useCallback((l: Lang) => setLangState(l), [])
 

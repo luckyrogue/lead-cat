@@ -14,17 +14,14 @@ export function TabBar() {
   const items = buildTabBarItems(getVisibleTabBarModules(user), t)
 
   return (
-    <div className="tma-tabbar flex items-start border-t border-tma-border bg-tma-tg-bar">
+    <div className="tma-tabbar border-tma-border bg-tma-tg-bar flex items-start border-t">
       {items.map((it) => {
         if (it.key === "_fab") {
           return (
-            <div
-              key="_fab"
-              className="relative flex flex-1 justify-center"
-            >
+            <div key="_fab" className="relative flex flex-1 justify-center">
               <Link
                 to="/meetings/create"
-                className="absolute -top-[30px] flex size-[58px] cursor-pointer items-center justify-center rounded-[20px] border-4 border-tma-tg-bar bg-tma-accent shadow-[0_8px_20px_var(--tma-accent-glow)] transition-transform duration-150 active:scale-90 active:rotate-90"
+                className="border-tma-tg-bar bg-tma-accent absolute -top-[30px] flex size-[58px] cursor-pointer items-center justify-center rounded-[20px] border-4 shadow-[0_8px_20px_var(--tma-accent-glow)] transition-transform duration-150 active:rotate-90 active:scale-90"
               >
                 <CatIcon
                   name="plus"

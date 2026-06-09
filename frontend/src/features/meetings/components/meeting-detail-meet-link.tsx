@@ -9,10 +9,15 @@ export function MeetingDetailMeetLink() {
     <button
       type="button"
       onClick={() => toastSuccess("🔗 Google Meet")}
-      className="mb-4 flex w-full cursor-pointer items-center gap-3 rounded-2xl border-none bg-tma-accent px-[15px] py-[13px] text-tma-accent-text shadow-tma-sm"
+      className="bg-tma-accent text-tma-accent-text shadow-tma-sm mb-4 flex w-full cursor-pointer items-center gap-3 rounded-2xl border-none px-[15px] py-[13px]"
     >
-      <span className="flex size-9 items-center justify-center rounded-[11px] bg-white/22">
-        <CatIcon name="link" size={19} className="text-tma-accent-text" sw={2.2} />
+      <span className="bg-white/22 flex size-9 items-center justify-center rounded-[11px]">
+        <CatIcon
+          name="link"
+          size={19}
+          className="text-tma-accent-text"
+          sw={2.2}
+        />
       </span>
       <div className="flex-1 text-left">
         <div className="text-xs font-semibold opacity-85">{t("meetLink")}</div>
@@ -20,7 +25,12 @@ export function MeetingDetailMeetLink() {
           {t("joinMeet")}
         </div>
       </div>
-      <CatIcon name="arrowR" size={20} className="text-tma-accent-text" sw={2.2} />
+      <CatIcon
+        name="arrowR"
+        size={20}
+        className="text-tma-accent-text"
+        sw={2.2}
+      />
     </button>
   )
 }

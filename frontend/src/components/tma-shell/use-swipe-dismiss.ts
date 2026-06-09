@@ -87,9 +87,7 @@ export function useSwipeDismiss(
 
   const panelMotionStyle = {
     transform: undefined as string | undefined,
-    transition: dragging
-      ? "none"
-      : "transform .34s cubic-bezier(.32,.72,0,1)",
+    transition: dragging ? "none" : "transform .34s cubic-bezier(.32,.72,0,1)",
   }
 
   return {

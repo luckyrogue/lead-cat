@@ -37,12 +37,12 @@ export function EmployeePicker({
           placeholder={searchPlaceholder}
           className={cn("tma-input pl-[42px]")}
         />
-        <span className="pointer-events-none absolute left-[13px] top-[15px] text-tma-faint">
+        <span className="text-tma-faint pointer-events-none absolute left-[13px] top-[15px]">
           <CatIcon name="search" size={19} sw={2} />
         </span>
       </div>
       {matches.length > 0 && (
-        <div className="mt-2 overflow-hidden rounded-[14px] border border-tma-border bg-tma-card">
+        <div className="border-tma-border bg-tma-card mt-2 overflow-hidden rounded-[14px] border">
           {matches.map((e, i) => (
             <button
               key={e.id}
@@ -50,15 +50,15 @@ export function EmployeePicker({
               onClick={() => add(e)}
               className={cn(
                 "flex w-full cursor-pointer items-center gap-[11px] border-none bg-transparent px-3 py-2.5 text-left",
-                i < matches.length - 1 && "border-b border-tma-border"
+                i < matches.length - 1 && "border-tma-border border-b"
               )}
             >
               <Avatar name={e.name} size={34} />
               <div className="min-w-0 flex-1">
-                <div className="font-display text-sm font-bold text-tma-text">
+                <div className="font-display text-tma-text text-sm font-bold">
                   {e.name}
                 </div>
-                <div className="text-xs text-tma-muted">
+                <div className="text-tma-muted text-xs">
                   {showEmail ? `${e.dept} · ${e.email}` : e.dept}
                 </div>
               </div>
@@ -74,16 +74,16 @@ export function EmployeePicker({
           {value.map((e, i) => (
             <span
               key={e.id}
-              className="inline-flex items-center gap-[7px] rounded-full border border-tma-border bg-tma-card-alt py-[5px] pr-1.5 pl-[5px]"
+              className="border-tma-border bg-tma-card-alt inline-flex items-center gap-[7px] rounded-full border py-[5px] pl-[5px] pr-1.5"
             >
               <Avatar name={e.name} size={24} />
-              <span className="font-display text-[13px] font-bold text-tma-text">
+              <span className="font-display text-tma-text text-[13px] font-bold">
                 {e.name.split(" ")[0]}
               </span>
               <button
                 type="button"
                 onClick={() => remove(i)}
-                className="flex cursor-pointer border-none bg-transparent p-0.5 text-tma-muted"
+                className="text-tma-muted flex cursor-pointer border-none bg-transparent p-0.5"
               >
                 <CatIcon name="x" size={14} sw={2.4} />
               </button>

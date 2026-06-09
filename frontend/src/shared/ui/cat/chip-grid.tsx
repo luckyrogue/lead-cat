@@ -25,6 +25,7 @@ export function ChipGrid<T extends string | number>({
 }) {
   return (
     <div
+      role="group"
       className={cn(
         layout === "wrap"
           ? "flex flex-wrap gap-2"
@@ -39,9 +40,12 @@ export function ChipGrid<T extends string | number>({
             key={String(o.value)}
             type="button"
             onClick={() => onChange(o.value)}
+            aria-pressed={active}
             className={cn(
-              "font-display flex cursor-pointer items-center gap-2 rounded-[14px] border-[1.5px] text-left text-sm font-bold leading-[1.1] text-tma-text",
-              layout === "wrap" ? "rounded-[11px] px-3.5 py-[9px]" : "px-[13px] py-[13px]",
+              "font-display text-tma-text flex cursor-pointer items-center gap-2 rounded-[14px] border-[1.5px] text-left text-sm font-bold leading-[1.1]",
+              layout === "wrap"
+                ? "rounded-[11px] px-3.5 py-[9px]"
+                : "px-[13px] py-[13px]",
               active
                 ? layout === "wrap"
                   ? "border-tma-accent bg-tma-accent-soft text-tma-accent"
@@ -50,7 +54,13 @@ export function ChipGrid<T extends string | number>({
             )}
           >
             {o.emoji && <span className="text-lg">{o.emoji}</span>}
-            <span className={layout === "grid" ? "font-display text-sm font-bold leading-[1.1]" : undefined}>
+            <span
+              className={
+                layout === "grid"
+                  ? "font-display text-sm font-bold leading-[1.1]"
+                  : undefined
+              }
+            >
               {o.label}
             </span>
           </button>
