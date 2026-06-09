@@ -7,6 +7,6 @@ export const Route = createFileRoute("/_tma/")({
   shouldReload: shouldReloadExceptSearch,
   loaderDeps: () => ({}),
   loader: ({ context }) =>
-    context.queryClient.ensureQueryData(myMeetingsQuery("all")),
+    context.queryClient.ensureQueryData(myMeetingsQuery("upcoming")),
   component: HomePage,
 })

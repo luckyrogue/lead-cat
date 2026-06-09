@@ -11,7 +11,7 @@ export function PermissionDenied({
     <div className="flex flex-col items-center gap-3 p-6 text-center">
       <div className="text-[40px]">🙀</div>
       <h2 className="font-display m-0 text-xl font-extrabold">{title}</h2>
-      <p className="m-0 text-cat-secondary">{message}</p>
+      <p className="text-cat-secondary m-0">{message}</p>
     </div>
   )
 }

@@ -1,15 +1,15 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import path from "path";
 
 export default defineConfig({
   envDir: path.resolve(__dirname, ".."),
   plugins: [
-    TanStackRouterVite({
-      routesDirectory: "./src/routes",
-      generatedRouteTree: "./src/routeTree.gen.ts",
+    tanstackRouter({
+      target: "react",
+      autoCodeSplitting: true,
     }),
     tailwindcss(),
     react(),
@@ -24,7 +24,10 @@ export default defineConfig({
     proxy: {
       "/api": "http://localhost:8080",
     },
-    allowedHosts: ['038b-91-231-66-51.ngrok-free.app']
+    allowedHosts:
+      process.env.VITE_DEV_ALLOWED_HOSTS?.split(",")
+        .map((h) => h.trim())
+        .filter(Boolean) ?? true,
   },
   build: {
     outDir: "dist",

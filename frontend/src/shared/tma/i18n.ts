@@ -107,6 +107,24 @@ export const I18N = {
     delThis: "Эту встречу",
     delSeries: "Всю серию",
     seriesEditLockedNote: "Дата и периодичность серии не редактируются",
+    loading: "Загрузка…",
+    auth_loading: "Загрузка…",
+    auth_not_registered: "Сначала зарегистрируйтесь в боте командой /start.",
+    auth_open_bot: "Открыть бота",
+    auth_no_init_data: "Откройте приложение из Telegram.",
+    auth_invalid_init_data:
+      "Сессия Telegram недействительна. Закройте и откройте Mini App заново.",
+    auth_login_failed:
+      "Не удалось войти. Проверьте, что backend запущен (make dev).",
+    auth_retry: "Повторить",
+    maint_title: "Кот уронил сервер",
+    maint_body:
+      "Сервис временно недоступен. Попробуйте обновить через минуту — статус проверяется автоматически.",
+    maint_reload: "Обновить",
+    err_page_title: "Кот уронил страницу",
+    err_page_retry: "Попробовать снова",
+    err_page_generic: "Что-то пошло не так",
+    close: "Закрыть",
   },
   kk: {
     _label: "Қазақша",
@@ -212,6 +230,24 @@ export const I18N = {
     delThis: "Осы кездесуді",
     delSeries: "Бүкіл серияны",
     seriesEditLockedNote: "Сериалдың күні мен жиілігі өзгертілмейді",
+    loading: "Жүктелуде…",
+    auth_loading: "Жүктелуде…",
+    auth_not_registered: "Алдымен ботта /start арқылы тіркеліңіз.",
+    auth_open_bot: "Ботты ашу",
+    auth_no_init_data: "Қосымшаны Telegram ішінен ашыңыз.",
+    auth_invalid_init_data:
+      "Telegram сессиясы жарамсыз. Mini App-ты жауып, қайта ашыңыз.",
+    auth_login_failed:
+      "Кіру сәтсіз аяқталды. Backend іске қосылғанын тексеріңіз (make dev).",
+    auth_retry: "Қайталау",
+    maint_title: "Мысық серверді құлатты",
+    maint_body:
+      "Қызмет уақытша қолжетімсіз. Бір минуттан кейін жаңартып көріңіз — күй автоматты түрде тексеріледі.",
+    maint_reload: "Жаңарту",
+    err_page_title: "Мысық бетті құлатты",
+    err_page_retry: "Қайта көру",
+    err_page_generic: "Бір нәрсе дұрыс болмады",
+    close: "Жабу",
   },
   en: {
     _label: "English",
@@ -317,6 +353,23 @@ export const I18N = {
     delThis: "This meeting",
     delSeries: "Whole series",
     seriesEditLockedNote: "Series date and recurrence are not editable",
+    loading: "Loading…",
+    auth_loading: "Loading…",
+    auth_not_registered: "Register in the bot first with /start.",
+    auth_open_bot: "Open bot",
+    auth_no_init_data: "Open the app from Telegram.",
+    auth_invalid_init_data:
+      "Telegram session is invalid. Close and reopen the Mini App.",
+    auth_login_failed: "Sign-in failed. Check that the backend is running (make dev).",
+    auth_retry: "Retry",
+    maint_title: "The cat knocked over the server",
+    maint_body:
+      "Service is temporarily unavailable. Try refreshing in a minute — status is checked automatically.",
+    maint_reload: "Refresh",
+    err_page_title: "The cat broke the page",
+    err_page_retry: "Try again",
+    err_page_generic: "Something went wrong",
+    close: "Close",
   },
 } as const
 

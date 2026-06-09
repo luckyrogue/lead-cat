@@ -55,33 +55,23 @@ export function MiniCalendar({
     "flex size-8 cursor-pointer items-center justify-center rounded-[10px] border-none bg-tma-card-alt"
 
   return (
-    <div className="rounded-[18px] border border-tma-border bg-tma-card p-3.5">
+    <div className="border-tma-border bg-tma-card rounded-[18px] border p-3.5">
       <div className="mb-3 flex items-center justify-between">
         <button type="button" onClick={() => nav(-1)} className={navBtnClass}>
-          <CatIcon
-            name="chevL"
-            size={18}
-            className="text-tma-text"
-            sw={2.2}
-          />
+          <CatIcon name="chevL" size={18} className="text-tma-text" sw={2.2} />
         </button>
-        <span className="font-display text-base font-extrabold text-tma-text">
+        <span className="font-display text-tma-text text-base font-extrabold">
           {monthNames[view.m]} {view.y}
         </span>
         <button type="button" onClick={() => nav(1)} className={navBtnClass}>
-          <CatIcon
-            name="chevR"
-            size={18}
-            className="text-tma-text"
-            sw={2.2}
-          />
+          <CatIcon name="chevR" size={18} className="text-tma-text" sw={2.2} />
         </button>
       </div>
       <div className="mb-1.5 grid grid-cols-7 gap-1">
         {WEEKDAYS.map((w) => (
           <div
             key={w}
-            className="text-center text-[11px] font-bold text-tma-faint"
+            className="text-tma-faint text-center text-[11px] font-bold"
           >
             {w}
           </div>
@@ -102,19 +92,19 @@ export function MiniCalendar({
               className={cn(
                 "font-display relative aspect-square cursor-pointer rounded-[11px] border-none text-sm",
                 active
-                  ? "bg-tma-accent font-extrabold text-tma-accent-text"
+                  ? "bg-tma-accent text-tma-accent-text font-extrabold"
                   : cn(
                       "bg-transparent",
                       isPast
-                        ? "font-semibold text-tma-faint"
-                        : "font-semibold text-tma-text",
+                        ? "text-tma-faint font-semibold"
+                        : "text-tma-text font-semibold",
                       isToday && "font-extrabold"
                     )
               )}
             >
               {d}
               {isToday && !active && (
-                <span className="absolute bottom-[5px] left-1/2 size-1 -translate-x-1/2 rounded-sm bg-tma-accent" />
+                <span className="bg-tma-accent absolute bottom-[5px] left-1/2 size-1 -translate-x-1/2 rounded-sm" />
               )}
             </button>
           )

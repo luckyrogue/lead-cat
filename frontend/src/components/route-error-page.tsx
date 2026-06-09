@@ -1,4 +1,6 @@
 import { StatusScreen } from "@/components/status-screen"
+import { translate } from "@/shared/tma/i18n"
+import { readStoredLang } from "@/shared/tma/stored-lang"
 
 type RouteErrorPageProps = {
   error: unknown
@@ -9,27 +11,30 @@ function errorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message
   }
-  return "Что-то пошло не так"
+  return translate(readStoredLang(), "err_page_generic")
 }
 
 export function RouteErrorPage({ error, reset }: RouteErrorPageProps) {
+  const t = (key: Parameters<typeof translate>[1]) =>
+    translate(readStoredLang(), key)
+
   return (
     <StatusScreen
       emoji="😿"
-      title="Кот уронил страницу"
+      title={t("err_page_title")}
       action={
         reset ? (
           <button
             type="button"
             onClick={reset}
-            className="cursor-pointer rounded-xl border-none bg-primary px-[18px] py-2.5 font-bold text-white"
+            className="bg-primary cursor-pointer rounded-xl border-none px-[18px] py-2.5 font-bold text-white"
           >
-            Попробовать снова
+            {t("err_page_retry")}
           </button>
         ) : null
       }
     >
-      <p className="m-0 mb-4 text-cat-secondary">{errorMessage(error)}</p>
+      <p className="text-cat-secondary m-0 mb-4">{errorMessage(error)}</p>
     </StatusScreen>
   )
 }

@@ -1,8 +1,10 @@
+import { useMemo } from "react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { cn } from "@/shared/lib/cn"
 import { TMA_NOW } from "@/entities/meeting/constants"
 import { useTmaAuth } from "@/shared/auth/auth-context"
 import { useTmaApp } from "@/shared/tma/context"
+import { splitHomeMeetings } from "@/entities/meeting/lib/home-meetings"
 import { useMyMeetings } from "@/entities/meeting/queries"
 import { hueSurfaceVars } from "@/shared/tma/surface-vars"
 import { CatIcon } from "@/shared/ui/cat/primitives"
@@ -18,15 +20,13 @@ export function HomePage() {
   const p = useTmaApp()
   const { user } = useTmaAuth()
   const navigate = useNavigate()
-  const { data: meetings = [] } = useMyMeetings("all")
+  // scope=upcoming: past-today meetings are omitted (backend window starts at now).
+  const { data: meetings = [] } = useMyMeetings("upcoming")
   const t = p.t
-  const today = meetings
-    .filter((m) => m.date === TMA_NOW)
-    .sort((a, b) => a.start.localeCompare(b.start))
-  const upcoming = meetings
-    .filter((m) => m.date > TMA_NOW)
-    .sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start))
-    .slice(0, 4)
+  const { todayMeetings: today, upcomingMeetings: upcoming } = useMemo(
+    () => splitHomeMeetings(meetings, TMA_NOW),
+    [meetings]
+  )
   const firstName = (user?.name ?? "").split(" ")[0]
 
   const actions = [
@@ -70,7 +70,7 @@ export function HomePage() {
 
   return (
     <div className="flex flex-col gap-[22px] px-4 pb-7 pt-4">
-      <div className="bg-tma-hero relative overflow-hidden rounded-3xl border border-tma-accent-line px-5 pb-[22px] pt-5">
+      <div className="bg-tma-hero border-tma-accent-line relative overflow-hidden rounded-3xl border px-5 pb-[22px] pt-5">
         <Paw
           size={150}
           className="absolute -bottom-[34px] -right-7 -rotate-[18deg]"
@@ -87,7 +87,7 @@ export function HomePage() {
           <div className="tma-heading mb-2.5 text-[28px] leading-[1.05]">
             {firstName}!
           </div>
-          <div className="text-[14.5px] font-semibold text-tma-text opacity-85">
+          <div className="text-tma-text text-[14.5px] font-semibold opacity-85">
             {today.length > 0
               ? `${t("today")}: ${meetCount(today.length, p.lang)}`
               : t("nothingToday")}
@@ -104,8 +104,8 @@ export function HomePage() {
               to={a.to}
               className={cn(
                 "flex cursor-pointer flex-col gap-[11px] rounded-[18px]",
-                "border border-tma-border bg-tma-card px-3.5 py-[15px]",
-                "text-left no-underline shadow-tma-sm transition-transform duration-150"
+                "border-tma-border bg-tma-card border px-3.5 py-[15px]",
+                "shadow-tma-sm text-left no-underline transition-transform duration-150"
               )}
             >
               <div
@@ -119,7 +119,7 @@ export function HomePage() {
                   sw={2.1}
                 />
               </div>
-              <span className="font-display text-[14.5px] font-bold leading-[1.15] text-tma-text">
+              <span className="font-display text-tma-text text-[14.5px] font-bold leading-[1.15]">
                 {a.label}
               </span>
             </Link>
@@ -137,7 +137,7 @@ export function HomePage() {
           {t("today")}
         </SectionTitle>
         {today.length === 0 ? (
-          <div className="overflow-hidden rounded-[20px] border border-tma-border bg-tma-card">
+          <div className="border-tma-border bg-tma-card overflow-hidden rounded-[20px] border">
             <EmptyState emoji="😴" title={t("nothingToday")} />
           </div>
         ) : (

@@ -17,7 +17,7 @@ export function TypeTag({
   return (
     <span
       className={cn(
-        "font-display inline-flex items-center whitespace-nowrap rounded-full bg-type-soft font-bold leading-none text-type-accent",
+        "font-display bg-type-soft text-type-accent inline-flex items-center whitespace-nowrap rounded-full font-bold leading-none",
         size === "sm"
           ? "gap-1 px-2 py-[3px] text-[11.5px]"
           : "gap-[5px] px-2.5 py-[5px] text-[13px]"

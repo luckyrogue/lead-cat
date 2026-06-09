@@ -1,4 +1,6 @@
 import { StatusScreen } from "@/components/status-screen"
+import { translate } from "@/shared/tma/i18n"
+import { readStoredLang } from "@/shared/tma/stored-lang"
 
 type MaintenanceScreenProps = {
   onReload?: () => void
@@ -7,24 +9,24 @@ type MaintenanceScreenProps = {
 export function MaintenanceScreen({
   onReload = () => window.location.reload(),
 }: MaintenanceScreenProps) {
+  const t = (key: Parameters<typeof translate>[1]) =>
+    translate(readStoredLang(), key)
+
   return (
     <StatusScreen
       emoji="🐱"
-      title="Кот уронил сервер"
+      title={t("maint_title")}
       action={
         <button
           type="button"
           onClick={onReload}
-          className="mt-2 cursor-pointer rounded-[14px] border-none bg-primary px-5 py-3 text-[15px] font-bold text-white"
+          className="bg-primary mt-2 cursor-pointer rounded-[14px] border-none px-5 py-3 text-[15px] font-bold text-white"
         >
-          Обновить
+          {t("maint_reload")}
         </button>
       }
     >
-      <p className="m-0 leading-normal text-cat-secondary">
-        Сервис временно недоступен. Попробуйте обновить через минуту — статус
-        проверяется автоматически.
-      </p>
+      <p className="text-cat-secondary m-0 leading-normal">{t("maint_body")}</p>
     </StatusScreen>
   )
 }

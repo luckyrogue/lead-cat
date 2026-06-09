@@ -40,10 +40,10 @@ export function WizardStepWho({
       <Field label={t("host")}>
         <div className="tma-input flex h-[54px] items-center gap-2.5">
           <Avatar name={draft.host} size={32} />
-          <span className="font-display font-bold text-tma-text">
+          <span className="font-display text-tma-text font-bold">
             {draft.host}
           </span>
-          <span className="ml-auto rounded-full bg-tma-accent-soft px-2 py-[3px] text-[11px] font-bold text-tma-accent">
+          <span className="bg-tma-accent-soft text-tma-accent ml-auto rounded-full px-2 py-[3px] text-[11px] font-bold">
             я
           </span>
         </div>

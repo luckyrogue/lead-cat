@@ -1,5 +1,7 @@
 import type { ReactNode } from "react"
 import { cn } from "@/shared/lib/cn"
+import { translate } from "@/shared/tma/i18n"
+import { readStoredLang } from "@/shared/tma/stored-lang"
 import { CatIcon } from "@/shared/ui/cat/primitives"
 import { useMounted } from "./use-mounted"
 import { useSwipeDismiss } from "./use-swipe-dismiss"
@@ -45,6 +47,7 @@ export function BottomSheet({
 
   if (!mounted) return null
 
+  const closeLabel = translate(readStoredLang(), "close")
   const fitContent = maxH === "fit-content"
 
   return (
@@ -67,7 +70,7 @@ export function BottomSheet({
         onClick={(e) => e.stopPropagation()}
         {...swipe.pointerHandlers}
         className={cn(
-          "relative flex flex-col rounded-t-[26px] bg-tma-bg shadow-[0_-10px_40px_rgba(0,0,0,0.25)]",
+          "bg-tma-bg relative flex flex-col rounded-t-[26px] shadow-[0_-10px_40px_rgba(0,0,0,0.25)]",
           MAX_H_CLASS[maxH],
           !fitContent && "min-h-0",
           !footer && "pb-[max(20px,env(safe-area-inset-bottom,0px))]"
@@ -79,21 +82,22 @@ export function BottomSheet({
       >
         {showHandle && (
           <div className="flex shrink-0 touch-none justify-center pt-2.5">
-            <div className="h-[5px] w-10 rounded-[3px] bg-tma-border-strong" />
+            <div className="bg-tma-border-strong h-[5px] w-10 rounded-[3px]" />
           </div>
         )}
 
         {title && (
           <div
             className={cn(
-              "flex shrink-0 touch-none items-center gap-2 border-b border-tma-border",
+              "border-tma-border flex shrink-0 touch-none items-center gap-2 border-b",
               showHandle ? "px-2.5 pb-2.5 pt-1" : "px-2.5 py-3"
             )}
           >
             <button
               type="button"
               onClick={onBack ?? onClose}
-              className="tg-icon-btn ml-0 w-[38px] text-tma-text"
+              aria-label={onBack ? undefined : closeLabel}
+              className="tg-icon-btn text-tma-text ml-0 w-[38px]"
             >
               <CatIcon name={onBack ? "chevL" : "x"} size={20} sw={2.2} />
             </button>
@@ -121,7 +125,7 @@ export function BottomSheet({
         </div>
 
         {footer && (
-          <div className="shrink-0 border-t border-tma-border bg-tma-tg-bar px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom,0px))]">
+          <div className="border-tma-border bg-tma-tg-bar shrink-0 border-t px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom,0px))]">
             {footer}
           </div>
         )}

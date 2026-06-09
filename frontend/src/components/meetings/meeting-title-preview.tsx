@@ -12,7 +12,7 @@ export function MeetingTitlePreview({
   return (
     <div
       className={cn(
-        "mb-4 rounded-2xl border border-dashed border-tma-border-strong",
+        "border-tma-border-strong mb-4 rounded-2xl border border-dashed",
         "bg-tma-card-alt px-[15px] py-[13px]",
         className
       )}

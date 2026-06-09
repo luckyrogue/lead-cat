@@ -41,13 +41,13 @@ src/
 │   │   profile/            # settings-group, profile-header
 ├── entities/
 │   ├── employee/           # types, fixtures, api, queries (search)
-│   ├── meeting/            # api, queries, write-api, mutations, scheduling-api, lib/
+│   ├── meeting/            # api, queries, write-api, mutations, scheduling-api, scheduling-queries, lib/
 │   └── scenario/           # types
 └── shared/
     ├── api/
     ├── auth/               # types, session, tma-api, auth-context, refresh-session, …
     ├── lib/                # cn, toast, use-list-url-state, …
-    ├── tma/                # i18n, palette, context, surface-vars
+    ├── tma/                # i18n, stored-lang, palette, context, surface-vars
     └── ui/cat/             # ChipGrid, DurationPicker, Segmented, … + primitives.tsx
 ```
 
@@ -60,9 +60,32 @@ Imports: `@/features/...`, `@/shared/...`, `@/entities/...`.
 3. Navigation and guards from `shared/auth/module-policies.ts` (TabBar ← `getVisibleTabBarModules`).
 4. Keep source files **≤300 lines**; split large pages into feature `components/` and shared `components/`.
 
+## Data scopes
+
+- **Home** — `scope=upcoming` (not `all`); today/upcoming derived via `entities/meeting/lib/home-meetings.ts`
+- **Meetings list** — `scope` from URL filter (`upcoming` / `past` / `all`); `scope=all` when detail or success sheet is open
+- **Detail route** loader prefetches `all` for meeting lookup in cache
+
+## Dev env
+
+Optional ngrok / tunnel host for Vite (repo root or `frontend/.env`):
+
+```bash
+VITE_DEV_ALLOWED_HOSTS=your-subdomain.ngrok-free.app
+```
+
 ## HTTP client (axios)
 
 `shared/api/client.ts` — axios `api` + `apiFetch`. Bearer from `shared/auth/session.ts` (`lc.tma.auth` in sessionStorage). 401 on `/tma/*` → single-flight `refreshTmaSessionIfNeeded`.
+
+## Tooling
+
+```bash
+pnpm lint          # ESLint + FSD import boundaries
+pnpm test          # vitest (unit + component tests)
+pnpm typecheck
+pnpm build
+```
 
 ## OpenAPI / codegen
 

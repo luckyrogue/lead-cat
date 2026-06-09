@@ -47,15 +47,15 @@ export function AdminPanel({ meetings }: { meetings: Meeting[] }) {
               key={e.id}
               className={cn(
                 "flex items-center gap-[11px] px-2 py-[9px]",
-                i < EMPLOYEES.length - 1 && "border-b border-tma-border"
+                i < EMPLOYEES.length - 1 && "border-tma-border border-b"
               )}
             >
               <Avatar name={e.name} size={38} />
               <div className="min-w-0 flex-1">
-                <div className="font-display text-[14.5px] font-bold text-tma-text">
+                <div className="font-display text-tma-text text-[14.5px] font-bold">
                   {e.name}
                 </div>
-                <div className="truncate text-xs text-tma-muted">{e.email}</div>
+                <div className="text-tma-muted truncate text-xs">{e.email}</div>
               </div>
               <span
                 className={cn(

@@ -36,26 +36,26 @@ export function AutoPage() {
 
   return (
     <div className="px-4 pb-7">
-      <h2 className="tma-heading mx-1 mt-0.5 mb-1 text-[26px]">
+      <h2 className="tma-heading mx-1 mb-1 mt-0.5 text-[26px]">
         {t("nav_auto")} ⚡
       </h2>
-      <p className="mx-1 mb-[18px] text-sm text-tma-muted">
+      <p className="text-tma-muted mx-1 mb-[18px] text-sm">
         Кот сам напомнит, пингнёт и пришлёт отчёт
       </p>
 
-      <div className="relative mb-[18px] overflow-hidden rounded-[20px] border border-tma-border bg-tma-auto-banner px-[18px] py-4">
+      <div className="border-tma-border bg-tma-auto-banner relative mb-[18px] overflow-hidden rounded-[20px] border px-[18px] py-4">
         <Paw
           size={90}
           tone="auto"
-          className="absolute -top-4 -right-4 rotate-[20deg]"
+          className="absolute -right-4 -top-4 rotate-[20deg]"
         />
         <div className="relative flex items-center gap-3">
           <span className="text-[30px]">🤖</span>
           <div>
-            <div className="font-display text-[15.5px] font-extrabold text-tma-text">
+            <div className="font-display text-tma-text text-[15.5px] font-extrabold">
               {scenarios.filter((s) => s.enabled).length} активных сценария
             </div>
-            <div className="text-[13px] font-semibold text-tma-muted">
+            <div className="text-tma-muted text-[13px] font-semibold">
               работают по расписанию в чате команды
             </div>
           </div>
@@ -72,15 +72,18 @@ export function AutoPage() {
           return (
             <CatCard
               key={s.id}
-              className={cn("overflow-hidden p-0", !s.enabled && "opacity-[0.62]")}
+              className={cn(
+                "overflow-hidden p-0",
+                !s.enabled && "opacity-[0.62]"
+              )}
             >
               <div className="px-[15px] py-3.5">
                 <div className="mb-3 flex items-start gap-2.5">
                   <div className="flex-1">
-                    <div className="font-display mb-1 text-base font-extrabold text-tma-text">
+                    <div className="font-display text-tma-text mb-1 text-base font-extrabold">
                       {s.name}
                     </div>
-                    <div className="flex items-center gap-2 text-[13px] font-semibold text-tma-muted">
+                    <div className="text-tma-muted flex items-center gap-2 text-[13px] font-semibold">
                       <span className="inline-flex items-center gap-1">
                         <CatIcon
                           name="clock"
@@ -107,7 +110,7 @@ export function AutoPage() {
                     onChange={() => toggleScenario(s.id)}
                   />
                 </div>
-                <div className="mb-3 text-[13px] leading-snug text-tma-muted">
+                <div className="text-tma-muted mb-3 text-[13px] leading-snug">
                   {s.note}
                 </div>
                 <div className="flex flex-wrap gap-[7px]">
@@ -117,7 +120,7 @@ export function AutoPage() {
                     return (
                       <span
                         key={act}
-                        className="font-display inline-flex items-center gap-[5px] rounded-full border border-tma-border bg-tma-card-alt px-2.5 py-1 text-[12.5px] font-bold text-tma-text"
+                        className="font-display border-tma-border bg-tma-card-alt text-tma-text inline-flex items-center gap-[5px] rounded-full border px-2.5 py-1 text-[12.5px] font-bold"
                       >
                         <span className="text-[13px]">{meta.emoji}</span>
                         {meta.label[lang]}
@@ -134,7 +137,7 @@ export function AutoPage() {
       <button
         type="button"
         onClick={() => toastSuccess("Конструктор сценариев скоро 🐾")}
-        className="font-display mt-3.5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border-[1.5px] border-dashed border-tma-border-strong bg-transparent px-[15px] py-[15px] text-[15px] font-extrabold text-tma-accent"
+        className="font-display border-tma-border-strong text-tma-accent mt-3.5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border-[1.5px] border-dashed bg-transparent px-[15px] py-[15px] text-[15px] font-extrabold"
       >
         <CatIcon name="plus" size={20} className="text-tma-accent" sw={2.4} />{" "}
         Новый сценарий

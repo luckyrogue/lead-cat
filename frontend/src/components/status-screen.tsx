@@ -19,13 +19,13 @@ export function StatusScreen({
   return (
     <main
       className={cn(
-        "flex min-h-screen items-center justify-center bg-cat-bg p-6 font-[family-name:var(--font-body)]",
+        "bg-cat-bg flex min-h-screen items-center justify-center p-6 font-[family-name:var(--font-body)]",
         className
       )}
     >
       <div className="mx-auto flex w-full max-w-[420px] flex-col gap-4 text-center">
         <div className="text-5xl">{emoji}</div>
-        <h1 className="font-display m-0 text-2xl font-extrabold text-cat-secondary">
+        <h1 className="font-display text-cat-secondary m-0 text-2xl font-extrabold">
           {title}
         </h1>
         {children}

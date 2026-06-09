@@ -20,7 +20,7 @@ export function CheckerSlotsResults({
 
   if (isError) {
     return (
-      <div className="mt-3 text-center text-sm font-semibold text-tma-muted">
+      <div className="text-tma-muted mt-3 text-center text-sm font-semibold">
         Не удалось найти слоты. Попробуй ещё раз.
       </div>
     )
@@ -29,7 +29,7 @@ export function CheckerSlotsResults({
   if (slots.length === 0) {
     return (
       <div className="mt-[22px]">
-        <div className="overflow-hidden rounded-[20px] border border-tma-border bg-tma-card">
+        <div className="border-tma-border bg-tma-card overflow-hidden rounded-[20px] border">
           <EmptyState
             emoji="🙀"
             title={t("noSlots")}
@@ -42,7 +42,7 @@ export function CheckerSlotsResults({
 
   return (
     <div className="mt-[22px]">
-      <div className="font-display mx-1 mb-3 flex items-center gap-[7px] text-[15px] font-extrabold text-tma-ok">
+      <div className="font-display text-tma-ok mx-1 mb-3 flex items-center gap-[7px] text-[15px] font-extrabold">
         ✅ {t("freeFor")} {people.length} {t("people")}
       </div>
       <div className="flex flex-col gap-2.5">
@@ -64,18 +64,18 @@ export function CheckerSlotsResults({
             }}
             className="flex items-center gap-[13px] p-3.5"
           >
-            <div className="flex size-[46px] shrink-0 flex-col items-center justify-center rounded-[13px] bg-tma-ok-soft">
+            <div className="bg-tma-ok-soft flex size-[46px] shrink-0 flex-col items-center justify-center rounded-[13px]">
               <span className="text-base">📅</span>
             </div>
             <div className="flex-1">
-              <div className="font-display text-[15.5px] font-extrabold text-tma-text">
+              <div className="font-display text-tma-text text-[15.5px] font-extrabold">
                 {s.start} – {s.end}
               </div>
-              <div className="text-[13px] font-semibold text-tma-muted">
+              <div className="text-tma-muted text-[13px] font-semibold">
                 {s.day} · {s.mins} {t("min")}
               </div>
             </div>
-            <div className="font-display flex items-center gap-1 text-[13px] font-bold text-tma-accent">
+            <div className="font-display text-tma-accent flex items-center gap-1 text-[13px] font-bold">
               {t("createHere")}
               <CatIcon name="chevR" size={15} sw={2.4} />
             </div>

@@ -19,7 +19,7 @@ export function CatCard({
       onClick={onClick}
       onKeyDown={onClick ? (e) => e.key === "Enter" && onClick() : undefined}
       className={cn(
-        "rounded-[20px] border border-tma-border bg-tma-card p-4 shadow-tma-sm transition-[transform,box-shadow] duration-150",
+        "border-tma-border bg-tma-card shadow-tma-sm rounded-[20px] border p-4 transition-[transform,box-shadow] duration-150",
         onClick ? "cursor-pointer" : "cursor-default",
         interactive && "active:scale-[0.985]",
         className

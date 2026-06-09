@@ -38,13 +38,18 @@ export function LangDropdown({
               "font-display flex w-full cursor-pointer items-center gap-[11px] rounded-[14px] border-none px-3 py-3.5 text-left text-base font-bold",
               active
                 ? "bg-tma-accent-soft text-tma-accent"
-                : "bg-transparent text-tma-text"
+                : "text-tma-text bg-transparent"
             )}
           >
             <span className="text-[22px]">{I18N[lng]._flag}</span>
             <span className="flex-1">{I18N[lng]._label}</span>
             {active && (
-              <CatIcon name="check" size={18} className="text-tma-accent" sw={2.6} />
+              <CatIcon
+                name="check"
+                size={18}
+                className="text-tma-accent"
+                sw={2.6}
+              />
             )}
           </button>
         )

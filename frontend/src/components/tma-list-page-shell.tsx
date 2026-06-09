@@ -34,7 +34,7 @@ export function TmaListPageShell({
           <Spinner />
         </div>
       ) : empty ? (
-        <div className="overflow-hidden rounded-[20px] border border-tma-border bg-tma-card">
+        <div className="border-tma-border bg-tma-card overflow-hidden rounded-[20px] border">
           {emptyState}
         </div>
       ) : (

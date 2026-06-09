@@ -4,767 +4,767 @@
  */
 
 export interface paths {
-    "/api/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Service health */
-        get: operations["health_health_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/tma": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Exchange Telegram initData for TMA JWT */
-        post: operations["tma_auth_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/tma/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Current TMA user */
-        get: operations["tma_me_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/tma/meetings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List authed user meetings */
-        get: operations["tma_meetings_get"];
-        put?: never;
-        /** Create a meeting (once or recurring series) */
-        post: operations["tmaCreateMeeting"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/tma/schedule": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Colleague schedule (read-only) */
-        get: operations["tma_schedule_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/tma/employees": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Search employee directory */
-        get: operations["tma_employees_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/tma/free-slots": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Common free-time checker */
-        post: operations["tma_free_slots_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/tma/meetings/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Cancel a single meeting (organizer/owner only) */
-        delete: operations["tmaDeleteMeeting"];
-        options?: never;
-        head?: never;
-        /** Edit a single meeting (organizer/owner only) */
-        patch: operations["tmaUpdateMeeting"];
-        trace?: never;
-    };
-    "/api/tma/conflicts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Cross-participant conflict warning */
-        post: operations["tmaConflicts"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
+  "/api/health": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Service health */
+    get: operations["health_health_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/auth/tma": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Exchange Telegram initData for TMA JWT */
+    post: operations["tma_auth_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/tma/me": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Current TMA user */
+    get: operations["tma_me_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/tma/meetings": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List authed user meetings */
+    get: operations["tma_meetings_get"]
+    put?: never
+    /** Create a meeting (once or recurring series) */
+    post: operations["tmaCreateMeeting"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/tma/schedule": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Colleague schedule (read-only) */
+    get: operations["tma_schedule_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/tma/employees": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Search employee directory */
+    get: operations["tma_employees_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/tma/free-slots": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Common free-time checker */
+    post: operations["tma_free_slots_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/tma/meetings/{id}": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /** Cancel a single meeting (organizer/owner only) */
+    delete: operations["tmaDeleteMeeting"]
+    options?: never
+    head?: never
+    /** Edit a single meeting (organizer/owner only) */
+    patch: operations["tmaUpdateMeeting"]
+    trace?: never
+  }
+  "/api/tma/conflicts": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Cross-participant conflict warning */
+    post: operations["tmaConflicts"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
-export type webhooks = Record<string, never>;
+export type webhooks = Record<string, never>
 export interface components {
-    schemas: {
-        HealthResponse: {
-            /** @enum {string} */
-            postgres: "ok" | "down";
-            /** @enum {string} */
-            redis: "ok" | "down";
-            bot_ok: boolean;
-            version: string;
-        };
-        TmaAuthRequest: {
-            init_data: string;
-        };
-        TmaUser: {
-            /** Format: int64 */
-            telegram_id: number;
-            name: string;
-            /** Format: email */
-            email: string;
-            /** @enum {string} */
-            role: "user" | "admin";
-        };
-        TmaAuthResponse: {
-            token: string;
-            user: components["schemas"]["TmaUser"];
-        };
-        TmaAuthError: {
-            /** @enum {string} */
-            code: "not_registered" | "invalid_init_data";
-        };
-        ApiErrorResponse: {
-            error?: string;
-            message?: string;
-            code?: string;
-        };
-        TmaMeeting: {
-            id: string;
-            type: string;
-            dept: string;
-            host: string;
-            /** Format: date */
-            date: string;
-            start: string;
-            end: string;
-            rec: string;
-            /** Format: email */
-            organizer: string;
-            participants: string[];
-            desc: string;
-            meet_link: string;
-            status: string;
-        };
-        TmaMeetingsResponse: {
-            meetings: components["schemas"]["TmaMeeting"][];
-        };
-        TmaEmployee: {
-            id: string;
-            name: string;
-            /** Format: email */
-            email: string;
-            dept: string;
-            tg: boolean;
-        };
-        TmaEmployeesResponse: {
-            employees: components["schemas"]["TmaEmployee"][];
-        };
-        TmaFreeSlotsRequest: {
-            participants: string[];
-            /** Format: date */
-            from: string;
-            /** Format: date */
-            to: string;
-            duration_mins: number;
-        };
-        TmaFreeSlot: {
-            /** Format: date */
-            iso: string;
-            start: string;
-            end: string;
-            mins: number;
-        };
-        TmaFreeSlotsResponse: {
-            slots: components["schemas"]["TmaFreeSlot"][];
-        };
-        TmaMeetingUpdateRequest: {
-            dept?: string | null;
-            type?: string | null;
-            host?: string | null;
-            /** @description YYYY-MM-DD */
-            date?: string | null;
-            /** @description HH:MM */
-            start?: string | null;
-            /** @description HH:MM */
-            end?: string | null;
-            desc?: string | null;
-        };
-        TmaConflictsRequest: {
-            participants: string[];
-            /** @description YYYY-MM-DD */
-            date: string;
-            /** @description HH:MM Almaty */
-            start: string;
-            /** @description HH:MM Almaty */
-            end: string;
-            /** Format: uuid */
-            exclude_id?: string;
-            /** @enum {string} */
-            recurrence?: "once" | "daily" | "weekly" | "custom" | "monthly";
-            /** Format: date */
-            recurrence_until?: string;
-            recurrence_days?: number[];
-        };
-        TmaConflict: {
-            /** Format: email */
-            email: string;
-            name: string;
-            title: string;
-            /** @description HH:MM Almaty */
-            start: string;
-            /** @description HH:MM Almaty */
-            end: string;
-        };
-        TmaOccurrenceConflicts: {
-            /** Format: date */
-            date: string;
-            /** @example 10:00 */
-            start: string;
-            /** @example 11:00 */
-            end: string;
-            conflicts: components["schemas"]["TmaConflict"][];
-        };
-        TmaMeetingCreateRequest: {
-            dept: string;
-            type: string;
-            host?: string;
-            /** @description YYYY-MM-DD */
-            date: string;
-            /** @description HH:MM */
-            start: string;
-            /** @description HH:MM */
-            end: string;
-            /** @enum {string} */
-            recurrence: "once" | "daily" | "weekly" | "custom" | "monthly";
-            desc?: string;
-            participants: string[];
-            /** Format: date */
-            recurrence_until?: string;
-            recurrence_days?: number[];
-        };
-    };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+  schemas: {
+    HealthResponse: {
+      /** @enum {string} */
+      postgres: "ok" | "down"
+      /** @enum {string} */
+      redis: "ok" | "down"
+      bot_ok: boolean
+      version: string
+    }
+    TmaAuthRequest: {
+      init_data: string
+    }
+    TmaUser: {
+      /** Format: int64 */
+      telegram_id: number
+      name: string
+      /** Format: email */
+      email: string
+      /** @enum {string} */
+      role: "user" | "admin"
+    }
+    TmaAuthResponse: {
+      token: string
+      user: components["schemas"]["TmaUser"]
+    }
+    TmaAuthError: {
+      /** @enum {string} */
+      code: "not_registered" | "invalid_init_data"
+    }
+    ApiErrorResponse: {
+      error?: string
+      message?: string
+      code?: string
+    }
+    TmaMeeting: {
+      id: string
+      type: string
+      dept: string
+      host: string
+      /** Format: date */
+      date: string
+      start: string
+      end: string
+      rec: string
+      /** Format: email */
+      organizer: string
+      participants: string[]
+      desc: string
+      meet_link: string
+      status: string
+    }
+    TmaMeetingsResponse: {
+      meetings: components["schemas"]["TmaMeeting"][]
+    }
+    TmaEmployee: {
+      id: string
+      name: string
+      /** Format: email */
+      email: string
+      dept: string
+      tg: boolean
+    }
+    TmaEmployeesResponse: {
+      employees: components["schemas"]["TmaEmployee"][]
+    }
+    TmaFreeSlotsRequest: {
+      participants: string[]
+      /** Format: date */
+      from: string
+      /** Format: date */
+      to: string
+      duration_mins: number
+    }
+    TmaFreeSlot: {
+      /** Format: date */
+      iso: string
+      start: string
+      end: string
+      mins: number
+    }
+    TmaFreeSlotsResponse: {
+      slots: components["schemas"]["TmaFreeSlot"][]
+    }
+    TmaMeetingUpdateRequest: {
+      dept?: string | null
+      type?: string | null
+      host?: string | null
+      /** @description YYYY-MM-DD */
+      date?: string | null
+      /** @description HH:MM */
+      start?: string | null
+      /** @description HH:MM */
+      end?: string | null
+      desc?: string | null
+    }
+    TmaConflictsRequest: {
+      participants: string[]
+      /** @description YYYY-MM-DD */
+      date: string
+      /** @description HH:MM Almaty */
+      start: string
+      /** @description HH:MM Almaty */
+      end: string
+      /** Format: uuid */
+      exclude_id?: string
+      /** @enum {string} */
+      recurrence?: "once" | "daily" | "weekly" | "custom" | "monthly"
+      /** Format: date */
+      recurrence_until?: string
+      recurrence_days?: number[]
+    }
+    TmaConflict: {
+      /** Format: email */
+      email: string
+      name: string
+      title: string
+      /** @description HH:MM Almaty */
+      start: string
+      /** @description HH:MM Almaty */
+      end: string
+    }
+    TmaOccurrenceConflicts: {
+      /** Format: date */
+      date: string
+      /** @example 10:00 */
+      start: string
+      /** @example 11:00 */
+      end: string
+      conflicts: components["schemas"]["TmaConflict"][]
+    }
+    TmaMeetingCreateRequest: {
+      dept: string
+      type: string
+      host?: string
+      /** @description YYYY-MM-DD */
+      date: string
+      /** @description HH:MM */
+      start: string
+      /** @description HH:MM */
+      end: string
+      /** @enum {string} */
+      recurrence: "once" | "daily" | "weekly" | "custom" | "monthly"
+      desc?: string
+      participants: string[]
+      /** Format: date */
+      recurrence_until?: string
+      recurrence_days?: number[]
+    }
+  }
+  responses: never
+  parameters: never
+  requestBodies: never
+  headers: never
+  pathItems: never
 }
-export type $defs = Record<string, never>;
+export type $defs = Record<string, never>
 export interface operations {
-    health_health_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Dependencies healthy */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HealthResponse"];
-                };
-            };
-            /** @description Dependency down */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HealthResponse"];
-                };
-            };
-        };
-    };
-    tma_auth_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TmaAuthRequest"];
-            };
-        };
-        responses: {
-            /** @description Authenticated */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TmaAuthResponse"];
-                };
-            };
-            /** @description Auth failed */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TmaAuthError"];
-                };
-            };
-        };
-    };
-    tma_me_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description User identity */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TmaUser"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-        };
-    };
-    tma_meetings_get: {
-        parameters: {
-            query: {
-                scope: "upcoming" | "past" | "all";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Meetings list */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TmaMeetingsResponse"];
-                };
-            };
-        };
-    };
-    tmaCreateMeeting: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TmaMeetingCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description Created meeting */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        meeting: components["schemas"]["TmaMeeting"];
-                    };
-                };
-            };
-            /** @description Invalid body / validation_failed / meetings_not_configured */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description telegram_linked_to_other_account */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-        };
-    };
-    tma_schedule_get: {
-        parameters: {
-            query: {
-                email: string;
-                scope: "upcoming" | "past" | "all";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Meetings list */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TmaMeetingsResponse"];
-                };
-            };
-        };
-    };
-    tma_employees_get: {
-        parameters: {
-            query?: {
-                q?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Employees */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TmaEmployeesResponse"];
-                };
-            };
-        };
-    };
-    tma_free_slots_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TmaFreeSlotsRequest"];
-            };
-        };
-        responses: {
-            /** @description Free slots */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TmaFreeSlotsResponse"];
-                };
-            };
-        };
-    };
-    tmaDeleteMeeting: {
-        parameters: {
-            query?: {
-                scope?: "this" | "whole";
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Meeting cancelled */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Conflict */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-        };
-    };
-    tmaUpdateMeeting: {
-        parameters: {
-            query?: {
-                scope?: "this" | "whole";
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TmaMeetingUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description Updated meeting */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        meeting: components["schemas"]["TmaMeeting"];
-                    };
-                };
-            };
-            /** @description Invalid body / invalid time / meetings_recurring_unsupported */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Conflict */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-        };
-    };
-    tmaConflicts: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TmaConflictsRequest"];
-            };
-        };
-        responses: {
-            /** @description Conflicts */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        occurrences: components["schemas"]["TmaOccurrenceConflicts"][];
-                    };
-                };
-            };
-            /** @description Invalid range / participants */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-        };
-    };
+  health_health_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Dependencies healthy */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HealthResponse"]
+        }
+      }
+      /** @description Dependency down */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HealthResponse"]
+        }
+      }
+    }
+  }
+  tma_auth_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TmaAuthRequest"]
+      }
+    }
+    responses: {
+      /** @description Authenticated */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["TmaAuthResponse"]
+        }
+      }
+      /** @description Auth failed */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["TmaAuthError"]
+        }
+      }
+    }
+  }
+  tma_me_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description User identity */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["TmaUser"]
+        }
+      }
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorResponse"]
+        }
+      }
+    }
+  }
+  tma_meetings_get: {
+    parameters: {
+      query: {
+        scope: "upcoming" | "past" | "all"
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Meetings list */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["TmaMeetingsResponse"]
+        }
+      }
+    }
+  }
+  tmaCreateMeeting: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TmaMeetingCreateRequest"]
+      }
+    }
+    responses: {
+      /** @description Created meeting */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": {
+            meeting: components["schemas"]["TmaMeeting"]
+          }
+        }
+      }
+      /** @description Invalid body / validation_failed / meetings_not_configured */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorResponse"]
+        }
+      }
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorResponse"]
+        }
+      }
+      /** @description telegram_linked_to_other_account */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorResponse"]
+        }
+      }
+      /** @description Internal server error */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorResponse"]
+        }
+      }
+    }
+  }
+  tma_schedule_get: {
+    parameters: {
+      query: {
+        email: string
+        scope: "upcoming" | "past" | "all"
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Meetings list */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["TmaMeetingsResponse"]
+        }
+      }
+    }
+  }
+  tma_employees_get: {
+    parameters: {
+      query?: {
+        q?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Employees */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["TmaEmployeesResponse"]
+        }
+      }
+    }
+  }
+  tma_free_slots_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TmaFreeSlotsRequest"]
+      }
+    }
+    responses: {
+      /** @description Free slots */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["TmaFreeSlotsResponse"]
+        }
+      }
+    }
+  }
+  tmaDeleteMeeting: {
+    parameters: {
+      query?: {
+        scope?: "this" | "whole"
+      }
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Meeting cancelled */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorResponse"]
+        }
+      }
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorResponse"]
+        }
+      }
+      /** @description Not found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorResponse"]
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorResponse"]
+        }
+      }
+      /** @description Internal server error */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorResponse"]
+        }
+      }
+    }
+  }
+  tmaUpdateMeeting: {
+    parameters: {
+      query?: {
+        scope?: "this" | "whole"
+      }
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TmaMeetingUpdateRequest"]
+      }
+    }
+    responses: {
+      /** @description Updated meeting */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": {
+            meeting: components["schemas"]["TmaMeeting"]
+          }
+        }
+      }
+      /** @description Invalid body / invalid time / meetings_recurring_unsupported */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorResponse"]
+        }
+      }
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorResponse"]
+        }
+      }
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorResponse"]
+        }
+      }
+      /** @description Not found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorResponse"]
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorResponse"]
+        }
+      }
+      /** @description Internal server error */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorResponse"]
+        }
+      }
+    }
+  }
+  tmaConflicts: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TmaConflictsRequest"]
+      }
+    }
+    responses: {
+      /** @description Conflicts */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": {
+            occurrences: components["schemas"]["TmaOccurrenceConflicts"][]
+          }
+        }
+      }
+      /** @description Invalid range / participants */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorResponse"]
+        }
+      }
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorResponse"]
+        }
+      }
+      /** @description Internal server error */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorResponse"]
+        }
+      }
+    }
+  }
 }

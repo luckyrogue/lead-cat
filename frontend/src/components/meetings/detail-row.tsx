@@ -10,15 +10,17 @@ export function DetailRow({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex gap-3 border-b border-tma-border py-3">
-      <div className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] bg-tma-accent-soft">
+    <div className="border-tma-border flex gap-3 border-b py-3">
+      <div className="bg-tma-accent-soft flex size-[34px] shrink-0 items-center justify-center rounded-[10px]">
         <CatIcon name={icon} size={18} className="text-tma-accent" sw={2} />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="mb-0.5 text-xs font-semibold text-tma-muted">
+        <div className="text-tma-muted mb-0.5 text-xs font-semibold">
           {label}
         </div>
-        <div className="text-[15px] font-semibold text-tma-text">{children}</div>
+        <div className="text-tma-text text-[15px] font-semibold">
+          {children}
+        </div>
       </div>
     </div>
   )
