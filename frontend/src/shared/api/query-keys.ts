@@ -1,12 +1,12 @@
-import type { TmaMeetingsScope } from "@/shared/api/types"
+import type { MiniAppMeetingsScope } from "@/shared/api/types"
 
-export const tmaKeys = {
-  all: ["tma"] as const,
-  meetings: (scope: TmaMeetingsScope) =>
-    [...tmaKeys.all, "meetings", scope] as const,
-  schedule: (email: string, scope: TmaMeetingsScope) =>
-    [...tmaKeys.all, "schedule", email, scope] as const,
-  employees: (q: string) => [...tmaKeys.all, "employees", q] as const,
+export const miniappKeys = {
+  all: ["miniapp"] as const,
+  meetings: (scope: MiniAppMeetingsScope) =>
+    [...miniappKeys.all, "meetings", scope] as const,
+  schedule: (email: string, scope: MiniAppMeetingsScope) =>
+    [...miniappKeys.all, "schedule", email, scope] as const,
+  employees: (q: string) => [...miniappKeys.all, "employees", q] as const,
 }
 
 export const healthKeys = {

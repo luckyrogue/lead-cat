@@ -9,14 +9,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const TaskRunScenario = "scenario:run"
-
-type RunPayload struct {
-	RunID      string `json:"run_id"`
-	ScenarioID string `json:"scenario_id"`
-	Trigger    string `json:"trigger"`
-}
-
 type Client struct {
 	client *asynq.Client
 	log    *zap.Logger
@@ -31,17 +23,6 @@ func NewClient(redisURL string, log *zap.Logger) (*Client, error) {
 }
 
 func (c *Client) Close() error { return c.client.Close() }
-
-func (c *Client) EnqueueRun(ctx context.Context, runID, scenarioID uuid.UUID, trigger string) error {
-	p, _ := json.Marshal(RunPayload{
-		RunID:      runID.String(),
-		ScenarioID: scenarioID.String(),
-		Trigger:    trigger,
-	})
-	task := asynq.NewTask(TaskRunScenario, p)
-	_, err := c.client.EnqueueContext(ctx, task, asynq.MaxRetry(5))
-	return err
-}
 
 const TaskMeetingCreated = "meeting:created"
 
@@ -172,10 +153,4 @@ func (s *Server) Run(ctx context.Context) error {
 
 func (s *Server) Shutdown() {
 	s.server.Shutdown()
-}
-
-func ParsePayload(t *asynq.Task) (RunPayload, error) {
-	var p RunPayload
-	err := json.Unmarshal(t.Payload(), &p)
-	return p, err
 }

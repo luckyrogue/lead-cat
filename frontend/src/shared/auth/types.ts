@@ -1,8 +1,8 @@
-export type TmaUser = {
+export type MiniAppUser = {
   telegramId: number
   name: string
   email: string
   role: "user" | "admin"
 }
 
-export type TmaUserRole = TmaUser["role"]
+export type MiniAppUserRole = MiniAppUser["role"]

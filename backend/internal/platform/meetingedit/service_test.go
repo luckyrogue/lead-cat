@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 type fakeBackend struct {

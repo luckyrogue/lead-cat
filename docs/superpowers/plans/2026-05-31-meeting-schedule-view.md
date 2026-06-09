@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-05-31-meeting-schedule-view-design.md`
 
-**Conventions:** Run Go from `backend/` with `env -u GOROOT`. Module `github.com/Jaryq-Lab/notify-bot`. Build check: `env -u GOROOT go build ./...`.
+**Conventions:** Run Go from `backend/` with `env -u GOROOT`. Module `github.com/luckyrogue/lead-cat`. Build check: `env -u GOROOT go build ./...`.
 
 ---
 
@@ -444,7 +444,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 type fakeBackend struct {
@@ -557,7 +557,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // Backend is the application surface the FSM needs (satisfied by *application.Services).
@@ -801,7 +801,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 - Modify: `backend/internal/infrastructure/telegram/multitenant.go`
 
-- [ ] **Step 1: Add the import + field.** In `backend/internal/infrastructure/telegram/multitenant.go`, add the import `"github.com/Jaryq-Lab/notify-bot/internal/platform/scheduleview"`, and add a field to `MultiHandler`:
+- [ ] **Step 1: Add the import + field.** In `backend/internal/infrastructure/telegram/multitenant.go`, add the import `"github.com/luckyrogue/lead-cat/internal/platform/scheduleview"`, and add a field to `MultiHandler`:
 
 ```go
 type MultiHandler struct {

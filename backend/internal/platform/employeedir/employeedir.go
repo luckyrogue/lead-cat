@@ -6,7 +6,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 //go:embed employees.csv

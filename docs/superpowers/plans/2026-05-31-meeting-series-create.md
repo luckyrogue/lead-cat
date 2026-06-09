@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-05-31-meeting-series-create-design.md`
 
-**Conventions:** Run Go from `backend/` with `env -u GOROOT`. Module `github.com/Jaryq-Lab/notify-bot`. Build check: `env -u GOROOT go build ./...`.
+**Conventions:** Run Go from `backend/` with `env -u GOROOT`. Module `github.com/luckyrogue/lead-cat`. Build check: `env -u GOROOT go build ./...`.
 
 ---
 
@@ -330,7 +330,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/domain/meeting"
+	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
 )
 
 type fakeCal struct {

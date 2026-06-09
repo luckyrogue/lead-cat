@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/domain/meeting"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // SeriesUpdateInput carries series-wide field overrides (nil = unchanged) plus an

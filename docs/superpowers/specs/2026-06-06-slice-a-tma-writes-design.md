@@ -22,7 +22,7 @@ Finish the TMA non-recurring write surface so an authed Telegram user can **edit
 
 ## Codebase facts (verified at HEAD `94c0baa`)
 
-- **Module path:** `github.com/Jaryq-Lab/notify-bot`.
+- **Module path:** `github.com/luckyrogue/lead-cat`.
 - **TMA group** (`backend/internal/delivery/http/app.go`, lines 151–156): `GET /me`, `GET /meetings`, `GET /schedule`, `GET /employees`, `POST /free-slots`, `POST /meetings` are wired. PATCH/DELETE/conflicts are NOT wired yet.
 - **Existing handler file** (`backend/internal/delivery/http/handlers/tma_write.go`, 97 lines): contains `tmaCreateRequest`, `toCreateMeetingInput`, `botUser(c) (postgres.BotUser, bool)`, `TMACreateMeeting`. **Slice A appends here**, not in a new file.
 - **Reusable application commands** (signatures verified):

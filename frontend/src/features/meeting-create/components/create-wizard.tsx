@@ -1,5 +1,5 @@
-import { useTmaApp } from "@/shared/tma/context"
-import type { MeetingDraft } from "@/shared/tma/types"
+import { useMiniApp } from "@/shared/miniapp/context"
+import type { MeetingDraft } from "@/shared/miniapp/types"
 import { CatBtn, CatIcon } from "@/shared/ui/cat/primitives"
 import { useCreateWizard } from "../lib/use-create-wizard"
 import { WIZARD_STEPS } from "../lib/wizard-constants"
@@ -23,7 +23,7 @@ export function CreateWizard({
     participants?: boolean
   }
 }) {
-  const { t } = useTmaApp()
+  const { t } = useMiniApp()
   const wizard = useCreateWizard({ initial, onComplete, lockedFields })
   const {
     step,
@@ -71,7 +71,7 @@ export function CreateWizard({
         )}
       </div>
 
-      <div className="border-tma-border bg-tma-tg-bar flex shrink-0 gap-2.5 border-t px-4 pb-[max(12px,var(--tma-safe-bottom,0px))] pt-3">
+      <div className="border-miniapp-border bg-miniapp-tg-bar flex shrink-0 gap-2.5 border-t px-4 pb-[max(12px,var(--miniapp-safe-bottom,0px))] pt-3">
         {step > 0 && (
           <CatBtn
             variant="outline"
@@ -80,7 +80,7 @@ export function CreateWizard({
               <CatIcon
                 name="chevL"
                 size={18}
-                className="text-tma-text"
+                className="text-miniapp-text"
                 sw={2.2}
               />
             }

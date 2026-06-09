@@ -817,7 +817,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/domain/meeting"
+	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
 )
 
 func TestExpandSeriesSpans_Once(t *testing.T) {
@@ -868,7 +868,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/domain/meeting"
+	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
 	"github.com/google/uuid"
 )
 

@@ -1,6 +1,6 @@
-import { TMA_NOW } from "@/entities/meeting/constants"
-import { useTmaAuth } from "@/shared/auth/auth-context"
-import { useTmaApp } from "@/shared/tma/context"
+import { MINIAPP_NOW } from "@/entities/meeting/constants"
+import { useMiniAppAuth } from "@/shared/auth/auth-context"
+import { useMiniApp } from "@/shared/miniapp/context"
 import { RECURRENCE } from "@/entities/meeting/constants"
 import { buildTitle, fmtDate } from "@/entities/meeting/lib/format"
 import type { Meeting } from "@/entities/meeting/types"
@@ -20,11 +20,11 @@ export function MeetingDetail({
   onEdit: (scope: "this" | "whole") => void
   onDelete: (scope: "this" | "whole") => void
 }) {
-  const p = useTmaApp()
-  const { user } = useTmaAuth()
+  const p = useMiniApp()
+  const { user } = useMiniAppAuth()
   const t = p.t
   const rec = RECURRENCE.find((r) => r.key === m.rec)
-  const past = m.date < TMA_NOW
+  const past = m.date < MINIAPP_NOW
   const canManage = m.organizer === user?.email || user?.role === "admin"
   const isSeries = Boolean(m.seriesId)
 
@@ -38,7 +38,7 @@ export function MeetingDetail({
       </DetailRow>
       <DetailRow icon="clock" label={t("timeT")}>
         {m.start} – {m.end}{" "}
-        <span className="text-tma-faint text-[13px] font-semibold">
+        <span className="text-miniapp-faint text-[13px] font-semibold">
           · UTC+5
         </span>
       </DetailRow>

@@ -14,7 +14,7 @@
 
 ## Codebase facts (verified — rely on these, but confirm before editing)
 
-- **Module path:** `github.com/Jaryq-Lab/notify-bot`.
+- **Module path:** `github.com/luckyrogue/lead-cat`.
 - **Platform auth is GROUP-scoped, not global.** `app.go` does `ap := app.Group("/api", authMW.Middleware)` and `authPub := app.Group("/api/auth")` (no mw). So a new `app.Group("/api/tma", tmaMW)` is NOT covered by the platform middleware — **no skip-list edit needed** (the spec's "add /api/tma/ to the skip list" is unnecessary; ignore it).
 - **`handlers.API` struct** (`internal/delivery/http/handlers/handlers.go`): fields `App *application.Services`, `Bot`, `RDB`, `Log`, `TMA *telegram.InitDataValidator`, `Version`. Constructed as a named-field literal in `app.go` (adding fields leaves others zero-valued — compiles). `a.App.Store` is the `*postgres.Store`.
 - **initData validator** (`internal/infrastructure/telegram/initdata.go`): `InitDataValidator.Validate(initData) (InitDataUser, error)`; `InitDataUser{ID int64, Username string}`. Verifies HMAC. Does NOT parse/return `auth_date` — this plan adds `AuthDate int64`.
@@ -331,7 +331,7 @@ Build-verified. The 401 results return an explicit JSON `{"code": ...}` so the f
 In `backend/internal/delivery/http/handlers/handlers.go`, add this import to the existing import block (matching the `platformauth` alias the package already uses in `auth.go`):
 
 ```go
-	platformauth "github.com/Jaryq-Lab/notify-bot/internal/platform/auth"
+	platformauth "github.com/luckyrogue/lead-cat/internal/platform/auth"
 ```
 
 and add two fields to the `API` struct (after `TMA`):
@@ -355,7 +355,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/telegram"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/telegram"
 )
 
 type tmaAuthRequest struct {
@@ -447,8 +447,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/auth"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/platform/auth"
 )
 
 type tmaStore interface {
@@ -519,7 +519,7 @@ package handlers
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // TMAMe returns the authenticated Telegram Mini App user's identity.

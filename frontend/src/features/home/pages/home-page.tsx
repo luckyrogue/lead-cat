@@ -1,12 +1,12 @@
 import { useMemo } from "react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { cn } from "@/shared/lib/cn"
-import { TMA_NOW } from "@/entities/meeting/constants"
-import { useTmaAuth } from "@/shared/auth/auth-context"
-import { useTmaApp } from "@/shared/tma/context"
+import { MINIAPP_NOW } from "@/entities/meeting/constants"
+import { useMiniAppAuth } from "@/shared/auth/auth-context"
+import { useMiniApp } from "@/shared/miniapp/context"
 import { splitHomeMeetings } from "@/entities/meeting/lib/home-meetings"
 import { useMyMeetings } from "@/entities/meeting/queries"
-import { hueSurfaceVars } from "@/shared/tma/surface-vars"
+import { hueSurfaceVars } from "@/shared/miniapp/surface-vars"
 import { CatIcon } from "@/shared/ui/cat/primitives"
 import { Paw } from "@/shared/ui/cat/paw"
 import {
@@ -17,14 +17,14 @@ import {
 } from "@/components/meetings/meeting-ui"
 
 export function HomePage() {
-  const p = useTmaApp()
-  const { user } = useTmaAuth()
+  const p = useMiniApp()
+  const { user } = useMiniAppAuth()
   const navigate = useNavigate()
   // scope=upcoming: past-today meetings are omitted (backend window starts at now).
   const { data: meetings = [] } = useMyMeetings("upcoming")
   const t = p.t
   const { todayMeetings: today, upcomingMeetings: upcoming } = useMemo(
-    () => splitHomeMeetings(meetings, TMA_NOW),
+    () => splitHomeMeetings(meetings, MINIAPP_NOW),
     [meetings]
   )
   const firstName = (user?.name ?? "").split(" ")[0]
@@ -51,13 +51,6 @@ export function HomePage() {
       hue: 300,
       to: "/profile/colleague" as const,
     },
-    {
-      key: "auto",
-      icon: "bolt" as const,
-      label: t("automate"),
-      hue: 25,
-      to: "/auto" as const,
-    },
   ]
 
   const openMeeting = (id: string) => {
@@ -70,7 +63,7 @@ export function HomePage() {
 
   return (
     <div className="flex flex-col gap-[22px] px-4 pb-7 pt-4">
-      <div className="bg-tma-hero border-tma-accent-line relative overflow-hidden rounded-3xl border px-5 pb-[22px] pt-5">
+      <div className="bg-miniapp-hero border-miniapp-accent-line relative overflow-hidden rounded-3xl border px-5 pb-[22px] pt-5">
         <Paw
           size={150}
           className="absolute -bottom-[34px] -right-7 -rotate-[18deg]"
@@ -79,15 +72,15 @@ export function HomePage() {
           <div
             className={cn(
               "mb-1 text-[13.5px] font-bold",
-              p.dark ? "text-tma-accent/95" : "text-tma-accent"
+              p.dark ? "text-miniapp-accent/95" : "text-miniapp-accent"
             )}
           >
             {t("greet_morning")} 🐾
           </div>
-          <div className="tma-heading mb-2.5 text-[28px] leading-[1.05]">
+          <div className="miniapp-heading mb-2.5 text-[28px] leading-[1.05]">
             {firstName}!
           </div>
-          <div className="text-tma-text text-[14.5px] font-semibold opacity-85">
+          <div className="text-miniapp-text text-[14.5px] font-semibold opacity-85">
             {today.length > 0
               ? `${t("today")}: ${meetCount(today.length, p.lang)}`
               : t("nothingToday")}
@@ -104,22 +97,22 @@ export function HomePage() {
               to={a.to}
               className={cn(
                 "flex cursor-pointer flex-col gap-[11px] rounded-[18px]",
-                "border-tma-border bg-tma-card border px-3.5 py-[15px]",
-                "shadow-tma-sm text-left no-underline transition-transform duration-150"
+                "border-miniapp-border bg-miniapp-card border px-3.5 py-[15px]",
+                "shadow-miniapp-sm text-left no-underline transition-transform duration-150"
               )}
             >
               <div
-                className="tma-hue-surface flex size-[42px] items-center justify-center rounded-[13px]"
+                className="miniapp-hue-surface flex size-[42px] items-center justify-center rounded-[13px]"
                 style={hueSurfaceVars(a.hue, p.dark)}
               >
                 <CatIcon
                   name={a.icon}
                   size={23}
-                  className="text-tma-hue-fg"
+                  className="text-miniapp-hue-fg"
                   sw={2.1}
                 />
               </div>
-              <span className="font-display text-tma-text text-[14.5px] font-bold leading-[1.15]">
+              <span className="font-display text-miniapp-text text-[14.5px] font-bold leading-[1.15]">
                 {a.label}
               </span>
             </Link>
@@ -137,7 +130,7 @@ export function HomePage() {
           {t("today")}
         </SectionTitle>
         {today.length === 0 ? (
-          <div className="border-tma-border bg-tma-card overflow-hidden rounded-[20px] border">
+          <div className="border-miniapp-border bg-miniapp-card overflow-hidden rounded-[20px] border">
             <EmptyState emoji="😴" title={t("nothingToday")} />
           </div>
         ) : (

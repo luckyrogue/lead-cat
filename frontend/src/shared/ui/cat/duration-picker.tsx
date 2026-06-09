@@ -1,5 +1,5 @@
 import { ChipGrid } from "@/shared/ui/cat/chip-grid"
-import type { I18nKey } from "@/shared/tma/i18n"
+import type { I18nKey } from "@/shared/miniapp/i18n"
 
 export function DurationPicker({
   value,

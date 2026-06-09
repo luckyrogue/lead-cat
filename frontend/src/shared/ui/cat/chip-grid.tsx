@@ -42,15 +42,15 @@ export function ChipGrid<T extends string | number>({
             onClick={() => onChange(o.value)}
             aria-pressed={active}
             className={cn(
-              "font-display text-tma-text flex cursor-pointer items-center gap-2 rounded-[14px] border-[1.5px] text-left text-sm font-bold leading-[1.1]",
+              "font-display text-miniapp-text flex cursor-pointer items-center gap-2 rounded-[14px] border-[1.5px] text-left text-sm font-bold leading-[1.1]",
               layout === "wrap"
                 ? "rounded-[11px] px-3.5 py-[9px]"
                 : "px-[13px] py-[13px]",
               active
                 ? layout === "wrap"
-                  ? "border-tma-accent bg-tma-accent-soft text-tma-accent"
-                  : "border-tma-accent bg-tma-accent-soft"
-                : "border-tma-border bg-tma-card"
+                  ? "border-miniapp-accent bg-miniapp-accent-soft text-miniapp-accent"
+                  : "border-miniapp-accent bg-miniapp-accent-soft"
+                : "border-miniapp-border bg-miniapp-card"
             )}
           >
             {o.emoji && <span className="text-lg">{o.emoji}</span>}

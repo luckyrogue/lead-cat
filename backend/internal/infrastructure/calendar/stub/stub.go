@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	docalendar "github.com/Jaryq-Lab/notify-bot/internal/domain/calendar"
+	docalendar "github.com/luckyrogue/lead-cat/internal/domain/calendar"
 )
 
 type Service struct{}

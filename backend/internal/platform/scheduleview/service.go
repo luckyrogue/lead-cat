@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // Backend is the application surface the FSM needs (satisfied by *application.Services).

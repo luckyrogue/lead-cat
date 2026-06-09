@@ -40,25 +40,6 @@ export type Member = {
   fullName: string
   telegramUsername: string
   role: string
-  githubLogin?: string
-  gitlabLogin?: string
-}
-
-export type Scenario = {
-  id: string
-  name: string
-  enabled: boolean
-  schedule: string
-  lastRunAt?: string
-}
-
-export type ScenarioRun = {
-  id: string
-  scenarioId: string
-  status: string
-  startedAt: string
-  finishedAt?: string
-  error?: string
 }
 
 export type AuditEntry = {

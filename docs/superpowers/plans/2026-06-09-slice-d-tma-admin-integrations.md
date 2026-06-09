@@ -375,7 +375,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // auditWhitelist maps action -> allowed detail keys.
@@ -496,8 +496,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/delivery/http/middleware"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/delivery/http/middleware"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 func newApp() *fiber.App {
@@ -563,7 +563,7 @@ package middleware
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // RequireBotAdmin asserts that the request was authenticated as a bot user
@@ -767,7 +767,7 @@ import (
 	"errors"
 	"testing"
 
-	googleprobe "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/google"
+	googleprobe "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/google"
 )
 
 func TestMapProbeError(t *testing.T) {
@@ -818,7 +818,7 @@ import (
 
 	"github.com/google/uuid"
 
-	googleprobe "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/google"
+	googleprobe "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/google"
 )
 
 // Sentinel errors mapped to handler-level error codes.
@@ -1054,8 +1054,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // tmaAdminBotUser extracts the authed admin bot user (set by RequireBotAdmin
@@ -1259,7 +1259,7 @@ tmaAdmin.Patch("/integrations", api.TMAAdminPatchIntegrations)
 tmaAdmin.Post("/integrations/verify", api.TMAAdminVerifyIntegrations)
 ```
 
-Add `"github.com/Jaryq-Lab/notify-bot/internal/delivery/http/middleware"` to the import block.
+Add `"github.com/luckyrogue/lead-cat/internal/delivery/http/middleware"` to the import block.
 
 - [ ] **Step 3: Build to verify**
 
@@ -1384,7 +1384,7 @@ func (s *Services) SyncChatMembers(ctx context.Context, workspaceID uuid.UUID) (
 }
 ```
 
-This requires adding `Bot *bot.Bot` to the `Services` struct and wiring it in `cmd/server/main.go`. Import `"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/telegram"` + `"github.com/go-telegram/bot"`.
+This requires adding `Bot *bot.Bot` to the `Services` struct and wiring it in `cmd/server/main.go`. Import `"github.com/luckyrogue/lead-cat/internal/infrastructure/telegram"` + `"github.com/go-telegram/bot"`.
 
 - [ ] **Step 2: Wire routes**
 

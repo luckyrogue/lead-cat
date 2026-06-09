@@ -1,4 +1,4 @@
-import { useTmaApp } from "@/shared/tma/context"
+import { useMiniApp } from "@/shared/miniapp/context"
 import { DurationPicker, Field, Segmented } from "@/shared/ui/cat/primitives"
 
 export function CheckerFilters({
@@ -12,7 +12,7 @@ export function CheckerFilters({
   dur: number
   onDurChange: (v: number) => void
 }) {
-  const t = useTmaApp().t
+  const t = useMiniApp().t
 
   return (
     <>

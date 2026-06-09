@@ -1,6 +1,8 @@
 # Lead Cat
 
-Google Meet meeting-management Mini App — Telegram-delivered notifications, employee scheduling, and conflict detection (in development — see docs/MEETINGS.md).
+Google Meet meeting-management Mini App — Telegram-delivered notifications, employee scheduling, and conflict detection (in development — see [docs/MEETINGS.md](docs/MEETINGS.md)).
+
+**Repository:** [github.com/luckyrogue/lead-cat](https://github.com/luckyrogue/lead-cat)
 
 ## Quick start (local)
 
@@ -19,7 +21,7 @@ Or step by step: `make help`
 | ------------------------------------------------ | ----------------------------------- |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)     | System design                       |
 | [docs/DEPLOY-DOKPLOY.md](docs/DEPLOY-DOKPLOY.md) | Dokploy                             |
-| [docs/AUTH.md](docs/AUTH.md)                     | Login (OTP, passkey, GitHub/GitLab) |
+| [docs/AUTH.md](docs/AUTH.md)                     | Mini App auth (Telegram `initData` → JWT) |
 | [docs/SETUP.md](docs/SETUP.md)                   | Local dev & environment setup       |
 | [docs/MEETINGS.md](docs/MEETINGS.md)             | Google Meet meetings (in dev)       |
 | [docs/NEW-FEATURES.md](docs/NEW-FEATURES.md)     | Meetings spec (ТЗ)                  |

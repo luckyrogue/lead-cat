@@ -1,4 +1,4 @@
-import type { TmaUser, TmaUserRole } from "@/shared/auth/types"
+import type { MiniAppUser, MiniAppUserRole } from "@/shared/auth/types"
 
 import {
   getRoleDeniedCode,
@@ -7,19 +7,19 @@ import {
 } from "@/shared/auth/permission-requirement"
 
 export function hasRole(
-  user: TmaUser | null | undefined,
+  user: MiniAppUser | null | undefined,
   requirement: RoleRequirement | null | undefined
 ): boolean {
   return matchesRoleRequirement(user?.role, requirement)
 }
 
-export function isAdmin(user: TmaUser | null | undefined): boolean {
+export function isAdmin(user: MiniAppUser | null | undefined): boolean {
   return user?.role === "admin"
 }
 
 export function hasAnyRole(
-  user: TmaUser | null | undefined,
-  roles: readonly TmaUserRole[]
+  user: MiniAppUser | null | undefined,
+  roles: readonly MiniAppUserRole[]
 ): boolean {
   return hasRole(user, { roles, mode: "any" })
 }

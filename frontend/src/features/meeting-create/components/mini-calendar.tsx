@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { TMA_NOW, WEEKDAYS } from "@/entities/meeting/constants"
+import { MINIAPP_NOW, WEEKDAYS } from "@/entities/meeting/constants"
 import { cn } from "@/shared/lib/cn"
 import { CatIcon } from "@/shared/ui/cat/primitives"
 
@@ -11,7 +11,7 @@ export function MiniCalendar({
   onChange: (v: string) => void
 }) {
   const [view, setView] = useState(() => {
-    const [y, m] = (value || TMA_NOW).split("-").map(Number)
+    const [y, m] = (value || MINIAPP_NOW).split("-").map(Number)
     return { y, m: m - 1 }
   })
   const monthNames = [
@@ -52,26 +52,26 @@ export function MiniCalendar({
     })
 
   const navBtnClass =
-    "flex size-8 cursor-pointer items-center justify-center rounded-[10px] border-none bg-tma-card-alt"
+    "flex size-8 cursor-pointer items-center justify-center rounded-[10px] border-none bg-miniapp-card-alt"
 
   return (
-    <div className="border-tma-border bg-tma-card rounded-[18px] border p-3.5">
+    <div className="border-miniapp-border bg-miniapp-card rounded-[18px] border p-3.5">
       <div className="mb-3 flex items-center justify-between">
         <button type="button" onClick={() => nav(-1)} className={navBtnClass}>
-          <CatIcon name="chevL" size={18} className="text-tma-text" sw={2.2} />
+          <CatIcon name="chevL" size={18} className="text-miniapp-text" sw={2.2} />
         </button>
-        <span className="font-display text-tma-text text-base font-extrabold">
+        <span className="font-display text-miniapp-text text-base font-extrabold">
           {monthNames[view.m]} {view.y}
         </span>
         <button type="button" onClick={() => nav(1)} className={navBtnClass}>
-          <CatIcon name="chevR" size={18} className="text-tma-text" sw={2.2} />
+          <CatIcon name="chevR" size={18} className="text-miniapp-text" sw={2.2} />
         </button>
       </div>
       <div className="mb-1.5 grid grid-cols-7 gap-1">
         {WEEKDAYS.map((w) => (
           <div
             key={w}
-            className="text-tma-faint text-center text-[11px] font-bold"
+            className="text-miniapp-faint text-center text-[11px] font-bold"
           >
             {w}
           </div>
@@ -82,8 +82,8 @@ export function MiniCalendar({
           if (!d) return <div key={i} />
           const dIso = iso(d)
           const active = dIso === value
-          const isPast = dIso < TMA_NOW
-          const isToday = dIso === TMA_NOW
+          const isPast = dIso < MINIAPP_NOW
+          const isToday = dIso === MINIAPP_NOW
           return (
             <button
               key={i}
@@ -92,19 +92,19 @@ export function MiniCalendar({
               className={cn(
                 "font-display relative aspect-square cursor-pointer rounded-[11px] border-none text-sm",
                 active
-                  ? "bg-tma-accent text-tma-accent-text font-extrabold"
+                  ? "bg-miniapp-accent text-miniapp-accent-text font-extrabold"
                   : cn(
                       "bg-transparent",
                       isPast
-                        ? "text-tma-faint font-semibold"
-                        : "text-tma-text font-semibold",
+                        ? "text-miniapp-faint font-semibold"
+                        : "text-miniapp-text font-semibold",
                       isToday && "font-extrabold"
                     )
               )}
             >
               {d}
               {isToday && !active && (
-                <span className="bg-tma-accent absolute bottom-[5px] left-1/2 size-1 -translate-x-1/2 rounded-sm" />
+                <span className="bg-miniapp-accent absolute bottom-[5px] left-1/2 size-1 -translate-x-1/2 rounded-sm" />
               )}
             </button>
           )

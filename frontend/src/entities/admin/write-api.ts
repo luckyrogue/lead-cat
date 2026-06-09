@@ -10,11 +10,11 @@ export type IntegrationsPatch = {
 }
 
 export async function createWorkspace(): Promise<{ id: string }> {
-  return apiFetch<{ id: string }>("/api/tma/admin/workspace", { method: "POST" })
+  return apiFetch<{ id: string }>("/miniapp/admin/workspace", { method: "POST" })
 }
 
 export async function patchIntegrations(p: IntegrationsPatch): Promise<void> {
-  await apiFetch("/api/tma/admin/integrations", {
+  await apiFetch("/miniapp/admin/integrations", {
     method: "PATCH",
     body: JSON.stringify({
       google_sa_json: p.googleSAJson,
@@ -32,7 +32,7 @@ export async function verifyIntegrations(): Promise<GoogleVerifyResult> {
     calendar_summary?: string
     time_zone?: string
     access_role?: string
-  }>("/api/tma/admin/integrations/verify", { method: "POST" })
+  }>("/miniapp/admin/integrations/verify", { method: "POST" })
   return {
     ok: d.ok, calendarSummary: d.calendar_summary,
     timeZone: d.time_zone, accessRole: d.access_role,
@@ -40,26 +40,12 @@ export async function verifyIntegrations(): Promise<GoogleVerifyResult> {
 }
 
 export async function linkChat(chatId: number, chatTitle?: string): Promise<void> {
-  await apiFetch("/api/tma/admin/chat/link", {
+  await apiFetch("/miniapp/admin/chat/link", {
     method: "POST",
     body: JSON.stringify({ chat_id: chatId, chat_title: chatTitle }),
   })
 }
 
 export async function syncChatMembers(): Promise<{ added: number }> {
-  return apiFetch<{ added: number }>("/api/tma/admin/members/sync-chat", { method: "POST" })
-}
-
-export async function patchScenario(id: string, enabled: boolean): Promise<void> {
-  await apiFetch(`/api/tma/admin/scenarios/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify({ enabled }),
-  })
-}
-
-export async function runScenario(id: string): Promise<{ runId: string }> {
-  const d = await apiFetch<{ run_id: string }>(
-    `/api/tma/admin/scenarios/${id}/run`, { method: "POST" }
-  )
-  return { runId: d.run_id }
+  return apiFetch<{ added: number }>("/miniapp/admin/members/sync-chat", { method: "POST" })
 }

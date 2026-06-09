@@ -13,7 +13,7 @@ export function CatToggle({
       onClick={() => onChange(!on)}
       className={cn(
         "relative h-[30px] w-[50px] shrink-0 cursor-pointer rounded-full border-none p-0 transition-colors duration-[220ms] ease-out",
-        on ? "bg-tma-accent" : "bg-[var(--tma-toggle-off)]"
+        on ? "bg-miniapp-accent" : "bg-[var(--miniapp-toggle-off)]"
       )}
     >
       <span

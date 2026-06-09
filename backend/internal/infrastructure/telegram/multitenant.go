@@ -11,16 +11,12 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/cats"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/crypto"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
-	platformauth "github.com/Jaryq-Lab/notify-bot/internal/platform/auth"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/botreg"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/botsettings"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/checker"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/meetingedit"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/scenario_executor"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/scheduleview"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/platform/botreg"
+	"github.com/luckyrogue/lead-cat/internal/platform/botsettings"
+	"github.com/luckyrogue/lead-cat/internal/platform/checker"
+	"github.com/luckyrogue/lead-cat/internal/platform/meetingedit"
+	"github.com/luckyrogue/lead-cat/internal/platform/scheduleview"
 )
 
 // botBackend is the application surface the bot FSMs need (satisfied by *application.Services).
@@ -32,7 +28,6 @@ type botBackend interface {
 
 type MultiHandler struct {
 	store     *postgres.Store
-	executor  *scenario_executor.Executor
 	registrar *botreg.Service
 	settings  *botsettings.Service
 	editor    *meetingedit.Service
@@ -41,16 +36,14 @@ type MultiHandler struct {
 	log       *zap.Logger
 }
 
-func NewMultiHandler(store *postgres.Store, cipher *crypto.TokenCipher, b *bot.Bot, rdb *redis.Client, adminIDs []int64, otpLog bool, backend botBackend, log *zap.Logger) *MultiHandler {
-	otp := platformauth.NewOTP(rdb, log, otpLog)
-	registrar := botreg.New(store, otp, botreg.NewRedisSessions(rdb), adminIDs)
+func NewMultiHandler(store *postgres.Store, b *bot.Bot, rdb *redis.Client, adminIDs []int64, backend botBackend, log *zap.Logger) *MultiHandler {
+	registrar := botreg.New(store, botreg.NewRedisSessions(rdb), adminIDs)
 	settings := botsettings.New(store)
 	editor := meetingedit.New(backend, meetingedit.NewRedisSessions(rdb))
 	schedule := scheduleview.New(backend, scheduleview.NewRedisSessions(rdb))
 	chk := checker.New(backend, checker.NewRedisSessions(rdb))
 	return &MultiHandler{
 		store:     store,
-		executor:  scenario_executor.New(store, cipher, b, log),
 		registrar: registrar,
 		settings:  settings,
 		editor:    editor,
@@ -103,36 +96,6 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 	case "/chatid":
 		_ = h.store.UpsertPendingChat(ctx, from.ID, chatID, update.Message.Chat.Title)
 		h.reply(ctx, b, update.Message, fmt.Sprintf("Логово id: %d — скопируй в админку 🐾", chatID))
-	case "/test":
-		ws, err := h.store.GetWorkspaceByChatID(ctx, chatID)
-		if err != nil {
-			h.reply(ctx, b, update.Message, "Кот не привязан к логову.")
-			return
-		}
-		okDev, _ := h.store.IsMemberDeveloper(ctx, ws.ID, from.Username)
-		if !okDev {
-			h.reply(ctx, b, update.Message, "Сюда только для своих котиков")
-			return
-		}
-		h.reply(ctx, b, update.Message, "Мяу! Проверка связи 🐾")
-		if url := cats.RandomImageURL(ctx); url != "" {
-			_, _ = b.SendPhoto(ctx, &bot.SendPhotoParams{
-				ChatID: chatID,
-				Photo:  &models.InputFileString{Data: url},
-			})
-		}
-	case "/report":
-		ws, err := h.store.GetWorkspaceByChatID(ctx, chatID)
-		if err != nil {
-			return
-		}
-		okDev, _ := h.store.IsMemberDeveloper(ctx, ws.ID, from.Username)
-		if !okDev && !isPrivate {
-			return
-		}
-		if err := h.executor.SendCommitsReport(ctx, ws); err != nil {
-			h.reply(ctx, b, update.Message, "Кот не смог собрать отчёт: "+err.Error())
-		}
 	case "/settings":
 		if isPrivate {
 			if _, err := h.store.GetBotUserByTelegramID(ctx, from.ID); err != nil {

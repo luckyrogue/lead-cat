@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // Backend is the application surface the checker FSM needs (satisfied by *application.Services).

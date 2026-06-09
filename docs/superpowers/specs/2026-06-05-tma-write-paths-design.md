@@ -26,7 +26,7 @@ Let the authenticated Telegram user **create**, **edit**, and **delete** their o
 
 ## Codebase facts (verified)
 
-- **Module path:** `github.com/Jaryq-Lab/notify-bot`.
+- **Module path:** `github.com/luckyrogue/lead-cat`.
 - **TMA route group:** `tma := app.Group("/api/tma", tmaAuth.Middleware)` (`delivery/http/app.go:149`), sets `c.Locals("bot_user").(postgres.BotUser)` (`TelegramID int64, FullName, Email, Role string`). New write routes register here alongside the read ones (`app.go:150-154`).
 - **Read-handler conventions** (`handlers/tma_read.go`): receiver `*API`; `a.App` is `*application.Services`; `botUserEmail(c) (string, bool)` reads the email from `c.Locals("bot_user")`; `almatyLoc()` helper; `a.toMeetingDTO(ctx, m)` already maps a `postgres.Meeting` → `tmaMeetingDTO`. Reuse all of these.
 - **Write commands (reused unchanged):**

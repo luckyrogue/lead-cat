@@ -12,7 +12,7 @@
 
 ## Codebase facts (verified — rely on these, but confirm before editing)
 
-- **Module path:** `github.com/Jaryq-Lab/notify-bot`. Imports are `github.com/Jaryq-Lab/notify-bot/internal/...`.
+- **Module path:** `github.com/luckyrogue/lead-cat`. Imports are `github.com/luckyrogue/lead-cat/internal/...`.
 - **`Store`** (`internal/infrastructure/persistence/postgres/store.go`): `type Store struct { pool *pgxpool.Pool; log *zap.Logger }`, constructed by `New(pool, log)`. Repo methods use receiver `s` and `s.pool`.
 - **Transaction idiom** (see `meeting_repo.go:72`): `tx, err := s.pool.Begin(ctx)` → `defer func() { _ = tx.Rollback(ctx) }()` → `tx.Exec` / `tx.QueryRow` → `tx.Commit(ctx)`.
 - **`employees` table** (`migrations/20260530120000_meetings.sql`): `id, workspace_id (NOT NULL, FK), full_name, email, dept (DEFAULT ''), has_telegram (DEFAULT false), created_at`, `UNIQUE (workspace_id, email)`. `has_telegram` is only ever set by `CreateEmployee` — never maintained dynamically; the upsert must NOT touch it.
@@ -336,7 +336,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 //go:embed employees.csv
@@ -405,7 +405,7 @@ git commit -m "feat(meetings): embedded employees.csv + Seed orchestrator §9.4"
 In `cmd/server/main.go`, add to the import block (with the other `internal/platform/...` imports):
 
 ```go
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/employeedir"
+	"github.com/luckyrogue/lead-cat/internal/platform/employeedir"
 ```
 
 - [ ] **Step 2: Call `Seed` after the store is built**

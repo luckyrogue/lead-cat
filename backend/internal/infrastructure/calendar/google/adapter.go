@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	calendar "google.golang.org/api/calendar/v3"
 
-	docalendar "github.com/Jaryq-Lab/notify-bot/internal/domain/calendar"
+	docalendar "github.com/luckyrogue/lead-cat/internal/domain/calendar"
 )
 
 type adapter struct {

@@ -20,13 +20,9 @@ func (s *Store) UpsertUser(ctx context.Context, authSub, email string) (User, er
 
 func (s *Store) GetUserBySub(ctx context.Context, sub string) (User, error) {
 	var u User
-	var phone *string
 	err := s.pool.QueryRow(ctx, `
-		SELECT id, auth_sub, email, telegram_id, phone FROM platform_users WHERE auth_sub = $1`, sub).
-		Scan(&u.ID, &u.AuthSub, &u.Email, &u.TelegramID, &phone)
-	if phone != nil {
-		u.Phone = *phone
-	}
+		SELECT id, auth_sub, email, telegram_id FROM platform_users WHERE auth_sub = $1`, sub).
+		Scan(&u.ID, &u.AuthSub, &u.Email, &u.TelegramID)
 	return u, err
 }
 

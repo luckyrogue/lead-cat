@@ -1,5 +1,5 @@
 import { cn } from "@/shared/lib/cn"
-import { stackBadgeVars } from "@/shared/tma/surface-vars"
+import { stackBadgeVars } from "@/shared/miniapp/surface-vars"
 import { emailsToPeople } from "@/entities/employee/fixtures"
 import { Avatar } from "@/shared/ui/cat/primitives"
 
@@ -25,9 +25,9 @@ export function ParticipantStack({
       {extra > 0 && (
         <div
           className={cn(
-            "tma-stack-badge -ml-2.5 flex items-center justify-center rounded-full",
-            "bg-tma-card-alt font-display text-tma-muted font-extrabold",
-            "shadow-[0_0_0_2px_var(--tma-bg)]"
+            "miniapp-stack-badge -ml-2.5 flex items-center justify-center rounded-full",
+            "bg-miniapp-card-alt font-display text-miniapp-muted font-extrabold",
+            "shadow-[0_0_0_2px_var(--miniapp-bg)]"
           )}
           style={stackBadgeVars(size)}
         >

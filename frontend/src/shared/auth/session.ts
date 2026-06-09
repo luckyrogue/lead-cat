@@ -1,20 +1,20 @@
-import type { TmaUser, TmaUserRole } from "./types"
+import type { MiniAppUser, MiniAppUserRole } from "./types"
 
-const SESSION_KEY = "lc.tma.auth"
+const SESSION_KEY = "lc.miniapp.auth"
 
 export type SessionData = {
   accessToken: string
-  user: TmaUser
+  user: MiniAppUser
 }
 
-type TmaUserDto = {
+type MiniAppUserDto = {
   telegram_id: number
   name: string
   email: string
-  role: TmaUserRole
+  role: MiniAppUserRole
 }
 
-function dtoToUser(dto: TmaUserDto): TmaUser {
+function dtoToUser(dto: MiniAppUserDto): MiniAppUser {
   return {
     telegramId: dto.telegram_id,
     name: dto.name,
@@ -58,7 +58,7 @@ export function clearSession(): void {
 
 export function sessionFromAuthResponse(
   token: string,
-  user: TmaUserDto
+  user: MiniAppUserDto
 ): SessionData {
   return { accessToken: token, user: dtoToUser(user) }
 }

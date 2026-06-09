@@ -389,7 +389,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
+	"github.com/luckyrogue/lead-cat/internal/application"
 )
 
 func TestStubCreateEvent(t *testing.T) {
@@ -422,7 +422,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
+	"github.com/luckyrogue/lead-cat/internal/application"
 )
 
 type Service struct{}
@@ -700,8 +700,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/domain/meeting"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // CreateMeetingInput is the transport-level payload (strings as received over HTTP).
@@ -855,9 +855,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/copy"
+	"github.com/luckyrogue/lead-cat/internal/application"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/platform/copy"
 )
 
 func (a *API) ListEmployees(c *fiber.Ctx) error {
@@ -937,7 +937,7 @@ func (a *API) DeleteMeeting(c *fiber.Ctx) error {
 In `backend/internal/delivery/http/app.go`, add the import (with the other infrastructure imports near line 19-24):
 
 ```go
-	calendarstub "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/stub"
+	calendarstub "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/stub"
 ```
 
 Then change the `api.App` construction (lines 83-90) so `Services` includes the Calendar:

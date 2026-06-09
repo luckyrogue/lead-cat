@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/domain/meeting"
+	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
 )
 
 // OccurrenceConflicts is the per-occurrence result of a series conflict check.

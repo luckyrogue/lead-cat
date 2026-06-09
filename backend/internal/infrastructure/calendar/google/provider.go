@@ -11,9 +11,9 @@ import (
 	calendar "google.golang.org/api/calendar/v3"
 	"google.golang.org/api/option"
 
-	docalendar "github.com/Jaryq-Lab/notify-bot/internal/domain/calendar"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/crypto"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	docalendar "github.com/luckyrogue/lead-cat/internal/domain/calendar"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/crypto"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // Provider builds a per-workspace Google Calendar client from the workspace's

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 var errNotFound = errors.New("not found")
@@ -39,19 +39,6 @@ func (f *fakeUsers) CreateBotUser(_ context.Context, id int64, name, email, role
 	return u, nil
 }
 
-type fakeOTP struct {
-	sent      []string
-	validCode string
-}
-
-func (f *fakeOTP) Send(_ context.Context, _, dest string) (string, error) {
-	f.sent = append(f.sent, dest)
-	return f.validCode, nil
-}
-func (f *fakeOTP) Verify(_ context.Context, _, _, code string) (bool, error) {
-	return code == f.validCode, nil
-}
-
 type fakeSessions struct{ m map[int64]State }
 
 func newFakeSessions() *fakeSessions { return &fakeSessions{m: map[int64]State{}} }
@@ -64,13 +51,13 @@ func (f *fakeSessions) Get(_ context.Context, id int64) (*State, error) {
 func (f *fakeSessions) Set(_ context.Context, id int64, s State) error { f.m[id] = s; return nil }
 func (f *fakeSessions) Del(_ context.Context, id int64) error          { delete(f.m, id); return nil }
 
-func newSvc(admins ...int64) (*Service, *fakeUsers, *fakeOTP, *fakeSessions) {
-	u, o, s := newFakeUsers(), &fakeOTP{validCode: "1234"}, newFakeSessions()
-	return New(u, o, s, admins), u, o, s
+func newSvc(admins ...int64) (*Service, *fakeUsers, *fakeSessions) {
+	u, s := newFakeUsers(), newFakeSessions()
+	return New(u, s, admins), u, s
 }
 
 func TestHappyPath_User(t *testing.T) {
-	svc, users, otp, _ := newSvc()
+	svc, users, _ := newSvc()
 	ctx := context.Background()
 	const tg = int64(42)
 	svc.Start(ctx, tg)
@@ -79,12 +66,6 @@ func TestHappyPath_User(t *testing.T) {
 	}
 	if r, ok := svc.OnText(ctx, tg, "ivan@corp.kz"); !ok || r == "" {
 		t.Fatalf("email step: ok=%v r=%q", ok, r)
-	}
-	if len(otp.sent) != 1 || otp.sent[0] != "ivan@corp.kz" {
-		t.Fatalf("otp not sent: %+v", otp.sent)
-	}
-	if _, ok := svc.OnText(ctx, tg, "1234"); !ok {
-		t.Fatal("otp step not handled")
 	}
 	if len(users.created) != 1 {
 		t.Fatalf("user not created: %+v", users.created)
@@ -96,19 +77,18 @@ func TestHappyPath_User(t *testing.T) {
 }
 
 func TestAdminRole(t *testing.T) {
-	svc, users, _, _ := newSvc(42)
+	svc, users, _ := newSvc(42)
 	ctx := context.Background()
 	svc.Start(ctx, 42)
 	svc.OnText(ctx, 42, "Admin User")
 	svc.OnText(ctx, 42, "admin@corp.kz")
-	svc.OnText(ctx, 42, "1234")
 	if len(users.created) != 1 || users.created[0].Role != "admin" {
 		t.Fatalf("expected admin role: %+v", users.created)
 	}
 }
 
 func TestAlreadyRegistered(t *testing.T) {
-	svc, users, _, sess := newSvc()
+	svc, users, sess := newSvc()
 	users.byTG[7] = postgres.BotUser{TelegramID: 7}
 	r := svc.Start(context.Background(), 7)
 	if r == "" {
@@ -120,19 +100,22 @@ func TestAlreadyRegistered(t *testing.T) {
 }
 
 func TestEmailTaken(t *testing.T) {
-	svc, users, otp, _ := newSvc()
+	svc, users, _ := newSvc()
 	ctx := context.Background()
 	users.byEmail["taken@corp.kz"] = postgres.BotUser{Email: "taken@corp.kz"}
 	svc.Start(ctx, 9)
 	svc.OnText(ctx, 9, "Some One")
-	svc.OnText(ctx, 9, "taken@corp.kz")
-	if len(otp.sent) != 0 {
-		t.Fatal("must not send OTP for a taken email")
+	r, ok := svc.OnText(ctx, 9, "taken@corp.kz")
+	if !ok || r == "" {
+		t.Fatal("expected taken-email reply")
+	}
+	if len(users.created) != 0 {
+		t.Fatal("must not create user for taken email")
 	}
 }
 
-func TestBadEmailThenBadOTP(t *testing.T) {
-	svc, users, _, _ := newSvc()
+func TestBadEmail(t *testing.T) {
+	svc, users, _ := newSvc()
 	ctx := context.Background()
 	svc.Start(ctx, 5)
 	svc.OnText(ctx, 5, "Name Here")
@@ -140,29 +123,24 @@ func TestBadEmailThenBadOTP(t *testing.T) {
 		t.Fatal("bad email should be handled (stay)")
 	}
 	svc.OnText(ctx, 5, "real@corp.kz")
-	svc.OnText(ctx, 5, "0000")
-	if len(users.created) != 0 {
-		t.Fatal("wrong OTP must not create a user")
+	if len(users.created) != 1 {
+		t.Fatal("valid email should create user")
 	}
 }
 
 func TestNoSessionIgnored(t *testing.T) {
-	svc, _, _, _ := newSvc()
+	svc, _, _ := newSvc()
 	if _, ok := svc.OnText(context.Background(), 1, "random"); ok {
 		t.Fatal("text with no active session must be ignored (ok=false)")
 	}
 }
 
 func TestEmailNormalized(t *testing.T) {
-	svc, users, otp, _ := newSvc()
+	svc, users, _ := newSvc()
 	ctx := context.Background()
 	svc.Start(ctx, 11)
 	svc.OnText(ctx, 11, "Name Here")
 	svc.OnText(ctx, 11, "  Ivan@Corp.KZ ")
-	if len(otp.sent) != 1 || otp.sent[0] != "ivan@corp.kz" {
-		t.Fatalf("otp dest not normalized: %+v", otp.sent)
-	}
-	svc.OnText(ctx, 11, "1234")
 	if len(users.created) != 1 || users.created[0].Email != "ivan@corp.kz" {
 		t.Fatalf("email not normalized on create: %+v", users.created)
 	}

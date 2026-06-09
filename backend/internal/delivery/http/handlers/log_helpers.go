@@ -5,7 +5,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/observability/log"
+	"github.com/luckyrogue/lead-cat/internal/platform/observability/log"
 )
 
 func (a *API) logHTTPError(c *fiber.Ctx, msg string, err error, extra ...zap.Field) {

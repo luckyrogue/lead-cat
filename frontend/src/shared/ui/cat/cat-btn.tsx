@@ -5,13 +5,13 @@ type BtnVariant = "primary" | "soft" | "ghost" | "outline" | "danger" | "dark"
 
 const variantClasses: Record<BtnVariant, string> = {
   primary:
-    "bg-tma-accent text-tma-accent-text shadow-tma-sm active:shadow-none",
-  soft: "bg-tma-accent-soft text-tma-accent",
-  ghost: "bg-transparent text-tma-text",
+    "bg-miniapp-accent text-miniapp-accent-text shadow-miniapp-sm active:shadow-none",
+  soft: "bg-miniapp-accent-soft text-miniapp-accent",
+  ghost: "bg-transparent text-miniapp-text",
   outline:
-    "border-[1.5px] border-tma-border-strong bg-transparent text-tma-text",
-  danger: "bg-tma-danger-soft text-tma-danger",
-  dark: "bg-tma-text text-tma-bg",
+    "border-[1.5px] border-miniapp-border-strong bg-transparent text-miniapp-text",
+  danger: "bg-miniapp-danger-soft text-miniapp-danger",
+  dark: "bg-miniapp-text text-miniapp-bg",
 }
 
 const sizeClasses = {

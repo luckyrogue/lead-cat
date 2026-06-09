@@ -13,7 +13,7 @@
 **Conventions:**
 
 - Run Go commands from `backend/` with `env -u GOROOT` prefix.
-- Module path: `github.com/Jaryq-Lab/notify-bot`.
+- Module path: `github.com/luckyrogue/lead-cat`.
 - Build check: `env -u GOROOT go build ./...`
 
 ---
@@ -39,7 +39,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 type fakeStore struct {
@@ -129,7 +129,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // Store is the subset of *postgres.Store this package needs.
@@ -238,7 +238,7 @@ func (s *Scheduler) recipients(ctx context.Context, m postgres.Meeting) map[int6
 In the same file's import block, add the meetingrecipients import (keep the existing `botsettings` and `postgres` imports):
 
 ```go
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/meetingrecipients"
+	"github.com/luckyrogue/lead-cat/internal/platform/meetingrecipients"
 ```
 
 - [ ] **Step 3: Build and run existing tests**
@@ -449,8 +449,8 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/meetingrecipients"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/platform/meetingrecipients"
 )
 
 // offsetCreated is the sentinel offset reused in meeting_reminders to dedup the
@@ -669,7 +669,7 @@ Change the `NewServer` map (from Task 3) to include the meeting handler:
 In `main.go`'s import block, add:
 
 ```go
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/meeting_notifier"
+	"github.com/luckyrogue/lead-cat/internal/platform/meeting_notifier"
 ```
 
 - [ ] **Step 4: Build**

@@ -85,7 +85,7 @@ smoke:
 
 coverage:
 	@cd $(BACKEND) && $(GO) test -cover -count=1 \
-		./internal/delivery/http/middleware/... ./internal/domain/scenario/...
+		./internal/delivery/http/middleware/...
 
 docker-build:
 	docker build -t lead-cat:local -f deploy/Dockerfile --build-arg VITE_AUTH_DEV_MODE=false .

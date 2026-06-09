@@ -1,4 +1,4 @@
-import type { I18nKey } from "@/shared/tma/i18n"
+import type { I18nKey } from "@/shared/miniapp/i18n"
 
 export type SAValidation =
   | { ok: true; clientEmail: string; projectID: string }

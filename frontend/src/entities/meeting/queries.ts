@@ -4,17 +4,17 @@ import {
   fetchMyMeetings,
   type Scope,
 } from "@/entities/meeting/api"
-import { tmaKeys } from "@/shared/api/query-keys"
+import { miniappKeys } from "@/shared/api/query-keys"
 
 export const myMeetingsQuery = (scope: Scope) =>
   queryOptions({
-    queryKey: tmaKeys.meetings(scope),
+    queryKey: miniappKeys.meetings(scope),
     queryFn: () => fetchMyMeetings(scope),
   })
 
 export const colleagueScheduleQuery = (email: string, scope: Scope) =>
   queryOptions({
-    queryKey: tmaKeys.schedule(email, scope),
+    queryKey: miniappKeys.schedule(email, scope),
     queryFn: () => fetchColleagueSchedule(email, scope),
     enabled: email.trim().length > 0,
   })

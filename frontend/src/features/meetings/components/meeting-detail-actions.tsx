@@ -1,7 +1,7 @@
 import { useState } from "react"
-import { useTmaApp } from "@/shared/tma/context"
+import { useMiniApp } from "@/shared/miniapp/context"
 import { CatBtn, CatIcon } from "@/shared/ui/cat/primitives"
-import { Sheet } from "@/components/tma-shell"
+import { Sheet } from "@/components/miniapp-shell"
 
 export function MeetingDetailActions({
   isSeries,
@@ -12,7 +12,7 @@ export function MeetingDetailActions({
   onEdit: (scope: "this" | "whole") => void
   onDelete: (scope: "this" | "whole") => void
 }) {
-  const { t } = useTmaApp()
+  const { t } = useMiniApp()
   const [editSheet, setEditSheet] = useState(false)
   const [delSheet, setDelSheet] = useState(false)
 
@@ -23,7 +23,7 @@ export function MeetingDetailActions({
           variant="outline"
           full
           icon={
-            <CatIcon name="pencil" size={18} className="text-tma-text" sw={2} />
+            <CatIcon name="pencil" size={18} className="text-miniapp-text" sw={2} />
           }
           onClick={() => (isSeries ? setEditSheet(true) : onEdit("this"))}
         >
@@ -35,7 +35,7 @@ export function MeetingDetailActions({
             <CatIcon
               name="trash"
               size={18}
-              className="text-tma-danger"
+              className="text-miniapp-danger"
               sw={2}
             />
           }

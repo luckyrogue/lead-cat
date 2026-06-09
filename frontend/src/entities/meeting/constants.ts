@@ -1,4 +1,4 @@
-export const TMA_NOW = new Intl.DateTimeFormat("en-CA", {
+export const MINIAPP_NOW = new Intl.DateTimeFormat("en-CA", {
   timeZone: "Asia/Almaty",
 }).format(new Date())
 

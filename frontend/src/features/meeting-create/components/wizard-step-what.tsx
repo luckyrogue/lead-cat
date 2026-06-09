@@ -1,7 +1,7 @@
 import { DEPARTMENTS } from "@/entities/employee/fixtures"
 import { MEETING_TYPES, typeAccent } from "@/entities/meeting/constants"
-import { useTmaApp } from "@/shared/tma/context"
-import type { MeetingDraft } from "@/shared/tma/types"
+import { useMiniApp } from "@/shared/miniapp/context"
+import type { MeetingDraft } from "@/shared/miniapp/types"
 import { ChipGrid, Field } from "@/shared/ui/cat/primitives"
 import { WizardStepTitle } from "./wizard-step-title"
 
@@ -12,7 +12,7 @@ export function WizardStepWhat({
   draft: MeetingDraft
   set: <K extends keyof MeetingDraft>(k: K, v: MeetingDraft[K]) => void
 }) {
-  const { dark, t } = useTmaApp()
+  const { dark, t } = useMiniApp()
 
   return (
     <div>

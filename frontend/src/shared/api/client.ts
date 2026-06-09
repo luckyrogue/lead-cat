@@ -10,7 +10,7 @@ import { getSession } from "@/shared/auth/session"
 import type { ApiErrorBody, ApiFetchOptions } from "@/shared/api/types"
 import { ApiError } from "@/shared/api/types"
 
-const AUTH_PATHS_WITHOUT_RETRY = ["/auth/tma"]
+const AUTH_PATHS_WITHOUT_RETRY = ["/auth/miniapp"]
 
 type RetryableAxiosRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean
@@ -29,7 +29,7 @@ export function getAuthToken(): string | null {
   return getSession()?.accessToken ?? null
 }
 
-/** Dev bootstrap only — prefer setSession via tmaLogin. */
+/** Dev bootstrap only — prefer setSession via miniappLogin. */
 export function setAuthToken(token: string | null) {
   if (token) {
     api.defaults.headers.common.Authorization = `Bearer ${token}`
@@ -84,9 +84,9 @@ function isAuthPathWithoutRetry(url: string | undefined): boolean {
   return AUTH_PATHS_WITHOUT_RETRY.some((path) => url.includes(path))
 }
 
-function isTmaApiPath(url: string | undefined): boolean {
+function isMiniAppApiPath(url: string | undefined): boolean {
   if (!url) return false
-  return url.includes("/tma/")
+  return url.includes("/miniapp/")
 }
 
 export const api: AxiosInstance = axios.create({
@@ -122,14 +122,14 @@ api.interceptors.response.use(
       axiosError.response?.status === 401 &&
       config &&
       !config._retry &&
-      isTmaApiPath(config.url) &&
+      isMiniAppApiPath(config.url) &&
       !isAuthPathWithoutRetry(config.url)
     ) {
       config._retry = true
 
-      const { refreshTmaSessionIfNeeded } =
+      const { refreshMiniAppSessionIfNeeded } =
         await import("@/shared/auth/refresh-session")
-      const token = await refreshTmaSessionIfNeeded({ force: true })
+      const token = await refreshMiniAppSessionIfNeeded({ force: true })
 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`

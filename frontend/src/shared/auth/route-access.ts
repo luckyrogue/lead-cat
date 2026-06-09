@@ -1,9 +1,9 @@
-import type { TmaUser } from "@/shared/auth/types"
+import type { MiniAppUser } from "@/shared/auth/types"
 import { ApiError } from "@/shared/api/types"
 import {
-  getTmaModuleAccessRequirement,
-  getTmaModuleDeniedCode,
-  type TmaModuleKey,
+  getMiniAppModuleAccessRequirement,
+  getMiniAppModuleDeniedCode,
+  type MiniAppModuleKey,
 } from "@/shared/auth/module-policies"
 import {
   matchesRoleRequirement,
@@ -14,30 +14,30 @@ export function isForbiddenApiError(error: unknown): error is ApiError {
   return error instanceof ApiError && error.status === 403
 }
 
-export function canAccessTmaRoute(
-  user: TmaUser | null | undefined,
-  moduleKey: TmaModuleKey
+export function canAccessMiniAppRoute(
+  user: MiniAppUser | null | undefined,
+  moduleKey: MiniAppModuleKey
 ): boolean {
   return matchesRoleRequirement(
     user?.role,
-    getTmaModuleAccessRequirement(moduleKey)
+    getMiniAppModuleAccessRequirement(moduleKey)
   )
 }
 
-export function isTmaRouteForbidden(
-  user: TmaUser | null | undefined,
-  moduleKey: TmaModuleKey,
+export function isMiniAppRouteForbidden(
+  user: MiniAppUser | null | undefined,
+  moduleKey: MiniAppModuleKey,
   error?: unknown
 ): boolean {
-  return !canAccessTmaRoute(user, moduleKey) || isForbiddenApiError(error)
+  return !canAccessMiniAppRoute(user, moduleKey) || isForbiddenApiError(error)
 }
 
-export function getTmaRouteDeniedCode(moduleKey: TmaModuleKey): string {
-  return getTmaModuleDeniedCode(moduleKey) ?? "forbidden"
+export function getMiniAppRouteDeniedCode(moduleKey: MiniAppModuleKey): string {
+  return getMiniAppModuleDeniedCode(moduleKey) ?? "forbidden"
 }
 
 export async function ensureRoleQueryData(
-  user: TmaUser | null | undefined,
+  user: MiniAppUser | null | undefined,
   requirement: RoleRequirement | null | undefined,
   load: () => Promise<unknown>
 ) {
@@ -54,14 +54,14 @@ export async function ensureRoleQueryData(
   }
 }
 
-export async function ensureTmaQueryData(
-  user: TmaUser | null | undefined,
-  moduleKey: TmaModuleKey,
+export async function ensureMiniAppQueryData(
+  user: MiniAppUser | null | undefined,
+  moduleKey: MiniAppModuleKey,
   load: () => Promise<unknown>
 ) {
   await ensureRoleQueryData(
     user,
-    getTmaModuleAccessRequirement(moduleKey),
+    getMiniAppModuleAccessRequirement(moduleKey),
     load
   )
 }

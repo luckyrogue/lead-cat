@@ -1,26 +1,25 @@
 import { describe, expect, it } from "vitest"
 import {
-  canAccessTmaAdmin,
+  canAccessMiniAppAdmin,
   getVisibleTabBarModules,
-  tmaModulePolicies,
+  miniappModulePolicies,
 } from "@/shared/auth/module-policies"
 
 describe("module-policies", () => {
   it("exposes all module routes", () => {
-    expect(tmaModulePolicies.map((t) => t.href)).toEqual([
+    expect(miniappModulePolicies.map((t) => t.href)).toEqual([
       "/",
       "/meetings",
       "/checker",
-      "/auto",
       "/profile",
       "/profile/admin",
     ])
   })
 
   it("grants admin panel only to admin role", () => {
-    expect(canAccessTmaAdmin(null)).toBe(false)
+    expect(canAccessMiniAppAdmin(null)).toBe(false)
     expect(
-      canAccessTmaAdmin({
+      canAccessMiniAppAdmin({
         telegramId: 1,
         name: "U",
         email: "u@x.kz",
@@ -28,7 +27,7 @@ describe("module-policies", () => {
       })
     ).toBe(false)
     expect(
-      canAccessTmaAdmin({
+      canAccessMiniAppAdmin({
         telegramId: 2,
         name: "A",
         email: "a@x.kz",
@@ -37,18 +36,12 @@ describe("module-policies", () => {
     ).toBe(true)
   })
 
-  it("returns tab bar modules without auto", () => {
+  it("returns tab bar modules", () => {
     expect(getVisibleTabBarModules(null).map((m) => m.key)).toEqual([
       "home",
       "meetings",
       "checker",
       "profile",
     ])
-  })
-
-  it("excludes auto from tab bar modules", () => {
-    expect(getVisibleTabBarModules(null).map((m) => m.key)).not.toContain(
-      "auto"
-    )
   })
 })

@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	googleprobe "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/google"
+	googleprobe "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/google"
 )
 
 // Sentinel errors mapped to handler-level error codes.

@@ -10,13 +10,13 @@ import {
   type MeetingPatch,
   updateMeeting,
 } from "@/entities/meeting/write-api"
-import { tmaKeys } from "@/shared/api/query-keys"
+import { miniappKeys } from "@/shared/api/query-keys"
 
 export function useCreateMeeting() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (input: MeetingInput) => createMeeting(input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: tmaKeys.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: miniappKeys.all }),
   })
 }
 
@@ -32,7 +32,7 @@ export function useUpdateMeeting() {
       patch: MeetingPatch
       scope?: "this" | "whole"
     }) => updateMeeting(id, patch, { scope }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: tmaKeys.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: miniappKeys.all }),
   })
 }
 
@@ -43,7 +43,7 @@ export function useDeleteMeeting() {
       if (typeof args === "string") return deleteMeeting(args)
       return deleteMeeting(args.id, { scope: args.scope })
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: tmaKeys.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: miniappKeys.all }),
   })
 }
 

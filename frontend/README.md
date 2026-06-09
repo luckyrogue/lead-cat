@@ -1,4 +1,4 @@
-# Lead Cat frontend (TMA)
+# Lead Cat frontend (Mini App)
 
 Telegram Mini App — thin client to [backend API](../backend). Architecture mirrors [sadu/admin](https://github.com/jaryq-lab/sadu) patterns; UI stays cat-design + TabBar.
 
@@ -26,15 +26,15 @@ make dev
 ```
 src/
 ├── app/                    # providers, app-content (health gate), router
-├── routes/_tma/*           # thin routes → feature pages
+├── routes/_miniapp/*       # thin routes → feature pages
 ├── components/
-│   ├── tma-shell/          # tg-bar, tab-bar, sheet, overlay, index barrel
+│   ├── miniapp-shell/      # tg-bar, tab-bar, sheet, overlay, index barrel
 │   ├── meetings/           # detail-row, meeting-title-preview, meeting-ui/*
 │   ├── employee-picker.tsx
-│   └── tma-list-page-shell, maintenance-screen, auth/
+│   └── miniapp-list-page-shell, maintenance-screen, auth/
 ├── features/               # vertical slices
 │   ├── auth/               # require-auth (route guard)
-│   ├── home|meetings|meeting-create|checker|auto|profile/
+│   ├── home|meetings|meeting-create|checker|profile/
 │   │   meeting-create/     # wizard steps, mini-calendar, use-create-wizard
 │   │   meetings/           # meeting-detail*, pages/, search-schema, list-url
 │   │   checker/            # checker-* sections
@@ -42,12 +42,12 @@ src/
 ├── entities/
 │   ├── employee/           # types, fixtures, api, queries (search)
 │   ├── meeting/            # api, queries, write-api, mutations, scheduling-api, scheduling-queries, lib/
-│   └── scenario/           # types
+│   └── admin/              # workspace setup API + hooks
 └── shared/
     ├── api/
-    ├── auth/               # types, session, tma-api, auth-context, refresh-session, …
+    ├── auth/               # types, session, miniapp-api, auth-context, refresh-session, …
     ├── lib/                # cn, toast, use-list-url-state, …
-    ├── tma/                # i18n, stored-lang, palette, context, surface-vars
+    ├── miniapp/            # i18n, stored-lang, palette, context, surface-vars
     └── ui/cat/             # ChipGrid, DurationPicker, Segmented, … + primitives.tsx
 ```
 
@@ -72,11 +72,12 @@ Optional ngrok / tunnel host for Vite (repo root or `frontend/.env`):
 
 ```bash
 VITE_DEV_ALLOWED_HOSTS=your-subdomain.ngrok-free.app
+VITE_MINIAPP_DEV_TG_ID=123456789   # browser-only dev when VITE_AUTH_DEV_MODE=true
 ```
 
 ## HTTP client (axios)
 
-`shared/api/client.ts` — axios `api` + `apiFetch`. Bearer from `shared/auth/session.ts` (`lc.tma.auth` in sessionStorage). 401 on `/tma/*` → single-flight `refreshTmaSessionIfNeeded`.
+`shared/api/client.ts` — axios `api` + `apiFetch`. Bearer from `shared/auth/session.ts` (`lc.miniapp.auth` in sessionStorage). 401 on `/miniapp/*` → single-flight `refreshMiniAppSessionIfNeeded`.
 
 ## Tooling
 
@@ -90,9 +91,8 @@ pnpm build
 ## OpenAPI / codegen
 
 ```bash
-# backend must serve GET /openapi.json
 pnpm openapi:generate
-# → src/shared/api/generated/schema.ts
+# → src/shared/api/generated/schema.ts  (from backend/openapi/openapi.json offline)
 ```
 
 Spec source: `backend/openapi/openapi.json`.
@@ -101,21 +101,21 @@ Spec source: `backend/openapi/openapi.json`.
 
 `useListUrlState` syncs debounced `q`, filters, `page` to query string (`replace: true`). Loader routes use `shouldReload: shouldReloadExceptSearch` so search-only nav does not refetch.
 
-## Auth (TMA)
+## Auth (Mini App)
 
 | Action | Endpoint |
 |--------|----------|
-| Login | `POST /api/auth/tma` `{ init_data }` |
+| Login | `POST /api/auth/miniapp` `{ init_data }` |
 | Session | `shared/auth/session.ts` |
 | Refresh | `shared/auth/refresh-session.ts` (re-login via initData) |
-| Me | `GET /api/tma/me` |
+| Me | `GET /api/miniapp/me` |
 
 ## Sadu mapping
 
-| Sadu admin | Lead Cat TMA |
-|------------|--------------|
-| `components/app-sidebar.tsx` + `getVisibleSidebarModules` | `components/tma-shell/` + `getVisibleTabBarModules` |
-| `admin-list-page-shell` | `tma-list-page-shell` |
+| Sadu admin | Lead Cat Mini App |
+|------------|-------------------|
+| `components/app-sidebar.tsx` + `getVisibleSidebarModules` | `components/miniapp-shell/` + `getVisibleTabBarModules` |
+| `admin-list-page-shell` | `miniapp-list-page-shell` |
 | `root.tsx` health + Toaster | `app/app-content.tsx` |
 | `features/auth/session.ts` | `shared/auth/session.ts` |
 | `shared/auth/route-access.ts` | `shared/auth/route-access.ts` (roles) |

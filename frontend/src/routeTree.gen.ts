@@ -9,116 +9,118 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TmaRouteImport } from './routes/_tma'
-import { Route as TmaIndexRouteImport } from './routes/_tma/index'
-import { Route as TmaProfileRouteImport } from './routes/_tma/profile'
-import { Route as TmaMeetingsRouteImport } from './routes/_tma/meetings'
-import { Route as TmaCheckerRouteImport } from './routes/_tma/checker'
-import { Route as TmaAutoRouteImport } from './routes/_tma/auto'
-import { Route as TmaProfileColleagueRouteImport } from './routes/_tma/profile.colleague'
-import { Route as TmaProfileAdminRouteImport } from './routes/_tma/profile.admin'
-import { Route as TmaMeetingsCreateRouteImport } from './routes/_tma/meetings.create'
-import { Route as TmaMeetingsMeetingIdRouteImport } from './routes/_tma/meetings.$meetingId'
-import { Route as TmaMeetingsCreateEditIdRouteImport } from './routes/_tma/meetings.create.$editId'
+import { Route as MiniappRouteImport } from './routes/_miniapp'
+import { Route as MiniappIndexRouteImport } from './routes/_miniapp/index'
+import { Route as MiniappProfileRouteImport } from './routes/_miniapp/profile'
+import { Route as MiniappMeetingsRouteImport } from './routes/_miniapp/meetings'
+import { Route as MiniappCheckerRouteImport } from './routes/_miniapp/checker'
+import { Route as MiniappProfileColleagueRouteImport } from './routes/_miniapp/profile.colleague'
+import { Route as MiniappProfileAdminRouteImport } from './routes/_miniapp/profile.admin'
+import { Route as MiniappMeetingsCreateRouteImport } from './routes/_miniapp/meetings.create'
+import { Route as MiniappMeetingsMeetingIdRouteImport } from './routes/_miniapp/meetings.$meetingId'
+import { Route as MiniappProfileAdminSetupRouteImport } from './routes/_miniapp/profile.admin.setup'
+import { Route as MiniappMeetingsCreateEditIdRouteImport } from './routes/_miniapp/meetings.create.$editId'
 
-const TmaRoute = TmaRouteImport.update({
-  id: '/_tma',
+const MiniappRoute = MiniappRouteImport.update({
+  id: '/_miniapp',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TmaIndexRoute = TmaIndexRouteImport.update({
+const MiniappIndexRoute = MiniappIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => TmaRoute,
+  getParentRoute: () => MiniappRoute,
 } as any)
-const TmaProfileRoute = TmaProfileRouteImport.update({
+const MiniappProfileRoute = MiniappProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
-  getParentRoute: () => TmaRoute,
+  getParentRoute: () => MiniappRoute,
 } as any)
-const TmaMeetingsRoute = TmaMeetingsRouteImport.update({
+const MiniappMeetingsRoute = MiniappMeetingsRouteImport.update({
   id: '/meetings',
   path: '/meetings',
-  getParentRoute: () => TmaRoute,
+  getParentRoute: () => MiniappRoute,
 } as any)
-const TmaCheckerRoute = TmaCheckerRouteImport.update({
+const MiniappCheckerRoute = MiniappCheckerRouteImport.update({
   id: '/checker',
   path: '/checker',
-  getParentRoute: () => TmaRoute,
+  getParentRoute: () => MiniappRoute,
 } as any)
-const TmaAutoRoute = TmaAutoRouteImport.update({
-  id: '/auto',
-  path: '/auto',
-  getParentRoute: () => TmaRoute,
-} as any)
-const TmaProfileColleagueRoute = TmaProfileColleagueRouteImport.update({
+const MiniappProfileColleagueRoute = MiniappProfileColleagueRouteImport.update({
   id: '/colleague',
   path: '/colleague',
-  getParentRoute: () => TmaProfileRoute,
+  getParentRoute: () => MiniappProfileRoute,
 } as any)
-const TmaProfileAdminRoute = TmaProfileAdminRouteImport.update({
+const MiniappProfileAdminRoute = MiniappProfileAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
-  getParentRoute: () => TmaProfileRoute,
+  getParentRoute: () => MiniappProfileRoute,
 } as any)
-const TmaMeetingsCreateRoute = TmaMeetingsCreateRouteImport.update({
+const MiniappMeetingsCreateRoute = MiniappMeetingsCreateRouteImport.update({
   id: '/create',
   path: '/create',
-  getParentRoute: () => TmaMeetingsRoute,
+  getParentRoute: () => MiniappMeetingsRoute,
 } as any)
-const TmaMeetingsMeetingIdRoute = TmaMeetingsMeetingIdRouteImport.update({
-  id: '/$meetingId',
-  path: '/$meetingId',
-  getParentRoute: () => TmaMeetingsRoute,
-} as any)
-const TmaMeetingsCreateEditIdRoute = TmaMeetingsCreateEditIdRouteImport.update({
-  id: '/$editId',
-  path: '/$editId',
-  getParentRoute: () => TmaMeetingsCreateRoute,
-} as any)
+const MiniappMeetingsMeetingIdRoute =
+  MiniappMeetingsMeetingIdRouteImport.update({
+    id: '/$meetingId',
+    path: '/$meetingId',
+    getParentRoute: () => MiniappMeetingsRoute,
+  } as any)
+const MiniappProfileAdminSetupRoute =
+  MiniappProfileAdminSetupRouteImport.update({
+    id: '/setup',
+    path: '/setup',
+    getParentRoute: () => MiniappProfileAdminRoute,
+  } as any)
+const MiniappMeetingsCreateEditIdRoute =
+  MiniappMeetingsCreateEditIdRouteImport.update({
+    id: '/$editId',
+    path: '/$editId',
+    getParentRoute: () => MiniappMeetingsCreateRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof TmaIndexRoute
-  '/auto': typeof TmaAutoRoute
-  '/checker': typeof TmaCheckerRoute
-  '/meetings': typeof TmaMeetingsRouteWithChildren
-  '/profile': typeof TmaProfileRouteWithChildren
-  '/meetings/$meetingId': typeof TmaMeetingsMeetingIdRoute
-  '/meetings/create': typeof TmaMeetingsCreateRouteWithChildren
-  '/profile/admin': typeof TmaProfileAdminRoute
-  '/profile/colleague': typeof TmaProfileColleagueRoute
-  '/meetings/create/$editId': typeof TmaMeetingsCreateEditIdRoute
+  '/': typeof MiniappIndexRoute
+  '/checker': typeof MiniappCheckerRoute
+  '/meetings': typeof MiniappMeetingsRouteWithChildren
+  '/profile': typeof MiniappProfileRouteWithChildren
+  '/meetings/$meetingId': typeof MiniappMeetingsMeetingIdRoute
+  '/meetings/create': typeof MiniappMeetingsCreateRouteWithChildren
+  '/profile/admin': typeof MiniappProfileAdminRouteWithChildren
+  '/profile/colleague': typeof MiniappProfileColleagueRoute
+  '/meetings/create/$editId': typeof MiniappMeetingsCreateEditIdRoute
+  '/profile/admin/setup': typeof MiniappProfileAdminSetupRoute
 }
 export interface FileRoutesByTo {
-  '/auto': typeof TmaAutoRoute
-  '/checker': typeof TmaCheckerRoute
-  '/meetings': typeof TmaMeetingsRouteWithChildren
-  '/profile': typeof TmaProfileRouteWithChildren
-  '/': typeof TmaIndexRoute
-  '/meetings/$meetingId': typeof TmaMeetingsMeetingIdRoute
-  '/meetings/create': typeof TmaMeetingsCreateRouteWithChildren
-  '/profile/admin': typeof TmaProfileAdminRoute
-  '/profile/colleague': typeof TmaProfileColleagueRoute
-  '/meetings/create/$editId': typeof TmaMeetingsCreateEditIdRoute
+  '/checker': typeof MiniappCheckerRoute
+  '/meetings': typeof MiniappMeetingsRouteWithChildren
+  '/profile': typeof MiniappProfileRouteWithChildren
+  '/': typeof MiniappIndexRoute
+  '/meetings/$meetingId': typeof MiniappMeetingsMeetingIdRoute
+  '/meetings/create': typeof MiniappMeetingsCreateRouteWithChildren
+  '/profile/admin': typeof MiniappProfileAdminRouteWithChildren
+  '/profile/colleague': typeof MiniappProfileColleagueRoute
+  '/meetings/create/$editId': typeof MiniappMeetingsCreateEditIdRoute
+  '/profile/admin/setup': typeof MiniappProfileAdminSetupRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/_tma': typeof TmaRouteWithChildren
-  '/_tma/auto': typeof TmaAutoRoute
-  '/_tma/checker': typeof TmaCheckerRoute
-  '/_tma/meetings': typeof TmaMeetingsRouteWithChildren
-  '/_tma/profile': typeof TmaProfileRouteWithChildren
-  '/_tma/': typeof TmaIndexRoute
-  '/_tma/meetings/$meetingId': typeof TmaMeetingsMeetingIdRoute
-  '/_tma/meetings/create': typeof TmaMeetingsCreateRouteWithChildren
-  '/_tma/profile/admin': typeof TmaProfileAdminRoute
-  '/_tma/profile/colleague': typeof TmaProfileColleagueRoute
-  '/_tma/meetings/create/$editId': typeof TmaMeetingsCreateEditIdRoute
+  '/_miniapp': typeof MiniappRouteWithChildren
+  '/_miniapp/checker': typeof MiniappCheckerRoute
+  '/_miniapp/meetings': typeof MiniappMeetingsRouteWithChildren
+  '/_miniapp/profile': typeof MiniappProfileRouteWithChildren
+  '/_miniapp/': typeof MiniappIndexRoute
+  '/_miniapp/meetings/$meetingId': typeof MiniappMeetingsMeetingIdRoute
+  '/_miniapp/meetings/create': typeof MiniappMeetingsCreateRouteWithChildren
+  '/_miniapp/profile/admin': typeof MiniappProfileAdminRouteWithChildren
+  '/_miniapp/profile/colleague': typeof MiniappProfileColleagueRoute
+  '/_miniapp/meetings/create/$editId': typeof MiniappMeetingsCreateEditIdRoute
+  '/_miniapp/profile/admin/setup': typeof MiniappProfileAdminSetupRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/auto'
     | '/checker'
     | '/meetings'
     | '/profile'
@@ -127,9 +129,9 @@ export interface FileRouteTypes {
     | '/profile/admin'
     | '/profile/colleague'
     | '/meetings/create/$editId'
+    | '/profile/admin/setup'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/auto'
     | '/checker'
     | '/meetings'
     | '/profile'
@@ -139,166 +141,179 @@ export interface FileRouteTypes {
     | '/profile/admin'
     | '/profile/colleague'
     | '/meetings/create/$editId'
+    | '/profile/admin/setup'
   id:
     | '__root__'
-    | '/_tma'
-    | '/_tma/auto'
-    | '/_tma/checker'
-    | '/_tma/meetings'
-    | '/_tma/profile'
-    | '/_tma/'
-    | '/_tma/meetings/$meetingId'
-    | '/_tma/meetings/create'
-    | '/_tma/profile/admin'
-    | '/_tma/profile/colleague'
-    | '/_tma/meetings/create/$editId'
+    | '/_miniapp'
+    | '/_miniapp/checker'
+    | '/_miniapp/meetings'
+    | '/_miniapp/profile'
+    | '/_miniapp/'
+    | '/_miniapp/meetings/$meetingId'
+    | '/_miniapp/meetings/create'
+    | '/_miniapp/profile/admin'
+    | '/_miniapp/profile/colleague'
+    | '/_miniapp/meetings/create/$editId'
+    | '/_miniapp/profile/admin/setup'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  TmaRoute: typeof TmaRouteWithChildren
+  MiniappRoute: typeof MiniappRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_tma': {
-      id: '/_tma'
+    '/_miniapp': {
+      id: '/_miniapp'
       path: ''
       fullPath: '/'
-      preLoaderRoute: typeof TmaRouteImport
+      preLoaderRoute: typeof MiniappRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_tma/': {
-      id: '/_tma/'
+    '/_miniapp/': {
+      id: '/_miniapp/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof TmaIndexRouteImport
-      parentRoute: typeof TmaRoute
+      preLoaderRoute: typeof MiniappIndexRouteImport
+      parentRoute: typeof MiniappRoute
     }
-    '/_tma/profile': {
-      id: '/_tma/profile'
+    '/_miniapp/profile': {
+      id: '/_miniapp/profile'
       path: '/profile'
       fullPath: '/profile'
-      preLoaderRoute: typeof TmaProfileRouteImport
-      parentRoute: typeof TmaRoute
+      preLoaderRoute: typeof MiniappProfileRouteImport
+      parentRoute: typeof MiniappRoute
     }
-    '/_tma/meetings': {
-      id: '/_tma/meetings'
+    '/_miniapp/meetings': {
+      id: '/_miniapp/meetings'
       path: '/meetings'
       fullPath: '/meetings'
-      preLoaderRoute: typeof TmaMeetingsRouteImport
-      parentRoute: typeof TmaRoute
+      preLoaderRoute: typeof MiniappMeetingsRouteImport
+      parentRoute: typeof MiniappRoute
     }
-    '/_tma/checker': {
-      id: '/_tma/checker'
+    '/_miniapp/checker': {
+      id: '/_miniapp/checker'
       path: '/checker'
       fullPath: '/checker'
-      preLoaderRoute: typeof TmaCheckerRouteImport
-      parentRoute: typeof TmaRoute
+      preLoaderRoute: typeof MiniappCheckerRouteImport
+      parentRoute: typeof MiniappRoute
     }
-    '/_tma/auto': {
-      id: '/_tma/auto'
-      path: '/auto'
-      fullPath: '/auto'
-      preLoaderRoute: typeof TmaAutoRouteImport
-      parentRoute: typeof TmaRoute
-    }
-    '/_tma/profile/colleague': {
-      id: '/_tma/profile/colleague'
+    '/_miniapp/profile/colleague': {
+      id: '/_miniapp/profile/colleague'
       path: '/colleague'
       fullPath: '/profile/colleague'
-      preLoaderRoute: typeof TmaProfileColleagueRouteImport
-      parentRoute: typeof TmaProfileRoute
+      preLoaderRoute: typeof MiniappProfileColleagueRouteImport
+      parentRoute: typeof MiniappProfileRoute
     }
-    '/_tma/profile/admin': {
-      id: '/_tma/profile/admin'
+    '/_miniapp/profile/admin': {
+      id: '/_miniapp/profile/admin'
       path: '/admin'
       fullPath: '/profile/admin'
-      preLoaderRoute: typeof TmaProfileAdminRouteImport
-      parentRoute: typeof TmaProfileRoute
+      preLoaderRoute: typeof MiniappProfileAdminRouteImport
+      parentRoute: typeof MiniappProfileRoute
     }
-    '/_tma/meetings/create': {
-      id: '/_tma/meetings/create'
+    '/_miniapp/meetings/create': {
+      id: '/_miniapp/meetings/create'
       path: '/create'
       fullPath: '/meetings/create'
-      preLoaderRoute: typeof TmaMeetingsCreateRouteImport
-      parentRoute: typeof TmaMeetingsRoute
+      preLoaderRoute: typeof MiniappMeetingsCreateRouteImport
+      parentRoute: typeof MiniappMeetingsRoute
     }
-    '/_tma/meetings/$meetingId': {
-      id: '/_tma/meetings/$meetingId'
+    '/_miniapp/meetings/$meetingId': {
+      id: '/_miniapp/meetings/$meetingId'
       path: '/$meetingId'
       fullPath: '/meetings/$meetingId'
-      preLoaderRoute: typeof TmaMeetingsMeetingIdRouteImport
-      parentRoute: typeof TmaMeetingsRoute
+      preLoaderRoute: typeof MiniappMeetingsMeetingIdRouteImport
+      parentRoute: typeof MiniappMeetingsRoute
     }
-    '/_tma/meetings/create/$editId': {
-      id: '/_tma/meetings/create/$editId'
+    '/_miniapp/profile/admin/setup': {
+      id: '/_miniapp/profile/admin/setup'
+      path: '/setup'
+      fullPath: '/profile/admin/setup'
+      preLoaderRoute: typeof MiniappProfileAdminSetupRouteImport
+      parentRoute: typeof MiniappProfileAdminRoute
+    }
+    '/_miniapp/meetings/create/$editId': {
+      id: '/_miniapp/meetings/create/$editId'
       path: '/$editId'
       fullPath: '/meetings/create/$editId'
-      preLoaderRoute: typeof TmaMeetingsCreateEditIdRouteImport
-      parentRoute: typeof TmaMeetingsCreateRoute
+      preLoaderRoute: typeof MiniappMeetingsCreateEditIdRouteImport
+      parentRoute: typeof MiniappMeetingsCreateRoute
     }
   }
 }
 
-interface TmaMeetingsCreateRouteChildren {
-  TmaMeetingsCreateEditIdRoute: typeof TmaMeetingsCreateEditIdRoute
+interface MiniappMeetingsCreateRouteChildren {
+  MiniappMeetingsCreateEditIdRoute: typeof MiniappMeetingsCreateEditIdRoute
 }
 
-const TmaMeetingsCreateRouteChildren: TmaMeetingsCreateRouteChildren = {
-  TmaMeetingsCreateEditIdRoute: TmaMeetingsCreateEditIdRoute,
+const MiniappMeetingsCreateRouteChildren: MiniappMeetingsCreateRouteChildren = {
+  MiniappMeetingsCreateEditIdRoute: MiniappMeetingsCreateEditIdRoute,
 }
 
-const TmaMeetingsCreateRouteWithChildren =
-  TmaMeetingsCreateRoute._addFileChildren(TmaMeetingsCreateRouteChildren)
+const MiniappMeetingsCreateRouteWithChildren =
+  MiniappMeetingsCreateRoute._addFileChildren(
+    MiniappMeetingsCreateRouteChildren,
+  )
 
-interface TmaMeetingsRouteChildren {
-  TmaMeetingsMeetingIdRoute: typeof TmaMeetingsMeetingIdRoute
-  TmaMeetingsCreateRoute: typeof TmaMeetingsCreateRouteWithChildren
+interface MiniappMeetingsRouteChildren {
+  MiniappMeetingsMeetingIdRoute: typeof MiniappMeetingsMeetingIdRoute
+  MiniappMeetingsCreateRoute: typeof MiniappMeetingsCreateRouteWithChildren
 }
 
-const TmaMeetingsRouteChildren: TmaMeetingsRouteChildren = {
-  TmaMeetingsMeetingIdRoute: TmaMeetingsMeetingIdRoute,
-  TmaMeetingsCreateRoute: TmaMeetingsCreateRouteWithChildren,
+const MiniappMeetingsRouteChildren: MiniappMeetingsRouteChildren = {
+  MiniappMeetingsMeetingIdRoute: MiniappMeetingsMeetingIdRoute,
+  MiniappMeetingsCreateRoute: MiniappMeetingsCreateRouteWithChildren,
 }
 
-const TmaMeetingsRouteWithChildren = TmaMeetingsRoute._addFileChildren(
-  TmaMeetingsRouteChildren,
+const MiniappMeetingsRouteWithChildren = MiniappMeetingsRoute._addFileChildren(
+  MiniappMeetingsRouteChildren,
 )
 
-interface TmaProfileRouteChildren {
-  TmaProfileAdminRoute: typeof TmaProfileAdminRoute
-  TmaProfileColleagueRoute: typeof TmaProfileColleagueRoute
+interface MiniappProfileAdminRouteChildren {
+  MiniappProfileAdminSetupRoute: typeof MiniappProfileAdminSetupRoute
 }
 
-const TmaProfileRouteChildren: TmaProfileRouteChildren = {
-  TmaProfileAdminRoute: TmaProfileAdminRoute,
-  TmaProfileColleagueRoute: TmaProfileColleagueRoute,
+const MiniappProfileAdminRouteChildren: MiniappProfileAdminRouteChildren = {
+  MiniappProfileAdminSetupRoute: MiniappProfileAdminSetupRoute,
 }
 
-const TmaProfileRouteWithChildren = TmaProfileRoute._addFileChildren(
-  TmaProfileRouteChildren,
+const MiniappProfileAdminRouteWithChildren =
+  MiniappProfileAdminRoute._addFileChildren(MiniappProfileAdminRouteChildren)
+
+interface MiniappProfileRouteChildren {
+  MiniappProfileAdminRoute: typeof MiniappProfileAdminRouteWithChildren
+  MiniappProfileColleagueRoute: typeof MiniappProfileColleagueRoute
+}
+
+const MiniappProfileRouteChildren: MiniappProfileRouteChildren = {
+  MiniappProfileAdminRoute: MiniappProfileAdminRouteWithChildren,
+  MiniappProfileColleagueRoute: MiniappProfileColleagueRoute,
+}
+
+const MiniappProfileRouteWithChildren = MiniappProfileRoute._addFileChildren(
+  MiniappProfileRouteChildren,
 )
 
-interface TmaRouteChildren {
-  TmaAutoRoute: typeof TmaAutoRoute
-  TmaCheckerRoute: typeof TmaCheckerRoute
-  TmaMeetingsRoute: typeof TmaMeetingsRouteWithChildren
-  TmaProfileRoute: typeof TmaProfileRouteWithChildren
-  TmaIndexRoute: typeof TmaIndexRoute
+interface MiniappRouteChildren {
+  MiniappCheckerRoute: typeof MiniappCheckerRoute
+  MiniappMeetingsRoute: typeof MiniappMeetingsRouteWithChildren
+  MiniappProfileRoute: typeof MiniappProfileRouteWithChildren
+  MiniappIndexRoute: typeof MiniappIndexRoute
 }
 
-const TmaRouteChildren: TmaRouteChildren = {
-  TmaAutoRoute: TmaAutoRoute,
-  TmaCheckerRoute: TmaCheckerRoute,
-  TmaMeetingsRoute: TmaMeetingsRouteWithChildren,
-  TmaProfileRoute: TmaProfileRouteWithChildren,
-  TmaIndexRoute: TmaIndexRoute,
+const MiniappRouteChildren: MiniappRouteChildren = {
+  MiniappCheckerRoute: MiniappCheckerRoute,
+  MiniappMeetingsRoute: MiniappMeetingsRouteWithChildren,
+  MiniappProfileRoute: MiniappProfileRouteWithChildren,
+  MiniappIndexRoute: MiniappIndexRoute,
 }
 
-const TmaRouteWithChildren = TmaRoute._addFileChildren(TmaRouteChildren)
+const MiniappRouteWithChildren =
+  MiniappRoute._addFileChildren(MiniappRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  TmaRoute: TmaRouteWithChildren,
+  MiniappRoute: MiniappRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

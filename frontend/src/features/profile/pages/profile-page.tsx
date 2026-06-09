@@ -2,18 +2,18 @@ import { useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
 import { cn } from "@/shared/lib/cn"
 import { toastSuccess } from "@/shared/lib/toast"
-import { I18N } from "@/shared/tma/i18n"
-import { useTmaApp } from "@/shared/tma/context"
-import { canAccessTmaAdmin } from "@/shared/auth/module-policies"
-import { useTmaAuth } from "@/shared/auth/auth-context"
+import { I18N } from "@/shared/miniapp/i18n"
+import { useMiniApp } from "@/shared/miniapp/context"
+import { canAccessMiniAppAdmin } from "@/shared/auth/module-policies"
+import { useMiniAppAuth } from "@/shared/auth/auth-context"
 import { CatIcon, CatToggle } from "@/shared/ui/cat/primitives"
 import { ProfileHeader } from "../components/profile-header"
 import { SettingsGroup } from "../components/settings-group"
 import { SettingsRow } from "../components/settings-row"
 
 export function ProfilePage() {
-  const p = useTmaApp()
-  const { user } = useTmaAuth()
+  const p = useMiniApp()
+  const { user } = useMiniAppAuth()
   const navigate = useNavigate()
   const t = p.t
   const [reminders, setReminders] = useState(["15m"])
@@ -58,8 +58,8 @@ export function ProfilePage() {
                 className={cn(
                   "font-display cursor-pointer rounded-[11px] border-[1.5px] px-[13px] py-2 text-[13.5px] font-bold",
                   on
-                    ? "border-tma-accent bg-tma-accent-soft text-tma-accent"
-                    : "border-tma-border bg-tma-card text-tma-muted"
+                    ? "border-miniapp-accent bg-miniapp-accent-soft text-miniapp-accent"
+                    : "border-miniapp-border bg-miniapp-card text-miniapp-muted"
                 )}
               >
                 {on ? "✓ " : ""}
@@ -77,9 +77,9 @@ export function ProfilePage() {
           label={t("language")}
           onClick={p.openLangPicker}
           right={
-            <span className="text-tma-muted flex items-center gap-1.5 text-sm font-bold">
+            <span className="text-miniapp-muted flex items-center gap-1.5 text-sm font-bold">
               {I18N[p.lang]._flag} {I18N[p.lang]._label}
-              <span className="text-tma-faint">
+              <span className="text-miniapp-faint">
                 <CatIcon name="chevR" size={16} sw={2.2} />
               </span>
             </span>
@@ -90,9 +90,9 @@ export function ProfilePage() {
           hue={300}
           label={t("timezone")}
           right={
-            <span className="text-tma-muted flex items-center gap-1.5 text-sm font-bold">
+            <span className="text-miniapp-muted flex items-center gap-1.5 text-sm font-bold">
               Алматы UTC+5
-              <span className="text-tma-faint">
+              <span className="text-miniapp-faint">
                 <CatIcon name="chevR" size={16} sw={2.2} />
               </span>
             </span>
@@ -101,7 +101,7 @@ export function ProfilePage() {
         />
       </SettingsGroup>
 
-      {canAccessTmaAdmin(user) && (
+      {canAccessMiniAppAdmin(user) && (
         <SettingsGroup title={t("admin")}>
           <SettingsRow
             icon="shield"
@@ -109,7 +109,18 @@ export function ProfilePage() {
             label={t("admin")}
             onClick={() => void navigate({ to: "/profile/admin" })}
             right={
-              <span className="text-tma-faint">
+              <span className="text-miniapp-faint">
+                <CatIcon name="chevR" size={18} sw={2.2} />
+              </span>
+            }
+          />
+          <SettingsRow
+            icon="settings"
+            hue={45}
+            label="Настройка workspace"
+            onClick={() => void navigate({ to: "/profile/admin/setup" })}
+            right={
+              <span className="text-miniapp-faint">
                 <CatIcon name="chevR" size={18} sw={2.2} />
               </span>
             }
@@ -125,7 +136,7 @@ export function ProfilePage() {
           label={t("help")}
           onClick={() => toastSuccess("Мяу! Чем помочь? 🐾")}
           right={
-            <span className="text-tma-faint">
+            <span className="text-miniapp-faint">
               <CatIcon name="chevR" size={18} sw={2.2} />
             </span>
           }
@@ -133,7 +144,7 @@ export function ProfilePage() {
         />
       </SettingsGroup>
 
-      <div className="text-tma-faint mt-2 text-center text-xs font-semibold">
+      <div className="text-miniapp-faint mt-2 text-center text-xs font-semibold">
         Lead Cat · v2.0 · {I18N[p.lang].appSub} 🐾
       </div>
     </div>

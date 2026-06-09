@@ -15,7 +15,7 @@ export async function fetchFreeSlots(
   params: FreeSlotsParams,
   lang: Lang
 ): Promise<FreeSlot[]> {
-  const data = await apiFetch<{ slots: FreeSlotDTO[] }>("/tma/free-slots", {
+  const data = await apiFetch<{ slots: FreeSlotDTO[] }>("/miniapp/free-slots", {
     method: "POST",
     body: {
       participants: params.participants,
@@ -63,7 +63,7 @@ export async function fetchConflicts(
   params: ConflictsParams
 ): Promise<OccurrenceConflicts[]> {
   const data = await apiFetch<{ occurrences: OccurrenceConflicts[] }>(
-    "/tma/conflicts",
+    "/miniapp/conflicts",
     {
       method: "POST",
       body: {

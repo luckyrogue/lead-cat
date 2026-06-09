@@ -1,6 +1,6 @@
 import { StatusScreen } from "@/components/status-screen"
-import { translate } from "@/shared/tma/i18n"
-import { readStoredLang } from "@/shared/tma/stored-lang"
+import { translate } from "@/shared/miniapp/i18n"
+import { readStoredLang } from "@/shared/miniapp/stored-lang"
 
 type RouteErrorPageProps = {
   error: unknown

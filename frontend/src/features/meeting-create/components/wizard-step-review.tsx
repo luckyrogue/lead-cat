@@ -1,8 +1,8 @@
 import type { ReactNode } from "react"
 import { buildTitle, fmtDate } from "@/entities/meeting/lib/format"
 import type { OccurrenceConflicts } from "@/entities/meeting/scheduling-api"
-import { useTmaApp } from "@/shared/tma/context"
-import type { MeetingDraft } from "@/shared/tma/types"
+import { useMiniApp } from "@/shared/miniapp/context"
+import type { MeetingDraft } from "@/shared/miniapp/types"
 import { DetailRow } from "@/components/meetings/detail-row"
 import { MeetingTitlePreview } from "@/components/meetings/meeting-title-preview"
 import { ParticipantStack } from "@/components/meetings/meeting-ui"
@@ -17,11 +17,11 @@ function AlertBanner({
   children: ReactNode
 }) {
   return (
-    <div className="border-tma-danger/30 bg-tma-danger-soft mt-3.5 rounded-2xl border px-[15px] py-[13px]">
-      <div className="font-display text-tma-danger mb-1.5 flex items-center gap-[7px] text-[14.5px] font-extrabold">
+    <div className="border-miniapp-danger/30 bg-miniapp-danger-soft mt-3.5 rounded-2xl border px-[15px] py-[13px]">
+      <div className="font-display text-miniapp-danger mb-1.5 flex items-center gap-[7px] text-[14.5px] font-extrabold">
         ⚠️ {title}
       </div>
-      <div className="text-tma-text/85 text-[13px] leading-snug">
+      <div className="text-miniapp-text/85 text-[13px] leading-snug">
         {children}
       </div>
     </div>
@@ -39,7 +39,7 @@ export function WizardStepReview({
   finalMeeting: MeetingDraft & { end: string; organizer: string }
   conflictOccurrences: OccurrenceConflicts[]
 }) {
-  const { t, lang } = useTmaApp()
+  const { t, lang } = useMiniApp()
 
   return (
     <div>
@@ -60,16 +60,16 @@ export function WizardStepReview({
           {draft.host}
         </DetailRow>
         <div className="flex items-center gap-3 pt-3">
-          <div className="bg-tma-accent-soft flex size-[34px] shrink-0 items-center justify-center rounded-[10px]">
+          <div className="bg-miniapp-accent-soft flex size-[34px] shrink-0 items-center justify-center rounded-[10px]">
             <CatIcon
               name="users"
               size={18}
-              className="text-tma-accent"
+              className="text-miniapp-accent"
               sw={2}
             />
           </div>
           <div className="flex-1">
-            <div className="text-tma-muted mb-1 text-xs font-semibold">
+            <div className="text-miniapp-muted mb-1 text-xs font-semibold">
               {t("addPeople")}
             </div>
             {draft.participants.length ? (
@@ -78,7 +78,7 @@ export function WizardStepReview({
                 max={6}
               />
             ) : (
-              <span className="text-tma-faint text-sm">—</span>
+              <span className="text-miniapp-faint text-sm">—</span>
             )}
           </div>
         </div>
@@ -121,7 +121,7 @@ export function WizardStepReview({
               )
             })}
             {conflictOccurrences.length > 5 && (
-              <div className="text-tma-text/70 mt-1.5">
+              <div className="text-miniapp-text/70 mt-1.5">
                 {t("seriesConflictsMore").replace(
                   "{count}",
                   String(conflictOccurrences.length - 5)

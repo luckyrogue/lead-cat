@@ -2,8 +2,8 @@
 
 Base path: `/api`. Error shape: `{ "error": "code", "message": "…" }`.
 
-The machine-readable source of truth is `docs/openapi.json`, served at `GET /openapi.json`
-and mirrored to the generated TypeScript client at `frontend/src/shared/api/generated/`.
+The machine-readable source of truth is `backend/openapi/openapi.json`, served at `GET /openapi.json`
+and mirrored to the generated TypeScript client at `frontend/src/shared/api/generated/schema.ts`.
 
 ---
 
@@ -17,12 +17,12 @@ and mirrored to the generated TypeScript client at `frontend/src/shared/api/gene
 
 ---
 
-## TMA auth
+## Mini App auth
 
-Exchange a Telegram WebApp `initData` string for a TMA JWT.
+Exchange a Telegram WebApp `initData` string for a Mini App JWT.
 
 ```
-POST /api/auth/tma
+POST /api/auth/miniapp
 Body: { "init_data": "<Telegram WebApp initData>" }
 →    { "token": "…", "user": { … } }
 ```
@@ -30,26 +30,26 @@ Body: { "init_data": "<Telegram WebApp initData>" }
 Returns `401 { "code": "not_registered" }` when no `bot_users` row exists for the
 Telegram user. Registration is **not** HTTP — the user must start the bot with `/start`.
 
-Subsequent calls to `/api/tma/*` require `Authorization: Bearer <tma_jwt>`.
-Token type `typ:tma`, TTL 24 h.
+Subsequent calls to `/api/miniapp/*` require `Authorization: Bearer <miniapp_jwt>`.
+Token type `tok_typ:miniapp`, TTL 24 h.
 
 ---
 
-## TMA — present
+## Mini App — meetings
 
-All routes require `Authorization: Bearer <tma_jwt>`.
+All routes require `Authorization: Bearer <miniapp_jwt>`.
 
-| Method   | Path                                          | Purpose                                                               |
-| -------- | --------------------------------------------- | --------------------------------------------------------------------- |
-| `GET`    | `/api/tma/me`                                 | Current bot-user identity (name, email, role)                         |
-| `GET`    | `/api/tma/meetings?scope=upcoming\|past\|all` | Authenticated user's own meetings                                     |
-| `GET`    | `/api/tma/schedule?email=&scope=`             | Read a colleague's schedule (view-only)                               |
-| `GET`    | `/api/tma/employees?q=`                       | Employee directory search / autocomplete                              |
-| `POST`   | `/api/tma/free-slots`                         | Common free-time checker across participants                          |
-| `POST`   | `/api/tma/meetings`                           | Create a meeting (recurring supported via `recurrence_until` + `recurrence_days`) |
-| `PATCH`  | `/api/tma/meetings/:id?scope=this\|whole`     | Edit a meeting (organizer-only, 403); `scope` default `this`          |
-| `DELETE` | `/api/tma/meetings/:id?scope=this\|whole`     | Cancel a meeting (organizer-only, 403); `scope` default `this`        |
-| `POST`   | `/api/tma/conflicts`                          | Conflict check (single or expanded series); response: `occurrences[]` |
+| Method   | Path                                              | Purpose                                                               |
+| -------- | ------------------------------------------------- | --------------------------------------------------------------------- |
+| `GET`    | `/api/miniapp/me`                                 | Current bot-user identity (name, email, role)                         |
+| `GET`    | `/api/miniapp/meetings?scope=upcoming\|past\|all` | Authenticated user's own meetings                                     |
+| `GET`    | `/api/miniapp/schedule?email=&scope=`             | Read a colleague's schedule (view-only)                               |
+| `GET`    | `/api/miniapp/employees?q=`                       | Employee directory search / autocomplete                              |
+| `POST`   | `/api/miniapp/free-slots`                         | Common free-time checker across participants                          |
+| `POST`   | `/api/miniapp/meetings`                           | Create a meeting (recurring supported via `recurrence_until` + `recurrence_days`) |
+| `PATCH`  | `/api/miniapp/meetings/:id?scope=this\|whole`     | Edit a meeting (organizer-only, 403); `scope` default `this`          |
+| `DELETE` | `/api/miniapp/meetings/:id?scope=this\|whole`     | Cancel a meeting (organizer-only, 403); `scope` default `this`        |
+| `POST`   | `/api/miniapp/conflicts`                          | Conflict check (single or expanded series); response: `occurrences[]` |
 
 Recurrence kinds: `once`, `daily`, `weekly`, `custom` (with `recurrence_days: [1..7]`, Mon=1..Sun=7), `monthly`. Non-once requires `recurrence_until` (YYYY-MM-DD).
 
@@ -57,26 +57,22 @@ Write-path error codes: `meetings_not_configured` (Google integration missing), 
 
 ---
 
-### TMA — admin (slice D)
+### Mini App — admin
 
-All routes require `Authorization: Bearer <tma_jwt>` AND `bot_users.role == "admin"`.
+All routes require `Authorization: Bearer <miniapp_jwt>` AND `bot_users.role == "admin"`.
 
 | Method   | Path                                          | Purpose                                        |
 | -------- | --------------------------------------------- | ---------------------------------------------- |
-| `GET`    | `/api/tma/admin/workspace`                    | Workspace status (auto-create on first call)   |
-| `POST`   | `/api/tma/admin/workspace`                    | Idempotent ensure-workspace                    |
-| `GET`    | `/api/tma/admin/integrations`                 | Google integration view (no secrets)           |
-| `PATCH`  | `/api/tma/admin/integrations`                 | Set SA JSON / subject / calendar id / meet / tz |
-| `POST`   | `/api/tma/admin/integrations/verify`          | Real Google verify (parse → impersonate → Calendars.Get) |
-| `GET`    | `/api/tma/admin/chat/status`                  | Chat-link status                               |
-| `POST`   | `/api/tma/admin/chat/link`                    | Link Telegram chat                             |
-| `GET`    | `/api/tma/admin/members`                      | List workspace members                         |
-| `POST`   | `/api/tma/admin/members/sync-chat`            | Sync members from linked chat                  |
-| `GET`    | `/api/tma/admin/scenarios`                    | List scenarios                                 |
-| `PATCH`  | `/api/tma/admin/scenarios/:id`                | Toggle `enabled` (only)                        |
-| `POST`   | `/api/tma/admin/scenarios/:id/run`            | Manual run                                     |
-| `GET`    | `/api/tma/admin/scenarios/:id/runs`           | Last 30 runs                                   |
-| `GET`    | `/api/tma/admin/audit`                        | Audit log (filters: action, actor, limit≤200)  |
+| `GET`    | `/api/miniapp/admin/workspace`                | Workspace status (auto-create on first call)   |
+| `POST`   | `/api/miniapp/admin/workspace`                | Idempotent ensure-workspace                    |
+| `GET`    | `/api/miniapp/admin/integrations`             | Google integration view (no secrets)           |
+| `PATCH`  | `/api/miniapp/admin/integrations`             | Set SA JSON / subject / calendar id / meet / tz |
+| `POST`   | `/api/miniapp/admin/integrations/verify`      | Real Google verify (parse → impersonate → Calendars.Get) |
+| `GET`    | `/api/miniapp/admin/chat/status`              | Chat-link status                               |
+| `POST`   | `/api/miniapp/admin/chat/link`                | Link Telegram chat                             |
+| `GET`    | `/api/miniapp/admin/members`                  | List workspace members                         |
+| `POST`   | `/api/miniapp/admin/members/sync-chat`        | Sync members from linked chat                  |
+| `GET`    | `/api/miniapp/admin/audit`                    | Audit log (filters: action, actor, limit≤200)  |
 
 Error codes: `forbidden`, `unauthorized`, `validation_failed`, `workspace_not_found`, `google_sa_invalid`, `google_subject_invalid`, `google_calendar_not_accessible`, `google_api_disabled`, `google_not_configured`.
 
@@ -86,6 +82,4 @@ Mini App UI: **Profile → Admin → Настройка workspace** (`/profile/a
 
 ## Appendix — Retired platform API (410 Gone)
 
-> Platform JWT bootstrap (`/api/auth/email/*`, passkey, OAuth, `/api/workspaces/*`) returns **410 Gone** with `Deprecation: true`. Use TMA admin routes above and `POST /api/auth/tma` for all operator setup.
-
-> `PATCH /api/workspaces/:id/integrations` and `POST /api/workspaces/:id/chat/link` are superseded by `/api/tma/admin/*` (slice D). Kept for scripted operator use; will be removed after first beta release.
+> Platform JWT bootstrap (`/api/auth/email/*`, passkey, OAuth, `/api/workspaces/*`) returns **410 Gone** with `Deprecation: true`. Use Mini App admin routes above and `POST /api/auth/miniapp` for all operator setup.

@@ -4,7 +4,7 @@
 
 Lead Cat is a **Google Meet meetings-management Telegram Mini App**. Employees schedule, edit, and cancel meetings directly inside Telegram; the system creates Google Calendar events and sends notifications via a Telegram bot.
 
-- **Frontend** — React Telegram Mini App (`frontend/src/features/tma`, `frontend/src/routes/_tma`).
+- **Frontend** — React Telegram Mini App (`frontend/src/shared/miniapp`, `frontend/src/routes/_miniapp`).
 - **Backend** — Go monolith (`cmd/server`): Fiber HTTP server, Telegram bot, asynq workers.
 - **Infra** — Postgres (source of truth), Redis (asynq job queues + scheduler leader lock).
 
@@ -22,20 +22,19 @@ backend/internal/
 │   ├── meeting_service.go   (CreateMeeting, UpdateMeeting, CancelMeeting, ListMeetings, GetMeeting)
 │   ├── conflict.go          (MeetingConflicts, FreeSlots)
 │   ├── series_edit.go       (series-level edits)
-│   ├── tma_organizer.go     (EnsureTMAOrganizer)
-│   └── services.go          (Services struct; workspace/member/scenario helpers — legacy)
+│   ├── organizer_bridge.go  (EnsureMiniAppOrganizer)
+│   ├── query/               (Mini App read-model assembly; CQRS read side)
+│   └── services.go          (Services facade; workspace/member helpers)
 ├── delivery/
 │   └── http/        ← Fiber handlers, middleware; no business logic
 ├── infrastructure/
 │   ├── persistence/postgres/  ← pgx store (SoT)
 │   ├── calendar/              ← Google Calendar API adapter
 │   ├── queue/asynq/           ← job enqueue client
-│   ├── auth/                  ← OAuth, WebAuthn adapters
 │   ├── telegram/              ← initData validator
-│   ├── crypto/                ← AES-GCM token cipher
-│   └── vcs/                   ← GitHub/GitLab clients (legacy alpha)
+│   └── crypto/                ← AES-GCM token cipher
 └── platform/
-    ├── auth/                  ← JWT + TMA token issuers, OTP, session store
+    ├── auth/                  ← Mini App JWT issuer
     ├── employeedir/           ← CSV employee directory importer
     ├── meeting_notifier/      ← notification worker (created/cancelled/updated)
     ├── meetingedit/           ← bot FSM for editing meetings
@@ -44,7 +43,6 @@ backend/internal/
     ├── scheduleview/          ← colleague schedule query helper
     ├── botreg/                ← bot /start FSM (bot_users registration)
     ├── observability/         ← zap logger wiring
-    └── scenario_*/            ← legacy alpha scheduler/executor (see Appendix)
 ```
 
 ### Layer responsibilities
@@ -52,8 +50,8 @@ backend/internal/
 | Layer            | Responsibility                                                                                                                                                                                                          |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `domain/meeting` | Value types, recurrence maths, overlap/free-slot logic. No I/O.                                                                                                                                                         |
-| `application`    | Orchestrates domain + infrastructure. Commands mutate state (CreateMeeting, UpdateMeeting, CancelMeeting). Queries read state (MeetingConflicts, FreeSlots, EmployeeSchedule). `EnsureTMAOrganizer` bridges identities. |
-| `delivery/http`  | Maps HTTP ↔ application calls. Two handler groups: platform (`/api/*`) and TMA (`/api/tma/*`).                                                                                                                          |
+| `application`    | Orchestrates domain + infrastructure. Commands mutate state (CreateMeeting, UpdateMeeting, CancelMeeting). Queries read state (MeetingConflicts, FreeSlots, EmployeeSchedule). `EnsureMiniAppOrganizer` bridges identities. |
+| `delivery/http`  | Maps HTTP ↔ application calls. Public health + `POST /api/auth/miniapp`; meetings product on `/api/miniapp/*` (+ `/api/miniapp/admin/*` for operators). Retired platform routes return 410.                               |
 | `infrastructure` | Implements ports used by `application`: Postgres store, Google Calendar adapter, asynq queue client.                                                                                                                    |
 | `platform`       | Cross-cutting runtime concerns: auth token issuers, bot FSMs, notification workers, reminder scheduler, observability.                                                                                                  |
 
@@ -61,16 +59,16 @@ backend/internal/
 
 ## Identity
 
-Two identity worlds coexist:
+Two tables cooperate; only one is user-facing auth:
 
 | World              | Table            | Key                                    | Created by                                                     |
 | ------------------ | ---------------- | -------------------------------------- | -------------------------------------------------------------- |
 | **Bot users**      | `bot_users`      | `telegram_id` + corporate email + role | Telegram bot `/start` FSM (`platform/botreg`)                  |
-| **Platform users** | `platform_users` | UUID                                   | OTP / passkey / OAuth login; or lazily by `EnsureTMAOrganizer` |
+| **Platform users** | `platform_users` | UUID                                   | Lazily created by `EnsureMiniAppOrganizer` (organizer bridge) |
 
-**TMA JWT** (`tok_typ: "tma"`, 24 h) — issued by `POST /api/auth/tma` after validating Telegram `initData`. Claims carry the `bot_user` identity.
+**Mini App JWT** (`tok_typ: "miniapp"`, 24 h) — issued by `POST /api/auth/miniapp` after validating Telegram `initData`. Claims carry the `bot_user` identity.
 
-**`EnsureTMAOrganizer`** (`application/tma_organizer.go`) — bridges the two worlds at meeting-write time. It find-or-creates a `platform_users` row keyed by `auth_sub = "email:<email>"` (same sub as native email-OTP login, so a meeting created via Mini App is editable by a web login and vice-versa), then links the Telegram ID. Returns the `platform_users` UUID used as `organizer_user_id` on the meeting row. Idempotent. Returns `ErrTelegramLinkedToOtherAccount` (→ HTTP 409) if the Telegram ID is already bound to a different account.
+**`EnsureMiniAppOrganizer`** (`application/organizer_bridge.go`) — internal bridge at meeting-write time. Find-or-creates a `platform_users` row keyed by `auth_sub = "email:<email>"`, links the Telegram ID, returns the UUID used as `organizer_user_id`. Idempotent.
 
 ---
 
@@ -79,34 +77,34 @@ Two identity worlds coexist:
 ```
 Mini App (Telegram WebApp)
   │
-  │  POST /api/auth/tma   (initData in body)
+  │  POST /api/auth/miniapp   (initData in body)
   ▼
-TMAAuth endpoint  →  validates initData (HMAC)  →  issues TMA JWT (24 h)
+MiniAppAuth endpoint  →  validates initData (HMAC)  →  issues Mini App JWT (24 h)
   │
-  │  GET/POST /api/tma/*  Authorization: Bearer <tma_jwt>
+  │  GET/POST /api/miniapp/*  Authorization: Bearer <miniapp_jwt>
   ▼
-TMAAuth middleware  →  resolves bot_user from JWT claims  →  sets c.Locals
+MiniAppAuth middleware  →  resolves bot_user from JWT claims  →  sets c.Locals
   │
   ▼
 Handler (delivery/http)
   │  maps request → input struct
   ▼
-application.Services  (EnsureTMAOrganizer if write, then meeting command/query)
+application.Services  (EnsureMiniAppOrganizer if write, then meeting command/query)
   │
   ├──▶ infrastructure/persistence/postgres  (meetings, participants, employees, workspaces)
   └──▶ infrastructure/calendar              (Google Calendar event create/update/delete)
 ```
 
-**TMA route group** (`/api/tma/*`):
+**Mini App route group** (`/api/miniapp/*`):
 
-| Method | Path                  | Application call                                    |
-| ------ | --------------------- | --------------------------------------------------- |
-| `GET`  | `/api/tma/me`         | — (reads `bot_user` from TMAAuth middleware locals) |
-| `GET`  | `/api/tma/meetings`   | `TMAMyMeetings`                                     |
-| `GET`  | `/api/tma/schedule`   | `TMASchedule` (colleague schedule)                  |
-| `GET`  | `/api/tma/employees`  | `ListEmployees`                                     |
-| `POST` | `/api/tma/free-slots` | `FreeSlots`                                         |
-| `POST` | `/api/tma/meetings`   | `CreateMeeting` (via `EnsureTMAOrganizer`)          |
+| Method | Path                      | Application call                                        |
+| ------ | ------------------------- | ------------------------------------------------------- |
+| `GET`  | `/api/miniapp/me`         | — (reads `bot_user` from MiniAppAuth middleware locals) |
+| `GET`  | `/api/miniapp/meetings`   | `MiniAppMyMeetings`                                     |
+| `GET`  | `/api/miniapp/schedule`   | `MiniAppSchedule` (colleague schedule)                  |
+| `GET`  | `/api/miniapp/employees`  | `ListEmployees`                                         |
+| `POST` | `/api/miniapp/free-slots` | `FreeSlots`                                             |
+| `POST` | `/api/miniapp/meetings`   | `CreateMeeting` (via `EnsureMiniAppOrganizer`)          |
 
 ---
 
@@ -125,11 +123,6 @@ asynq worker process (same binary)
 
 ---
 
-## Appendix — Deprecated: alpha setup (curl)
+## Appendix — Retired platform bootstrap
 
-> These platform endpoints/flows exist only for alpha operator bootstrap and are
-> being replaced by in-Mini-App admin (`/api/tma/admin/*`, see
-> `docs/superpowers/specs/2026-06-05-tma-setup-replacement-design.md`). Not part
-> of the product; slated for removal.
-
-The platform JWT (`platform_users`, issued via OTP/passkey/OAuth) and the `/api/workspaces/*` group still exist to let an operator bootstrap the system: create a workspace, upload Google Service Account credentials (`PATCH .../integrations`), import employees via CSV, and manage members. These flows have no Mini App UI and are operated with curl or scripts. They are being superseded by a TMA admin surface.
+Platform JWT routes (`/api/auth/email/*`, passkey, OAuth) and `/api/workspaces/*` return **410 Gone**. Operator setup runs through Mini App admin (`/api/miniapp/admin/*`) inside Telegram — see `docs/SETUP.md` and `docs/API.md`.

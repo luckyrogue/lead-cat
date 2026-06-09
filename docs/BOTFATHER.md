@@ -53,11 +53,14 @@ admin - Панель администратора (только для адми�
 
 ## 4. `/start` — registration
 
-When a user sends `/start` the backend upserts a `bot_user` row that binds their
-`telegram_id` to an email account. If no account exists yet, the bot prompts the user to
-register or link an existing account via the Mini App.
+When a user sends `/start`:
 
-See `docs/AUTH.md` for the full authentication and identity-linking flow.
+1. **Already registered** — bot replies with a welcome and prompts to open the Mini App from the menu.
+2. **New user** — bot asks for full name (ФИО), then corporate email, then creates a `bot_users` row immediately. There is **no email OTP** step; identity is trusted via Telegram plus the user's email input.
+
+Duplicate emails are rejected (`bot_users.email` is unique). Admins listed in `BOT_ADMIN_TELEGRAM_IDS` receive `role = "admin"` on registration.
+
+See `docs/AUTH.md` for the Mini App JWT flow after registration.
 
 ---
 

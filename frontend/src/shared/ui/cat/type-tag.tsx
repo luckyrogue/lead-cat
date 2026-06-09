@@ -1,7 +1,7 @@
 import { cn } from "@/shared/lib/cn"
 import { typeAccent } from "@/entities/meeting/constants"
-import { typeAccentVars } from "@/shared/tma/surface-vars"
-import { useTmaApp } from "@/shared/tma/context"
+import { typeAccentVars } from "@/shared/miniapp/surface-vars"
+import { useMiniApp } from "@/shared/miniapp/context"
 
 export function TypeTag({
   typeKey,
@@ -12,7 +12,7 @@ export function TypeTag({
   label: string
   size?: "sm" | "md"
 }) {
-  const { dark } = useTmaApp()
+  const { dark } = useMiniApp()
   const accent = typeAccent(typeKey, dark)
   return (
     <span

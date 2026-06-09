@@ -45,7 +45,7 @@ export type MeetingPatch = Partial<{
 }>
 
 export async function createMeeting(input: MeetingInput): Promise<Meeting> {
-  const data = await apiFetch<{ meeting: MeetingDTO }>("/tma/meetings", {
+  const data = await apiFetch<{ meeting: MeetingDTO }>("/miniapp/meetings", {
     method: "POST",
     body: input,
   })
@@ -58,7 +58,7 @@ export async function updateMeeting(
   opts?: { scope?: "this" | "whole" }
 ): Promise<Meeting> {
   const scope = opts?.scope ?? "this"
-  const data = await apiFetch<{ meeting: MeetingDTO }>(`/tma/meetings/${id}`, {
+  const data = await apiFetch<{ meeting: MeetingDTO }>(`/miniapp/meetings/${id}`, {
     method: "PATCH",
     body: patch,
     params: { scope },
@@ -71,7 +71,7 @@ export async function deleteMeeting(
   opts?: { scope?: "this" | "whole" }
 ): Promise<void> {
   const scope = opts?.scope ?? "this"
-  await apiFetch<void>(`/tma/meetings/${id}`, {
+  await apiFetch<void>(`/miniapp/meetings/${id}`, {
     method: "DELETE",
     params: { scope },
   })

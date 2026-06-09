@@ -1,7 +1,7 @@
 import { useMemo } from "react"
-import { useTmaApp } from "@/shared/tma/context"
+import { useMiniApp } from "@/shared/miniapp/context"
 import { EMPLOYEES } from "@/entities/employee/fixtures"
-import type { MeetingDraft } from "@/shared/tma/types"
+import type { MeetingDraft } from "@/shared/miniapp/types"
 import { EmployeePicker } from "@/components/employee-picker"
 import { cn } from "@/shared/lib/cn"
 import { Avatar, Field } from "@/shared/ui/cat/primitives"
@@ -18,7 +18,7 @@ export function WizardStepWho({
   pSearch: string
   setPSearch: (q: string) => void
 }) {
-  const { t } = useTmaApp()
+  const { t } = useMiniApp()
 
   const matches = useMemo(
     () =>
@@ -38,12 +38,12 @@ export function WizardStepWho({
     <div>
       <WizardStepTitle>🧑‍🤝‍🧑 Кто участвует?</WizardStepTitle>
       <Field label={t("host")}>
-        <div className="tma-input flex h-[54px] items-center gap-2.5">
+        <div className="miniapp-input flex h-[54px] items-center gap-2.5">
           <Avatar name={draft.host} size={32} />
-          <span className="font-display text-tma-text font-bold">
+          <span className="font-display text-miniapp-text font-bold">
             {draft.host}
           </span>
-          <span className="bg-tma-accent-soft text-tma-accent ml-auto rounded-full px-2 py-[3px] text-[11px] font-bold">
+          <span className="bg-miniapp-accent-soft text-miniapp-accent ml-auto rounded-full px-2 py-[3px] text-[11px] font-bold">
             я
           </span>
         </div>
@@ -67,7 +67,7 @@ export function WizardStepWho({
           onChange={(e) => set("desc", e.target.value)}
           rows={3}
           placeholder="—"
-          className={cn("tma-input h-auto resize-none py-3")}
+          className={cn("miniapp-input h-auto resize-none py-3")}
         />
       </Field>
     </div>

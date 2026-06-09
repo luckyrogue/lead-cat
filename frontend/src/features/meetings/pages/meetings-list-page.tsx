@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router"
-import { TmaListPageShell } from "@/components/tma-list-page-shell"
+import { MiniAppListPageShell } from "@/components/miniapp-list-page-shell"
 import { toastError, toastSuccess } from "@/shared/lib/toast"
-import { TMA_NOW } from "@/entities/meeting/constants"
-import { useTmaApp } from "@/shared/tma/context"
+import { MINIAPP_NOW } from "@/entities/meeting/constants"
+import { useMiniApp } from "@/shared/miniapp/context"
 import { fmtDate } from "@/entities/meeting/lib/format"
 import type { Meeting } from "@/entities/meeting/types"
 import { useListUrlState } from "@/shared/lib/use-list-url-state"
@@ -19,11 +19,11 @@ import { MeetingDetail } from "@/features/meetings/components/meeting-detail"
 import { EmptyState, MeetingCard } from "@/components/meetings/meeting-ui"
 import { MeetingCreatedSuccess } from "@/features/meetings/pages/meeting-created-success"
 import { Segmented } from "@/shared/ui/cat/primitives"
-import { Sheet, PawBurst } from "@/components/tma-shell"
+import { Sheet, PawBurst } from "@/components/miniapp-shell"
 import type { MeetingsSearch } from "@/features/meetings/search-schema"
 
 export function MeetingsListPage() {
-  const p = useTmaApp()
+  const p = useMiniApp()
   const t = p.t
   const navigate = useNavigate()
   const search = useSearch({ strict: false }) as MeetingsSearch
@@ -121,7 +121,7 @@ export function MeetingsListPage() {
 
   return (
     <>
-      <TmaListPageShell
+      <MiniAppListPageShell
         title={t("nav_meetings")}
         isLoading={isLoading}
         empty={list.length === 0}
@@ -175,8 +175,8 @@ export function MeetingsListPage() {
         <div className="flex flex-col gap-5">
           {groups.map((g) => (
             <div key={g.date}>
-              <div className="tma-section-title mb-[9px] px-1">
-                {g.date === TMA_NOW ? t("today") : fmtDate(g.date, p.lang)}
+              <div className="miniapp-section-title mb-[9px] px-1">
+                {g.date === MINIAPP_NOW ? t("today") : fmtDate(g.date, p.lang)}
               </div>
               <div className="flex flex-col gap-[11px]">
                 {g.items.map((m) => (
@@ -190,7 +190,7 @@ export function MeetingsListPage() {
             </div>
           ))}
         </div>
-      </TmaListPageShell>
+      </MiniAppListPageShell>
     </>
   )
 }

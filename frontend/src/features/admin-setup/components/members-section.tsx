@@ -1,4 +1,4 @@
-import { useTmaApp } from "@/shared/tma/context"
+import { useMiniApp } from "@/shared/miniapp/context"
 import { toastError, toastSuccess } from "@/shared/lib/toast"
 import { useMembers } from "@/entities/admin/queries"
 import { useSyncMembers } from "@/entities/admin/mutations"
@@ -6,7 +6,7 @@ import { SettingsGroup } from "@/features/profile/components/settings-group"
 import { cn } from "@/shared/lib/cn"
 
 export function MembersSection() {
-  const { t } = useTmaApp()
+  const { t } = useMiniApp()
   const { data: members = [] } = useMembers()
   const syncMut = useSyncMembers()
 
@@ -26,7 +26,7 @@ export function MembersSection() {
           type="button"
           disabled={syncMut.isPending}
           onClick={() => void onSync()}
-          className="border-tma-accent bg-tma-accent self-start rounded-[12px] px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+          className="border-miniapp-accent bg-miniapp-accent self-start rounded-[12px] px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
         >
           {syncMut.isPending ? t("syncing" as never) : t("syncFromChatButton" as never)}
         </button>
@@ -37,16 +37,16 @@ export function MembersSection() {
                 key={m.id}
                 className={cn(
                   "flex items-center gap-2 py-2",
-                  i < members.length - 1 && "border-tma-border border-b"
+                  i < members.length - 1 && "border-miniapp-border border-b"
                 )}
               >
                 <div className="min-w-0 flex-1">
-                  <div className="text-tma-text text-[14px] font-bold">{m.fullName}</div>
+                  <div className="text-miniapp-text text-[14px] font-bold">{m.fullName}</div>
                   {m.telegramUsername && (
-                    <div className="text-tma-muted truncate text-xs">@{m.telegramUsername}</div>
+                    <div className="text-miniapp-muted truncate text-xs">@{m.telegramUsername}</div>
                   )}
                 </div>
-                <span className="text-tma-muted bg-tma-card-alt rounded-full px-2 py-0.5 text-[11px] font-bold">
+                <span className="text-miniapp-muted bg-miniapp-card-alt rounded-full px-2 py-0.5 text-[11px] font-bold">
                   {m.role}
                 </span>
               </div>

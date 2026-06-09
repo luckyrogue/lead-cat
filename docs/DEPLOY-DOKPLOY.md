@@ -121,19 +121,9 @@ Redeploy the previous image tag in Dokploy. Migrations are forward-only — test
 
 ---
 
-## Deprecated alpha-setup variables
+## Dev-only variables
 
-The following variables were used during the initial notify-bot alpha and are **not required** for the meetings-only deployment. They remain accepted by the binary for backward compatibility but should be omitted from new deployments.
-
-| Variable                     | Status                                                           |
-| ---------------------------- | ---------------------------------------------------------------- |
-| `GITHUB_OAUTH_CLIENT_ID`     | Alpha GitHub OAuth login — no UI in Mini App; omit.              |
-| `GITHUB_OAUTH_CLIENT_SECRET` | Alpha GitHub OAuth login — no UI in Mini App; omit.              |
-| `GITLAB_OAUTH_CLIENT_ID`     | Alpha GitLab OAuth login — no UI in Mini App; omit.              |
-| `GITLAB_OAUTH_CLIENT_SECRET` | Alpha GitLab OAuth login — no UI in Mini App; omit.              |
-| `WEBAUTHN_RP_ID`             | Passkey relying-party ID — passkey UI not shipped; omit.         |
-| `WEBAUTHN_RP_ORIGIN`         | Passkey relying-party origin — passkey UI not shipped; omit.     |
-| `AUTH_DEV_MODE`              | Dev bypass — **must not be set in production**.                  |
-| `AUTH_DEV_USER_SUB`          | Dev bypass user sub — dev only.                                  |
-| `AUTH_DEV_EMAIL`             | Dev bypass email — dev only.                                     |
-| `AUTH_OTP_LOG`               | Logs OTP codes to stdout — dev only; never enable in production. |
+| Variable          | Status                                              |
+| ----------------- | --------------------------------------------------- |
+| `AUTH_DEV_MODE`   | Mini App dev bypass — **must not be set in production**. |
+| `VITE_AUTH_DEV_MODE` / `VITE_MINIAPP_DEV_TG_ID` | Frontend browser dev — local only. |

@@ -14,7 +14,7 @@ Start with the **ТЗ**: [NEW-FEATURES.md](NEW-FEATURES.md).
 | [NEW-FEATURES.md](NEW-FEATURES.md)     | the canonical technical spec (ТЗ)                          | Dev/Product    |
 | [REQUIREMENTS.md](REQUIREMENTS.md)     | product overview, actors, feature set, stack               | Dev/Product    |
 | [ARCHITECTURE.md](ARCHITECTURE.md)     | backend layers, meeting domain, identity, request flow     | Dev            |
-| [API.md](API.md)                       | HTTP API (TMA stack; platform deprecated appendix)         | Dev            |
+| [API.md](API.md)                       | HTTP API (Mini App stack; platform deprecated appendix)    | Dev            |
 | [AUTH.md](AUTH.md)                     | Telegram Mini App auth (platform auth deprecated appendix) | Dev            |
 | [DEPLOY-DOKPLOY.md](DEPLOY-DOKPLOY.md) | Dokploy deploy + env vars                                  | Operator       |
 | [SETUP.md](SETUP.md)                   | bot/Google/employee-CSV/admin setup path                   | Operator/Admin |

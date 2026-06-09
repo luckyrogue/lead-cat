@@ -14,7 +14,7 @@
 
 ## Grounded facts (verified at HEAD `94c0baa` — re-verify before asserting line numbers)
 
-- **Module:** `github.com/Jaryq-Lab/notify-bot`. **Product:** Lead Cat.
+- **Module:** `github.com/luckyrogue/lead-cat`. **Product:** Lead Cat.
 - **Branch for this slice:** `feat/meetings-tma-write-paths-a` (new). The working tree has heavy in-progress code from the pivot — every task stages explicit paths only; never `git add -A`; never `frontend/vite.config.ts`.
 - **`backend/internal/delivery/http/handlers/tma_write.go` (97 lines, shipped)** contains: `tmaCreateRequest`, `toCreateMeetingInput`, `botUser(c) (postgres.BotUser, bool)`, `TMACreateMeeting`. Imports already include `errors`, `strings`, `fiber/v2`, `zap`, `application`, `domain/meeting`, `infrastructure/persistence/postgres`. **Slice A appends to this file** — does NOT create a new file. New imports needed: `"time"`, `"github.com/google/uuid"`.
 - **`backend/internal/delivery/http/handlers/tma_read.go`** has `(*API).toMeetingDTO(ctx context.Context, m postgres.Meeting) tmaMeetingDTO` (line 69) and `botUserEmail(c) (string, bool)` (line 103). Reuse `toMeetingDTO`; do NOT redefine.
@@ -120,7 +120,7 @@ func TestToConflictDTO(t *testing.T) {
 }
 ```
 
-Ensure the test file imports `"time"` and `"github.com/Jaryq-Lab/notify-bot/internal/application"` (in the test file's import block).
+Ensure the test file imports `"time"` and `"github.com/luckyrogue/lead-cat/internal/application"` (in the test file's import block).
 
 - [ ] **Step 3: Run to verify it fails**
 

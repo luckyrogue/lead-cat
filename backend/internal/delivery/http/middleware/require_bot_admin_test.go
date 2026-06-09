@@ -6,8 +6,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/delivery/http/middleware"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/delivery/http/middleware"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 func TestRequireBotAdmin_NoLocal_Returns403(t *testing.T) {

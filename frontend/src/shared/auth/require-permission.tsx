@@ -1,23 +1,23 @@
 import type { ReactNode } from "react"
 
-import type { TmaUser } from "@/shared/auth/types"
+import type { MiniAppUser } from "@/shared/auth/types"
 import { PermissionDenied } from "@/components/auth/permission-denied"
 import { hasRole } from "@/shared/auth/permissions"
 import type { RoleRequirement } from "@/shared/auth/permission-requirement"
 
-type RequireTmaRoleProps = {
-  user: TmaUser | null | undefined
+type RequireMiniAppRoleProps = {
+  user: MiniAppUser | null | undefined
   requirement: RoleRequirement | null | undefined
   fallback?: ReactNode
   children: ReactNode
 }
 
-export function RequireTmaRole({
+export function RequireMiniAppRole({
   user,
   requirement,
   fallback,
   children,
-}: RequireTmaRoleProps) {
+}: RequireMiniAppRoleProps) {
   if (!hasRole(user, requirement)) {
     return fallback ?? <PermissionDenied />
   }

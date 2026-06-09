@@ -5,24 +5,24 @@ import {
   useState,
   type ReactNode,
 } from "react"
-import { getInitData, tmaLogin } from "@/shared/auth/tma-api"
-import type { TmaUser } from "@/shared/auth/types"
+import { getInitData, miniappLogin } from "@/shared/auth/miniapp-api"
+import type { MiniAppUser } from "@/shared/auth/types"
 import { ApiError } from "@/shared/api/types"
 
-export type TmaAuthStatus = "loading" | "authed" | "not_registered" | "error"
+export type MiniAppAuthStatus = "loading" | "authed" | "not_registered" | "error"
 
-type TmaAuthValue = {
-  status: TmaAuthStatus
-  user: TmaUser | null
+type MiniAppAuthValue = {
+  status: MiniAppAuthStatus
+  user: MiniAppUser | null
   errorCode: string | null
   retry: () => void
 }
 
-const TmaAuthContext = createContext<TmaAuthValue | null>(null)
+const MiniAppAuthContext = createContext<MiniAppAuthValue | null>(null)
 
-export function TmaAuthProvider({ children }: { children: ReactNode }) {
-  const [status, setStatus] = useState<TmaAuthStatus>("loading")
-  const [user, setUser] = useState<TmaUser | null>(null)
+export function MiniAppAuthProvider({ children }: { children: ReactNode }) {
+  const [status, setStatus] = useState<MiniAppAuthStatus>("loading")
+  const [user, setUser] = useState<MiniAppUser | null>(null)
   const [errorCode, setErrorCode] = useState<string | null>(null)
 
   function run() {
@@ -34,7 +34,7 @@ export function TmaAuthProvider({ children }: { children: ReactNode }) {
       setErrorCode("no_init_data")
       return
     }
-    tmaLogin(initData)
+    miniappLogin(initData)
       .then((u) => {
         setUser(u)
         setStatus("authed")
@@ -52,14 +52,14 @@ export function TmaAuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <TmaAuthContext.Provider value={{ status, user, errorCode, retry: run }}>
+    <MiniAppAuthContext.Provider value={{ status, user, errorCode, retry: run }}>
       {children}
-    </TmaAuthContext.Provider>
+    </MiniAppAuthContext.Provider>
   )
 }
 
-export function useTmaAuth(): TmaAuthValue {
-  const ctx = useContext(TmaAuthContext)
-  if (!ctx) throw new Error("useTmaAuth must be used within TmaAuthProvider")
+export function useMiniAppAuth(): MiniAppAuthValue {
+  const ctx = useContext(MiniAppAuthContext)
+  if (!ctx) throw new Error("useMiniAppAuth must be used within MiniAppAuthProvider")
   return ctx
 }

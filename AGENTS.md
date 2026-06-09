@@ -1,10 +1,10 @@
 # Lead Cat — agent guide
 
-Single-purpose **Google Meet meetings-management Telegram Mini App**: **frontend** (React TMA) + **backend** Go monolith (`cmd/server`: Fiber HTTP, Telegram bot, asynq workers).
+Single-purpose **Google Meet meetings-management Telegram Mini App**: **frontend** (React Mini App) + **backend** Go monolith (`cmd/server`: Fiber HTTP, Telegram bot, asynq workers).
 
 ## Stack
 
-- **Auth:** TMA Telegram (primary — Mini App JWT via `POST /api/auth/tma`); platform OTP/passkey/OAuth for alpha operator bootstrap only (see `docs/AUTH.md`).
+- **Auth:** Telegram Mini App only — JWT via `POST /api/auth/miniapp`; platform OTP/passkey/OAuth retired (410). Operator setup via `/api/miniapp/admin/*` (see `docs/AUTH.md`).
 - **Data:** Postgres (SoT), Redis (asynq job queues + scheduler leader lock)
 - **Deploy:** Dokploy — see `docs/DEPLOY-DOKPLOY.md`
 - **Product overview:** `docs/MEETINGS.md`; full spec (ТЗ): `docs/NEW-FEATURES.md`; frontend structure: `frontend/README.md`.

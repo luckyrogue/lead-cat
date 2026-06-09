@@ -1,15 +1,15 @@
-import type { TmaUserRole } from "@/shared/auth/types"
+import type { MiniAppUserRole } from "@/shared/auth/types"
 
 export type RoleRequirement =
-  | TmaUserRole
+  | MiniAppUserRole
   | {
-      roles: readonly TmaUserRole[]
+      roles: readonly MiniAppUserRole[]
       mode?: "any" | "all"
       deniedCode?: string
     }
 
 export function matchesRoleRequirement(
-  userRole: TmaUserRole | null | undefined,
+  userRole: MiniAppUserRole | null | undefined,
   requirement: RoleRequirement | null | undefined
 ): boolean {
   if (!requirement) {

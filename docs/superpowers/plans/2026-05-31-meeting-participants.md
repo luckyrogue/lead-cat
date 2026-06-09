@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-05-31-meeting-participants-design.md`
 
-**Conventions:** Run Go from `backend/` with `env -u GOROOT`. Module `github.com/Jaryq-Lab/notify-bot`. Build check: `env -u GOROOT go build ./...`.
+**Conventions:** Run Go from `backend/` with `env -u GOROOT`. Module `github.com/luckyrogue/lead-cat`. Build check: `env -u GOROOT go build ./...`.
 
 ---
 
@@ -293,7 +293,7 @@ package application
 import (
 	"testing"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 func TestNormalizeEmail(t *testing.T) {
@@ -346,7 +346,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // ownerOrOrganizer reports whether userID is the workspace owner or the meeting's organizer.

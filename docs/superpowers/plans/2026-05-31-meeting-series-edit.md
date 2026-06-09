@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-05-31-meeting-series-edit-design.md`
 
-**Conventions:** Run Go from `backend/` with `env -u GOROOT`. Module `github.com/Jaryq-Lab/notify-bot`. Build check: `env -u GOROOT go build ./...`.
+**Conventions:** Run Go from `backend/` with `env -u GOROOT`. Module `github.com/luckyrogue/lead-cat`. Build check: `env -u GOROOT go build ./...`.
 
 ---
 
@@ -33,7 +33,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 func occ() postgres.Meeting {
@@ -101,8 +101,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/domain/meeting"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // SeriesUpdateInput carries series-wide field overrides (nil = unchanged) plus an

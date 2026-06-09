@@ -10,10 +10,8 @@ import (
 type ctxKey string
 
 const (
-	keyRequestID  ctxKey = "request_id"
-	keyWorkspace  ctxKey = "workspace_id"
-	keyScenarioID ctxKey = "scenario_id"
-	keyRunID      ctxKey = "run_id"
+	keyRequestID ctxKey = "request_id"
+	keyWorkspace ctxKey = "workspace_id"
 )
 
 func WithRequestID(ctx context.Context, id string) context.Context {
@@ -34,14 +32,6 @@ func WithWorkspaceID(ctx context.Context, id uuid.UUID) context.Context {
 	return context.WithValue(ctx, keyWorkspace, id.String())
 }
 
-func WithScenarioID(ctx context.Context, id uuid.UUID) context.Context {
-	return context.WithValue(ctx, keyScenarioID, id.String())
-}
-
-func WithRunID(ctx context.Context, id uuid.UUID) context.Context {
-	return context.WithValue(ctx, keyRunID, id.String())
-}
-
 func FieldsFromContext(ctx context.Context) []zap.Field {
 	var fields []zap.Field
 	if id := RequestIDFromContext(ctx); id != "" {
@@ -49,12 +39,6 @@ func FieldsFromContext(ctx context.Context) []zap.Field {
 	}
 	if v, ok := ctx.Value(keyWorkspace).(string); ok && v != "" {
 		fields = append(fields, zap.String("workspace_id", v))
-	}
-	if v, ok := ctx.Value(keyScenarioID).(string); ok && v != "" {
-		fields = append(fields, zap.String("scenario_id", v))
-	}
-	if v, ok := ctx.Value(keyRunID).(string); ok && v != "" {
-		fields = append(fields, zap.String("run_id", v))
 	}
 	return fields
 }

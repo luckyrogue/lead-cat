@@ -138,7 +138,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 func TestParse(t *testing.T) {
@@ -353,7 +353,7 @@ package botsettings
 import (
 	"context"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 type store interface {
@@ -412,7 +412,7 @@ git commit -m "feat(bot): reminder settings service (parse/toggle/render)"
 
 - [ ] **Step 1: Add the settings service to MultiHandler**
 
-In `multitenant.go`, add imports `"strconv"` and `"github.com/Jaryq-Lab/notify-bot/internal/platform/botsettings"`. Add a field + build it in the constructor:
+In `multitenant.go`, add imports `"strconv"` and `"github.com/luckyrogue/lead-cat/internal/platform/botsettings"`. Add a field + build it in the constructor:
 
 ```go
 type MultiHandler struct {

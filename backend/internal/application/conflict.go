@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/domain/meeting"
+	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
 )
 
 // almatyLoc is the base timezone for free-slot windows (UTC+5). §4.8

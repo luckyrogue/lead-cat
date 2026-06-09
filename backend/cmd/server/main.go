@@ -17,21 +17,19 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
-	deliveryhttp "github.com/Jaryq-Lab/notify-bot/internal/delivery/http"
-	calendargoogle "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/google"
-	calendarstub "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/stub"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/crypto"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
-	asynqqueue "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/queue/asynq"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/telegram"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/config"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/employeedir"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/meeting_notifier"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/observability/log"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/reminder_scheduler"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/scenario_executor"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/scenario_scheduler"
+	"github.com/luckyrogue/lead-cat/internal/application"
+	deliveryhttp "github.com/luckyrogue/lead-cat/internal/delivery/http"
+	calendargoogle "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/google"
+	calendarstub "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/stub"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/crypto"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	asynqqueue "github.com/luckyrogue/lead-cat/internal/infrastructure/queue/asynq"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/telegram"
+	"github.com/luckyrogue/lead-cat/internal/platform/config"
+	"github.com/luckyrogue/lead-cat/internal/platform/employeedir"
+	"github.com/luckyrogue/lead-cat/internal/platform/meeting_notifier"
+	"github.com/luckyrogue/lead-cat/internal/platform/observability/log"
+	"github.com/luckyrogue/lead-cat/internal/platform/reminder_scheduler"
 )
 
 func main() {
@@ -83,6 +81,7 @@ func main() {
 		calProvider = calendargoogle.NewProvider(store, cipher)
 	}
 	services := &application.Services{Store: store, Cipher: cipher, Queue: queueClient, Calendar: calProvider, Log: logger}
+	services.WireCQRS()
 
 	var tgHandler *telegram.MultiHandler
 	botOpts := []bot.Option{
@@ -110,24 +109,12 @@ func main() {
 			logger.Fatal("telegram getMe", zap.Error(err))
 		}
 		botUsername = me.Username
-		tgHandler = telegram.NewMultiHandler(store, cipher, tg, rdb, cfg.BotAdminTelegramIDs, cfg.AuthOTPLog, services, logger)
+		tgHandler = telegram.NewMultiHandler(store, tg, rdb, cfg.BotAdminTelegramIDs, services, logger)
 	} else if cfg.AuthDevMode {
 		logger.Warn("AUTH_DEV_MODE: telegram polling disabled (set BOT_TOKEN for /start and bot commands)")
 	} else {
 		logger.Fatal("telegram", zap.Error(fmt.Errorf("BOT_TOKEN is required")))
 	}
-	exec := scenario_executor.New(store, cipher, tg, logger)
-
-	asynqHandler := func(c context.Context, t *asynq.Task) error {
-		p, err := asynqqueue.ParsePayload(t)
-		if err != nil {
-			return err
-		}
-		runID, _ := uuid.Parse(p.RunID)
-		scID, _ := uuid.Parse(p.ScenarioID)
-		return exec.Run(c, runID, scID, p.Trigger)
-	}
-
 	notifier := meeting_notifier.New(store, tg, logger)
 	meetingCreatedHandler := func(c context.Context, t *asynq.Task) error {
 		p, err := asynqqueue.ParseMeetingCreated(t)
@@ -176,7 +163,6 @@ func main() {
 	}
 
 	asynqSrv, err := asynqqueue.NewServer(cfg.RedisURL, logger, map[string]asynq.HandlerFunc{
-		asynqqueue.TaskRunScenario:        asynqHandler,
 		asynqqueue.TaskMeetingCreated:     meetingCreatedHandler,
 		asynqqueue.TaskMeetingUpdated:     meetingUpdatedHandler,
 		asynqqueue.TaskParticipantAdded:   participantAddedHandler,
@@ -191,9 +177,6 @@ func main() {
 			logger.Error("asynq", zap.Error(err))
 		}
 	}()
-
-	sched := scenario_scheduler.New(store, queueClient, rdb, logger)
-	go sched.Run(ctx)
 
 	remSched := reminder_scheduler.New(store, tg, rdb, logger)
 	go remSched.Run(ctx)

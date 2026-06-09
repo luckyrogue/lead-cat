@@ -1,8 +1,8 @@
 @import "tailwindcss";
 @import "../shared/theme/cat-tokens.css";
 @import "../shared/theme/cat-animations.css";
-@import "../shared/theme/tma-shell.css";
-@import "../shared/theme/tma-tailwind.css";
+@import "../shared/theme/miniapp-shell.css";
+@import "../shared/theme/miniapp-tailwind.css";
 
 @theme inline {
   --color-background: var(--background);
@@ -30,29 +30,29 @@
   --color-cat-text: var(--cat-text);
   --color-cat-card: var(--cat-card);
   --color-cat-border: var(--cat-border);
-  --color-tma-accent: var(--tma-accent);
-  --color-tma-accent-text: var(--tma-accent-text);
-  --color-tma-accent-soft: var(--tma-accent-soft);
-  --color-tma-accent-line: var(--tma-accent-line);
-  --color-tma-bg: var(--tma-bg);
-  --color-tma-bg-2: var(--tma-bg-2);
-  --color-tma-card: var(--tma-card);
-  --color-tma-card-alt: var(--tma-card-alt);
-  --color-tma-text: var(--tma-text);
-  --color-tma-muted: var(--tma-muted);
-  --color-tma-faint: var(--tma-faint);
-  --color-tma-border: var(--tma-border);
-  --color-tma-border-strong: var(--tma-border-strong);
-  --color-tma-tg-bar: var(--tma-tg-bar);
-  --color-tma-tg-bar-text: var(--tma-tg-bar-text);
-  --color-tma-danger: var(--tma-danger);
-  --color-tma-danger-soft: var(--tma-danger-soft);
-  --color-tma-ok: var(--tma-ok);
-  --color-tma-ok-soft: var(--tma-ok-soft);
+  --color-miniapp-accent: var(--miniapp-accent);
+  --color-miniapp-accent-text: var(--miniapp-accent-text);
+  --color-miniapp-accent-soft: var(--miniapp-accent-soft);
+  --color-miniapp-accent-line: var(--miniapp-accent-line);
+  --color-miniapp-bg: var(--miniapp-bg);
+  --color-miniapp-bg-2: var(--miniapp-bg-2);
+  --color-miniapp-card: var(--miniapp-card);
+  --color-miniapp-card-alt: var(--miniapp-card-alt);
+  --color-miniapp-text: var(--miniapp-text);
+  --color-miniapp-muted: var(--miniapp-muted);
+  --color-miniapp-faint: var(--miniapp-faint);
+  --color-miniapp-border: var(--miniapp-border);
+  --color-miniapp-border-strong: var(--miniapp-border-strong);
+  --color-miniapp-tg-bar: var(--miniapp-tg-bar);
+  --color-miniapp-tg-bar-text: var(--miniapp-tg-bar-text);
+  --color-miniapp-danger: var(--miniapp-danger);
+  --color-miniapp-danger-soft: var(--miniapp-danger-soft);
+  --color-miniapp-ok: var(--miniapp-ok);
+  --color-miniapp-ok-soft: var(--miniapp-ok-soft);
   --font-display: var(--font-display);
   --font-body: var(--font-body);
-  --shadow-tma: var(--tma-shadow);
-  --shadow-tma-sm: var(--tma-shadow-sm);
+  --shadow-tma: var(--miniapp-shadow);
+  --shadow-miniapp-sm: var(--miniapp-shadow-sm);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -93,12 +93,12 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-body.tma-mode {
+body.miniapp-mode {
   background: #e8e2da;
   background-image: radial-gradient(circle at 30% 20%, #efe9e0, #ded6cb);
 }
 
-.dark body.tma-mode {
+.dark body.miniapp-mode {
   background: #0b0f14;
   background-image: radial-gradient(circle at 30% 20%, #141a21, #0a0d11);
 }

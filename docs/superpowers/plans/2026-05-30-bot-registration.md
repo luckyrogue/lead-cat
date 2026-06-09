@@ -188,7 +188,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 var errNotFound = errors.New("not found")
@@ -359,7 +359,7 @@ import (
 	"net/mail"
 	"strings"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // State is the per-user FSM state (stored in Redis between messages).
@@ -567,7 +567,7 @@ git commit -m "feat(bot): redis-backed registration sessions"
 
 - [ ] **Step 1: Add the Registrar to MultiHandler**
 
-In `multitenant.go`, add imports `"github.com/redis/go-redis/v9"`, `platformauth "github.com/Jaryq-Lab/notify-bot/internal/platform/auth"`, and `"github.com/Jaryq-Lab/notify-bot/internal/platform/botreg"`. Change the struct + constructor:
+In `multitenant.go`, add imports `"github.com/redis/go-redis/v9"`, `platformauth "github.com/luckyrogue/lead-cat/internal/platform/auth"`, and `"github.com/luckyrogue/lead-cat/internal/platform/botreg"`. Change the struct + constructor:
 
 ```go
 type MultiHandler struct {

@@ -19,7 +19,7 @@ Let a Telegram Mini App user authenticate to the backend with zero extra login a
 
 ## Codebase facts (verified)
 
-- **Module path:** `github.com/Jaryq-Lab/notify-bot`.
+- **Module path:** `github.com/luckyrogue/lead-cat`.
 - **initData validator** (`internal/infrastructure/telegram/initdata.go`): `InitDataValidator{botToken}`, `NewInitDataValidator(botToken)`, `Validate(initData string) (InitDataUser, error)` verifies the Telegram HMAC (`WebAppData` keyed by bot token) and returns `InitDataUser{ID int64, Username string}`. **It does NOT check `auth_date` freshness** and does not extract it — this design adds an `AuthDate int64` field (non-breaking; the one existing caller, `LinkTelegram`, ignores it) and a freshness check in the TMA handler.
 - **JWT** (`internal/platform/auth/jwt.go`): `JWT{secret, ttl, issuer}` via `NewJWT(secret, issuer, ttl)`; `Issue(userID uuid.UUID, authSub, email, phone string)` and `Parse(token) (*TokenClaims, error)`, HS256. `TokenClaims` is platform-user-shaped (`uid` UUID + `sub`) — **not reusable as-is for TMA** (a TMA user has no `platform_users` UUID). The TMA token is a parallel, minimal type reusing the same `JWT_SECRET` + HS256.
 - **Platform auth middleware** (`internal/delivery/http/middleware/auth.go`): a global app-level middleware that early-returns (skips) for `/api/health`, `/metrics`, and `strings.HasPrefix(path, "/api/auth/")`. Everything else requires a platform `Bearer` JWT (or, in `AuthDevMode`, any token resolves a dev user). **This design adds `/api/tma/` to that skip list** so TMA routes use their own middleware instead.

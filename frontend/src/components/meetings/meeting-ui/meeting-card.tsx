@@ -1,7 +1,7 @@
 import { cn } from "@/shared/lib/cn"
-import { TMA_NOW } from "@/entities/meeting/constants"
-import { typeAccentVars } from "@/shared/tma/surface-vars"
-import { useTmaApp } from "@/shared/tma/context"
+import { MINIAPP_NOW } from "@/entities/meeting/constants"
+import { typeAccentVars } from "@/shared/miniapp/surface-vars"
+import { useMiniApp } from "@/shared/miniapp/context"
 import { MEETING_TYPES, RECURRENCE } from "@/entities/meeting/constants"
 import { fmtDate } from "@/entities/meeting/lib/format"
 import type { Meeting } from "@/entities/meeting/types"
@@ -17,9 +17,9 @@ export function MeetingCard({
   onClick?: () => void
   compact?: boolean
 }) {
-  const { dark, lang } = useTmaApp()
+  const { dark, lang } = useMiniApp()
   const tObj = MEETING_TYPES.find((x) => x.key === m.type)
-  const past = m.date < TMA_NOW
+  const past = m.date < MINIAPP_NOW
   const rec = RECURRENCE.find((r) => r.key === m.rec)
 
   return (
@@ -41,11 +41,11 @@ export function MeetingCard({
               size="sm"
             />
             {rec?.short && (
-              <span className="text-tma-muted inline-flex items-center gap-[3px] text-[11.5px] font-bold">
+              <span className="text-miniapp-muted inline-flex items-center gap-[3px] text-[11.5px] font-bold">
                 <CatIcon
                   name="repeat"
                   size={12}
-                  className="text-tma-muted"
+                  className="text-miniapp-muted"
                   sw={2}
                 />
                 {rec.short}
@@ -55,20 +55,20 @@ export function MeetingCard({
             <span
               className={cn(
                 "size-2 shrink-0 rounded",
-                past ? "bg-tma-faint" : "bg-tma-ok"
+                past ? "bg-miniapp-faint" : "bg-miniapp-ok"
               )}
             />
           </div>
-          <div className="tma-heading mb-2 break-words text-[15.5px] leading-tight">
+          <div className="miniapp-heading mb-2 break-words text-[15.5px] leading-tight">
             {m.dept} · {tObj ? tObj.label : m.type}
           </div>
           <div className="flex items-center justify-between gap-2">
-            <div className="text-tma-muted flex items-center gap-2.5 text-[13px] font-semibold">
+            <div className="text-miniapp-muted flex items-center gap-2.5 text-[13px] font-semibold">
               <span className="inline-flex items-center gap-1">
                 <CatIcon
                   name="calendar"
                   size={14}
-                  className="text-tma-muted"
+                  className="text-miniapp-muted"
                   sw={2}
                 />
                 {fmtDate(m.date, lang)}
@@ -77,7 +77,7 @@ export function MeetingCard({
                 <CatIcon
                   name="clock"
                   size={14}
-                  className="text-tma-muted"
+                  className="text-miniapp-muted"
                   sw={2}
                 />
                 {m.start}–{m.end}

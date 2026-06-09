@@ -3,20 +3,24 @@
   "info": {
     "title": "Lead Cat API",
     "version": "1.0.0",
-    "description": "TMA-facing endpoints and health check for frontend codegen."
+    "description": "Mini App-facing endpoints and health check for frontend codegen."
   },
   "paths": {
     "/api/health": {
       "get": {
         "operationId": "health_health_get",
-        "tags": ["health"],
+        "tags": [
+          "health"
+        ],
         "summary": "Service health",
         "responses": {
           "200": {
             "description": "Dependencies healthy",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
               }
             }
           },
@@ -24,23 +28,29 @@
             "description": "Dependency down",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
               }
             }
           }
         }
       }
     },
-    "/api/auth/tma": {
+    "/api/auth/miniapp": {
       "post": {
-        "operationId": "tma_auth_post",
-        "tags": ["auth"],
-        "summary": "Exchange Telegram initData for TMA JWT",
+        "operationId": "miniapp_auth_post",
+        "tags": [
+          "auth"
+        ],
+        "summary": "Exchange Telegram initData for Mini App JWT",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/TmaAuthRequest" }
+              "schema": {
+                "$ref": "#/components/schemas/MiniAppAuthRequest"
+              }
             }
           }
         },
@@ -49,7 +59,9 @@
             "description": "Authenticated",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/TmaAuthResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/MiniAppAuthResponse"
+                }
               }
             }
           },
@@ -57,25 +69,35 @@
             "description": "Auth failed",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/TmaAuthError" }
+                "schema": {
+                  "$ref": "#/components/schemas/MiniAppAuthError"
+                }
               }
             }
           }
         }
       }
     },
-    "/api/tma/me": {
+    "/api/miniapp/me": {
       "get": {
-        "operationId": "tma_me_get",
-        "tags": ["tma"],
-        "summary": "Current TMA user",
-        "security": [{ "bearerAuth": [] }],
+        "operationId": "miniapp_me_get",
+        "tags": [
+          "miniapp"
+        ],
+        "summary": "Current Mini App user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "User identity",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/TmaUser" }
+                "schema": {
+                  "$ref": "#/components/schemas/MiniAppUser"
+                }
               }
             }
           },
@@ -83,19 +105,27 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           }
         }
       }
     },
-    "/api/tma/meetings": {
+    "/api/miniapp/meetings": {
       "get": {
-        "operationId": "tma_meetings_get",
-        "tags": ["tma"],
+        "operationId": "miniapp_meetings_get",
+        "tags": [
+          "miniapp"
+        ],
         "summary": "List authed user meetings",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "scope",
@@ -103,7 +133,11 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": ["upcoming", "past", "all"]
+              "enum": [
+                "upcoming",
+                "past",
+                "all"
+              ]
             }
           }
         ],
@@ -112,22 +146,32 @@
             "description": "Meetings list",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/TmaMeetingsResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/MiniAppMeetingsResponse"
+                }
               }
             }
           }
         }
       },
       "post": {
-        "operationId": "tmaCreateMeeting",
-        "tags": ["tma"],
+        "operationId": "miniappCreateMeeting",
+        "tags": [
+          "miniapp"
+        ],
         "summary": "Create a meeting (once or recurring series)",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/TmaMeetingCreateRequest" }
+              "schema": {
+                "$ref": "#/components/schemas/MiniAppMeetingCreateRequest"
+              }
             }
           }
         },
@@ -138,9 +182,13 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["meeting"],
+                  "required": [
+                    "meeting"
+                  ],
                   "properties": {
-                    "meeting": { "$ref": "#/components/schemas/TmaMeeting" }
+                    "meeting": {
+                      "$ref": "#/components/schemas/MiniAppMeeting"
+                    }
                   }
                 }
               }
@@ -150,7 +198,9 @@
             "description": "Invalid body / validation_failed / meetings_not_configured",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -158,7 +208,9 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -166,7 +218,9 @@
             "description": "telegram_linked_to_other_account",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -174,25 +228,36 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           }
         }
       }
     },
-    "/api/tma/schedule": {
+    "/api/miniapp/schedule": {
       "get": {
-        "operationId": "tma_schedule_get",
-        "tags": ["tma"],
+        "operationId": "miniapp_schedule_get",
+        "tags": [
+          "miniapp"
+        ],
         "summary": "Colleague schedule (read-only)",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "email",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "format": "email" }
+            "schema": {
+              "type": "string",
+              "format": "email"
+            }
           },
           {
             "name": "scope",
@@ -200,7 +265,11 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": ["upcoming", "past", "all"]
+              "enum": [
+                "upcoming",
+                "past",
+                "all"
+              ]
             }
           }
         ],
@@ -209,24 +278,34 @@
             "description": "Meetings list",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/TmaMeetingsResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/MiniAppMeetingsResponse"
+                }
               }
             }
           }
         }
       }
     },
-    "/api/tma/employees": {
+    "/api/miniapp/employees": {
       "get": {
-        "operationId": "tma_employees_get",
-        "tags": ["tma"],
+        "operationId": "miniapp_employees_get",
+        "tags": [
+          "miniapp"
+        ],
         "summary": "Search employee directory",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "q",
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -234,24 +313,34 @@
             "description": "Employees",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/TmaEmployeesResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/MiniAppEmployeesResponse"
+                }
               }
             }
           }
         }
       }
     },
-    "/api/tma/free-slots": {
+    "/api/miniapp/free-slots": {
       "post": {
-        "operationId": "tma_free_slots_post",
-        "tags": ["tma"],
+        "operationId": "miniapp_free_slots_post",
+        "tags": [
+          "miniapp"
+        ],
         "summary": "Common free-time checker",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/TmaFreeSlotsRequest" }
+              "schema": {
+                "$ref": "#/components/schemas/MiniAppFreeSlotsRequest"
+              }
             }
           }
         },
@@ -260,38 +349,58 @@
             "description": "Free slots",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/TmaFreeSlotsResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/MiniAppFreeSlotsResponse"
+                }
               }
             }
           }
         }
       }
     },
-    "/api/tma/meetings/{id}": {
+    "/api/miniapp/meetings/{id}": {
       "patch": {
-        "operationId": "tmaUpdateMeeting",
-        "tags": ["tma"],
+        "operationId": "miniappUpdateMeeting",
+        "tags": [
+          "miniapp"
+        ],
         "summary": "Edit a single meeting (organizer/owner only)",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "scope",
             "in": "query",
             "required": false,
-            "schema": { "type": "string", "enum": ["this", "whole"], "default": "this" }
+            "schema": {
+              "type": "string",
+              "enum": [
+                "this",
+                "whole"
+              ],
+              "default": "this"
+            }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/TmaMeetingUpdateRequest" }
+              "schema": {
+                "$ref": "#/components/schemas/MiniAppMeetingUpdateRequest"
+              }
             }
           }
         },
@@ -302,9 +411,13 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["meeting"],
+                  "required": [
+                    "meeting"
+                  ],
                   "properties": {
-                    "meeting": { "$ref": "#/components/schemas/TmaMeeting" }
+                    "meeting": {
+                      "$ref": "#/components/schemas/MiniAppMeeting"
+                    }
                   }
                 }
               }
@@ -314,7 +427,9 @@
             "description": "Invalid body / invalid time / meetings_recurring_unsupported",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -322,7 +437,9 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -330,7 +447,9 @@
             "description": "Forbidden",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -338,7 +457,9 @@
             "description": "Not found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -346,7 +467,9 @@
             "description": "Conflict",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -354,29 +477,47 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           }
         }
       },
       "delete": {
-        "operationId": "tmaDeleteMeeting",
-        "tags": ["tma"],
+        "operationId": "miniappDeleteMeeting",
+        "tags": [
+          "miniapp"
+        ],
         "summary": "Cancel a single meeting (organizer/owner only)",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "scope",
             "in": "query",
             "required": false,
-            "schema": { "type": "string", "enum": ["this", "whole"], "default": "this" }
+            "schema": {
+              "type": "string",
+              "enum": [
+                "this",
+                "whole"
+              ],
+              "default": "this"
+            }
           }
         ],
         "responses": {
@@ -387,7 +528,9 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -395,7 +538,9 @@
             "description": "Forbidden",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -403,7 +548,9 @@
             "description": "Not found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -411,7 +558,9 @@
             "description": "Conflict",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -419,25 +568,35 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           }
         }
       }
     },
-    "/api/tma/admin/workspace": {
+    "/api/miniapp/admin/workspace": {
       "get": {
-        "operationId": "tmaAdminWorkspaceGet",
-        "tags": ["tma-admin"],
+        "operationId": "miniappAdminWorkspaceGet",
+        "tags": [
+          "miniapp-admin"
+        ],
         "summary": "Get workspace status",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Workspace status",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/TmaAdminWorkspaceStatus" }
+                "schema": {
+                  "$ref": "#/components/schemas/MiniAppAdminWorkspaceStatus"
+                }
               }
             }
           },
@@ -445,7 +604,9 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -453,7 +614,9 @@
             "description": "Forbidden",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -461,17 +624,25 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           }
         }
       },
       "post": {
-        "operationId": "tmaAdminWorkspacePost",
-        "tags": ["tma-admin"],
+        "operationId": "miniappAdminWorkspacePost",
+        "tags": [
+          "miniapp-admin"
+        ],
         "summary": "Create workspace",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Created workspace",
@@ -479,9 +650,13 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["id"],
+                  "required": [
+                    "id"
+                  ],
                   "properties": {
-                    "id": { "type": "string" }
+                    "id": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -491,7 +666,9 @@
             "description": "Validation failed",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -499,7 +676,9 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -507,7 +686,9 @@
             "description": "Forbidden",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -515,25 +696,35 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           }
         }
       }
     },
-    "/api/tma/admin/integrations": {
+    "/api/miniapp/admin/integrations": {
       "get": {
-        "operationId": "tmaAdminIntegrationsGet",
-        "tags": ["tma-admin"],
+        "operationId": "miniappAdminIntegrationsGet",
+        "tags": [
+          "miniapp-admin"
+        ],
         "summary": "Get integrations view",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Integrations",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/TmaAdminIntegrationsView" }
+                "schema": {
+                  "$ref": "#/components/schemas/MiniAppAdminIntegrationsView"
+                }
               }
             }
           },
@@ -541,7 +732,9 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -549,7 +742,9 @@
             "description": "Forbidden",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -557,22 +752,32 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           }
         }
       },
       "patch": {
-        "operationId": "tmaAdminIntegrationsPatch",
-        "tags": ["tma-admin"],
+        "operationId": "miniappAdminIntegrationsPatch",
+        "tags": [
+          "miniapp-admin"
+        ],
         "summary": "Update integrations settings",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/TmaAdminIntegrationsPatchRequest" }
+              "schema": {
+                "$ref": "#/components/schemas/MiniAppAdminIntegrationsPatchRequest"
+              }
             }
           }
         },
@@ -584,7 +789,9 @@
             "description": "Validation failed",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -592,7 +799,9 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -600,7 +809,9 @@
             "description": "Forbidden",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -608,25 +819,35 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           }
         }
       }
     },
-    "/api/tma/admin/integrations/verify": {
+    "/api/miniapp/admin/integrations/verify": {
       "post": {
-        "operationId": "tmaAdminIntegrationsVerify",
-        "tags": ["tma-admin"],
+        "operationId": "miniappAdminIntegrationsVerify",
+        "tags": [
+          "miniapp-admin"
+        ],
         "summary": "Verify Google integration",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Verify result",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/TmaAdminGoogleVerifyResult" }
+                "schema": {
+                  "$ref": "#/components/schemas/MiniAppAdminGoogleVerifyResult"
+                }
               }
             }
           },
@@ -634,7 +855,9 @@
             "description": "Google verification error (google_sa_invalid | google_subject_invalid | google_calendar_not_accessible | google_api_disabled | google_not_configured)",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -642,7 +865,9 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -650,7 +875,9 @@
             "description": "Forbidden",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -658,25 +885,35 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           }
         }
       }
     },
-    "/api/tma/admin/chat/status": {
+    "/api/miniapp/admin/chat/status": {
       "get": {
-        "operationId": "tmaAdminChatStatusGet",
-        "tags": ["tma-admin"],
+        "operationId": "miniappAdminChatStatusGet",
+        "tags": [
+          "miniapp-admin"
+        ],
         "summary": "Get chat link status",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Chat status",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/TmaAdminChatStatus" }
+                "schema": {
+                  "$ref": "#/components/schemas/MiniAppAdminChatStatus"
+                }
               }
             }
           },
@@ -684,7 +921,9 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -692,7 +931,9 @@
             "description": "Forbidden",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -700,24 +941,34 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           }
         }
       }
     },
-    "/api/tma/admin/chat/link": {
+    "/api/miniapp/admin/chat/link": {
       "post": {
-        "operationId": "tmaAdminChatLink",
-        "tags": ["tma-admin"],
+        "operationId": "miniappAdminChatLink",
+        "tags": [
+          "miniapp-admin"
+        ],
         "summary": "Link Telegram chat to workspace",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/TmaAdminChatLinkRequest" }
+              "schema": {
+                "$ref": "#/components/schemas/MiniAppAdminChatLinkRequest"
+              }
             }
           }
         },
@@ -729,7 +980,9 @@
             "description": "Validation failed",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -737,7 +990,9 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -745,7 +1000,9 @@
             "description": "Forbidden",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -753,19 +1010,27 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           }
         }
       }
     },
-    "/api/tma/admin/members": {
+    "/api/miniapp/admin/members": {
       "get": {
-        "operationId": "tmaAdminMembersGet",
-        "tags": ["tma-admin"],
+        "operationId": "miniappAdminMembersGet",
+        "tags": [
+          "miniapp-admin"
+        ],
         "summary": "List workspace members",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Members list",
@@ -773,11 +1038,15 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["members"],
+                  "required": [
+                    "members"
+                  ],
                   "properties": {
                     "members": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/TmaAdminMember" }
+                      "items": {
+                        "$ref": "#/components/schemas/MiniAppAdminMember"
+                      }
                     }
                   }
                 }
@@ -788,7 +1057,9 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -796,7 +1067,9 @@
             "description": "Forbidden",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -804,19 +1077,27 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           }
         }
       }
     },
-    "/api/tma/admin/members/sync-chat": {
+    "/api/miniapp/admin/members/sync-chat": {
       "post": {
-        "operationId": "tmaAdminMembersSyncChat",
-        "tags": ["tma-admin"],
+        "operationId": "miniappAdminMembersSyncChat",
+        "tags": [
+          "miniapp-admin"
+        ],
         "summary": "Sync members from Telegram chat",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Sync result",
@@ -824,258 +1105,25 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["added"],
+                  "required": [
+                    "added"
+                  ],
                   "properties": {
-                    "added": { "type": "integer", "format": "int64" }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation failed",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/tma/admin/scenarios": {
-      "get": {
-        "operationId": "tmaAdminScenariosGet",
-        "tags": ["tma-admin"],
-        "summary": "List scenarios",
-        "security": [{ "bearerAuth": [] }],
-        "responses": {
-          "200": {
-            "description": "Scenarios list",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": ["scenarios"],
-                  "properties": {
-                    "scenarios": {
-                      "type": "array",
-                      "items": { "$ref": "#/components/schemas/TmaAdminScenario" }
+                    "added": {
+                      "type": "integer",
+                      "format": "int64"
                     }
                   }
                 }
               }
             }
           },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/tma/admin/scenarios/{id}": {
-      "patch": {
-        "operationId": "tmaAdminScenarioPatch",
-        "tags": ["tma-admin"],
-        "summary": "Update scenario",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/TmaAdminScenarioPatchRequest" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Updated scenario",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/TmaAdminScenario" }
-              }
-            }
-          },
           "400": {
             "description": "Validation failed",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/tma/admin/scenarios/{id}/run": {
-      "post": {
-        "operationId": "tmaAdminScenarioRun",
-        "tags": ["tma-admin"],
-        "summary": "Trigger scenario run",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Run triggered",
-            "content": {
-              "application/json": {
                 "schema": {
-                  "type": "object",
-                  "required": ["run_id"],
-                  "properties": {
-                    "run_id": { "type": "string" }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation failed",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/tma/admin/scenarios/{id}/runs": {
-      "get": {
-        "operationId": "tmaAdminScenarioRunsGet",
-        "tags": ["tma-admin"],
-        "summary": "List scenario runs",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Runs list",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": ["runs"],
-                  "properties": {
-                    "runs": {
-                      "type": "array",
-                      "items": { "$ref": "#/components/schemas/TmaAdminScenarioRun" }
-                    }
-                  }
+                  "$ref": "#/components/schemas/ApiErrorResponse"
                 }
               }
             }
@@ -1084,7 +1132,9 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -1092,7 +1142,9 @@
             "description": "Forbidden",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -1100,37 +1152,51 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           }
         }
       }
     },
-    "/api/tma/admin/audit": {
+    "/api/miniapp/admin/audit": {
       "get": {
-        "operationId": "tmaAdminAuditGet",
-        "tags": ["tma-admin"],
+        "operationId": "miniappAdminAuditGet",
+        "tags": [
+          "miniapp-admin"
+        ],
         "summary": "List audit log entries",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "limit",
             "in": "query",
             "required": false,
-            "schema": { "type": "integer" }
+            "schema": {
+              "type": "integer"
+            }
           },
           {
             "name": "action",
             "in": "query",
             "required": false,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "actor",
             "in": "query",
             "required": false,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1140,11 +1206,15 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["entries"],
+                  "required": [
+                    "entries"
+                  ],
                   "properties": {
                     "entries": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/TmaAdminAuditEntry" }
+                      "items": {
+                        "$ref": "#/components/schemas/MiniAppAdminAuditEntry"
+                      }
                     }
                   }
                 }
@@ -1155,7 +1225,9 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -1163,7 +1235,9 @@
             "description": "Forbidden",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -1171,24 +1245,34 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           }
         }
       }
     },
-    "/api/tma/conflicts": {
+    "/api/miniapp/conflicts": {
       "post": {
-        "operationId": "tmaConflicts",
-        "tags": ["tma"],
+        "operationId": "miniappConflicts",
+        "tags": [
+          "miniapp"
+        ],
         "summary": "Cross-participant conflict warning",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/TmaConflictsRequest" }
+              "schema": {
+                "$ref": "#/components/schemas/MiniAppConflictsRequest"
+              }
             }
           }
         },
@@ -1199,11 +1283,15 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["occurrences"],
+                  "required": [
+                    "occurrences"
+                  ],
                   "properties": {
                     "occurrences": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/TmaOccurrenceConflicts" }
+                      "items": {
+                        "$ref": "#/components/schemas/MiniAppOccurrenceConflicts"
+                      }
                     }
                   }
                 }
@@ -1214,7 +1302,9 @@
             "description": "Invalid range / participants",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -1222,7 +1312,9 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           },
@@ -1230,7 +1322,9 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
               }
             }
           }
@@ -1249,58 +1343,120 @@
     "schemas": {
       "HealthResponse": {
         "type": "object",
-        "required": ["postgres", "redis", "bot_ok", "version"],
+        "required": [
+          "postgres",
+          "redis",
+          "bot_ok",
+          "version"
+        ],
         "properties": {
-          "postgres": { "type": "string", "enum": ["ok", "down"] },
-          "redis": { "type": "string", "enum": ["ok", "down"] },
-          "bot_ok": { "type": "boolean" },
-          "version": { "type": "string" }
+          "postgres": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "down"
+            ]
+          },
+          "redis": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "down"
+            ]
+          },
+          "bot_ok": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "string"
+          }
         }
       },
-      "TmaAuthRequest": {
+      "MiniAppAuthRequest": {
         "type": "object",
-        "required": ["init_data"],
+        "required": [
+          "init_data"
+        ],
         "properties": {
-          "init_data": { "type": "string" }
+          "init_data": {
+            "type": "string"
+          }
         }
       },
-      "TmaUser": {
+      "MiniAppUser": {
         "type": "object",
-        "required": ["telegram_id", "name", "email", "role"],
+        "required": [
+          "telegram_id",
+          "name",
+          "email",
+          "role"
+        ],
         "properties": {
-          "telegram_id": { "type": "integer", "format": "int64" },
-          "name": { "type": "string" },
-          "email": { "type": "string", "format": "email" },
-          "role": { "type": "string", "enum": ["user", "admin"] }
+          "telegram_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "admin"
+            ]
+          }
         }
       },
-      "TmaAuthResponse": {
+      "MiniAppAuthResponse": {
         "type": "object",
-        "required": ["token", "user"],
+        "required": [
+          "token",
+          "user"
+        ],
         "properties": {
-          "token": { "type": "string" },
-          "user": { "$ref": "#/components/schemas/TmaUser" }
+          "token": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/MiniAppUser"
+          }
         }
       },
-      "TmaAuthError": {
+      "MiniAppAuthError": {
         "type": "object",
-        "required": ["code"],
+        "required": [
+          "code"
+        ],
         "properties": {
           "code": {
             "type": "string",
-            "enum": ["not_registered", "invalid_init_data"]
+            "enum": [
+              "not_registered",
+              "invalid_init_data"
+            ]
           }
         }
       },
       "ApiErrorResponse": {
         "type": "object",
         "properties": {
-          "error": { "type": "string" },
-          "message": { "type": "string" },
-          "code": { "type": "string" }
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          }
         }
       },
-      "TmaMeeting": {
+      "MiniAppMeeting": {
         "type": "object",
         "required": [
           "id",
@@ -1318,278 +1474,602 @@
           "status"
         ],
         "properties": {
-          "id": { "type": "string" },
-          "type": { "type": "string" },
-          "dept": { "type": "string" },
-          "host": { "type": "string" },
-          "date": { "type": "string", "format": "date" },
-          "start": { "type": "string" },
-          "end": { "type": "string" },
-          "rec": { "type": "string" },
-          "organizer": { "type": "string", "format": "email" },
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "dept": {
+            "type": "string"
+          },
+          "host": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "start": {
+            "type": "string"
+          },
+          "end": {
+            "type": "string"
+          },
+          "rec": {
+            "type": "string"
+          },
+          "organizer": {
+            "type": "string",
+            "format": "email"
+          },
           "participants": {
             "type": "array",
-            "items": { "type": "string", "format": "email" }
+            "items": {
+              "type": "string",
+              "format": "email"
+            }
           },
-          "desc": { "type": "string" },
-          "meet_link": { "type": "string" },
-          "status": { "type": "string" }
+          "desc": {
+            "type": "string"
+          },
+          "meet_link": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
         }
       },
-      "TmaMeetingsResponse": {
+      "MiniAppMeetingsResponse": {
         "type": "object",
-        "required": ["meetings"],
+        "required": [
+          "meetings"
+        ],
         "properties": {
           "meetings": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/TmaMeeting" }
+            "items": {
+              "$ref": "#/components/schemas/MiniAppMeeting"
+            }
           }
         }
       },
-      "TmaEmployee": {
+      "MiniAppEmployee": {
         "type": "object",
-        "required": ["id", "name", "email", "dept", "tg"],
+        "required": [
+          "id",
+          "name",
+          "email",
+          "dept",
+          "tg"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "name": { "type": "string" },
-          "email": { "type": "string", "format": "email" },
-          "dept": { "type": "string" },
-          "tg": { "type": "boolean" }
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "dept": {
+            "type": "string"
+          },
+          "tg": {
+            "type": "boolean"
+          }
         }
       },
-      "TmaEmployeesResponse": {
+      "MiniAppEmployeesResponse": {
         "type": "object",
-        "required": ["employees"],
+        "required": [
+          "employees"
+        ],
         "properties": {
           "employees": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/TmaEmployee" }
+            "items": {
+              "$ref": "#/components/schemas/MiniAppEmployee"
+            }
           }
         }
       },
-      "TmaFreeSlotsRequest": {
+      "MiniAppFreeSlotsRequest": {
         "type": "object",
-        "required": ["participants", "from", "to", "duration_mins"],
+        "required": [
+          "participants",
+          "from",
+          "to",
+          "duration_mins"
+        ],
         "properties": {
           "participants": {
             "type": "array",
-            "items": { "type": "string", "format": "email" }
+            "items": {
+              "type": "string",
+              "format": "email"
+            }
           },
-          "from": { "type": "string", "format": "date" },
-          "to": { "type": "string", "format": "date" },
-          "duration_mins": { "type": "integer", "minimum": 1 }
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "duration_mins": {
+            "type": "integer",
+            "minimum": 1
+          }
         }
       },
-      "TmaFreeSlot": {
+      "MiniAppFreeSlot": {
         "type": "object",
-        "required": ["iso", "start", "end", "mins"],
+        "required": [
+          "iso",
+          "start",
+          "end",
+          "mins"
+        ],
         "properties": {
-          "iso": { "type": "string", "format": "date" },
-          "start": { "type": "string" },
-          "end": { "type": "string" },
-          "mins": { "type": "integer" }
+          "iso": {
+            "type": "string",
+            "format": "date"
+          },
+          "start": {
+            "type": "string"
+          },
+          "end": {
+            "type": "string"
+          },
+          "mins": {
+            "type": "integer"
+          }
         }
       },
-      "TmaFreeSlotsResponse": {
+      "MiniAppFreeSlotsResponse": {
         "type": "object",
-        "required": ["slots"],
+        "required": [
+          "slots"
+        ],
         "properties": {
           "slots": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/TmaFreeSlot" }
+            "items": {
+              "$ref": "#/components/schemas/MiniAppFreeSlot"
+            }
           }
         }
       },
-      "TmaMeetingUpdateRequest": {
+      "MiniAppMeetingUpdateRequest": {
         "type": "object",
         "properties": {
-          "dept":  { "type": "string", "nullable": true },
-          "type":  { "type": "string", "nullable": true },
-          "host":  { "type": "string", "nullable": true },
-          "date":  { "type": "string", "nullable": true, "description": "YYYY-MM-DD" },
-          "start": { "type": "string", "nullable": true, "description": "HH:MM" },
-          "end":   { "type": "string", "nullable": true, "description": "HH:MM" },
-          "desc":  { "type": "string", "nullable": true }
+          "dept": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "host": {
+            "type": "string",
+            "nullable": true
+          },
+          "date": {
+            "type": "string",
+            "nullable": true,
+            "description": "YYYY-MM-DD"
+          },
+          "start": {
+            "type": "string",
+            "nullable": true,
+            "description": "HH:MM"
+          },
+          "end": {
+            "type": "string",
+            "nullable": true,
+            "description": "HH:MM"
+          },
+          "desc": {
+            "type": "string",
+            "nullable": true
+          }
         }
       },
-      "TmaConflictsRequest": {
+      "MiniAppConflictsRequest": {
         "type": "object",
-        "required": ["participants", "date", "start", "end"],
+        "required": [
+          "participants",
+          "date",
+          "start",
+          "end"
+        ],
         "properties": {
-          "participants": { "type": "array", "items": { "type": "string", "format": "email" } },
-          "date":  { "type": "string", "description": "YYYY-MM-DD" },
-          "start": { "type": "string", "description": "HH:MM Almaty" },
-          "end":   { "type": "string", "description": "HH:MM Almaty" },
-          "exclude_id": { "type": "string", "format": "uuid" },
-          "recurrence": { "type": "string", "enum": ["once", "daily", "weekly", "custom", "monthly"] },
-          "recurrence_until": { "type": "string", "format": "date" },
+          "participants": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "email"
+            }
+          },
+          "date": {
+            "type": "string",
+            "description": "YYYY-MM-DD"
+          },
+          "start": {
+            "type": "string",
+            "description": "HH:MM Almaty"
+          },
+          "end": {
+            "type": "string",
+            "description": "HH:MM Almaty"
+          },
+          "exclude_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recurrence": {
+            "type": "string",
+            "enum": [
+              "once",
+              "daily",
+              "weekly",
+              "custom",
+              "monthly"
+            ]
+          },
+          "recurrence_until": {
+            "type": "string",
+            "format": "date"
+          },
           "recurrence_days": {
             "type": "array",
-            "items": { "type": "integer", "minimum": 1, "maximum": 7 }
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 7
+            }
           }
         }
       },
-      "TmaConflict": {
+      "MiniAppConflict": {
         "type": "object",
-        "required": ["email", "name", "title", "start", "end"],
+        "required": [
+          "email",
+          "name",
+          "title",
+          "start",
+          "end"
+        ],
         "properties": {
-          "email": { "type": "string", "format": "email" },
-          "name":  { "type": "string" },
-          "title": { "type": "string" },
-          "start": { "type": "string", "description": "HH:MM Almaty" },
-          "end":   { "type": "string", "description": "HH:MM Almaty" }
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "name": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "start": {
+            "type": "string",
+            "description": "HH:MM Almaty"
+          },
+          "end": {
+            "type": "string",
+            "description": "HH:MM Almaty"
+          }
         }
       },
-      "TmaOccurrenceConflicts": {
+      "MiniAppOccurrenceConflicts": {
         "type": "object",
-        "required": ["date", "start", "end", "conflicts"],
+        "required": [
+          "date",
+          "start",
+          "end",
+          "conflicts"
+        ],
         "properties": {
-          "date":  { "type": "string", "format": "date" },
-          "start": { "type": "string", "example": "10:00" },
-          "end":   { "type": "string", "example": "11:00" },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "start": {
+            "type": "string",
+            "example": "10:00"
+          },
+          "end": {
+            "type": "string",
+            "example": "11:00"
+          },
           "conflicts": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/TmaConflict" }
+            "items": {
+              "$ref": "#/components/schemas/MiniAppConflict"
+            }
           }
         }
       },
-      "TmaAdminWorkspaceStatus": {
+      "MiniAppAdminWorkspaceStatus": {
         "type": "object",
-        "required": ["id", "name", "tz", "meet_link", "has_google", "google_subject", "google_calendar_id", "has_chat"],
+        "required": [
+          "id",
+          "name",
+          "tz",
+          "meet_link",
+          "has_google",
+          "google_subject",
+          "google_calendar_id",
+          "has_chat"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "name": { "type": "string" },
-          "tz": { "type": "string" },
-          "meet_link": { "type": "string" },
-          "has_google": { "type": "boolean" },
-          "google_subject": { "type": "string" },
-          "google_calendar_id": { "type": "string" },
-          "has_chat": { "type": "boolean" },
-          "chat_id": { "type": "integer", "format": "int64" },
-          "chat_title": { "type": "string" }
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "tz": {
+            "type": "string"
+          },
+          "meet_link": {
+            "type": "string"
+          },
+          "has_google": {
+            "type": "boolean"
+          },
+          "google_subject": {
+            "type": "string"
+          },
+          "google_calendar_id": {
+            "type": "string"
+          },
+          "has_chat": {
+            "type": "boolean"
+          },
+          "chat_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "chat_title": {
+            "type": "string"
+          }
         }
       },
-      "TmaAdminIntegrationsView": {
+      "MiniAppAdminIntegrationsView": {
         "type": "object",
-        "required": ["has_google", "google_subject", "google_calendar_id", "meet_link", "tz"],
+        "required": [
+          "has_google",
+          "google_subject",
+          "google_calendar_id",
+          "meet_link",
+          "tz"
+        ],
         "properties": {
-          "has_google": { "type": "boolean" },
-          "google_subject": { "type": "string" },
-          "google_calendar_id": { "type": "string" },
-          "meet_link": { "type": "string" },
-          "tz": { "type": "string" }
+          "has_google": {
+            "type": "boolean"
+          },
+          "google_subject": {
+            "type": "string"
+          },
+          "google_calendar_id": {
+            "type": "string"
+          },
+          "meet_link": {
+            "type": "string"
+          },
+          "tz": {
+            "type": "string"
+          }
         }
       },
-      "TmaAdminIntegrationsPatchRequest": {
+      "MiniAppAdminIntegrationsPatchRequest": {
         "type": "object",
         "properties": {
-          "google_sa_json": { "type": "string" },
-          "google_subject": { "type": "string" },
-          "google_calendar_id": { "type": "string" },
-          "meet_link": { "type": "string" },
-          "tz": { "type": "string" }
+          "google_sa_json": {
+            "type": "string"
+          },
+          "google_subject": {
+            "type": "string"
+          },
+          "google_calendar_id": {
+            "type": "string"
+          },
+          "meet_link": {
+            "type": "string"
+          },
+          "tz": {
+            "type": "string"
+          }
         }
       },
-      "TmaAdminGoogleVerifyResult": {
+      "MiniAppAdminGoogleVerifyResult": {
         "type": "object",
-        "required": ["ok"],
+        "required": [
+          "ok"
+        ],
         "properties": {
-          "ok": { "type": "boolean" },
-          "calendar_summary": { "type": "string" },
-          "time_zone": { "type": "string" },
-          "access_role": { "type": "string" }
+          "ok": {
+            "type": "boolean"
+          },
+          "calendar_summary": {
+            "type": "string"
+          },
+          "time_zone": {
+            "type": "string"
+          },
+          "access_role": {
+            "type": "string"
+          }
         }
       },
-      "TmaAdminChatStatus": {
+      "MiniAppAdminChatStatus": {
         "type": "object",
-        "required": ["linked"],
+        "required": [
+          "linked"
+        ],
         "properties": {
-          "linked": { "type": "boolean" },
-          "chat_id": { "type": "integer", "format": "int64" },
-          "chat_title": { "type": "string" }
+          "linked": {
+            "type": "boolean"
+          },
+          "chat_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "chat_title": {
+            "type": "string"
+          }
         }
       },
-      "TmaAdminChatLinkRequest": {
+      "MiniAppAdminChatLinkRequest": {
         "type": "object",
-        "required": ["chat_id"],
+        "required": [
+          "chat_id"
+        ],
         "properties": {
-          "chat_id": { "type": "integer", "format": "int64" },
-          "chat_title": { "type": "string" }
+          "chat_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "chat_title": {
+            "type": "string"
+          }
         }
       },
-      "TmaAdminMember": {
+      "MiniAppAdminMember": {
         "type": "object",
-        "required": ["id", "full_name", "telegram_username", "role"],
+        "required": [
+          "id",
+          "full_name",
+          "telegram_username",
+          "role"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "full_name": { "type": "string" },
-          "telegram_username": { "type": "string" },
-          "role": { "type": "string" },
-          "github_login": { "type": "string" },
-          "gitlab_login": { "type": "string" }
+          "id": {
+            "type": "string"
+          },
+          "full_name": {
+            "type": "string"
+          },
+          "telegram_username": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          }
         }
       },
-      "TmaAdminScenario": {
+      "MiniAppAdminAuditEntry": {
         "type": "object",
-        "required": ["id", "name", "enabled", "schedule"],
+        "required": [
+          "id",
+          "actor_email",
+          "actor_telegram_id",
+          "action",
+          "target_kind",
+          "target_id",
+          "details",
+          "created_at"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "name": { "type": "string" },
-          "enabled": { "type": "boolean" },
-          "schedule": { "type": "string" },
-          "last_run_at": { "type": "string", "format": "date-time" }
+          "id": {
+            "type": "string"
+          },
+          "actor_email": {
+            "type": "string"
+          },
+          "actor_telegram_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "action": {
+            "type": "string"
+          },
+          "target_kind": {
+            "type": "string"
+          },
+          "target_id": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       },
-      "TmaAdminScenarioPatchRequest": {
+      "MiniAppMeetingCreateRequest": {
         "type": "object",
-        "required": ["enabled"],
+        "required": [
+          "dept",
+          "type",
+          "date",
+          "start",
+          "end",
+          "recurrence",
+          "participants"
+        ],
         "properties": {
-          "enabled": { "type": "boolean" }
-        }
-      },
-      "TmaAdminScenarioRun": {
-        "type": "object",
-        "required": ["id", "scenario_id", "status", "started_at"],
-        "properties": {
-          "id": { "type": "string" },
-          "scenario_id": { "type": "string" },
-          "status": { "type": "string" },
-          "started_at": { "type": "string", "format": "date-time" },
-          "finished_at": { "type": "string", "format": "date-time" },
-          "error": { "type": "string" }
-        }
-      },
-      "TmaAdminAuditEntry": {
-        "type": "object",
-        "required": ["id", "actor_email", "actor_telegram_id", "action", "target_kind", "target_id", "details", "created_at"],
-        "properties": {
-          "id": { "type": "string" },
-          "actor_email": { "type": "string" },
-          "actor_telegram_id": { "type": "integer", "format": "int64" },
-          "action": { "type": "string" },
-          "target_kind": { "type": "string" },
-          "target_id": { "type": "string" },
-          "details": { "type": "string" },
-          "created_at": { "type": "string", "format": "date-time" }
-        }
-      },
-      "TmaMeetingCreateRequest": {
-        "type": "object",
-        "required": ["dept", "type", "date", "start", "end", "recurrence", "participants"],
-        "properties": {
-          "dept":  { "type": "string" },
-          "type":  { "type": "string" },
-          "host":  { "type": "string" },
-          "date":  { "type": "string", "description": "YYYY-MM-DD" },
-          "start": { "type": "string", "description": "HH:MM" },
-          "end":   { "type": "string", "description": "HH:MM" },
-          "recurrence": { "type": "string", "enum": ["once", "daily", "weekly", "custom", "monthly"] },
-          "desc":  { "type": "string" },
-          "participants": { "type": "array", "items": { "type": "string", "format": "email" } },
-          "recurrence_until": { "type": "string", "format": "date" },
+          "dept": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "host": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "description": "YYYY-MM-DD"
+          },
+          "start": {
+            "type": "string",
+            "description": "HH:MM"
+          },
+          "end": {
+            "type": "string",
+            "description": "HH:MM"
+          },
+          "recurrence": {
+            "type": "string",
+            "enum": [
+              "once",
+              "daily",
+              "weekly",
+              "custom",
+              "monthly"
+            ]
+          },
+          "desc": {
+            "type": "string"
+          },
+          "participants": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "email"
+            }
+          },
+          "recurrence_until": {
+            "type": "string",
+            "format": "date"
+          },
           "recurrence_days": {
             "type": "array",
-            "items": { "type": "integer", "minimum": 1, "maximum": 7 }
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 7
+            }
           }
         }
       }

@@ -12,7 +12,7 @@
 
 **Conventions:**
 
-- Run Go commands from `backend/` with the `env -u GOROOT` prefix. Module: `github.com/Jaryq-Lab/notify-bot`.
+- Run Go commands from `backend/` with the `env -u GOROOT` prefix. Module: `github.com/luckyrogue/lead-cat`.
 - Build check: `env -u GOROOT go build ./...`
 
 ---
@@ -372,7 +372,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 func strp(s string) *string { return &s }
@@ -464,8 +464,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/domain/meeting"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // UpdateMeetingInput carries optional field overrides (nil = leave unchanged).
@@ -842,8 +842,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 type fakeBackend struct {
@@ -971,9 +971,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
-	"github.com/Jaryq-Lab/notify-bot/internal/domain/meeting"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application"
+	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // Backend is the application surface the FSM needs (satisfied by *application.Services).
@@ -1291,7 +1291,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 - [ ] **Step 1: Add the editor to MultiHandler.** In `backend/internal/infrastructure/telegram/multitenant.go`:
 
-(a) Add the import `"github.com/Jaryq-Lab/notify-bot/internal/platform/meetingedit"`. (The editor backend is passed as the `meetingedit.Backend` interface type, so this file needs neither `application` nor `uuid`.)
+(a) Add the import `"github.com/luckyrogue/lead-cat/internal/platform/meetingedit"`. (The editor backend is passed as the `meetingedit.Backend` interface type, so this file needs neither `application` nor `uuid`.)
 
 (b) Add a field to the struct:
 
@@ -1423,7 +1423,7 @@ Remove now-unused imports from `app.go`: the `queue` parameter is gone, and `cal
 
 - [ ] **Step 3: Build the provider + Services once in `main.go` and wire everything.** In `backend/cmd/server/main.go`:
 
-(a) Add imports: `"github.com/Jaryq-Lab/notify-bot/internal/application"`, `calendargoogle "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/google"`, `calendarstub "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/stub"`.
+(a) Add imports: `"github.com/luckyrogue/lead-cat/internal/application"`, `calendargoogle "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/google"`, `calendarstub "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/stub"`.
 
 (b) After `store`, `cipher`, `queueClient` are created (and before the bot/tgHandler block), build the calendar provider and the shared `Services`:
 

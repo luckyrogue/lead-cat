@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useTmaApp } from "@/shared/tma/context"
+import { useMiniApp } from "@/shared/miniapp/context"
 import { toastError, toastSuccess } from "@/shared/lib/toast"
 import { useIntegrations } from "@/entities/admin/queries"
 import { useUpdateIntegrations, useVerifyIntegrations } from "@/entities/admin/mutations"
@@ -16,7 +16,7 @@ type VerifyState =
   | { state: "error"; errorCode: string }
 
 export function IntegrationsSection() {
-  const { t } = useTmaApp()
+  const { t } = useMiniApp()
   const { data: int } = useIntegrations()
   const updateMut = useUpdateIntegrations()
   const verifyMut = useVerifyIntegrations()
@@ -56,20 +56,20 @@ export function IntegrationsSection() {
     <SettingsGroup title={t("adminIntegrations" as never)}>
       <div className="flex flex-col gap-3 px-3 pb-3">
         <label className="flex flex-col gap-1">
-          <span className="text-tma-muted text-xs font-bold">{t("googleSubject" as never)}</span>
+          <span className="text-miniapp-muted text-xs font-bold">{t("googleSubject" as never)}</span>
           <input
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            className="border-tma-border bg-tma-card text-tma-text w-full rounded-[12px] border px-3 py-2.5 text-[15px]"
+            className="border-miniapp-border bg-miniapp-card text-miniapp-text w-full rounded-[12px] border px-3 py-2.5 text-[15px]"
             placeholder="admin@yourdomain.com"
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-tma-muted text-xs font-bold">{t("googleCalendarID" as never)}</span>
+          <span className="text-miniapp-muted text-xs font-bold">{t("googleCalendarID" as never)}</span>
           <input
             value={calendarID}
             onChange={(e) => setCalendarID(e.target.value)}
-            className="border-tma-border bg-tma-card text-tma-text w-full rounded-[12px] border px-3 py-2.5 text-[15px]"
+            className="border-miniapp-border bg-miniapp-card text-miniapp-text w-full rounded-[12px] border px-3 py-2.5 text-[15px]"
           />
         </label>
         <SaPasteInput value={sa} onChange={setSa} />
@@ -77,7 +77,7 @@ export function IntegrationsSection() {
           type="button"
           disabled={!canSave || updateMut.isPending}
           onClick={() => void onSave()}
-          className="border-tma-accent bg-tma-accent self-start rounded-[12px] px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+          className="border-miniapp-accent bg-miniapp-accent self-start rounded-[12px] px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
         >
           {updateMut.isPending ? t("saving" as never) : t("verifyButton" as never)}
         </button>

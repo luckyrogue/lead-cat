@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
-  createWorkspace, linkChat, patchIntegrations, patchScenario,
-  runScenario, syncChatMembers, verifyIntegrations,
+  createWorkspace, linkChat, patchIntegrations,
+  syncChatMembers, verifyIntegrations,
   type IntegrationsPatch,
 } from "./write-api"
 import { adminKeys } from "./queries"
@@ -41,17 +41,4 @@ export function useSyncMembers() {
     mutationFn: syncChatMembers,
     onSuccess: () => { void qc.invalidateQueries({ queryKey: adminKeys.members() }) },
   })
-}
-
-export function useToggleScenario() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) =>
-      patchScenario(id, enabled),
-    onSuccess: () => { void qc.invalidateQueries({ queryKey: adminKeys.scenarios() }) },
-  })
-}
-
-export function useRunScenario() {
-  return useMutation({ mutationFn: (id: string) => runScenario(id) })
 }

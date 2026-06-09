@@ -8,9 +8,9 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/botsettings"
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/meetingrecipients"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/platform/botsettings"
+	"github.com/luckyrogue/lead-cat/internal/platform/meetingrecipients"
 )
 
 const lockKey = "leadcat:reminders:leader"

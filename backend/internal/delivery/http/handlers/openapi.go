@@ -3,7 +3,7 @@ package handlers
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/Jaryq-Lab/notify-bot/openapi"
+	"github.com/luckyrogue/lead-cat/openapi"
 )
 
 // OpenAPI serves the embedded OpenAPI document for frontend codegen.

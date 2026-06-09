@@ -8,14 +8,14 @@ import {
   useUpdateMeeting,
 } from "@/entities/meeting/mutations"
 import { useMyMeetings } from "@/entities/meeting/queries"
-import { useTmaApp } from "@/shared/tma/context"
+import { useMiniApp } from "@/shared/miniapp/context"
 import { toastError, toastSuccess } from "@/shared/lib/toast"
 import type { MeetingDraft } from "@/entities/meeting/types"
 import type { MeetingInput, MeetingPatch } from "@/entities/meeting/write-api"
-import { Overlay } from "@/components/tma-shell"
+import { Overlay } from "@/components/miniapp-shell"
 
 export function CreateMeetingPage() {
-  const p = useTmaApp()
+  const p = useMiniApp()
   const navigate = useNavigate()
   const params = useParams({ strict: false })
   const editId = "editId" in params ? (params.editId as string) : undefined
@@ -26,9 +26,9 @@ export function CreateMeetingPage() {
       ? { date: true, rec: true, until: true, participants: true }
       : undefined
   const slotInitial = useMemo(() => {
-    const raw = sessionStorage.getItem("tma-create-initial")
+    const raw = sessionStorage.getItem("miniapp-create-initial")
     if (!raw) return undefined
-    sessionStorage.removeItem("tma-create-initial")
+    sessionStorage.removeItem("miniapp-create-initial")
     try {
       return JSON.parse(raw) as Partial<MeetingDraft>
     } catch {

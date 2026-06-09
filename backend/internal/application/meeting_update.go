@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/domain/meeting"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // UpdateMeetingInput carries optional field overrides (nil = leave unchanged).

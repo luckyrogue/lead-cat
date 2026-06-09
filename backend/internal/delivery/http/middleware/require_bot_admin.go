@@ -4,7 +4,7 @@ package middleware
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // RequireBotAdmin asserts that the request was authenticated as a bot user

@@ -10,9 +10,7 @@ import (
 
 func (s *Store) ListWorkspacesForUser(ctx context.Context, userID uuid.UUID) ([]Workspace, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT DISTINCT w.id, w.slug, w.name, w.notify_chat_id, w.meet_link, w.tz,
-			w.owner_user_id, w.vcs_provider, w.vcs_namespace, w.vcs_base_url,
-			(w.vcs_token_enc IS NOT NULL AND length(w.vcs_token_enc) > 0)
+		SELECT DISTINCT w.id, w.slug, w.name, w.notify_chat_id, w.meet_link, w.tz, w.owner_user_id
 		FROM workspaces w
 		WHERE w.owner_user_id = $1
 			OR EXISTS (
@@ -32,48 +30,36 @@ func (s *Store) CreateWorkspace(ctx context.Context, slug, name string, ownerID 
 	err := s.pool.QueryRow(ctx, `
 		INSERT INTO workspaces (slug, name, owner_user_id, tz)
 		VALUES ($1, $2, $3, 'Asia/Almaty')
-		RETURNING id, slug, name, notify_chat_id, meet_link, tz, owner_user_id,
-			vcs_provider, vcs_namespace, vcs_base_url,
-			(vcs_token_enc IS NOT NULL AND length(vcs_token_enc) > 0)`,
+		RETURNING id, slug, name, notify_chat_id, meet_link, tz, owner_user_id`,
 		slug, name, ownerID).Scan(
-		&w.ID, &w.Slug, &w.Name, &w.NotifyChatID, &w.MeetLink, &w.TZ, &w.OwnerUserID,
-		&w.VCSProvider, &w.VCSNamespace, &w.VCSBaseURL, &w.HasVCSToken)
+		&w.ID, &w.Slug, &w.Name, &w.NotifyChatID, &w.MeetLink, &w.TZ, &w.OwnerUserID)
 	return w, err
 }
 
 func (s *Store) GetWorkspace(ctx context.Context, id uuid.UUID) (Workspace, error) {
 	var w Workspace
 	err := s.pool.QueryRow(ctx, `
-		SELECT id, slug, name, notify_chat_id, meet_link, tz, owner_user_id,
-			vcs_provider, vcs_namespace, vcs_base_url,
-			(vcs_token_enc IS NOT NULL AND length(vcs_token_enc) > 0)
+		SELECT id, slug, name, notify_chat_id, meet_link, tz, owner_user_id
 		FROM workspaces WHERE id = $1`, id).Scan(
-		&w.ID, &w.Slug, &w.Name, &w.NotifyChatID, &w.MeetLink, &w.TZ, &w.OwnerUserID,
-		&w.VCSProvider, &w.VCSNamespace, &w.VCSBaseURL, &w.HasVCSToken)
+		&w.ID, &w.Slug, &w.Name, &w.NotifyChatID, &w.MeetLink, &w.TZ, &w.OwnerUserID)
 	return w, err
 }
 
 func (s *Store) GetWorkspaceBySlug(ctx context.Context, slug string) (Workspace, error) {
 	var w Workspace
 	err := s.pool.QueryRow(ctx, `
-		SELECT id, slug, name, notify_chat_id, meet_link, tz, owner_user_id,
-			vcs_provider, vcs_namespace, vcs_base_url,
-			(vcs_token_enc IS NOT NULL AND length(vcs_token_enc) > 0)
+		SELECT id, slug, name, notify_chat_id, meet_link, tz, owner_user_id
 		FROM workspaces WHERE slug = $1`, slug).Scan(
-		&w.ID, &w.Slug, &w.Name, &w.NotifyChatID, &w.MeetLink, &w.TZ, &w.OwnerUserID,
-		&w.VCSProvider, &w.VCSNamespace, &w.VCSBaseURL, &w.HasVCSToken)
+		&w.ID, &w.Slug, &w.Name, &w.NotifyChatID, &w.MeetLink, &w.TZ, &w.OwnerUserID)
 	return w, err
 }
 
 func (s *Store) GetWorkspaceByChatID(ctx context.Context, chatID int64) (Workspace, error) {
 	var w Workspace
 	err := s.pool.QueryRow(ctx, `
-		SELECT id, slug, name, notify_chat_id, meet_link, tz, owner_user_id,
-			vcs_provider, vcs_namespace, vcs_base_url,
-			(vcs_token_enc IS NOT NULL AND length(vcs_token_enc) > 0)
+		SELECT id, slug, name, notify_chat_id, meet_link, tz, owner_user_id
 		FROM workspaces WHERE notify_chat_id = $1`, chatID).Scan(
-		&w.ID, &w.Slug, &w.Name, &w.NotifyChatID, &w.MeetLink, &w.TZ, &w.OwnerUserID,
-		&w.VCSProvider, &w.VCSNamespace, &w.VCSBaseURL, &w.HasVCSToken)
+		&w.ID, &w.Slug, &w.Name, &w.NotifyChatID, &w.MeetLink, &w.TZ, &w.OwnerUserID)
 	return w, err
 }
 
@@ -89,20 +75,6 @@ func (s *Store) LinkChat(ctx context.Context, workspaceID uuid.UUID, chatID int6
 		UPDATE workspaces SET notify_chat_id = $2, chat_linked_at = now(), updated_at = now()
 		WHERE id = $1`, workspaceID, chatID)
 	return err
-}
-
-func (s *Store) SetVCSToken(ctx context.Context, id uuid.UUID, provider, namespace string, baseURL *string, enc []byte) error {
-	_, err := s.pool.Exec(ctx, `
-		UPDATE workspaces SET vcs_provider = $2, vcs_namespace = $3, vcs_base_url = $4,
-			vcs_token_enc = $5, updated_at = now() WHERE id = $1`,
-		id, provider, namespace, baseURL, enc)
-	return err
-}
-
-func (s *Store) GetVCSTokenEnc(ctx context.Context, id uuid.UUID) ([]byte, error) {
-	var enc []byte
-	err := s.pool.QueryRow(ctx, `SELECT vcs_token_enc FROM workspaces WHERE id = $1`, id).Scan(&enc)
-	return enc, err
 }
 
 func (s *Store) ListMembers(ctx context.Context, workspaceID uuid.UUID) ([]Member, error) {
@@ -158,12 +130,27 @@ func (s *Store) UpsertPendingChat(ctx context.Context, userID, chatID int64, tit
 	return err
 }
 
+func (s *Store) UpsertMemberFromChat(ctx context.Context, workspaceID uuid.UUID, username, role string) error {
+	username = normalizeUsername(username)
+	if username == "" {
+		return nil
+	}
+	if role == "" {
+		role = "developer"
+	}
+	_, err := s.pool.Exec(ctx, `
+		INSERT INTO workspace_members (workspace_id, telegram_username, role)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (workspace_id, telegram_username) DO NOTHING`,
+		workspaceID, username, role)
+	return err
+}
+
 func scanWorkspaces(rows pgx.Rows) ([]Workspace, error) {
 	var out []Workspace
 	for rows.Next() {
 		var w Workspace
-		if err := rows.Scan(&w.ID, &w.Slug, &w.Name, &w.NotifyChatID, &w.MeetLink, &w.TZ, &w.OwnerUserID,
-			&w.VCSProvider, &w.VCSNamespace, &w.VCSBaseURL, &w.HasVCSToken); err != nil {
+		if err := rows.Scan(&w.ID, &w.Slug, &w.Name, &w.NotifyChatID, &w.MeetLink, &w.TZ, &w.OwnerUserID); err != nil {
 			return nil, err
 		}
 		out = append(out, w)

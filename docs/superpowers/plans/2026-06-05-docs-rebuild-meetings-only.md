@@ -14,7 +14,7 @@
 
 ## Grounded facts (verified — rely on these; re-verify before asserting line numbers)
 
-- **Module:** `github.com/Jaryq-Lab/notify-bot`. Product name in docs: **Lead Cat**.
+- **Module:** `github.com/luckyrogue/lead-cat`. Product name in docs: **Lead Cat**.
 - **Current routes** (`backend/internal/delivery/http/app.go`):
   - Public: `GET /api/health`, `GET /openapi.json`, `GET /metrics`.
   - TMA auth: `POST /api/auth/tma`.

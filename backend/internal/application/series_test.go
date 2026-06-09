@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/domain/meeting"
+	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
 )
 
 type fakeCal struct {

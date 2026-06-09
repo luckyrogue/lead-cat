@@ -18,7 +18,7 @@ Per ТЗ §9.4 the CSV is the source of truth for the directory; columns are `fu
 
 ## Codebase facts (verified)
 
-- **Module path:** `github.com/Jaryq-Lab/notify-bot`.
+- **Module path:** `github.com/luckyrogue/lead-cat`.
 - `employees` table (`migrations/20260530120000_meetings.sql`): `id, workspace_id (NOT NULL, FK→workspaces ON DELETE CASCADE), full_name, email, dept (DEFAULT ''), has_telegram (DEFAULT false), created_at`, `UNIQUE (workspace_id, email)`.
 - `has_telegram` is written **only** by `CreateEmployee` and read by `ListEmployees`/`SearchEmployeesGlobal`; never maintained dynamically (the CSV has no telegram column). The upsert therefore leaves `has_telegram` untouched on existing rows.
 - `meeting_participants.email` is a plain column (no FK to `employees`), so deleting an employee row never cascades into meetings/participants — full-sync deletes are referentially safe.

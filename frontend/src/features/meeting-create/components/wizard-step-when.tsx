@@ -1,7 +1,7 @@
 import { WEEKDAYS } from "@/entities/meeting/constants"
-import { useTmaApp } from "@/shared/tma/context"
+import { useMiniApp } from "@/shared/miniapp/context"
 import { RECURRENCE } from "@/entities/meeting/constants"
-import type { MeetingDraft } from "@/shared/tma/types"
+import type { MeetingDraft } from "@/shared/miniapp/types"
 import { cn } from "@/shared/lib/cn"
 import { ChipGrid, DurationPicker, Field } from "@/shared/ui/cat/primitives"
 import { DURATION_OPTIONS, TIME_SLOTS } from "../lib/wizard-constants"
@@ -24,12 +24,12 @@ export function WizardStepWhen({
     participants?: boolean
   }
 }) {
-  const { t } = useTmaApp()
+  const { t } = useMiniApp()
 
   return (
     <div>
       {lockedFields?.rec && (
-        <div className="bg-tma-accent-soft text-tma-text mb-3.5 rounded-[12px] px-3 py-2.5 text-[13px]">
+        <div className="bg-miniapp-accent-soft text-miniapp-text mb-3.5 rounded-[12px] px-3 py-2.5 text-[13px]">
           {t("seriesEditLockedNote")}
         </div>
       )}
@@ -56,8 +56,8 @@ export function WizardStepWhen({
                 className={cn(
                   "font-display shrink-0 cursor-pointer rounded-[11px] border-[1.5px] px-[13px] py-[9px] text-sm font-bold",
                   active
-                    ? "border-tma-accent bg-tma-accent text-tma-accent-text"
-                    : "border-tma-border bg-tma-card text-tma-text"
+                    ? "border-miniapp-accent bg-miniapp-accent text-miniapp-accent-text"
+                    : "border-miniapp-border bg-miniapp-card text-miniapp-text"
                 )}
               >
                 {tm}
@@ -108,8 +108,8 @@ export function WizardStepWhen({
                     className={cn(
                       "font-display aspect-square flex-1 cursor-pointer rounded-[11px] border-[1.5px] text-[12.5px] font-extrabold",
                       on
-                        ? "border-tma-accent bg-tma-accent text-tma-accent-text"
-                        : "border-tma-border bg-tma-card text-tma-muted"
+                        ? "border-miniapp-accent bg-miniapp-accent text-miniapp-accent-text"
+                        : "border-miniapp-border bg-miniapp-card text-miniapp-muted"
                     )}
                   >
                     {w}
@@ -132,17 +132,17 @@ export function WizardStepWhen({
               placeholder={t("untilPlaceholder")}
               disabled={lockedFields?.until}
               className={cn(
-                "border-tma-border bg-tma-card text-tma-text w-full rounded-[12px] border px-3 py-2.5 text-[15px]",
+                "border-miniapp-border bg-miniapp-card text-miniapp-text w-full rounded-[12px] border px-3 py-2.5 text-[15px]",
                 lockedFields?.until && "cursor-not-allowed opacity-60"
               )}
             />
             {!draft.until && (
-              <div className="text-tma-danger mt-1.5 text-xs">
+              <div className="text-miniapp-danger mt-1.5 text-xs">
                 {t("untilRequired")}
               </div>
             )}
             {draft.until && draft.until < draft.date && (
-              <div className="text-tma-danger mt-1.5 text-xs">
+              <div className="text-miniapp-danger mt-1.5 text-xs">
                 {t("untilBeforeStart")}
               </div>
             )}

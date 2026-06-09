@@ -7,17 +7,15 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // auditWhitelist maps action -> allowed detail keys.
 var auditWhitelist = map[string]map[string]struct{}{
 	"google_config_updated": {"subject": {}, "calendar_id": {}, "has_new_sa_json": {}},
 	"google_verified":       {"ok": {}, "calendar_summary": {}, "time_zone": {}, "error_code": {}},
-	"chat_linked":           {"chat_id": {}, "chat_title": {}},
-	"members_synced":        {"added": {}, "removed": {}, "unchanged": {}},
-	"scenario_toggled":      {"name": {}, "enabled": {}},
-	"scenario_run_started":  {"name": {}, "manual_run_id": {}},
+	"chat_linked":    {"chat_id": {}, "chat_title": {}},
+	"members_synced": {"added": {}, "removed": {}, "unchanged": {}},
 }
 
 // sanitizeAuditDetails filters details by the action's whitelist. Returns the

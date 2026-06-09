@@ -1,8 +1,8 @@
 import { apiFetch } from "@/shared/api/client"
-import type { TmaMeetingsScope } from "@/shared/api/types"
+import type { MiniAppMeetingsScope } from "@/shared/api/types"
 import type { Meeting } from "@/entities/meeting/types"
 
-export type Scope = TmaMeetingsScope
+export type Scope = MiniAppMeetingsScope
 
 type MeetingDTO = {
   id: string
@@ -41,7 +41,7 @@ export function toMeeting(d: MeetingDTO): Meeting {
 }
 
 export async function fetchMyMeetings(scope: Scope): Promise<Meeting[]> {
-  const data = await apiFetch<{ meetings: MeetingDTO[] }>("/tma/meetings", {
+  const data = await apiFetch<{ meetings: MeetingDTO[] }>("/miniapp/meetings", {
     params: { scope },
   })
   return data.meetings.map(toMeeting)
@@ -51,7 +51,7 @@ export async function fetchColleagueSchedule(
   email: string,
   scope: Scope
 ): Promise<Meeting[]> {
-  const data = await apiFetch<{ meetings: MeetingDTO[] }>("/tma/schedule", {
+  const data = await apiFetch<{ meetings: MeetingDTO[] }>("/miniapp/schedule", {
     params: { email, scope },
   })
   return data.meetings.map(toMeeting)

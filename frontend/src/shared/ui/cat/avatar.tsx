@@ -1,6 +1,6 @@
 import { cn } from "@/shared/lib/cn"
-import { avatarVars } from "@/shared/tma/surface-vars"
-import { useTmaApp } from "@/shared/tma/context"
+import { avatarVars } from "@/shared/miniapp/surface-vars"
+import { useMiniApp } from "@/shared/miniapp/context"
 
 const AV_HUES = [25, 150, 255, 300, 95, 180, 45, 350]
 
@@ -24,11 +24,11 @@ export function Avatar({
   size?: number
   ring?: boolean
 }) {
-  const { dark } = useTmaApp()
+  const { dark } = useMiniApp()
   const hue = avatarColor(name || "?")
   return (
     <div
-      className={cn("tma-avatar", ring && "tma-avatar-ring")}
+      className={cn("miniapp-avatar", ring && "miniapp-avatar-ring")}
       style={avatarVars(size, dark, hue)}
     >
       {initials(name || "?")}

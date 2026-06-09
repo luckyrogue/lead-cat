@@ -21,7 +21,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/auth/tma": {
+    "/api/auth/miniapp": {
         parameters: {
             query?: never;
             header?: never;
@@ -30,23 +30,23 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Exchange Telegram initData for TMA JWT */
-        post: operations["tma_auth_post"];
+        /** Exchange Telegram initData for Mini App JWT */
+        post: operations["miniapp_auth_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/tma/me": {
+    "/api/miniapp/me": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Current TMA user */
-        get: operations["tma_me_get"];
+        /** Current Mini App user */
+        get: operations["miniapp_me_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -55,7 +55,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/tma/meetings": {
+    "/api/miniapp/meetings": {
         parameters: {
             query?: never;
             header?: never;
@@ -63,17 +63,17 @@ export interface paths {
             cookie?: never;
         };
         /** List authed user meetings */
-        get: operations["tma_meetings_get"];
+        get: operations["miniapp_meetings_get"];
         put?: never;
         /** Create a meeting (once or recurring series) */
-        post: operations["tmaCreateMeeting"];
+        post: operations["miniappCreateMeeting"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/tma/schedule": {
+    "/api/miniapp/schedule": {
         parameters: {
             query?: never;
             header?: never;
@@ -81,7 +81,7 @@ export interface paths {
             cookie?: never;
         };
         /** Colleague schedule (read-only) */
-        get: operations["tma_schedule_get"];
+        get: operations["miniapp_schedule_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -90,7 +90,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/tma/employees": {
+    "/api/miniapp/employees": {
         parameters: {
             query?: never;
             header?: never;
@@ -98,7 +98,7 @@ export interface paths {
             cookie?: never;
         };
         /** Search employee directory */
-        get: operations["tma_employees_get"];
+        get: operations["miniapp_employees_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -107,7 +107,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/tma/free-slots": {
+    "/api/miniapp/free-slots": {
         parameters: {
             query?: never;
             header?: never;
@@ -117,14 +117,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Common free-time checker */
-        post: operations["tma_free_slots_post"];
+        post: operations["miniapp_free_slots_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/tma/meetings/{id}": {
+    "/api/miniapp/meetings/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -135,14 +135,14 @@ export interface paths {
         put?: never;
         post?: never;
         /** Cancel a single meeting (organizer/owner only) */
-        delete: operations["tmaDeleteMeeting"];
+        delete: operations["miniappDeleteMeeting"];
         options?: never;
         head?: never;
         /** Edit a single meeting (organizer/owner only) */
-        patch: operations["tmaUpdateMeeting"];
+        patch: operations["miniappUpdateMeeting"];
         trace?: never;
     };
-    "/api/tma/admin/workspace": {
+    "/api/miniapp/admin/workspace": {
         parameters: {
             query?: never;
             header?: never;
@@ -150,17 +150,17 @@ export interface paths {
             cookie?: never;
         };
         /** Get workspace status */
-        get: operations["tmaAdminWorkspaceGet"];
+        get: operations["miniappAdminWorkspaceGet"];
         put?: never;
         /** Create workspace */
-        post: operations["tmaAdminWorkspacePost"];
+        post: operations["miniappAdminWorkspacePost"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/tma/admin/integrations": {
+    "/api/miniapp/admin/integrations": {
         parameters: {
             query?: never;
             header?: never;
@@ -168,17 +168,17 @@ export interface paths {
             cookie?: never;
         };
         /** Get integrations view */
-        get: operations["tmaAdminIntegrationsGet"];
+        get: operations["miniappAdminIntegrationsGet"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
         /** Update integrations settings */
-        patch: operations["tmaAdminIntegrationsPatch"];
+        patch: operations["miniappAdminIntegrationsPatch"];
         trace?: never;
     };
-    "/api/tma/admin/integrations/verify": {
+    "/api/miniapp/admin/integrations/verify": {
         parameters: {
             query?: never;
             header?: never;
@@ -188,14 +188,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Verify Google integration */
-        post: operations["tmaAdminIntegrationsVerify"];
+        post: operations["miniappAdminIntegrationsVerify"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/tma/admin/chat/status": {
+    "/api/miniapp/admin/chat/status": {
         parameters: {
             query?: never;
             header?: never;
@@ -203,7 +203,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get chat link status */
-        get: operations["tmaAdminChatStatusGet"];
+        get: operations["miniappAdminChatStatusGet"];
         put?: never;
         post?: never;
         delete?: never;
@@ -212,7 +212,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/tma/admin/chat/link": {
+    "/api/miniapp/admin/chat/link": {
         parameters: {
             query?: never;
             header?: never;
@@ -222,14 +222,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Link Telegram chat to workspace */
-        post: operations["tmaAdminChatLink"];
+        post: operations["miniappAdminChatLink"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/tma/admin/members": {
+    "/api/miniapp/admin/members": {
         parameters: {
             query?: never;
             header?: never;
@@ -237,7 +237,7 @@ export interface paths {
             cookie?: never;
         };
         /** List workspace members */
-        get: operations["tmaAdminMembersGet"];
+        get: operations["miniappAdminMembersGet"];
         put?: never;
         post?: never;
         delete?: never;
@@ -246,7 +246,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/tma/admin/members/sync-chat": {
+    "/api/miniapp/admin/members/sync-chat": {
         parameters: {
             query?: never;
             header?: never;
@@ -256,82 +256,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Sync members from Telegram chat */
-        post: operations["tmaAdminMembersSyncChat"];
+        post: operations["miniappAdminMembersSyncChat"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/tma/admin/scenarios": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List scenarios */
-        get: operations["tmaAdminScenariosGet"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/tma/admin/scenarios/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update scenario */
-        patch: operations["tmaAdminScenarioPatch"];
-        trace?: never;
-    };
-    "/api/tma/admin/scenarios/{id}/run": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Trigger scenario run */
-        post: operations["tmaAdminScenarioRun"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/tma/admin/scenarios/{id}/runs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List scenario runs */
-        get: operations["tmaAdminScenarioRunsGet"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/tma/admin/audit": {
+    "/api/miniapp/admin/audit": {
         parameters: {
             query?: never;
             header?: never;
@@ -339,7 +271,7 @@ export interface paths {
             cookie?: never;
         };
         /** List audit log entries */
-        get: operations["tmaAdminAuditGet"];
+        get: operations["miniappAdminAuditGet"];
         put?: never;
         post?: never;
         delete?: never;
@@ -348,7 +280,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/tma/conflicts": {
+    "/api/miniapp/conflicts": {
         parameters: {
             query?: never;
             header?: never;
@@ -358,7 +290,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Cross-participant conflict warning */
-        post: operations["tmaConflicts"];
+        post: operations["miniappConflicts"];
         delete?: never;
         options?: never;
         head?: never;
@@ -377,10 +309,10 @@ export interface components {
             bot_ok: boolean;
             version: string;
         };
-        TmaAuthRequest: {
+        MiniAppAuthRequest: {
             init_data: string;
         };
-        TmaUser: {
+        MiniAppUser: {
             /** Format: int64 */
             telegram_id: number;
             name: string;
@@ -389,11 +321,11 @@ export interface components {
             /** @enum {string} */
             role: "user" | "admin";
         };
-        TmaAuthResponse: {
+        MiniAppAuthResponse: {
             token: string;
-            user: components["schemas"]["TmaUser"];
+            user: components["schemas"]["MiniAppUser"];
         };
-        TmaAuthError: {
+        MiniAppAuthError: {
             /** @enum {string} */
             code: "not_registered" | "invalid_init_data";
         };
@@ -402,7 +334,7 @@ export interface components {
             message?: string;
             code?: string;
         };
-        TmaMeeting: {
+        MiniAppMeeting: {
             id: string;
             type: string;
             dept: string;
@@ -419,10 +351,10 @@ export interface components {
             meet_link: string;
             status: string;
         };
-        TmaMeetingsResponse: {
-            meetings: components["schemas"]["TmaMeeting"][];
+        MiniAppMeetingsResponse: {
+            meetings: components["schemas"]["MiniAppMeeting"][];
         };
-        TmaEmployee: {
+        MiniAppEmployee: {
             id: string;
             name: string;
             /** Format: email */
@@ -430,10 +362,10 @@ export interface components {
             dept: string;
             tg: boolean;
         };
-        TmaEmployeesResponse: {
-            employees: components["schemas"]["TmaEmployee"][];
+        MiniAppEmployeesResponse: {
+            employees: components["schemas"]["MiniAppEmployee"][];
         };
-        TmaFreeSlotsRequest: {
+        MiniAppFreeSlotsRequest: {
             participants: string[];
             /** Format: date */
             from: string;
@@ -441,17 +373,17 @@ export interface components {
             to: string;
             duration_mins: number;
         };
-        TmaFreeSlot: {
+        MiniAppFreeSlot: {
             /** Format: date */
             iso: string;
             start: string;
             end: string;
             mins: number;
         };
-        TmaFreeSlotsResponse: {
-            slots: components["schemas"]["TmaFreeSlot"][];
+        MiniAppFreeSlotsResponse: {
+            slots: components["schemas"]["MiniAppFreeSlot"][];
         };
-        TmaMeetingUpdateRequest: {
+        MiniAppMeetingUpdateRequest: {
             dept?: string | null;
             type?: string | null;
             host?: string | null;
@@ -463,7 +395,7 @@ export interface components {
             end?: string | null;
             desc?: string | null;
         };
-        TmaConflictsRequest: {
+        MiniAppConflictsRequest: {
             participants: string[];
             /** @description YYYY-MM-DD */
             date: string;
@@ -479,7 +411,7 @@ export interface components {
             recurrence_until?: string;
             recurrence_days?: number[];
         };
-        TmaConflict: {
+        MiniAppConflict: {
             /** Format: email */
             email: string;
             name: string;
@@ -489,16 +421,16 @@ export interface components {
             /** @description HH:MM Almaty */
             end: string;
         };
-        TmaOccurrenceConflicts: {
+        MiniAppOccurrenceConflicts: {
             /** Format: date */
             date: string;
             /** @example 10:00 */
             start: string;
             /** @example 11:00 */
             end: string;
-            conflicts: components["schemas"]["TmaConflict"][];
+            conflicts: components["schemas"]["MiniAppConflict"][];
         };
-        TmaAdminWorkspaceStatus: {
+        MiniAppAdminWorkspaceStatus: {
             id: string;
             name: string;
             tz: string;
@@ -511,67 +443,44 @@ export interface components {
             chat_id?: number;
             chat_title?: string;
         };
-        TmaAdminIntegrationsView: {
+        MiniAppAdminIntegrationsView: {
             has_google: boolean;
             google_subject: string;
             google_calendar_id: string;
             meet_link: string;
             tz: string;
         };
-        TmaAdminIntegrationsPatchRequest: {
+        MiniAppAdminIntegrationsPatchRequest: {
             google_sa_json?: string;
             google_subject?: string;
             google_calendar_id?: string;
             meet_link?: string;
             tz?: string;
         };
-        TmaAdminGoogleVerifyResult: {
+        MiniAppAdminGoogleVerifyResult: {
             ok: boolean;
             calendar_summary?: string;
             time_zone?: string;
             access_role?: string;
         };
-        TmaAdminChatStatus: {
+        MiniAppAdminChatStatus: {
             linked: boolean;
             /** Format: int64 */
             chat_id?: number;
             chat_title?: string;
         };
-        TmaAdminChatLinkRequest: {
+        MiniAppAdminChatLinkRequest: {
             /** Format: int64 */
             chat_id: number;
             chat_title?: string;
         };
-        TmaAdminMember: {
+        MiniAppAdminMember: {
             id: string;
             full_name: string;
             telegram_username: string;
             role: string;
-            github_login?: string;
-            gitlab_login?: string;
         };
-        TmaAdminScenario: {
-            id: string;
-            name: string;
-            enabled: boolean;
-            schedule: string;
-            /** Format: date-time */
-            last_run_at?: string;
-        };
-        TmaAdminScenarioPatchRequest: {
-            enabled: boolean;
-        };
-        TmaAdminScenarioRun: {
-            id: string;
-            scenario_id: string;
-            status: string;
-            /** Format: date-time */
-            started_at: string;
-            /** Format: date-time */
-            finished_at?: string;
-            error?: string;
-        };
-        TmaAdminAuditEntry: {
+        MiniAppAdminAuditEntry: {
             id: string;
             actor_email: string;
             /** Format: int64 */
@@ -583,7 +492,7 @@ export interface components {
             /** Format: date-time */
             created_at: string;
         };
-        TmaMeetingCreateRequest: {
+        MiniAppMeetingCreateRequest: {
             dept: string;
             type: string;
             host?: string;
@@ -639,7 +548,7 @@ export interface operations {
             };
         };
     };
-    tma_auth_post: {
+    miniapp_auth_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -648,7 +557,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["TmaAuthRequest"];
+                "application/json": components["schemas"]["MiniAppAuthRequest"];
             };
         };
         responses: {
@@ -658,7 +567,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TmaAuthResponse"];
+                    "application/json": components["schemas"]["MiniAppAuthResponse"];
                 };
             };
             /** @description Auth failed */
@@ -667,12 +576,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TmaAuthError"];
+                    "application/json": components["schemas"]["MiniAppAuthError"];
                 };
             };
         };
     };
-    tma_me_get: {
+    miniapp_me_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -687,7 +596,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TmaUser"];
+                    "application/json": components["schemas"]["MiniAppUser"];
                 };
             };
             /** @description Unauthorized */
@@ -701,7 +610,7 @@ export interface operations {
             };
         };
     };
-    tma_meetings_get: {
+    miniapp_meetings_get: {
         parameters: {
             query: {
                 scope: "upcoming" | "past" | "all";
@@ -718,12 +627,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TmaMeetingsResponse"];
+                    "application/json": components["schemas"]["MiniAppMeetingsResponse"];
                 };
             };
         };
     };
-    tmaCreateMeeting: {
+    miniappCreateMeeting: {
         parameters: {
             query?: never;
             header?: never;
@@ -732,7 +641,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["TmaMeetingCreateRequest"];
+                "application/json": components["schemas"]["MiniAppMeetingCreateRequest"];
             };
         };
         responses: {
@@ -743,7 +652,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        meeting: components["schemas"]["TmaMeeting"];
+                        meeting: components["schemas"]["MiniAppMeeting"];
                     };
                 };
             };
@@ -785,7 +694,7 @@ export interface operations {
             };
         };
     };
-    tma_schedule_get: {
+    miniapp_schedule_get: {
         parameters: {
             query: {
                 email: string;
@@ -803,12 +712,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TmaMeetingsResponse"];
+                    "application/json": components["schemas"]["MiniAppMeetingsResponse"];
                 };
             };
         };
     };
-    tma_employees_get: {
+    miniapp_employees_get: {
         parameters: {
             query?: {
                 q?: string;
@@ -825,12 +734,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TmaEmployeesResponse"];
+                    "application/json": components["schemas"]["MiniAppEmployeesResponse"];
                 };
             };
         };
     };
-    tma_free_slots_post: {
+    miniapp_free_slots_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -839,7 +748,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["TmaFreeSlotsRequest"];
+                "application/json": components["schemas"]["MiniAppFreeSlotsRequest"];
             };
         };
         responses: {
@@ -849,12 +758,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TmaFreeSlotsResponse"];
+                    "application/json": components["schemas"]["MiniAppFreeSlotsResponse"];
                 };
             };
         };
     };
-    tmaDeleteMeeting: {
+    miniappDeleteMeeting: {
         parameters: {
             query?: {
                 scope?: "this" | "whole";
@@ -921,7 +830,7 @@ export interface operations {
             };
         };
     };
-    tmaUpdateMeeting: {
+    miniappUpdateMeeting: {
         parameters: {
             query?: {
                 scope?: "this" | "whole";
@@ -934,7 +843,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["TmaMeetingUpdateRequest"];
+                "application/json": components["schemas"]["MiniAppMeetingUpdateRequest"];
             };
         };
         responses: {
@@ -945,7 +854,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        meeting: components["schemas"]["TmaMeeting"];
+                        meeting: components["schemas"]["MiniAppMeeting"];
                     };
                 };
             };
@@ -1005,7 +914,7 @@ export interface operations {
             };
         };
     };
-    tmaAdminWorkspaceGet: {
+    miniappAdminWorkspaceGet: {
         parameters: {
             query?: never;
             header?: never;
@@ -1020,7 +929,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TmaAdminWorkspaceStatus"];
+                    "application/json": components["schemas"]["MiniAppAdminWorkspaceStatus"];
                 };
             };
             /** @description Unauthorized */
@@ -1052,7 +961,7 @@ export interface operations {
             };
         };
     };
-    tmaAdminWorkspacePost: {
+    miniappAdminWorkspacePost: {
         parameters: {
             query?: never;
             header?: never;
@@ -1110,7 +1019,7 @@ export interface operations {
             };
         };
     };
-    tmaAdminIntegrationsGet: {
+    miniappAdminIntegrationsGet: {
         parameters: {
             query?: never;
             header?: never;
@@ -1125,7 +1034,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TmaAdminIntegrationsView"];
+                    "application/json": components["schemas"]["MiniAppAdminIntegrationsView"];
                 };
             };
             /** @description Unauthorized */
@@ -1157,7 +1066,7 @@ export interface operations {
             };
         };
     };
-    tmaAdminIntegrationsPatch: {
+    miniappAdminIntegrationsPatch: {
         parameters: {
             query?: never;
             header?: never;
@@ -1166,7 +1075,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["TmaAdminIntegrationsPatchRequest"];
+                "application/json": components["schemas"]["MiniAppAdminIntegrationsPatchRequest"];
             };
         };
         responses: {
@@ -1215,7 +1124,7 @@ export interface operations {
             };
         };
     };
-    tmaAdminIntegrationsVerify: {
+    miniappAdminIntegrationsVerify: {
         parameters: {
             query?: never;
             header?: never;
@@ -1230,7 +1139,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TmaAdminGoogleVerifyResult"];
+                    "application/json": components["schemas"]["MiniAppAdminGoogleVerifyResult"];
                 };
             };
             /** @description Google verification error (google_sa_invalid | google_subject_invalid | google_calendar_not_accessible | google_api_disabled | google_not_configured) */
@@ -1271,7 +1180,7 @@ export interface operations {
             };
         };
     };
-    tmaAdminChatStatusGet: {
+    miniappAdminChatStatusGet: {
         parameters: {
             query?: never;
             header?: never;
@@ -1286,7 +1195,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TmaAdminChatStatus"];
+                    "application/json": components["schemas"]["MiniAppAdminChatStatus"];
                 };
             };
             /** @description Unauthorized */
@@ -1318,7 +1227,7 @@ export interface operations {
             };
         };
     };
-    tmaAdminChatLink: {
+    miniappAdminChatLink: {
         parameters: {
             query?: never;
             header?: never;
@@ -1327,7 +1236,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["TmaAdminChatLinkRequest"];
+                "application/json": components["schemas"]["MiniAppAdminChatLinkRequest"];
             };
         };
         responses: {
@@ -1376,7 +1285,7 @@ export interface operations {
             };
         };
     };
-    tmaAdminMembersGet: {
+    miniappAdminMembersGet: {
         parameters: {
             query?: never;
             header?: never;
@@ -1392,7 +1301,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        members: components["schemas"]["TmaAdminMember"][];
+                        members: components["schemas"]["MiniAppAdminMember"][];
                     };
                 };
             };
@@ -1425,7 +1334,7 @@ export interface operations {
             };
         };
     };
-    tmaAdminMembersSyncChat: {
+    miniappAdminMembersSyncChat: {
         parameters: {
             query?: never;
             header?: never;
@@ -1484,229 +1393,7 @@ export interface operations {
             };
         };
     };
-    tmaAdminScenariosGet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Scenarios list */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        scenarios: components["schemas"]["TmaAdminScenario"][];
-                    };
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-        };
-    };
-    tmaAdminScenarioPatch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TmaAdminScenarioPatchRequest"];
-            };
-        };
-        responses: {
-            /** @description Updated scenario */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TmaAdminScenario"];
-                };
-            };
-            /** @description Validation failed */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-        };
-    };
-    tmaAdminScenarioRun: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Run triggered */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        run_id: string;
-                    };
-                };
-            };
-            /** @description Validation failed */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-        };
-    };
-    tmaAdminScenarioRunsGet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Runs list */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        runs: components["schemas"]["TmaAdminScenarioRun"][];
-                    };
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-        };
-    };
-    tmaAdminAuditGet: {
+    miniappAdminAuditGet: {
         parameters: {
             query?: {
                 limit?: number;
@@ -1726,7 +1413,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        entries: components["schemas"]["TmaAdminAuditEntry"][];
+                        entries: components["schemas"]["MiniAppAdminAuditEntry"][];
                     };
                 };
             };
@@ -1759,7 +1446,7 @@ export interface operations {
             };
         };
     };
-    tmaConflicts: {
+    miniappConflicts: {
         parameters: {
             query?: never;
             header?: never;
@@ -1768,7 +1455,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["TmaConflictsRequest"];
+                "application/json": components["schemas"]["MiniAppConflictsRequest"];
             };
         };
         responses: {
@@ -1779,7 +1466,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        occurrences: components["schemas"]["TmaOccurrenceConflicts"][];
+                        occurrences: components["schemas"]["MiniAppOccurrenceConflicts"][];
                     };
                 };
             };

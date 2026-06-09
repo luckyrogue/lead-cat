@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
+	"github.com/luckyrogue/lead-cat/internal/application"
 )
 
 func TestStubCreateEvent(t *testing.T) {

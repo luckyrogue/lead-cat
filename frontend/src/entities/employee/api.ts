@@ -13,7 +13,7 @@ export async function searchEmployees(
   q: string,
   signal?: AbortSignal
 ): Promise<Employee[]> {
-  const data = await apiFetch<{ employees: EmployeeDTO[] }>("/tma/employees", {
+  const data = await apiFetch<{ employees: EmployeeDTO[] }>("/miniapp/employees", {
     params: { q },
     signal,
   })

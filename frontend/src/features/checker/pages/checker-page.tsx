@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useTmaApp } from "@/shared/tma/context"
+import { useMiniApp } from "@/shared/miniapp/context"
 import type { Employee } from "@/entities/employee/types"
 import { useFreeSlots } from "@/entities/meeting/scheduling-queries"
 import { CatBtn, CatIcon } from "@/shared/ui/cat/primitives"
@@ -8,7 +8,7 @@ import { CheckerPeopleSection } from "../components/checker-people-section"
 import { CheckerSlotsResults } from "../components/checker-slots-results"
 
 export function CheckerPage() {
-  const { t, lang } = useTmaApp()
+  const { t, lang } = useMiniApp()
   const [people, setPeople] = useState<Employee[]>([])
   const [search, setSearch] = useState("")
   const [range, setRange] = useState("7")
@@ -19,10 +19,10 @@ export function CheckerPage() {
 
   return (
     <div className="px-4 pb-7">
-      <h2 className="tma-heading mx-1 mb-1 mt-0.5 text-[26px]">
+      <h2 className="miniapp-heading mx-1 mb-1 mt-0.5 text-[26px]">
         {t("findTime")} 🔍
       </h2>
-      <p className="text-tma-muted mx-1 mb-[18px] text-sm">
+      <p className="text-miniapp-muted mx-1 mb-[18px] text-sm">
         Кот найдёт окно, когда все свободны
       </p>
 

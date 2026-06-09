@@ -10,22 +10,10 @@ var (
 		Name: "leadcat_http_requests_total",
 		Help: "Total HTTP requests",
 	}, []string{"method", "path", "status"})
-
-	ScenarioRuns = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "leadcat_scenario_runs_total",
-		Help: "Scenario runs finished",
-	}, []string{"status"})
 )
 
 func IncHTTP(method, path string, status int) {
 	HTTPRequests.WithLabelValues(method, path, statusLabel(status)).Inc()
-}
-
-func IncScenarioRun(status string) {
-	if status == "" {
-		status = "unknown"
-	}
-	ScenarioRuns.WithLabelValues(status).Inc()
 }
 
 func statusLabel(code int) string {

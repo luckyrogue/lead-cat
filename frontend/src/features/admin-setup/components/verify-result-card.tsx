@@ -1,4 +1,4 @@
-import { useTmaApp } from "@/shared/tma/context"
+import { useMiniApp } from "@/shared/miniapp/context"
 import type { GoogleVerifyResult } from "@/entities/admin/types"
 
 type Props =
@@ -8,14 +8,14 @@ type Props =
   | { state: "error"; errorCode: string }
 
 export function VerifyResultCard(props: Props) {
-  const { t } = useTmaApp()
+  const { t } = useMiniApp()
   if (props.state === "idle") return null
   if (props.state === "loading") {
-    return <div className="text-tma-muted text-sm">{t("verifying" as never)}</div>
+    return <div className="text-miniapp-muted text-sm">{t("verifying" as never)}</div>
   }
   if (props.state === "ok") {
     return (
-      <div className="border-tma-accent bg-tma-accent-soft text-tma-accent rounded-[12px] border p-3 text-sm">
+      <div className="border-miniapp-accent bg-miniapp-accent-soft text-miniapp-accent rounded-[12px] border p-3 text-sm">
         <div className="font-bold">{t("verifyOK" as never)}</div>
         {props.result.calendarSummary && (
           <div className="opacity-80 mt-0.5">
@@ -32,7 +32,7 @@ export function VerifyResultCard(props: Props) {
     props.errorCode === "google_api_disabled" ? "googleApiDisabledErr" :
     "verifyUnknownErr"
   return (
-    <div className="border-tma-danger bg-tma-danger-soft text-tma-danger rounded-[12px] border p-3 text-sm">
+    <div className="border-miniapp-danger bg-miniapp-danger-soft text-miniapp-danger rounded-[12px] border p-3 text-sm">
       {t(key as never)}
     </div>
   )

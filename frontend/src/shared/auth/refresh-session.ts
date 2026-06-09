@@ -1,4 +1,4 @@
-import { getInitData, tmaLogin } from "@/shared/auth/tma-api"
+import { getInitData, miniappLogin } from "@/shared/auth/miniapp-api"
 import { getSession } from "@/shared/auth/session"
 import { ApiError } from "@/shared/api/types"
 
@@ -11,7 +11,7 @@ async function refreshAccessToken(): Promise<string | null> {
   }
 
   try {
-    await tmaLogin(initData)
+    await miniappLogin(initData)
     return getSession()?.accessToken ?? null
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
@@ -21,7 +21,7 @@ async function refreshAccessToken(): Promise<string | null> {
   }
 }
 
-export async function refreshTmaSessionIfNeeded({
+export async function refreshMiniAppSessionIfNeeded({
   force = false,
 }: { force?: boolean } = {}): Promise<string | null> {
   const current = getSession()?.accessToken

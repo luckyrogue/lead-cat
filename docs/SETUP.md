@@ -4,9 +4,8 @@ Lead Cat is a single-purpose Google Meet meetings-management Telegram Mini App.
 Employees schedule, view, and manage meetings entirely inside the Mini App; no web
 login or external scheduler is required.
 
-**Setup today** uses curl against the platform REST API with a platform JWT (alpha
-interim). **Target:** an Admin overlay inside the Mini App replaces all curl steps —
-see the [TMA setup-replacement spec](superpowers/specs/2026-06-05-tma-setup-replacement-design.md).
+**Operator setup** runs inside the Mini App: **Profile → Admin → Настройка workspace**
+(`/profile/admin/setup`), backed by `/api/miniapp/admin/*`. Platform curl bootstrap is retired (HTTP 410).
 
 ---
 
@@ -35,41 +34,16 @@ You need three values:
 | `calendar_subject` | Delegated user email the service account impersonates                |
 | `calendar_id`      | Google Calendar id to create events on (usually the same user email) |
 
-### Target (not yet shipped)
+### Mini App admin (recommended)
 
-Once the Admin overlay ships, you will paste the service account JSON and calendar
-settings directly inside the Mini App under **Profile → Admin → Integrations** —
-the backend route will be `PATCH /api/tma/admin/integrations`, no curl required.
-See [TMA setup-replacement spec](superpowers/specs/2026-06-05-tma-setup-replacement-design.md).
+1. Open the Mini App as a user with `role=admin`.
+2. Go to **Profile → Admin → Настройка workspace**.
+3. Paste the service account JSON, set subject and calendar id, tap **Сохранить**, then **Проверить**.
 
-### Interim alpha — curl (deprecated, will be removed)
-
-> **Deprecated.** This path requires a platform JWT and direct REST access. It is the
-> current only option while the TMA Admin overlay is in development.
-
-Obtain a platform JWT (email OTP, passkey, or GitHub/GitLab OAuth — see [AUTH.md](AUTH.md)),
-then apply the integration and verify it:
-
-```bash
-# PATCH integrations (deprecated alpha path)
-curl -X PATCH https://<host>/api/workspaces/<workspace-id>/integrations \
-  -H "Authorization: Bearer <PLATFORM_JWT>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "google_sa_json": "<SERVICE_ACCOUNT_JSON_PLACEHOLDER>",
-    "calendar_subject": "<DELEGATED_USER_EMAIL_PLACEHOLDER>",
-    "calendar_id": "<CALENDAR_ID_PLACEHOLDER>"
-  }'
-
-# Verify the integration
-curl -X POST https://<host>/api/workspaces/<workspace-id>/integrations/verify \
-  -H "Authorization: Bearer <PLATFORM_JWT>"
-```
-
-A `200` with `"ok": true` on verify confirms Google Calendar access is working. Any
-error contains a human-readable `message` field.
+Backend routes: `PATCH /api/miniapp/admin/integrations`, `POST /api/miniapp/admin/integrations/verify`.
 
 ---
+
 
 ## Step 3 — Employee directory
 
@@ -93,16 +67,14 @@ the file is read at startup.
 
 ## Step 4 — Users self-register
 
-Users do not create platform accounts. Registration happens entirely via the bot:
+Registration happens entirely via the bot (not HTTP):
 
 1. User opens the Telegram bot and sends `/start`.
-2. The Mini App shows a **registration screen** (first launch only) asking for name
-   confirmation.
-3. On submit, the user is registered as a `bot_user` and can immediately access the
-   meetings features.
+2. Bot asks for full name (ФИО), then corporate email.
+3. A `bot_users` row is created immediately (no email OTP).
+4. User opens the Mini App from the bot menu; `POST /api/auth/miniapp` issues a JWT.
 
-There is no invite flow or email required — anyone who can find and start the bot can
-register.
+Unregistered users who open the Mini App first see a "register in the bot" screen.
 
 ---
 
@@ -115,33 +87,17 @@ in the environment:
 BOT_ADMIN_TELEGRAM_IDS=123456789,987654321
 ```
 
-Comma-separated, no spaces. These users gain the **Admin** section in **Profile** tab
-inside the Mini App, which is where all future setup surfaces will live (per the
-[setup-replacement spec](superpowers/specs/2026-06-05-tma-setup-replacement-design.md)).
+Comma-separated, no spaces. These users gain **Profile → Admin** and the **Настройка workspace**
+screen for Google Calendar, chat linking, and member sync.
 
 To find a Telegram user's numeric ID, have them message the bot — their id appears in
-the `GET /api/tma/me` response field `telegram_id` once registered.
+the `GET /api/miniapp/me` response field `telegram_id` once registered.
 
 ---
 
-## Appendix — Deprecated: alpha setup (curl)
+## Appendix — Retired platform bootstrap
 
-The curl-based setup path (Step 2 above) uses platform JWT authentication against
-`/api/workspaces/*`. This is an **interim alpha mechanism** and will be replaced by
-TMA-authenticated `/api/tma/admin/*` routes so operators never need a platform account
-or terminal access.
-
-Deprecation schedule follows the phased rollout in the
-[TMA setup-replacement spec](superpowers/specs/2026-06-05-tma-setup-replacement-design.md):
-
-| Phase                           | Route deprecated for human use           |
-| ------------------------------- | ---------------------------------------- |
-| Phase 1 (meetings unblock)      | `PATCH /api/workspaces/:id/integrations` |
-| Phase 2 (legacy notify-bot ops) | `…/chat/*`, `…/members/*`                |
-| Phase 3 (auto-tab ops)          | `…/auto/*` read/toggle                   |
-
-After all phases ship, platform setup routes will require a script-only token or be
-removed from public deployments. Do not build new tooling against `/api/workspaces/*`
-for setup — use `/api/tma/admin/*` when it ships.
+`/api/workspaces/*` and platform auth (`/api/auth/email/*`, passkey, OAuth) return **410 Gone**.
+All operator setup uses Mini App admin (`/api/miniapp/admin/*`) from Telegram.
 
 See also: [API.md](API.md), [ARCHITECTURE.md](ARCHITECTURE.md), [MEETINGS.md](MEETINGS.md).

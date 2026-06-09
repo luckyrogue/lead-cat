@@ -3,7 +3,7 @@ package middleware
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/platform/observability/metrics"
+	"github.com/luckyrogue/lead-cat/internal/platform/observability/metrics"
 )
 
 func PrometheusHTTP() fiber.Handler {

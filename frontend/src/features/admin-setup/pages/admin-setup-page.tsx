@@ -1,14 +1,13 @@
 import { useNavigate } from "@tanstack/react-router"
-import { useTmaApp } from "@/shared/tma/context"
-import { Overlay } from "@/components/tma-shell"
+import { useMiniApp } from "@/shared/miniapp/context"
+import { Overlay } from "@/components/miniapp-shell"
 import { IntegrationsSection } from "../components/integrations-section"
 import { ChatLinkSection } from "../components/chat-link-section"
 import { MembersSection } from "../components/members-section"
-import { ScenariosSection } from "../components/scenarios-section"
 import { AuditLogSection } from "../components/audit-log-section"
 
 export function AdminSetupPage() {
-  const { t } = useTmaApp()
+  const { t } = useMiniApp()
   const navigate = useNavigate()
   const goBack = () => { void navigate({ to: "/profile/admin" }) }
   return (
@@ -17,7 +16,6 @@ export function AdminSetupPage() {
         <IntegrationsSection />
         <ChatLinkSection />
         <MembersSection />
-        <ScenariosSection />
         <AuditLogSection />
       </div>
     </Overlay>

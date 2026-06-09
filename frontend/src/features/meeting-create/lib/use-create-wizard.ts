@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { ME } from "@/entities/employee/fixtures"
-import type { MeetingDraft } from "@/shared/tma/types"
+import type { MeetingDraft } from "@/shared/miniapp/types"
 import { useConflicts } from "@/entities/meeting/mutations"
 import { WIZARD_STEPS } from "./wizard-constants"
 

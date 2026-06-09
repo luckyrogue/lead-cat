@@ -14,7 +14,7 @@
 
 ## Codebase facts (verified — rely on these)
 
-- **Module path:** `github.com/Jaryq-Lab/notify-bot`.
+- **Module path:** `github.com/luckyrogue/lead-cat`.
 - **TMA group** (`backend/internal/delivery/http/app.go`): after sub-project 1 there is `tmaAuth := middleware.NewTMAAuth(tmaToken, store)` then `tma := app.Group("/api/tma", tmaAuth.Middleware)` then `tma.Get("/me", api.TMAMe)`. New read routes are added to this `tma` group.
 - **TMA auth context:** the middleware sets `c.Locals("bot_user").(postgres.BotUser)` — `BotUser{TelegramID int64, FullName, Email, Role string, ...}`.
 - **Application methods** (receiver `*application.Services`, field `a.App` on the handler `*API`):
@@ -112,7 +112,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 type tmaMeetingDTO struct {

@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
-	googleprobe "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/google"
+	"github.com/luckyrogue/lead-cat/internal/application"
+	googleprobe "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/google"
 )
 
 func TestMapProbeError(t *testing.T) {

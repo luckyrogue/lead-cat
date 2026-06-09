@@ -216,7 +216,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
+	"github.com/luckyrogue/lead-cat/internal/application"
 )
 
 // Provider always resolves to the stub Service, regardless of workspace.
@@ -273,7 +273,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
+	"github.com/luckyrogue/lead-cat/internal/application"
 )
 
 func TestBuildEvent(t *testing.T) {
@@ -329,7 +329,7 @@ import (
 	"github.com/google/uuid"
 	calendar "google.golang.org/api/calendar/v3"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
+	"github.com/luckyrogue/lead-cat/internal/application"
 )
 
 type adapter struct {
@@ -405,9 +405,9 @@ import (
 	calendar "google.golang.org/api/calendar/v3"
 	"google.golang.org/api/option"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/crypto"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/crypto"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // Provider builds a per-workspace Google Calendar client from the workspace's
@@ -540,7 +540,7 @@ with:
 In `backend/internal/delivery/http/app.go`, add the google import alongside the existing `calendarstub` import (line ~21):
 
 ```go
-	calendargoogle "github.com/Jaryq-Lab/notify-bot/internal/infrastructure/calendar/google"
+	calendargoogle "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/google"
 ```
 
 Then, just before the `api := &handlers.API{...}` literal, add:

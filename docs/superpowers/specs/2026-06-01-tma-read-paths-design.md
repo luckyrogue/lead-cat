@@ -20,7 +20,7 @@ Wire the Mini App's read-only screens to the backend through the TMA auth from s
 
 ## Codebase facts (verified)
 
-- **Module path:** `github.com/Jaryq-Lab/notify-bot`.
+- **Module path:** `github.com/luckyrogue/lead-cat`.
 - **TMA auth (sub-project 1):** `middleware.TMAAuth.Middleware` guards a `tma := app.Group("/api/tma", tmaAuth.Middleware)` group; it sets `c.Locals("bot_user").(postgres.BotUser)` (fields `TelegramID, FullName, Email, Role`). New read routes are added to this existing group.
 - **Application read methods (global-by-email):**
   - `(*Services).EmployeeSchedule(ctx, email string, from, to time.Time) ([]postgres.Meeting, error)` (`application/participants.go:63`) → `Store.ListScheduleForEmail` (`meeting_repo.go:241`: participant OR organizer by email, `status='scheduled'`, `starts_at` in `[from,to)`, ordered). **Participants are NOT hydrated** by this query.

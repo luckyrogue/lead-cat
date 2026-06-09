@@ -1,7 +1,7 @@
 import type { operations, components } from "@/shared/api/generated/schema"
 import type { AxiosRequestConfig } from "axios"
 
-export type TmaMeetingsScope = "upcoming" | "past" | "all"
+export type MiniAppMeetingsScope = "upcoming" | "past" | "all"
 
 export type ApiFetchOptions = {
   method?: AxiosRequestConfig["method"]
@@ -18,13 +18,13 @@ export type ApiErrorBody = {
   detail?: string | ApiErrorBody | ApiErrorBody[]
 }
 
-export type TmaUserDto = components["schemas"]["TmaUser"]
-export type TmaMeetingDto = components["schemas"]["TmaMeeting"]
-export type TmaEmployeeDto = components["schemas"]["TmaEmployee"]
-export type TmaFreeSlotDto = components["schemas"]["TmaFreeSlot"]
+export type MiniAppUserDto = components["schemas"]["MiniAppUser"]
+export type MiniAppMeetingDto = components["schemas"]["MiniAppMeeting"]
+export type MiniAppEmployeeDto = components["schemas"]["MiniAppEmployee"]
+export type MiniAppFreeSlotDto = components["schemas"]["MiniAppFreeSlot"]
 
-export type TmaAuthResponse =
-  operations["tma_auth_post"]["responses"][200]["content"]["application/json"]
+export type MiniAppAuthResponse =
+  operations["miniapp_auth_post"]["responses"][200]["content"]["application/json"]
 
 export class ApiError extends Error {
   readonly status: number

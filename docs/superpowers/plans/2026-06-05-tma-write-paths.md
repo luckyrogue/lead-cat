@@ -14,7 +14,7 @@
 
 ## Codebase facts (verified — rely on these)
 
-- **Module path:** `github.com/Jaryq-Lab/notify-bot`.
+- **Module path:** `github.com/luckyrogue/lead-cat`.
 - **TMA group** (`backend/internal/delivery/http/app.go:149-154`): `tma := app.Group("/api/tma", tmaAuth.Middleware)` then `tma.Get("/me"…)`, `/meetings`, `/schedule`, `/employees`, `/free-slots`. New write routes append here. The middleware sets `c.Locals("bot_user").(postgres.BotUser)`.
 - **`postgres.BotUser`** (`models.go:101`): `ID uuid.UUID, TelegramID int64, FullName, Email, Role, ReminderMinutes string`.
 - **Read-handler conventions** (`handlers/tma_read.go`): receiver `*API`; `a.App` is `*application.Services`; `botUserEmail(c) (string, bool)` reads email from `c.Locals("bot_user")`; `almatyLoc()` helper (in `handlers/meeting_availability.go`) returns `*time.Location`; `a.toMeetingDTO(ctx, m postgres.Meeting) tmaMeetingDTO` already maps a meeting → the UI DTO. **Reuse all of these.**
@@ -78,7 +78,7 @@ import (
 
 	"github.com/google/uuid"
 
-	platformauth "github.com/Jaryq-Lab/notify-bot/internal/platform/auth"
+	platformauth "github.com/luckyrogue/lead-cat/internal/platform/auth"
 )
 
 // EnsureTMAOrganizer find-or-creates the platform_users row backing a TMA user
@@ -178,8 +178,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
-	"github.com/Jaryq-Lab/notify-bot/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 type tmaCreateRequest struct {

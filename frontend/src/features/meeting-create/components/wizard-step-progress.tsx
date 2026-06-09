@@ -10,14 +10,14 @@ export function WizardStepProgress({ step }: { step: number }) {
           <span className="shrink-0 transition-all duration-[250ms]">
             <Paw
               size={i <= step ? 20 : 16}
-              className={i <= step ? "text-tma-accent" : "text-tma-border"}
+              className={i <= step ? "text-miniapp-accent" : "text-miniapp-border"}
             />
           </span>
           {i < WIZARD_STEPS.length - 1 && (
             <div
               className={cn(
                 "h-[3px] flex-1 rounded-sm transition-[background] duration-[250ms]",
-                i < step ? "bg-tma-accent" : "bg-tma-border"
+                i < step ? "bg-miniapp-accent" : "bg-miniapp-border"
               )}
             />
           )}

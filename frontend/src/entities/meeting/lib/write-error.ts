@@ -1,5 +1,5 @@
 import { ApiError } from "@/shared/api/types"
-import type { I18nKey } from "@/shared/tma/i18n"
+import type { I18nKey } from "@/shared/miniapp/i18n"
 
 export function writeErrorKey(error: unknown): I18nKey {
   if (!(error instanceof ApiError)) return "errGeneric"
