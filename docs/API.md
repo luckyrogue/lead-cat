@@ -42,6 +42,8 @@ All routes require `Authorization: Bearer <miniapp_jwt>`.
 | Method   | Path                                              | Purpose                                                               |
 | -------- | ------------------------------------------------- | --------------------------------------------------------------------- |
 | `GET`    | `/api/miniapp/me`                                 | Current bot-user identity (name, email, role)                         |
+| `GET`    | `/api/miniapp/settings`                           | Current user reminder settings                                        |
+| `PATCH`  | `/api/miniapp/settings`                           | Update reminder minutes (whitelist enforced)                          |
 | `GET`    | `/api/miniapp/meetings?scope=upcoming\|past\|all` | Authenticated user's own meetings                                     |
 | `GET`    | `/api/miniapp/schedule?email=&scope=`             | Read a colleague's schedule (view-only)                               |
 | `GET`    | `/api/miniapp/employees?q=`                       | Employee directory search / autocomplete                              |

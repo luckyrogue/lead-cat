@@ -66,4 +66,8 @@ Recurrence kinds: `once`, `daily`, `weekly`, `custom` (with `recurrence_days: [1
 
 Admin setup (Google integration, chat link, members sync, audit log) is live in the Mini App under `/api/miniapp/admin/*`. Audit log at `GET /api/miniapp/admin/audit`.
 
+### User settings (done)
+
+Reminder intervals are user-configurable in the Profile screen, persisted in `bot_users.reminder_minutes`. See [`docs/superpowers/specs/2026-06-09-slice-c-user-settings-design.md`](superpowers/specs/2026-06-09-slice-c-user-settings-design.md). Timezone + language remain Slice H scope.
+
 See [API.md](API.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
