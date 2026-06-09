@@ -158,6 +158,13 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	tma.Patch("/meetings/:id", api.TMAUpdateMeeting)
 	tma.Delete("/meetings/:id", api.TMADeleteMeeting)
 
+	tmaAdmin := tma.Group("/admin", middleware.RequireBotAdmin)
+	tmaAdmin.Get("/workspace", api.TMAAdminGetWorkspace)
+	tmaAdmin.Post("/workspace", api.TMAAdminCreateWorkspace)
+	tmaAdmin.Get("/integrations", api.TMAAdminGetIntegrations)
+	tmaAdmin.Patch("/integrations", api.TMAAdminPatchIntegrations)
+	tmaAdmin.Post("/integrations/verify", api.TMAAdminVerifyIntegrations)
+
 	if stat, err := os.Stat(cfg.StaticDir); err == nil && stat.IsDir() {
 		app.Static("/", cfg.StaticDir, fiber.Static{
 			Index:  "index.html",
