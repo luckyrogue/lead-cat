@@ -24,7 +24,7 @@ export function buildTitle(
   return parts.join(" · ")
 }
 
-export function fmtDate(iso: string): string {
+export function fmtDate(iso: string, _lang: Lang): string {
   const [y, m, d] = iso.split("-").map(Number)
   const dt = new Date(y, m - 1, d)
   const dow = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"][dt.getDay()]
