@@ -79,6 +79,8 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	miniappAuth := middleware.NewMiniAppAuth(miniappToken, store)
 	miniapp := app.Group("/api/miniapp", miniappAuth.Middleware)
 	miniapp.Get("/me", api.MiniAppMe)
+	miniapp.Get("/settings", api.MiniAppGetSettings)
+	miniapp.Patch("/settings", api.MiniAppPatchSettings)
 	miniapp.Get("/meetings", api.MiniAppMyMeetings)
 	miniapp.Get("/schedule", api.MiniAppSchedule)
 	miniapp.Get("/employees", api.MiniAppEmployees)
