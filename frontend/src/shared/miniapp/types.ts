@@ -1,4 +1,4 @@
-export type Lang = "ru" | "kk" | "en"
+export type Lang = "ru" | "kk"
 
 export type TabKey = "home" | "meetings" | "checker" | "profile"
 

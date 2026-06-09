@@ -24,7 +24,7 @@ Telegram Mini App under `frontend/src/routes/_miniapp/` + feature slices + `comp
 | `checker`  | `/checker` → `checker-page`           | Common free-slot finder                |
 | `profile`  | `/profile` → `profile-page`           | User profile & settings                |
 
-Meeting creation: `/meetings/create` → `features/meeting-create/pages/create-page.tsx`. Cat design: [DESIGN-CATS.md](DESIGN-CATS.md). i18n: `shared/miniapp/i18n.ts` (`ru` / `kk` / `en`).
+Meeting creation: `/meetings/create` → `features/meeting-create/pages/create-page.tsx`. Cat design: [DESIGN-CATS.md](DESIGN-CATS.md). i18n: `shared/miniapp/i18n.ts` (`ru` / `kk`).
 
 ### Data model
 
