@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Jaryq-Lab/notify-bot/internal/application"
+	docalendar "github.com/Jaryq-Lab/notify-bot/internal/domain/calendar"
 )
 
 func TestBuildPatch(t *testing.T) {
-	e := application.CalendarEvent{
+	e := docalendar.CalendarEvent{
 		Title:          "Разработка | Планёрка",
 		Description:    "desc",
 		Start:          time.Date(2026, 6, 1, 14, 0, 0, 0, time.UTC),
@@ -42,7 +42,7 @@ func TestAttendeeList(t *testing.T) {
 
 func TestBuildEvent(t *testing.T) {
 	start := time.Date(2025, 6, 2, 10, 0, 0, 0, time.UTC)
-	ev := buildEvent(application.CalendarEvent{
+	ev := buildEvent(docalendar.CalendarEvent{
 		Title:          "Sync",
 		Description:    "desc",
 		Start:          start,
