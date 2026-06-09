@@ -29,6 +29,9 @@ var Intervals = []Interval{
 // Parse exposes the reminder-minutes CSV parser for other packages.
 func Parse(csv string) []int { return parse(csv) }
 
+// Format exposes the canonical CSV writer to other packages.
+func Format(mins []int) string { return format(mins) }
+
 func parse(csv string) []int {
 	var out []int
 	for _, p := range strings.Split(csv, ",") {
