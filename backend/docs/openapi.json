@@ -1330,6 +1330,53 @@
           }
         }
       }
+    },
+    "/api/miniapp/settings": {
+      "get": {
+        "operationId": "miniapp_settings_get",
+        "tags": ["miniapp"],
+        "summary": "Get current user settings",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Current settings",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MiniAppUserSettings" } } }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "miniapp_settings_patch",
+        "tags": ["miniapp"],
+        "summary": "Update reminder minutes",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MiniAppUserSettingsPatch" } } }
+        },
+        "responses": {
+          "204": { "description": "Saved" },
+          "400": {
+            "description": "validation_failed",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2069,6 +2116,30 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 7
+            }
+          }
+        }
+      },
+      "MiniAppUserSettings": {
+        "type": "object",
+        "required": ["reminder_minutes"],
+        "properties": {
+          "reminder_minutes": {
+            "type": "array",
+            "items": { "type": "integer", "format": "int32" }
+          }
+        }
+      },
+      "MiniAppUserSettingsPatch": {
+        "type": "object",
+        "required": ["reminder_minutes"],
+        "properties": {
+          "reminder_minutes": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32",
+              "enum": [10, 15, 30, 60, 120, 1440]
             }
           }
         }
