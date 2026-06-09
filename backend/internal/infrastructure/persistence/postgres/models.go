@@ -107,3 +107,23 @@ type BotUser struct {
 	Role            string    `json:"role"`
 	ReminderMinutes string    `json:"reminder_minutes"`
 }
+
+// AuditEntry is one row in admin_audit_log.
+type AuditEntry struct {
+	ID              uuid.UUID       `json:"id"`
+	ActorUserID     uuid.UUID       `json:"actor_user_id"`
+	ActorTelegramID int64           `json:"actor_telegram_id"`
+	ActorEmail      string          `json:"actor_email"`
+	Action          string          `json:"action"`
+	TargetKind      string          `json:"target_kind"`
+	TargetID        string          `json:"target_id"`
+	Details         json.RawMessage `json:"details"`
+	CreatedAt       time.Time       `json:"created_at"`
+}
+
+// AuditFilter narrows ListAuditEntries.
+type AuditFilter struct {
+	Action     string // exact match, empty = any
+	ActorEmail string // exact match, empty = any
+	Limit      int    // 1..200; 0 → 50
+}
