@@ -30,6 +30,7 @@ type Member struct {
 	UserID           *uuid.UUID
 	TelegramUsername string
 	Role             string
+	InvitedEmail     *string
 }
 
 type PendingChat struct {
@@ -102,4 +103,38 @@ type AuditFilter struct {
 	Action     string // exact match, empty = any
 	ActorEmail string // exact match, empty = any
 	Limit      int    // 1..200; 0 → 50
+}
+
+type OrganizationInvite struct {
+	ID              uuid.UUID
+	OrganizationID  uuid.UUID
+	Email           string
+	Role            string
+	TokenHash       []byte
+	ExpiresAt       time.Time
+	AcceptedAt      *time.Time
+	CreatedByUserID *uuid.UUID
+	CreatedAt       time.Time
+}
+
+type MagicLinkToken struct {
+	ID         uuid.UUID
+	Email      string
+	TokenHash  []byte
+	Purpose    string
+	ExpiresAt  time.Time
+	ConsumedAt *time.Time
+	CreatedAt  time.Time
+}
+
+type WebSession struct {
+	ID         uuid.UUID
+	TokenHash  []byte
+	UserID     uuid.UUID
+	CreatedAt  time.Time
+	LastSeenAt time.Time
+	ExpiresAt  time.Time
+	RevokedAt  *time.Time
+	UserAgent  string
+	IP         string
 }
