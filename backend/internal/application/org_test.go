@@ -22,16 +22,16 @@ func TestSlugify(t *testing.T) {
 }
 
 func TestRoleAtLeast(t *testing.T) {
-	if !roleAtLeast("owner", "admin") {
+	if !RoleAtLeast("owner", "admin") {
 		t.Fatal("owner >= admin")
 	}
-	if !roleAtLeast("admin", "admin") {
+	if !RoleAtLeast("admin", "admin") {
 		t.Fatal("admin >= admin")
 	}
-	if roleAtLeast("member", "admin") {
+	if RoleAtLeast("member", "admin") {
 		t.Fatal("member < admin")
 	}
-	if !roleAtLeast("owner", "member") {
+	if !RoleAtLeast("owner", "member") {
 		t.Fatal("owner >= member")
 	}
 }

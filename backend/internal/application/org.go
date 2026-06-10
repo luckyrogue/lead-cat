@@ -33,8 +33,8 @@ func rolePrecedence(role string) int {
 	return 0
 }
 
-// roleAtLeast returns true when role is at least as privileged as min.
-func roleAtLeast(role, min string) bool {
+// RoleAtLeast returns true when role is at least as privileged as min.
+func RoleAtLeast(role, min string) bool {
 	return rolePrecedence(role) >= rolePrecedence(min)
 }
 
