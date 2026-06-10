@@ -3,10 +3,9 @@ package handlers
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
 )
 
-// MiniAppMe returns the authenticated Telegram Mini App user's identity.
 func (a *API) MiniAppMe(c *fiber.Ctx) error {
 	bu, ok := c.Locals("bot_user").(postgres.BotUser)
 	if !ok {

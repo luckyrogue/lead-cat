@@ -7,18 +7,14 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
 )
 
-// miniappAdminBotUser extracts the authed admin bot user. Caller may assume role==admin
-// (the RequireBotAdmin middleware enforced it upstream).
 func miniappAdminBotUser(c *fiber.Ctx) (postgres.BotUser, bool) {
 	bu, ok := c.Locals("bot_user").(postgres.BotUser)
 	return bu, ok && bu.Role == "admin"
 }
 
-// withAuditActor enriches the user-context with the actor identity so the
-// application-layer Audit helper can record who did what.
 func (a *API) withAuditActor(c *fiber.Ctx) {
 	bu, ok := miniappAdminBotUser(c)
 	if !ok {
@@ -31,9 +27,6 @@ func (a *API) withAuditActor(c *fiber.Ctx) {
 	}))
 }
 
-// adminOrganizationID returns the default Lead Cat organization id, creating it
-// implicitly on first call. The admin's platform user_id (if any) becomes
-// owner_user_id; if the admin has no paired platform account, NULL is stored.
 func (a *API) adminOrganizationID(c *fiber.Ctx) (uuid.UUID, error) {
 	bu, _ := miniappAdminBotUser(c)
 	ownerID := uuid.Nil
@@ -43,7 +36,6 @@ func (a *API) adminOrganizationID(c *fiber.Ctx) (uuid.UUID, error) {
 	return a.App.EnsureDefaultOrganization(c.Context(), ownerID)
 }
 
-// GET /api/miniapp/admin/workspace
 func (a *API) MiniAppAdminGetWorkspace(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
@@ -75,7 +67,6 @@ func (a *API) MiniAppAdminGetWorkspace(c *fiber.Ctx) error {
 	})
 }
 
-// POST /api/miniapp/admin/workspace
 func (a *API) MiniAppAdminCreateWorkspace(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
@@ -85,7 +76,6 @@ func (a *API) MiniAppAdminCreateWorkspace(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"id": id})
 }
 
-// GET /api/miniapp/admin/integrations
 func (a *API) MiniAppAdminGetIntegrations(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
@@ -105,7 +95,6 @@ func (a *API) MiniAppAdminGetIntegrations(c *fiber.Ctx) error {
 	})
 }
 
-// PATCH /api/miniapp/admin/integrations
 func (a *API) MiniAppAdminPatchIntegrations(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
@@ -140,7 +129,6 @@ func (a *API) MiniAppAdminPatchIntegrations(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-// POST /api/miniapp/admin/integrations/verify
 func (a *API) MiniAppAdminVerifyIntegrations(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
@@ -181,7 +169,6 @@ func mapVerifyError(err error) (code string, status int) {
 	}
 }
 
-// GET /api/miniapp/admin/chat/status
 func (a *API) MiniAppAdminChatStatus(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
@@ -202,7 +189,6 @@ func (a *API) MiniAppAdminChatStatus(c *fiber.Ctx) error {
 	})
 }
 
-// POST /api/miniapp/admin/chat/link
 func (a *API) MiniAppAdminChatLink(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
@@ -226,7 +212,6 @@ func (a *API) MiniAppAdminChatLink(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-// GET /api/miniapp/admin/members
 func (a *API) MiniAppAdminListMembers(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
@@ -240,7 +225,6 @@ func (a *API) MiniAppAdminListMembers(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"members": members})
 }
 
-// POST /api/miniapp/admin/members/sync-chat
 func (a *API) MiniAppAdminMembersSyncChat(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
@@ -257,7 +241,6 @@ func (a *API) MiniAppAdminMembersSyncChat(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"added": n})
 }
 
-// GET /api/miniapp/admin/audit?limit=&action=&actor=
 func (a *API) MiniAppAdminListAudit(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	entries, err := a.App.ListAudit(c.Context(), postgres.AuditFilter{

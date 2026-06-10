@@ -6,7 +6,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
 	"github.com/luckyrogue/lead-cat/internal/platform/auth"
 )
 
@@ -14,8 +14,6 @@ type miniappStore interface {
 	GetBotUserByTelegramID(ctx context.Context, telegramID int64) (postgres.BotUser, error)
 }
 
-// MiniAppAuth guards /api/miniapp/* with a Mini App session JWT and resolves the bot_users
-// row each request (so role/email changes and de-registration take effect).
 type MiniAppAuth struct {
 	token *auth.MiniAppToken
 	store miniappStore

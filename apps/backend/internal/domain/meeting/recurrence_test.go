@@ -73,7 +73,7 @@ func TestOccurrences_Errors(t *testing.T) {
 
 func TestOccurrences_Custom(t *testing.T) {
 	loc := time.UTC
-	start := time.Date(2026, 6, 1, 9, 0, 0, 0, loc) // Mon
+	start := time.Date(2026, 6, 1, 9, 0, 0, 0, loc)
 	end := time.Date(2026, 6, 1, 10, 0, 0, 0, loc)
 	until := time.Date(2026, 6, 21, 0, 0, 0, 0, loc)
 	got, err := Occurrences(start, end, Custom, []int{1, 3, 5}, until)

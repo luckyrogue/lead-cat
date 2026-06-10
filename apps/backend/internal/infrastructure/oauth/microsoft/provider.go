@@ -84,7 +84,7 @@ func (p *Provider) Exchange(ctx context.Context, code, verifier, redirectURL str
 	return application.SSOProfile{
 		Email:     email,
 		Name:      c.Name,
-		AvatarURL: "", // Microsoft id_token does not include a picture claim
+		AvatarURL: "",
 		Subject:   c.Sub,
 		Provider:  "microsoft",
 	}, nil

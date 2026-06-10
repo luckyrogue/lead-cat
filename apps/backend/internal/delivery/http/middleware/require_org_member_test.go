@@ -9,7 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
 )
 
 type fakeOrgResolver struct {
@@ -23,7 +23,7 @@ func (f fakeOrgResolver) GetOrgMember(_ context.Context, _, _ uuid.UUID) (postgr
 
 func appWithWebUser(handler fiber.Handler, mws ...fiber.Handler) *fiber.App {
 	app := fiber.New()
-	// inject a fake authed web user (as WebAuth would)
+
 	app.Use(func(c *fiber.Ctx) error {
 		c.Locals("web_user", postgres.PlatformUser{ID: uuid.New()})
 		return c.Next()

@@ -25,8 +25,7 @@ func TestBuildMessage(t *testing.T) {
 		t.Fatal("no link line when meet link empty")
 	}
 
-	// stored times are UTC; rendering must convert to Almaty (+5).
-	startUTC := time.Date(2026, 5, 31, 9, 0, 0, 0, time.UTC) // 14:00 Almaty
+	startUTC := time.Date(2026, 5, 31, 9, 0, 0, 0, time.UTC)
 	m2 := buildMessage("X", "", startUTC, startUTC.Add(time.Hour), loc)
 	if !strings.Contains(m2, "14:00–15:00") {
 		t.Fatalf("UTC not converted to Almaty: %q", m2)

@@ -9,6 +9,42 @@ linters:
     - misspell
     - unconvert
     - bodyclose
+    - depguard
+  disable:
+    - godot
+    - godox
+    - revive
+  settings:
+    depguard:
+      rules:
+        domain-no-infra:
+          files:
+            - "**/internal/domain/**"
+          deny:
+            - pkg: "github.com/gofiber/fiber"
+              desc: "domain must not import delivery frameworks (clean-arch: domain has no outward deps)"
+            - pkg: "github.com/jackc/pgx"
+              desc: "domain must not import persistence drivers (clean-arch: domain has no outward deps)"
+            - pkg: "github.com/hibiken/asynq"
+              desc: "domain must not import queue drivers (clean-arch: domain has no outward deps)"
+            - pkg: "github.com/go-telegram/bot"
+              desc: "domain must not import bot drivers (clean-arch: domain has no outward deps)"
+            - pkg: "github.com/luckyrogue/lead-cat/internal/application"
+              desc: "domain must not depend on application layer (clean-arch: deps point inward)"
+            - pkg: "github.com/luckyrogue/lead-cat/internal/infrastructure"
+              desc: "domain must not depend on infrastructure layer (clean-arch: deps point inward)"
+            - pkg: "github.com/luckyrogue/lead-cat/internal/delivery"
+              desc: "domain must not depend on delivery layer (clean-arch: deps point inward)"
+            - pkg: "github.com/luckyrogue/lead-cat/internal/platform"
+              desc: "domain must not depend on platform layer (clean-arch: deps point inward)"
+        delivery-no-direct-db:
+          files:
+            - "**/internal/delivery/**"
+          deny:
+            - pkg: "github.com/jackc/pgx"
+              desc: "delivery must not import postgres driver directly — use application layer (Phase C2 to fix)"
+            - pkg: "github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+              desc: "delivery must not import postgres repository directly — use application layer (Phase C2 to fix)"
   exclusions:
     generated: lax
     presets:

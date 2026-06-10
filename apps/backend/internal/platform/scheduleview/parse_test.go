@@ -33,7 +33,7 @@ func TestParseRange(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if from.Day() != 1 || to.Day() != 4 { // to is exclusive end = 2026-06-04 00:00
+	if from.Day() != 1 || to.Day() != 4 {
 		t.Fatalf("range from=%v to=%v", from, to)
 	}
 	if _, _, err := parseRange("2026-06-03..2026-06-01", loc); err == nil {

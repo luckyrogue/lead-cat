@@ -8,7 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/telegram"
 )
 
@@ -23,9 +23,6 @@ type miniappUser struct {
 	Role       string `json:"role"`
 }
 
-// MiniAppAuth exchanges Telegram initData for a short-lived Mini App JWT. Public route.
-// 401 bodies carry a machine-readable {"code": ...} so the Mini App can tell
-// not_registered (→ "register in the bot" screen) from invalid_init_data.
 func (a *API) MiniAppAuth(c *fiber.Ctx) error {
 	var req miniappAuthRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -33,7 +30,7 @@ func (a *API) MiniAppAuth(c *fiber.Ctx) error {
 	}
 	var tgID int64
 	if a.AuthDevMode && !looksLikeTelegramInitData(req.InitData) {
-		// Browser-only dev: init_data is a raw telegram_id, no HMAC.
+
 		id, err := strconv.ParseInt(strings.TrimSpace(req.InitData), 10, 64)
 		if err != nil || id == 0 {
 			return fiber.NewError(fiber.StatusBadRequest, "dev init_data must be a telegram id")

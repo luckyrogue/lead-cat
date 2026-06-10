@@ -7,18 +7,13 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
 )
 
-// OrgMemberResolver resolves a user's membership in an organization.
 type OrgMemberResolver interface {
 	GetOrgMember(ctx context.Context, orgID, userID uuid.UUID) (postgres.Member, bool, error)
 }
 
-// RequireOrgMember resolves the org id (from the :id path param, else the
-// X-Org-Id header), verifies the authed web user is a member, and stores the
-// membership in c.Locals("org_member"). 400 on missing/invalid org id, 403 if
-// the user is not a member. Must run after WebAuth (which sets "web_user").
 func RequireOrgMember(r OrgMemberResolver) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		user, ok := c.Locals("web_user").(postgres.PlatformUser)
@@ -45,8 +40,6 @@ func RequireOrgMember(r OrgMemberResolver) fiber.Handler {
 	}
 }
 
-// RequireOrgRole gates on a minimum role; must run AFTER RequireOrgMember
-// (reads the membership it stored). 403 if the member's role is insufficient.
 func RequireOrgRole(minRole string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		m, ok := c.Locals("org_member").(postgres.Member)

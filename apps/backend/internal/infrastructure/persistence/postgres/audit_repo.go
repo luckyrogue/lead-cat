@@ -89,8 +89,6 @@ func (s *Store) EnsureDefaultOrganizationID(ctx context.Context, defaultTZ, defa
 		ownerArg = nil
 	}
 
-	// Try INSERT. ON CONFLICT DO NOTHING swallows slug uniqueness races;
-	// re-SELECT to pick up the winner's row.
 	if err := s.pool.QueryRow(ctx, `
 		INSERT INTO organizations (slug, name, owner_user_id, tz, meet_link)
 		VALUES ('lead-cat', 'Lead Cat', $1, $2, $3)
@@ -98,7 +96,7 @@ func (s *Store) EnsureDefaultOrganizationID(ctx context.Context, defaultTZ, defa
 		RETURNING id`, ownerArg, defaultTZ, defaultMeetLink).Scan(&id); err == nil {
 		return id, nil
 	}
-	// Race: re-select.
+
 	if err := s.pool.QueryRow(ctx, `SELECT id FROM organizations WHERE name = 'Lead Cat' LIMIT 1`).Scan(&id); err != nil {
 		return uuid.Nil, err
 	}

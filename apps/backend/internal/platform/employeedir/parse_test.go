@@ -4,9 +4,9 @@ import "testing"
 
 const goodCSV = "full_name,email,department\n" +
 	"Иванов Иван Иванович,I.Ivanov@Company.kz,Разработка\n" +
-	"\n" + // blank line between rows is skipped
+	"\n" +
 	"  Петров Пётр  , p.petrov@company.kz ,  Маркетинг \n" +
-	",noname@company.kz,Без имени\n" + // empty full_name is allowed
+	",noname@company.kz,Без имени\n" +
 	"Без Почты,,Отдел\n" // empty email row is skipped
 
 func TestParse_Good(t *testing.T) {
@@ -17,7 +17,7 @@ func TestParse_Good(t *testing.T) {
 	if len(recs) != 3 {
 		t.Fatalf("want 3 records, got %d: %+v", len(recs), recs)
 	}
-	// email lower-cased, fields trimmed
+
 	if recs[0].Email != "i.ivanov@company.kz" || recs[0].FullName != "Иванов Иван Иванович" || recs[0].Dept != "Разработка" {
 		t.Fatalf("rec0 wrong: %+v", recs[0])
 	}

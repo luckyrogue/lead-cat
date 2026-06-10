@@ -56,7 +56,7 @@ func (p *Provider) For(ctx context.Context, organizationID uuid.UUID) (docalenda
 	if err != nil {
 		return nil, err
 	}
-	jwtCfg.Subject = subject // domain-wide delegation
+	jwtCfg.Subject = subject
 	svc, err := calendar.NewService(ctx, option.WithHTTPClient(jwtCfg.Client(ctx)))
 	if err != nil {
 		return nil, err

@@ -12,11 +12,6 @@ import (
 //go:embed employees.csv
 var csvData []byte
 
-// Seed parses the embedded directory CSV and full-syncs it into every
-// Google-configured organization. Best-effort: all failures are logged, never
-// fatal — a directory glitch must not take the server down. If the CSV parses
-// to zero records the sync is skipped entirely (guard against an empty/truncated
-// CSV wiping the directory). §9.4
 func Seed(ctx context.Context, store *postgres.Store, log *zap.Logger) {
 	records, err := Parse(csvData)
 	if err != nil {
@@ -37,9 +32,7 @@ func Seed(ctx context.Context, store *postgres.Store, log *zap.Logger) {
 		return
 	}
 	if len(orgIDs) == 0 {
-		// No organization has Google configured yet — the directory has nowhere to
-		// land. This is the expected steady state until Google is set up, so it's
-		// Info (a distinct message, not the misleading employee_seed_done{0}).
+
 		log.Info("employee_seed_no_google_organizations")
 		return
 	}

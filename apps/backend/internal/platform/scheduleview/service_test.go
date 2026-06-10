@@ -147,9 +147,9 @@ func TestScheduleFlow_PeriodsClearsAwaiting(t *testing.T) {
 	svc.Start(ctx, tg)
 	svc.OnText(ctx, tg, "bob@corp.kz")
 	svc.OnCallback(ctx, tg, "sched:pick:0")
-	svc.OnCallback(ctx, tg, "sched:d:date")  // sets AwaitingKind=date
-	svc.OnCallback(ctx, tg, "sched:periods") // must clear AwaitingKind
-	// a free-text message must NOT be parsed as a date now (no schedule session awaiting)
+	svc.OnCallback(ctx, tg, "sched:d:date")
+	svc.OnCallback(ctx, tg, "sched:periods")
+
 	if _, ok := svc.OnText(ctx, tg, "иван"); ok {
 		t.Fatal("after ⬅ Периоды, free text should not be handled as a date/search input")
 	}

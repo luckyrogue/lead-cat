@@ -8,8 +8,7 @@ import (
 )
 
 func TestToCreateMeetingInput(t *testing.T) {
-	// Host falls back to the bot user's full name when empty; blank participant
-	// emails are dropped; recurrence/desc pass through.
+
 	in := toCreateMeetingInput(miniappCreateRequest{
 		Dept: "Eng", Type: "weekly", Host: "", Date: "2026-06-10",
 		Start: "10:00", End: "10:30", Recurrence: "once", Desc: "sync",
@@ -24,7 +23,7 @@ func TestToCreateMeetingInput(t *testing.T) {
 	if in.Date != "2026-06-10" || in.Start != "10:00" || in.End != "10:30" || in.Recurrence != "once" || in.Description != "sync" {
 		t.Fatalf("passthrough: %+v", in)
 	}
-	// Non-empty host is kept.
+
 	if got := toCreateMeetingInput(miniappCreateRequest{Host: "Custom"}, "Real").Host; got != "Custom" {
 		t.Fatalf("host kept: %q", got)
 	}
@@ -32,7 +31,7 @@ func TestToCreateMeetingInput(t *testing.T) {
 
 func TestToConflictDTO(t *testing.T) {
 	loc, _ := time.LoadLocation("Asia/Almaty")
-	// 09:00–10:00 UTC == 14:00–15:00 Almaty
+
 	c := application.Conflict{
 		Email:       "a@x.io",
 		PersonName:  "Alice",

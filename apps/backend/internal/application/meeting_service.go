@@ -40,7 +40,7 @@ func (s *Services) ListMeetings(ctx context.Context, organizationID, userID uuid
 	if err != nil {
 		return nil, err
 	}
-	// Organization owner sees all meetings; everyone else sees their own (ТЗ §2).
+
 	if w.OwnerUserID != nil && *w.OwnerUserID == userID {
 		return s.Store.ListMeetings(ctx, organizationID)
 	}
@@ -108,7 +108,6 @@ func (s *Services) CreateMeeting(ctx context.Context, organizationID, organizerI
 		return postgres.Meeting{}, err
 	}
 
-	// Single (non-recurring) meeting: existing path.
 	if rec == meeting.Once {
 		name := meeting.GenerateName(in.Dept, in.Type, in.Host, startsAt, rec)
 		cal, err := calSvc.CreateEvent(ctx, CalendarEvent{
@@ -137,7 +136,6 @@ func (s *Services) CreateMeeting(ctx context.Context, organizationID, organizerI
 		return m, nil
 	}
 
-	// Recurring series: materialize occurrences (Google first w/ compensation, then one DB tx).
 	names := make([]string, len(spansList))
 	for i, sp := range spansList {
 		names[i] = meeting.GenerateName(in.Dept, in.Type, in.Host, sp.Start, rec)
@@ -147,7 +145,7 @@ func (s *Services) CreateMeeting(ctx context.Context, organizationID, organizerI
 		return postgres.Meeting{}, err
 	}
 	seriesID := uuid.New()
-	recUntil := until // midnight in the organization TZ; its date component is the intended end day (no .UTC() — column is DATE)
+	recUntil := until
 	rows := make([]postgres.Meeting, len(evs))
 	for i, e := range evs {
 		rows[i] = postgres.Meeting{
@@ -261,10 +259,7 @@ func (s *Services) UpdateMeeting(ctx context.Context, organizationID, userID, me
 	if err != nil {
 		return postgres.Meeting{}, err
 	}
-	// Google event is patched before the DB write (consistent with CreateMeeting).
-	// The common failure (Google API error) then leaves the DB unchanged for a
-	// clean retry; the rare DB-write-after-Google-success skew is reconciled by
-	// a subsequent edit/retry. Postgres remains the source of truth.
+
 	if updated.GoogleEventID != "" {
 		calSvc, err := s.Calendar.For(ctx, organizationID)
 		if err != nil {
@@ -310,11 +305,11 @@ func (s *Services) CancelMeeting(ctx context.Context, organizationID, userID, id
 		return ErrForbidden
 	}
 	if m.Status != "scheduled" {
-		return nil // already cancelled or past — nothing to do
+		return nil
 	}
 	if m.GoogleEventID != "" {
 		if calSvc, ferr := s.Calendar.For(ctx, organizationID); ferr == nil {
-			_ = calSvc.DeleteEvent(ctx, m.GoogleEventID) // best-effort
+			_ = calSvc.DeleteEvent(ctx, m.GoogleEventID)
 		}
 	}
 	if err := s.Store.CancelMeeting(ctx, organizationID, id); err != nil {

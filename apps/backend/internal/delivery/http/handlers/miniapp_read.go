@@ -8,7 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"github.com/luckyrogue/lead-cat/internal/application/query"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
 )
 
 type miniappMeetingDTO struct {
@@ -16,12 +16,12 @@ type miniappMeetingDTO struct {
 	Type         string   `json:"type"`
 	Dept         string   `json:"dept"`
 	Host         string   `json:"host"`
-	Date         string   `json:"date"`  // YYYY-MM-DD, Almaty
-	Start        string   `json:"start"` // HH:MM, Almaty
-	End          string   `json:"end"`   // HH:MM, Almaty
+	Date         string   `json:"date"`
+	Start        string   `json:"start"`
+	End          string   `json:"end"`
 	Rec          string   `json:"rec"`
-	Organizer    string   `json:"organizer"`    // email
-	Participants []string `json:"participants"` // emails
+	Organizer    string   `json:"organizer"`
+	Participants []string `json:"participants"`
 	Desc         string   `json:"desc"`
 	MeetLink     string   `json:"meet_link"`
 	Status       string   `json:"status"`
@@ -36,21 +36,18 @@ type miniappEmployeeDTO struct {
 }
 
 type miniappFreeSlotDTO struct {
-	ISO   string `json:"iso"`   // YYYY-MM-DD, Almaty
-	Start string `json:"start"` // HH:MM, Almaty
-	End   string `json:"end"`   // HH:MM, Almaty
+	ISO   string `json:"iso"`
+	Start string `json:"start"`
+	End   string `json:"end"`
 	Mins  int    `json:"mins"`
 }
 
-// splitMeetingTime renders a meeting's UTC start/end into Almaty-local date + times.
 func splitMeetingTime(startsAt, endsAt time.Time, loc *time.Location) (date, start, end string) {
 	s := startsAt.In(loc)
 	e := endsAt.In(loc)
 	return s.Format("2006-01-02"), s.Format("15:04"), e.Format("15:04")
 }
 
-// miniappScopeWindow maps a scope to a [from,to) window around now (ListScheduleForEmail
-// filters starts_at in [from,to)). Unknown scope → ok=false.
 func miniappScopeWindow(scope string, now time.Time) (from, to time.Time, ok bool) {
 	const horizon = 365
 	switch scope {
@@ -74,8 +71,6 @@ func miniappMeetingFromQuery(d query.MiniAppMeeting) miniappMeetingDTO {
 	}
 }
 
-// toMeetingDTO maps a meeting to the UI-shaped DTO, resolving organizer email and
-// participant emails (N+1 per meeting; fine for personal-scale lists).
 func (a *API) toMeetingDTO(ctx context.Context, m postgres.Meeting) miniappMeetingDTO {
 	return miniappMeetingFromQuery(a.App.MiniAppMeetingDTO(ctx, m, almatyLoc()))
 }
@@ -88,7 +83,6 @@ func (a *API) toMeetingDTOs(ctx context.Context, ms []postgres.Meeting) []miniap
 	return out
 }
 
-// botUserEmail returns the authed TMA user's email, or "" if absent.
 func botUserEmail(c *fiber.Ctx) (string, bool) {
 	bu, ok := botUser(c)
 	if !ok {
@@ -97,7 +91,6 @@ func botUserEmail(c *fiber.Ctx) (string, bool) {
 	return bu.Email, true
 }
 
-// MiniAppMyMeetings lists the authed user's meetings for a scope window.
 func (a *API) MiniAppMyMeetings(c *fiber.Ctx) error {
 	email, ok := botUserEmail(c)
 	if !ok {
@@ -114,7 +107,6 @@ func (a *API) MiniAppMyMeetings(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"meetings": a.toMeetingDTOs(c.Context(), ms)})
 }
 
-// MiniAppSchedule lists a colleague's meetings (read-only directory feature, §4.6).
 func (a *API) MiniAppSchedule(c *fiber.Ctx) error {
 	if _, ok := botUserEmail(c); !ok {
 		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
@@ -134,7 +126,6 @@ func (a *API) MiniAppSchedule(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"meetings": a.toMeetingDTOs(c.Context(), ms)})
 }
 
-// MiniAppEmployees searches the global directory (empty q → empty list).
 func (a *API) MiniAppEmployees(c *fiber.Ctx) error {
 	if _, ok := botUserEmail(c); !ok {
 		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
@@ -155,12 +146,11 @@ func (a *API) MiniAppEmployees(c *fiber.Ctx) error {
 
 type miniappFreeSlotsRequest struct {
 	Participants []string `json:"participants"`
-	From         string   `json:"from"` // YYYY-MM-DD (inclusive)
-	To           string   `json:"to"`   // YYYY-MM-DD (inclusive)
+	From         string   `json:"from"`
+	To           string   `json:"to"`
 	DurationMins int      `json:"duration_mins"`
 }
 
-// MiniAppFreeSlots finds common free time across participants (§4.8).
 func (a *API) MiniAppFreeSlots(c *fiber.Ctx) error {
 	if _, ok := botUserEmail(c); !ok {
 		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")

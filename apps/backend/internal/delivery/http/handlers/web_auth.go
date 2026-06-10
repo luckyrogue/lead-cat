@@ -12,17 +12,14 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
 	"github.com/luckyrogue/lead-cat/internal/platform/authweb"
 )
 
-// cookieSecure derives the cookie Secure flag from the configured base URL.
 func (a *API) cookieSecure() bool {
 	return strings.HasPrefix(a.App.AppBaseURL(), "https")
 }
 
-// setSessionCookies sets the long-lived lc_session (HTTPOnly) and lc_csrf
-// (JS-readable, for double-submit) cookies.
 func (a *API) setSessionCookies(c *fiber.Ctx, session, csrf string) {
 	secure := a.cookieSecure()
 	exp := time.Now().Add(30 * 24 * time.Hour)
@@ -48,13 +45,11 @@ func (a *API) setSessionCookies(c *fiber.Ctx, session, csrf string) {
 	})
 }
 
-// clearSessionCookies expires the session and csrf cookies.
 func (a *API) clearSessionCookies(c *fiber.Ctx) {
 	a.clearCookie(c, "lc_session", true)
 	a.clearCookie(c, "lc_csrf", false)
 }
 
-// setShortCookie sets a short-lived HTTPOnly cookie (oauth state / pkce).
 func (a *API) setShortCookie(c *fiber.Ctx, name, value string) {
 	c.Cookie(&fiber.Cookie{
 		Name:     name,
@@ -67,7 +62,6 @@ func (a *API) setShortCookie(c *fiber.Ctx, name, value string) {
 	})
 }
 
-// clearCookie expires a cookie by name. httpOnly must match how it was set.
 func (a *API) clearCookie(c *fiber.Ctx, name string, httpOnly bool) {
 	c.Cookie(&fiber.Cookie{
 		Name:     name,
@@ -82,7 +76,6 @@ func (a *API) clearCookie(c *fiber.Ctx, name string, httpOnly bool) {
 	})
 }
 
-// WebAuthStart begins an SSO authorization-code + PKCE flow.
 func (a *API) WebAuthStart(c *fiber.Ctx) error {
 	provider := c.Params("provider")
 	p, ok := a.App.SSOProviderByName(provider)
@@ -103,8 +96,6 @@ func (a *API) WebAuthStart(c *fiber.Ctx) error {
 	return c.Redirect(p.AuthURL(state, challenge, redirectURL), fiber.StatusFound)
 }
 
-// WebAuthCallback completes the SSO flow: validates state, exchanges the code,
-// upserts the identity, and issues a session.
 func (a *API) WebAuthCallback(c *fiber.Ctx) error {
 	provider := c.Params("provider")
 	p, ok := a.App.SSOProviderByName(provider)
@@ -160,8 +151,6 @@ func (a *API) WebAuthCallback(c *fiber.Ctx) error {
 	return c.Redirect(a.App.AppBaseURL()+a.postLoginDest(ctx, user.ID), fiber.StatusFound)
 }
 
-// WebMagicRequest issues a one-time sign-in link. Always returns 204 to avoid
-// account enumeration.
 func (a *API) WebMagicRequest(c *fiber.Ctx) error {
 	var body struct {
 		Email string `json:"email"`
@@ -182,7 +171,6 @@ func (a *API) WebMagicRequest(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-// WebMagicVerify consumes a magic-link token and issues a session.
 func (a *API) WebMagicVerify(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	token := c.Query("token")
@@ -211,7 +199,6 @@ func (a *API) WebMagicVerify(c *fiber.Ctx) error {
 	return c.Redirect(a.App.AppBaseURL()+a.postLoginDest(ctx, user.ID), fiber.StatusFound)
 }
 
-// WebLogout revokes the current session and clears cookies.
 func (a *API) WebLogout(c *fiber.Ctx) error {
 	raw := c.Cookies("lc_session")
 	if err := a.App.RevokeWebSession(c.UserContext(), raw); err != nil {
@@ -221,7 +208,6 @@ func (a *API) WebLogout(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-// WebMe returns the authenticated web account and its organizations.
 func (a *API) WebMe(c *fiber.Ctx) error {
 	user := c.Locals("web_user").(postgres.PlatformUser)
 	orgs, err := a.App.ListOrganizationsForUser(c.UserContext(), user.ID)
@@ -248,8 +234,6 @@ func (a *API) WebMe(c *fiber.Ctx) error {
 	})
 }
 
-// postLoginDest decides where to send the user after sign-in: onboarding when
-// they belong to no organization, otherwise the app root.
 func (a *API) postLoginDest(ctx context.Context, userID uuid.UUID) string {
 	orgs, _ := a.App.ListOrganizationsForUser(ctx, userID)
 	if len(orgs) == 0 {

@@ -7,7 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"github.com/luckyrogue/lead-cat/internal/delivery/http/middleware"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
 )
 
 func TestRequireBotAdmin_NoLocal_Returns403(t *testing.T) {

@@ -60,7 +60,7 @@ func (s *Services) MeetingConflicts(ctx context.Context, emails []string, start,
 		if m.ID == excludeMeetingID {
 			continue
 		}
-		// Defensive: the repo query already guarantees overlap; re-check in case its predicate ever drifts.
+
 		if !meeting.Overlaps(start, end, m.StartsAt, m.EndsAt) {
 			continue
 		}
@@ -89,7 +89,7 @@ func (s *Services) MeetingConflicts(ctx context.Context, emails []string, start,
 			})
 		}
 	}
-	// Deterministic order (map iteration above is unordered).
+
 	sort.Slice(out, func(i, j int) bool {
 		if out[i].Start.Equal(out[j].Start) {
 			return out[i].Email < out[j].Email
@@ -104,7 +104,7 @@ func (s *Services) MeetingConflicts(ctx context.Context, emails []string, start,
 // itself). Returns nil when the edit does not change the time (overlap unchanged).
 func (s *Services) MeetingUpdateConflicts(ctx context.Context, organizationID, meetingID uuid.UUID, in UpdateMeetingInput) ([]Conflict, error) {
 	if in.Date == nil || in.Start == nil || in.End == nil {
-		// No date/time edit (or only a partial one) → the overlap set is unchanged; nothing to warn about.
+
 		return nil, nil
 	}
 	w, err := s.Store.GetOrganization(ctx, organizationID)
@@ -117,7 +117,7 @@ func (s *Services) MeetingUpdateConflicts(ctx context.Context, organizationID, m
 	}
 	start, err := time.ParseInLocation("2006-01-02 15:04", *in.Date+" "+*in.Start, loc)
 	if err != nil {
-		return nil, nil // malformed time is rejected later by UpdateMeeting
+		return nil, nil
 	}
 	end, err := time.ParseInLocation("2006-01-02 15:04", *in.Date+" "+*in.End, loc)
 	if err != nil {

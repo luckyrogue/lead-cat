@@ -6,17 +6,13 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
 )
 
-// WebUserResolver resolves a raw session cookie value to the authenticated
-// web account, sliding the session as needed.
 type WebUserResolver interface {
 	ResolveWebUser(ctx context.Context, rawSessionToken string) (postgres.PlatformUser, bool, error)
 }
 
-// WebAuth guards web routes via the lc_session cookie and enforces CSRF
-// (double-submit) on state-changing methods.
 type WebAuth struct{ resolver WebUserResolver }
 
 func NewWebAuth(r WebUserResolver) *WebAuth { return &WebAuth{resolver: r} }
@@ -39,7 +35,6 @@ func (m *WebAuth) Middleware(c *fiber.Ctx) error {
 	return c.Next()
 }
 
-// csrfMatches does a constant-time compare; empty values never match.
 func csrfMatches(header, cookie string) bool {
 	if header == "" || cookie == "" {
 		return false

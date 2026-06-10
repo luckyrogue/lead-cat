@@ -30,7 +30,7 @@ func TestNewPKCEProducesUrlSafeVerifierAndMatchingChallenge(t *testing.T) {
 }
 
 func TestNewStateIsUrlSafeAndUnique(t *testing.T) {
-	s1, err := NewState(nil) // nil reader -> crypto/rand
+	s1, err := NewState(nil)
 	if err != nil {
 		t.Fatal(err)
 	}

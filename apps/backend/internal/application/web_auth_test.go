@@ -47,7 +47,7 @@ func TestRequestMagicLinkStoresHashAndEmailsRawToken(t *testing.T) {
 	if !strings.Contains(mail.lastBody, "https://app.example.com/api/auth/web/magic/verify?token=") {
 		t.Fatalf("link missing in body: %q", mail.lastBody)
 	}
-	// the raw token in the email must NOT equal the stored hash bytes
+
 }
 
 func TestVerifyMagicLinkReturnsEmailForIssuedToken(t *testing.T) {

@@ -1,15 +1,11 @@
-// Package middleware contains Fiber-level middleware shared across handlers.
 package middleware
 
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
 )
 
-// RequireBotAdmin asserts that the request was authenticated as a bot user
-// whose role is "admin". Returns 403 otherwise. Must be mounted AFTER the TMA
-// JWT middleware that sets c.Locals("bot_user").
 func RequireBotAdmin(c *fiber.Ctx) error {
 	bu, ok := c.Locals("bot_user").(postgres.BotUser)
 	if !ok || bu.Role != "admin" {

@@ -24,7 +24,7 @@ var wantHeader = []string{"full_name", "email", "department"}
 // email is lower-cased. §9.4
 func Parse(data []byte) ([]Record, error) {
 	r := csv.NewReader(bytes.NewReader(data))
-	r.FieldsPerRecord = -1 // tolerate ragged rows; we validate the header ourselves
+	r.FieldsPerRecord = -1
 	rows, err := r.ReadAll()
 	if err != nil {
 		return nil, fmt.Errorf("parse employees csv: %w", err)
@@ -37,7 +37,7 @@ func Parse(data []byte) ([]Record, error) {
 		return nil, fmt.Errorf("invalid header: got %v, want full_name,email,department", head)
 	}
 	for i, want := range wantHeader {
-		// guard: len(head) >= len(wantHeader) checked above, so head[i] is safe.
+
 		if got := strings.ToLower(strings.TrimSpace(head[i])); got != want {
 			return nil, fmt.Errorf("invalid header col %d: got %q, want %q", i, got, want)
 		}

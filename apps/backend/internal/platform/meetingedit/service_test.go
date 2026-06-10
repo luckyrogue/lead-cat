@@ -194,7 +194,7 @@ func TestEditFlow_ConflictWarning(t *testing.T) {
 	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
 	svc.OnCallback(ctx, tg, "medit:field:datetime")
 	svc.OnText(ctx, tg, "2026-06-02 10:00-11:00")
-	// A time change with conflicts must warn instead of applying.
+
 	r, ok := svc.OnCallback(ctx, tg, "medit:apply")
 	if !ok || !strings.Contains(r.Text, "Внимание") || !strings.Contains(r.Text, "Алиса") {
 		t.Fatalf("expected conflict warning, got %+v", r)
@@ -202,7 +202,7 @@ func TestEditFlow_ConflictWarning(t *testing.T) {
 	if be.gotIn.Date != nil {
 		t.Fatal("UpdateMeeting must not run while warning is shown")
 	}
-	// Forcing past the warning applies the change.
+
 	if _, ok := svc.OnCallback(ctx, tg, "medit:applyforce"); !ok {
 		t.Fatal("applyforce not handled")
 	}
@@ -278,7 +278,6 @@ func TestEditFlow_ApplyErrors(t *testing.T) {
 	ctx := context.Background()
 	m := sampleMeeting()
 
-	// ErrForbidden -> "Нет доступа", session cleared.
 	sess := newMemSessions()
 	svc := New(&fakeBackend{meetings: []postgres.MeetingWithTZ{m}, updateErr: application.ErrForbidden}, sess)
 	const tg = int64(14)
@@ -292,7 +291,6 @@ func TestEditFlow_ApplyErrors(t *testing.T) {
 		t.Fatal("session should be cleared on forbidden")
 	}
 
-	// ErrMeetingNotEditable -> "больше недоступна", session cleared.
 	sess3 := newMemSessions()
 	svc3 := New(&fakeBackend{meetings: []postgres.MeetingWithTZ{m}, updateErr: postgres.ErrMeetingNotEditable}, sess3)
 	const tg3 = int64(16)
@@ -306,7 +304,6 @@ func TestEditFlow_ApplyErrors(t *testing.T) {
 		t.Fatal("session should be cleared when meeting not editable")
 	}
 
-	// ErrInvalidInput -> "Неверные данные", session kept.
 	sess2 := newMemSessions()
 	svc2 := New(&fakeBackend{meetings: []postgres.MeetingWithTZ{m}, updateErr: application.ErrInvalidInput}, sess2)
 	const tg2 = int64(15)
@@ -412,7 +409,7 @@ func TestParticipants_AddBadIndex(t *testing.T) {
 	const tg = int64(61)
 	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
 	svc.OnCallback(ctx, tg, "medit:padd")
-	// no search performed yet → PartCands empty → index 0 is out of bounds
+
 	if r, _ := svc.OnCallback(ctx, tg, "medit:padd:0"); !strings.Contains(r.Text, "не найден") {
 		t.Fatalf("expected not-found for bad index, got %+v", r)
 	}
@@ -424,12 +421,12 @@ func TestParticipants_AddBadIndex(t *testing.T) {
 func TestParticipants_SearchNoResults(t *testing.T) {
 	ctx := context.Background()
 	m := sampleMeeting()
-	be := &fakeBackend{meetings: []postgres.MeetingWithTZ{m}, applied: m.Meeting} // no employees
+	be := &fakeBackend{meetings: []postgres.MeetingWithTZ{m}, applied: m.Meeting}
 	svc := New(be, newMemSessions())
 	const tg = int64(62)
 	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
 	svc.OnCallback(ctx, tg, "medit:padd")
-	// a non-email query with no directory matches
+
 	if r, ok := svc.OnText(ctx, tg, "zzz"); !ok || !strings.Contains(r.Text, "Ничего не найдено") {
 		t.Fatalf("expected no-results, got %+v ok=%v", r, ok)
 	}
@@ -498,8 +495,8 @@ func TestEditFlow_SeriesApplyWithoutScope(t *testing.T) {
 	be := &fakeBackend{meetings: []postgres.MeetingWithTZ{m}, applied: m.Meeting}
 	svc := New(be, newMemSessions())
 	const tg = int64(83)
-	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String()) // scope prompt shown, Scope=""
-	// a stray apply before choosing scope must re-prompt, not call UpdateMeeting/UpdateSeries
+	svc.OnCallback(ctx, tg, "medit:pick:"+m.ID.String())
+
 	if r, _ := svc.OnCallback(ctx, tg, "medit:apply"); !strings.Contains(r.Text, "выбери") {
 		t.Fatalf("apply without scope should re-prompt, got %+v", r)
 	}

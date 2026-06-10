@@ -18,7 +18,7 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/delivery/http/handlers"
 	"github.com/luckyrogue/lead-cat/internal/delivery/http/middleware"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/crypto"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/telegram"
 	platformauth "github.com/luckyrogue/lead-cat/internal/platform/auth"
 	"github.com/luckyrogue/lead-cat/internal/platform/config"
@@ -145,8 +145,6 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	return app, nil
 }
 
-// dedupeNonEmpty returns the input with empty strings removed and duplicates
-// collapsed, preserving first-seen order.
 func dedupeNonEmpty(in []string) []string {
 	seen := make(map[string]struct{}, len(in))
 	out := make([]string, 0, len(in))

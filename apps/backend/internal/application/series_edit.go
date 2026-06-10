@@ -104,8 +104,7 @@ func (s *Services) UpdateSeries(ctx context.Context, organizationID, userID, mee
 	if err := s.Store.UpdateMeetingsTx(ctx, organizationID, rows); err != nil {
 		return 0, err
 	}
-	// Google best-effort: DB is the source of truth; a failed patch is reconciled
-	// by re-editing (series patches are not reversible, so we don't compensate).
+
 	if calSvc, ferr := s.Calendar.For(ctx, organizationID); ferr != nil {
 		if s.Log != nil {
 			s.Log.Warn("series update calendar provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))
@@ -161,8 +160,7 @@ func (s *Services) CancelSeries(ctx context.Context, organizationID, userID, mee
 	if err != nil {
 		return 0, err
 	}
-	// Google best-effort: deletes are irreversible, so DB-first (above) keeps
-	// Postgres the source of truth; a lingering event is logged, not fatal.
+
 	if calSvc, ferr := s.Calendar.For(ctx, organizationID); ferr != nil {
 		if s.Log != nil {
 			s.Log.Warn("cancel series calendar provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))

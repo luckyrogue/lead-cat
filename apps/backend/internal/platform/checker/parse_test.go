@@ -24,7 +24,7 @@ func TestParseRange(t *testing.T) {
 
 func TestDayLabel(t *testing.T) {
 	loc := almaty()
-	d := time.Date(2026, 6, 1, 0, 0, 0, 0, loc) // Monday
+	d := time.Date(2026, 6, 1, 0, 0, 0, 0, loc)
 	if got := dayLabel(d, loc); got != "Пн, 01.06" {
 		t.Fatalf("got %q", got)
 	}

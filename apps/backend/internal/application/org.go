@@ -80,7 +80,7 @@ func memberViews(members []postgres.Member, target uuid.UUID) ([]OrgMemberView, 
 // result may be an empty string. The caller is responsible for providing a
 // fallback.
 func slugify(name string) string {
-	// Normalise: NFD decomposition then strip combining (Mn) marks.
+
 	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 	folded, _, err := transform.String(t, name)
 	if err != nil {
@@ -90,7 +90,7 @@ func slugify(name string) string {
 	lower := strings.ToLower(folded)
 
 	var sb strings.Builder
-	inSep := true // start true so leading separators are skipped
+	inSep := true
 	for _, r := range lower {
 		if r >= 'a' && r <= 'z' || r >= '0' && r <= '9' {
 			sb.WriteRune(r)

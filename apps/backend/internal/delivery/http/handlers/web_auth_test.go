@@ -11,15 +11,14 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/pgxpool" //nolint:depguard
 	"go.uber.org/zap"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
 	"github.com/luckyrogue/lead-cat/internal/delivery/http/middleware"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
 )
 
-// captureMailer records the last email body so the test can extract the token.
 type captureMailer struct{ lastBody string }
 
 func (m *captureMailer) Send(_ context.Context, _, _, htmlBody string) error {
@@ -27,8 +26,6 @@ func (m *captureMailer) Send(_ context.Context, _, _, htmlBody string) error {
 	return nil
 }
 
-// extractToken pulls the raw token out of a magic-link email body of the form
-// .../verify?token=<raw>">.
 func extractToken(body string) string {
 	const marker = "token="
 	i := strings.Index(body, marker)
@@ -70,7 +67,6 @@ func TestMagicLinkRoundTripIssuesSession(t *testing.T) {
 	web.Get("/magic/verify", api.WebMagicVerify)
 	web.Get("/me", webAuth.Middleware, api.WebMe)
 
-	// 1. Request a magic link.
 	reqBody := strings.NewReader(`{"email":"itest@example.com"}`)
 	req := httptest.NewRequest(http.MethodPost, "/api/auth/web/magic/request", reqBody)
 	req.Header.Set("Content-Type", "application/json")
@@ -88,7 +84,6 @@ func TestMagicLinkRoundTripIssuesSession(t *testing.T) {
 		t.Fatalf("no token captured in mail body: %q", mailer.lastBody)
 	}
 
-	// 2. Verify the link -> 302 with an lc_session cookie.
 	req = httptest.NewRequest(http.MethodGet, "/api/auth/web/magic/verify?token="+token, nil)
 	resp, err = app.Test(req)
 	if err != nil {
@@ -108,7 +103,6 @@ func TestMagicLinkRoundTripIssuesSession(t *testing.T) {
 	}
 	_ = resp.Body.Close()
 
-	// 3. /me with the session cookie returns the user.
 	req = httptest.NewRequest(http.MethodGet, "/api/auth/web/me", nil)
 	req.AddCookie(sessionCookie)
 	resp, err = app.Test(req)

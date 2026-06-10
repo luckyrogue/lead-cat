@@ -68,8 +68,7 @@ func nextStep(t time.Time, r Recurrence) time.Time {
 	case Weekly:
 		return t.AddDate(0, 0, 7)
 	case Monthly:
-		// AddDate normalizes overflow (e.g. Jan 31 + 1mo → Mar 3), so a series
-		// anchored past a short month's end shifts forward — accepted behavior.
+
 		return t.AddDate(0, 1, 0)
 	}
 	return t.AddDate(0, 0, 1)

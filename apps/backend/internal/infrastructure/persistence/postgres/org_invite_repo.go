@@ -77,7 +77,6 @@ func (s *Store) AcceptInvitesForEmail(ctx context.Context, email string, userID 
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
-	// Fetch all pending invites for this email.
 	rows, err := tx.Query(ctx, `
 		SELECT id, organization_id, role
 		FROM organization_invites
@@ -108,7 +107,7 @@ func (s *Store) AcceptInvitesForEmail(ctx context.Context, email string, userID 
 
 	count := 0
 	for _, inv := range invites {
-		// Insert member; if they're already a member, skip silently.
+
 		_, err := tx.Exec(ctx, `
 			INSERT INTO organization_members (organization_id, user_id, role)
 			VALUES ($1, $2, $3)
@@ -118,7 +117,6 @@ func (s *Store) AcceptInvitesForEmail(ctx context.Context, email string, userID 
 			return 0, err
 		}
 
-		// Mark invite as accepted.
 		_, err = tx.Exec(ctx, `
 			UPDATE organization_invites SET accepted_at = now()
 			WHERE id = $1`, inv.id)

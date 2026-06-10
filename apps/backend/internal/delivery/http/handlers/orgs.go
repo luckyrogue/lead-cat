@@ -9,11 +9,9 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
 )
 
-// withWebAuditActor enriches the user-context with the actor identity for a
-// web platform user, mirroring withAuditActor for the bot path.
 func (a *API) withWebAuditActor(c *fiber.Ctx) {
 	u, ok := c.Locals("web_user").(postgres.PlatformUser)
 	if !ok {
@@ -22,14 +20,12 @@ func (a *API) withWebAuditActor(c *fiber.Ctx) {
 	c.SetUserContext(application.WithWebAuditActor(c.UserContext(), u.ID, u.Email))
 }
 
-// validRoles is the set of roles that may be assigned via the API.
 var validRoles = map[string]struct{}{
 	"member": {},
 	"admin":  {},
 	"owner":  {},
 }
 
-// CreateOrg handles POST /api/orgs — creates a new org for the authenticated user.
 func (a *API) CreateOrg(c *fiber.Ctx) error {
 	user := c.Locals("web_user").(postgres.PlatformUser)
 	var body struct {
@@ -50,7 +46,6 @@ func (a *API) CreateOrg(c *fiber.Ctx) error {
 	})
 }
 
-// ListMyOrgs handles GET /api/orgs — lists orgs for the authenticated user.
 func (a *API) ListMyOrgs(c *fiber.Ctx) error {
 	user := c.Locals("web_user").(postgres.PlatformUser)
 	orgs, err := a.App.ListOrganizationsForUser(c.UserContext(), user.ID)
@@ -69,7 +64,6 @@ func (a *API) ListMyOrgs(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"organizations": out})
 }
 
-// ListOrgMembers handles GET /api/orgs/:id/members.
 func (a *API) ListOrgMembers(c *fiber.Ctx) error {
 	orgID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
@@ -93,7 +87,6 @@ func (a *API) ListOrgMembers(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"members": out})
 }
 
-// InviteMember handles POST /api/orgs/:id/invites.
 func (a *API) InviteMember(c *fiber.Ctx) error {
 	user := c.Locals("web_user").(postgres.PlatformUser)
 	orgID, err := uuid.Parse(c.Params("id"))
@@ -130,7 +123,6 @@ func (a *API) InviteMember(c *fiber.Ctx) error {
 	})
 }
 
-// ListInvites handles GET /api/orgs/:id/invites.
 func (a *API) ListInvites(c *fiber.Ctx) error {
 	orgID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
@@ -153,7 +145,6 @@ func (a *API) ListInvites(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"invites": out})
 }
 
-// DeleteInvite handles DELETE /api/orgs/:id/invites/:iid.
 func (a *API) DeleteInvite(c *fiber.Ctx) error {
 	orgID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
@@ -170,7 +161,6 @@ func (a *API) DeleteInvite(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-// UpdateMemberRole handles PATCH /api/orgs/:id/members/:uid/role.
 func (a *API) UpdateMemberRole(c *fiber.Ctx) error {
 	orgID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
@@ -201,7 +191,6 @@ func (a *API) UpdateMemberRole(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-// RemoveMember handles DELETE /api/orgs/:id/members/:uid.
 func (a *API) RemoveMember(c *fiber.Ctx) error {
 	orgID, err := uuid.Parse(c.Params("id"))
 	if err != nil {

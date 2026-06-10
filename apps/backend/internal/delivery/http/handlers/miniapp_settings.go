@@ -6,16 +6,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
 )
 
-// miniAppSettingsBotUser extracts the authed bot user identity for settings handlers.
 func miniAppSettingsBotUser(c *fiber.Ctx) (postgres.BotUser, bool) {
 	bu, ok := c.Locals("bot_user").(postgres.BotUser)
 	return bu, ok
 }
 
-// MiniAppGetSettings — GET /api/miniapp/settings
 func (a *API) MiniAppGetSettings(c *fiber.Ctx) error {
 	bu, ok := miniAppSettingsBotUser(c)
 	if !ok {
@@ -28,7 +26,6 @@ func (a *API) MiniAppGetSettings(c *fiber.Ctx) error {
 	return c.JSON(s)
 }
 
-// MiniAppPatchSettings — PATCH /api/miniapp/settings
 func (a *API) MiniAppPatchSettings(c *fiber.Ctx) error {
 	bu, ok := miniAppSettingsBotUser(c)
 	if !ok {

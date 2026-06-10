@@ -168,7 +168,7 @@ func (h *MultiHandler) handleCallback(ctx context.Context, b *bot.Bot, cq *model
 
 func (h *MultiHandler) sendEditorReply(ctx context.Context, b *bot.Bot, chatID int64, msgID int, reply meetingedit.Reply) {
 	if reply.Text == "" {
-		return // empty reply = no-op (FSM emitted nothing to send)
+		return
 	}
 	var markup models.ReplyMarkup
 	if len(reply.Keyboard) > 0 {

@@ -38,8 +38,6 @@ func (f *fakeStore) GetUserTelegramID(_ context.Context, _ uuid.UUID) (int64, bo
 func TestResolve(t *testing.T) {
 	org := uuid.New()
 
-	// participant "a@x" is registered (tg 111), "b@x" has no bot_user (skipped),
-	// organizer is linked (tg 999) and not a participant.
 	f := &fakeStore{
 		parts: []postgres.MeetingParticipant{{Email: "a@x"}, {Email: "b@x"}, {Email: ""}},
 		byEmail: map[string]postgres.BotUser{

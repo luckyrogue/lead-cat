@@ -7,7 +7,7 @@ import (
 
 func TestSplitMeetingTime(t *testing.T) {
 	loc, _ := time.LoadLocation("Asia/Almaty")
-	// 2026-06-01 14:00–15:00 Almaty == 09:00–10:00 UTC
+
 	s := time.Date(2026, 6, 1, 9, 0, 0, 0, time.UTC)
 	e := time.Date(2026, 6, 1, 10, 0, 0, 0, time.UTC)
 	date, start, end := splitMeetingTime(s, e, loc)

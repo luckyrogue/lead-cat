@@ -13,7 +13,7 @@ func TestOverlaps(t *testing.T) {
 		aS, aE, bS, bE time.Time
 		want           bool
 	}{
-		{"disjoint before", tm(9, 0), tm(10, 0), tm(10, 0), tm(11, 0), false}, // touching edge = no overlap
+		{"disjoint before", tm(9, 0), tm(10, 0), tm(10, 0), tm(11, 0), false},
 		{"disjoint after", tm(11, 0), tm(12, 0), tm(9, 0), tm(10, 0), false},
 		{"partial", tm(9, 0), tm(10, 0), tm(9, 30), tm(11, 0), true},
 		{"full contain", tm(9, 0), tm(12, 0), tm(10, 0), tm(11, 0), true},
@@ -69,7 +69,7 @@ func TestFreeSlots(t *testing.T) {
 		}
 	})
 	t.Run("min-duration filter drops short gaps", func(t *testing.T) {
-		// leaves 9:00-9:15 and 17:45-18:00, both < 30m
+
 		if got := FreeSlots([]Span{{tm(9, 15), tm(17, 45)}}, win, winEnd, min); len(got) != 0 {
 			t.Fatalf("got %v want empty", got)
 		}

@@ -12,10 +12,9 @@ import (
 
 	"github.com/luckyrogue/lead-cat/internal/application"
 	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
 )
 
-// parseScope reads ?scope=this|whole; default "this". Returns error for any other value.
 func parseScope(c *fiber.Ctx) (string, error) {
 	switch s := c.Query("scope", "this"); s {
 	case "this", "whole":
@@ -25,9 +24,6 @@ func parseScope(c *fiber.Ctx) (string, error) {
 	}
 }
 
-// mapToSeriesUpdateInput converts the wire request into a SeriesUpdateInput.
-// Date is intentionally NOT carried — whole-series edits don't change the date
-// of each occurrence (that's locked when the series is created).
 func mapToSeriesUpdateInput(req miniappUpdateRequest) application.SeriesUpdateInput {
 	return application.SeriesUpdateInput{
 		Dept:        req.Dept,
@@ -39,25 +35,20 @@ func mapToSeriesUpdateInput(req miniappUpdateRequest) application.SeriesUpdateIn
 	}
 }
 
-// miniappCreateRequest is the create-meeting payload. Recurrence fields are optional:
-// the domain Validate() enforces the per-recurrence rules (until required for
-// non-once, days required for custom, etc.).
 type miniappCreateRequest struct {
 	Dept            string   `json:"dept"`
 	Type            string   `json:"type"`
 	Host            string   `json:"host"`
-	Date            string   `json:"date"`  // YYYY-MM-DD
-	Start           string   `json:"start"` // HH:MM
-	End             string   `json:"end"`   // HH:MM
+	Date            string   `json:"date"`
+	Start           string   `json:"start"`
+	End             string   `json:"end"`
 	Recurrence      string   `json:"recurrence"`
 	Desc            string   `json:"desc"`
-	Participants    []string `json:"participants"`               // emails
-	RecurrenceUntil *string  `json:"recurrence_until,omitempty"` // YYYY-MM-DD; required when recurrence != once
-	RecurrenceDays  *[]int   `json:"recurrence_days,omitempty"`  // 1..7 (Mon..Sun); required when recurrence == custom
+	Participants    []string `json:"participants"`
+	RecurrenceUntil *string  `json:"recurrence_until,omitempty"`
+	RecurrenceDays  *[]int   `json:"recurrence_days,omitempty"`
 }
 
-// toCreateMeetingInput maps the TMA request to the application input. Pure: host
-// falls back to the bot user's name when blank; blank participant emails are dropped.
 func toCreateMeetingInput(req miniappCreateRequest, hostFallback string) application.CreateMeetingInput {
 	host := strings.TrimSpace(req.Host)
 	if host == "" {
@@ -84,15 +75,11 @@ func toCreateMeetingInput(req miniappCreateRequest, hostFallback string) applica
 	return in
 }
 
-// botUser returns the authed TMA bot_user from locals.
 func botUser(c *fiber.Ctx) (postgres.BotUser, bool) {
 	bu, ok := c.Locals("bot_user").(postgres.BotUser)
 	return bu, ok
 }
 
-// MiniAppCreateMeeting creates a meeting (once or recurring series) for the authed TMA user.
-// Recurrence rules are enforced by the domain Validate() inside CreateMeeting and
-// surface as 400 validation_failed via ErrInvalidInput.
 func (a *API) MiniAppCreateMeeting(c *fiber.Ctx) error {
 	bu, ok := botUser(c)
 	if !ok {
@@ -109,7 +96,7 @@ func (a *API) MiniAppCreateMeeting(c *fiber.Ctx) error {
 	if len(wsIDs) == 0 {
 		return fiber.NewError(fiber.StatusBadRequest, "meetings_not_configured")
 	}
-	// Use the first Google-configured organization; multi-organization targeting is deferred.
+
 	organizationID := wsIDs[0]
 	organizerID, err := a.App.EnsureMiniAppOrganizer(c.Context(), bu.Email, bu.TelegramID)
 	if err != nil {
@@ -134,13 +121,12 @@ func (a *API) MiniAppCreateMeeting(c *fiber.Ctx) error {
 
 type miniappConflictDTO struct {
 	Email string `json:"email"`
-	Name  string `json:"name"`  // application.Conflict.PersonName
-	Title string `json:"title"` // application.Conflict.MeetingName
-	Start string `json:"start"` // HH:MM Almaty
+	Name  string `json:"name"`
+	Title string `json:"title"`
+	Start string `json:"start"`
 	End   string `json:"end"`
 }
 
-// toConflictDTO renders a conflict's UTC times into Almaty HH:MM. Pure.
 func toConflictDTO(c application.Conflict, loc *time.Location) miniappConflictDTO {
 	return miniappConflictDTO{
 		Email: c.Email,
@@ -151,17 +137,13 @@ func toConflictDTO(c application.Conflict, loc *time.Location) miniappConflictDT
 	}
 }
 
-// miniappOccurrenceConflictsDTO is one occurrence's date/time + its conflicts list,
-// rendered in Almaty TZ. Always wrapped in {"occurrences":[...]} on the wire.
 type miniappOccurrenceConflictsDTO struct {
-	Date      string               `json:"date"`  // YYYY-MM-DD
-	Start     string               `json:"start"` // HH:MM Almaty
-	End       string               `json:"end"`   // HH:MM Almaty
+	Date      string               `json:"date"`
+	Start     string               `json:"start"`
+	End       string               `json:"end"`
 	Conflicts []miniappConflictDTO `json:"conflicts"`
 }
 
-// toOccurrenceConflicts maps an application OccurrenceConflicts + locale into
-// the wire DTO. Pure.
 func toOccurrenceConflicts(oc application.OccurrenceConflicts, loc *time.Location) miniappOccurrenceConflictsDTO {
 	startLocal := oc.Span.Start.In(loc)
 	endLocal := oc.Span.End.In(loc)
@@ -179,20 +161,15 @@ func toOccurrenceConflicts(oc application.OccurrenceConflicts, loc *time.Locatio
 
 type miniappConflictRequest struct {
 	Participants    []string `json:"participants"`
-	Date            string   `json:"date"`  // YYYY-MM-DD
-	Start           string   `json:"start"` // HH:MM
-	End             string   `json:"end"`   // HH:MM
+	Date            string   `json:"date"`
+	Start           string   `json:"start"`
+	End             string   `json:"end"`
 	ExcludeID       string   `json:"exclude_id"`
 	Recurrence      *string  `json:"recurrence,omitempty"`
-	RecurrenceUntil *string  `json:"recurrence_until,omitempty"` // YYYY-MM-DD
-	RecurrenceDays  *[]int   `json:"recurrence_days,omitempty"`  // 1..7 (Mon..Sun)
+	RecurrenceUntil *string  `json:"recurrence_until,omitempty"`
+	RecurrenceDays  *[]int   `json:"recurrence_days,omitempty"`
 }
 
-// MiniAppConflicts reports cross-participant conflicts for a pending meeting (§4.7).
-// Response is always occurrence-grouped: {"occurrences":[{date,start,end,conflicts:[]}]}.
-// For once (or absent recurrence) it's a one-element array with the single check;
-// for daily/weekly/custom/monthly the series is expanded and only occurrences with
-// ≥1 conflict are returned.
 func (a *API) MiniAppConflicts(c *fiber.Ctx) error {
 	if _, ok := botUser(c); !ok {
 		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
@@ -233,7 +210,7 @@ func (a *API) MiniAppConflicts(c *fiber.Ctx) error {
 			Conflicts: out,
 		}}})
 	}
-	// Recurring series: expand and per-occurrence check.
+
 	var until time.Time
 	if req.RecurrenceUntil != nil && strings.TrimSpace(*req.RecurrenceUntil) != "" {
 		u, uerr := time.ParseInLocation("2006-01-02", strings.TrimSpace(*req.RecurrenceUntil), loc)
@@ -248,8 +225,7 @@ func (a *API) MiniAppConflicts(c *fiber.Ctx) error {
 	}
 	ocs, err := a.App.MeetingSeriesConflicts(c.Context(), req.Participants, start, end, meeting.Recurrence(rec), days, until)
 	if err != nil {
-		// Domain errors from meeting.Occurrences (ErrRecurrenceDays,
-		// ErrRecurrenceWindow, ErrTooManyOccurrences, …) surface as 400.
+
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	occurrences := make([]miniappOccurrenceConflictsDTO, 0, len(ocs))
@@ -259,9 +235,6 @@ func (a *API) MiniAppConflicts(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"occurrences": occurrences})
 }
 
-// editableOrganization returns the organization of a meeting the TMA user may edit,
-// or false if the meeting is not in their editable set (not theirs / not
-// scheduled / past). Used by edit + delete.
 func (a *API) editableOrganization(c *fiber.Ctx, telegramID int64, meetingID uuid.UUID) (uuid.UUID, bool, error) {
 	ms, err := a.App.ListEditableMeetings(c.Context(), telegramID)
 	if err != nil {
@@ -285,7 +258,6 @@ type miniappUpdateRequest struct {
 	Desc  *string `json:"desc"`
 }
 
-// MiniAppUpdateMeeting edits a single meeting the authed TMA user organizes (§4.4).
 func (a *API) MiniAppUpdateMeeting(c *fiber.Ctx) error {
 	bu, ok := botUser(c)
 	if !ok {
@@ -338,7 +310,7 @@ func (a *API) MiniAppUpdateMeeting(c *fiber.Ctx) error {
 			zap.String("organization_id", organizationID.String()))
 		return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m)})
 	}
-	// scope == "whole"
+
 	if req.Date != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "date cannot be changed for whole-series edit")
 	}
@@ -358,7 +330,7 @@ func (a *API) MiniAppUpdateMeeting(c *fiber.Ctx) error {
 		zap.String("meeting_id", meetingID.String()),
 		zap.String("organization_id", organizationID.String()),
 		zap.Int("count", n))
-	// Refetch the picked occurrence so the response shape mirrors scope=this.
+
 	m, err := a.App.GetMeeting(c.Context(), organizationID, meetingID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
@@ -366,7 +338,6 @@ func (a *API) MiniAppUpdateMeeting(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m)})
 }
 
-// MiniAppDeleteMeeting cancels a single meeting the authed TMA user organizes (§4.5).
 func (a *API) MiniAppDeleteMeeting(c *fiber.Ctx) error {
 	bu, ok := botUser(c)
 	if !ok {
@@ -407,7 +378,7 @@ func (a *API) MiniAppDeleteMeeting(c *fiber.Ctx) error {
 			zap.String("organization_id", organizationID.String()))
 		return c.SendStatus(fiber.StatusNoContent)
 	}
-	// scope == "whole"
+
 	n, err := a.App.CancelWholeSeries(c.Context(), organizationID, organizerID, meetingID)
 	if err != nil {
 		switch {

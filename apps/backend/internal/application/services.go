@@ -99,7 +99,7 @@ func (s *Services) CreateOrganizationForOwner(ctx context.Context, name string, 
 	if base == "" {
 		base = "org"
 	}
-	suffix, err := authweb.NewState(nil) // url-safe random
+	suffix, err := authweb.NewState(nil)
 	if err != nil {
 		return postgres.Organization{}, err
 	}
@@ -292,7 +292,7 @@ func (s *Services) RemoveOrgMember(ctx context.Context, orgID, targetUserID uuid
 	}
 	views, idx := memberViews(members, targetUserID)
 	if idx < 0 {
-		return nil // not a member -> no-op
+		return nil
 	}
 	if err := canDemoteOrRemove(views, idx); err != nil {
 		return err
@@ -310,7 +310,7 @@ func (s *Services) SetOrgMemberRole(ctx context.Context, orgID, targetUserID uui
 	if idx < 0 {
 		return nil
 	}
-	// only guard when this change would remove the user's owner status
+
 	if newRole != "owner" {
 		if err := canDemoteOrRemove(views, idx); err != nil {
 			return err

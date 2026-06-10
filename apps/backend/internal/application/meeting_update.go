@@ -36,7 +36,6 @@ func applyMeetingUpdate(cur postgres.Meeting, in UpdateMeetingInput, loc *time.L
 	startsAt := cur.StartsAt
 	endsAt := cur.EndsAt
 
-	// Date/Start/End are a unit: all three or none.
 	hasDate := in.Date != nil || in.Start != nil || in.End != nil
 	allDate := in.Date != nil && in.Start != nil && in.End != nil
 	if hasDate && !allDate {

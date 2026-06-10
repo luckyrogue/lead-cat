@@ -22,7 +22,7 @@ func TestExpandSeriesSpans_Once(t *testing.T) {
 
 func TestExpandSeriesSpans_CustomThreeWeeks(t *testing.T) {
 	loc, _ := time.LoadLocation("Asia/Almaty")
-	start := time.Date(2026, 6, 1, 10, 0, 0, 0, loc).UTC() // Mon
+	start := time.Date(2026, 6, 1, 10, 0, 0, 0, loc).UTC()
 	end := time.Date(2026, 6, 1, 11, 0, 0, 0, loc).UTC()
 	until := time.Date(2026, 6, 21, 0, 0, 0, 0, loc)
 	spans, err := expandSeriesSpans(start, end, meeting.Custom, []int{1, 3, 5}, until)

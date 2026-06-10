@@ -95,10 +95,10 @@ func (n *Notifier) notifyParticipant(ctx context.Context, organizationID, meetin
 	}
 	u, err := n.store.GetBotUserByEmail(ctx, email)
 	if postgres.IsNotFound(err) {
-		return nil // not a bot user — the Google email invitation/cancellation covers them
+		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("get bot user: %w", err) // transient error — let asynq retry
+		return fmt.Errorf("get bot user: %w", err)
 	}
 	var text string
 	if added {
