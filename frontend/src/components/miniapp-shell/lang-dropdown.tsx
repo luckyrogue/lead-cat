@@ -13,7 +13,7 @@ export function LangDropdown({
   onClose: () => void
 }) {
   const { lang, setLang, t } = useMiniApp()
-  const langs: Lang[] = ["ru", "kk", "en"]
+  const langs: Lang[] = ["ru", "kk"]
 
   return (
     <BottomSheet

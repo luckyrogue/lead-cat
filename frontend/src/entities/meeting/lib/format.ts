@@ -2,7 +2,9 @@ import { MEETING_TYPES, RECURRENCE } from "@/entities/meeting/constants"
 import type { Meeting, MeetingDraft } from "@/entities/meeting/types"
 import type { Employee } from "@/entities/employee/types"
 import { emailsToPeople } from "@/entities/employee/fixtures"
-export type Lang = "ru" | "kk" | "en"
+import type { Lang } from "@/shared/miniapp/types"
+
+export type { Lang }
 
 export type PartWordKey = "part1" | "part24" | "participants"
 
@@ -22,14 +24,13 @@ export function buildTitle(
   return parts.join(" · ")
 }
 
-export function fmtDate(iso: string, lang: Lang): string {
+export function fmtDate(iso: string, _lang: Lang): string {
   const [y, m, d] = iso.split("-").map(Number)
   const dt = new Date(y, m - 1, d)
   const dow = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"][dt.getDay()]
-  const dowEn = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][dt.getDay()]
   const dd = String(d).padStart(2, "0")
   const mm = String(m).padStart(2, "0")
-  return lang === "en" ? `${dowEn} ${dd}.${mm}` : `${dd}.${mm}, ${dow}`
+  return `${dd}.${mm}, ${dow}`
 }
 
 export function partWord(n: number, t: (k: PartWordKey) => string): string {
@@ -41,7 +42,6 @@ export function partWord(n: number, t: (k: PartWordKey) => string): string {
 }
 
 export function meetCount(n: number, lang: Lang): string {
-  if (lang === "en") return `${n} ${n === 1 ? "meeting" : "meetings"}`
   if (lang === "kk") return `${n} кездесу`
   const last = n % 10
   const last2 = n % 100

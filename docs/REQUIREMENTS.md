@@ -132,7 +132,7 @@ Access matrix summary (from ТЗ §2):
 | ------------------ | -------------------------- |
 | Timezone           | UTC+5 (Almaty)             |
 | Reminder intervals | Off                        |
-| Interface language | Russian (English optional) |
+| Interface language | Russian and Kazakh |
 
 ### 3.13 Commands and navigation (§8)
 

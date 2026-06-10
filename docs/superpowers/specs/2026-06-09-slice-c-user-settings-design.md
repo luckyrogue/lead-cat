@@ -70,7 +70,7 @@ User identity comes from `c.Locals("bot_user").(postgres.BotUser).TelegramID`, s
 
 ### Modified
 
-**`backend/internal/platform/botsettings/settings.go`** — export the private `format` helper:
+**`backend/internal/platform/botsettings/settings.go`** — export the private `format` helper so the application layer can produce canonical CSV without duplicating logic:
 
 ```go
 // Format exposes the canonical CSV writer to other packages.
@@ -94,12 +94,16 @@ import (
 	"github.com/Jaryq-Lab/lead-cat/internal/platform/botsettings"
 )
 
+// ErrInvalidReminderMinute is returned when a minute value is not in the
+// botsettings.Intervals whitelist.
 var ErrInvalidReminderMinute = errors.New("invalid_reminder_minute")
 
+// UserSettings is the per-user settings projection exposed to the Mini App.
 type UserSettings struct {
 	ReminderMinutes []int `json:"reminder_minutes"`
 }
 
+// GetUserSettings returns the authed bot user's settings.
 func (s *Services) GetUserSettings(ctx context.Context, telegramID int64) (UserSettings, error) {
 	u, err := s.Store.GetBotUserByTelegramID(ctx, telegramID)
 	if err != nil {
@@ -108,6 +112,8 @@ func (s *Services) GetUserSettings(ctx context.Context, telegramID int64) (UserS
 	return UserSettings{ReminderMinutes: botsettings.Parse(u.ReminderMinutes)}, nil
 }
 
+// SetUserReminderMinutes validates input against the whitelist, dedupes/sorts,
+// and writes canonical CSV. Empty slice → empty CSV → reminders disabled.
 func (s *Services) SetUserReminderMinutes(ctx context.Context, telegramID int64, minutes []int) error {
 	allowed := allowedReminderMinutes()
 	for _, m := range minutes {
@@ -161,6 +167,7 @@ func miniAppBotUser(c *fiber.Ctx) (postgres.BotUser, bool) {
 	return bu, ok
 }
 
+// MiniAppGetSettings — GET /api/miniapp/settings
 func (a *API) MiniAppGetSettings(c *fiber.Ctx) error {
 	bu, ok := miniAppBotUser(c)
 	if !ok {
@@ -173,6 +180,7 @@ func (a *API) MiniAppGetSettings(c *fiber.Ctx) error {
 	return c.JSON(s)
 }
 
+// MiniAppPatchSettings — PATCH /api/miniapp/settings
 func (a *API) MiniAppPatchSettings(c *fiber.Ctx) error {
 	bu, ok := miniAppBotUser(c)
 	if !ok {
@@ -194,7 +202,7 @@ func (a *API) MiniAppPatchSettings(c *fiber.Ctx) error {
 }
 ```
 
-`*[]int` distinguishes "not sent" from "sent empty array". nil → 400. Empty array → write empty CSV (reminders off).
+`*[]int` distinguishes "not sent" from "sent empty array". A nil pointer → 400. An empty array → write empty CSV (reminders off).
 
 ### Routing
 
@@ -316,7 +324,73 @@ export function useUpdateReminderMinutes() {
 
 ### Profile page rewrite
 
-`frontend/src/features/profile/pages/profile-page.tsx` — replace the local-state reminder block. Remove `useState(["15m"])`, `useState(true)`, `remOn && (...)` wrapper, local `intervals` array. Iterate `REMINDER_INTERVALS` and call `useUpdateReminderMinutes` on each chip click. Show `t("remindersOff")` hint when array is empty.
+`frontend/src/features/profile/pages/profile-page.tsx` — replace the local-state reminder block:
+
+```tsx
+const { data: settings } = useUserSettings()
+const updateMut = useUpdateReminderMinutes()
+const current = settings?.reminderMinutes ?? []
+
+const toggleInterval = (minutes: number) => {
+  const next = current.includes(minutes)
+    ? current.filter((m) => m !== minutes)
+    : [...current, minutes]
+  updateMut.mutate(next, {
+    onError: (err) => toastError(err, t("settingsSaveFailed")),
+  })
+}
+
+return (
+  <>
+    <SettingsGroup title={t("reminders")}>
+      <SettingsRow
+        icon="bell"
+        hue={45}
+        label={t("reminders")}
+        right={
+          current.length > 0 ? (
+            <span className="text-miniapp-muted text-xs font-bold">
+              {current.length}
+            </span>
+          ) : undefined
+        }
+        last
+      />
+    </SettingsGroup>
+    <div className="mx-1 -mt-3 mb-5 flex flex-col gap-2">
+      {current.length === 0 && (
+        <p className="text-miniapp-muted px-1 text-xs">
+          {t("remindersOff")}
+        </p>
+      )}
+      <div className="flex flex-wrap gap-2">
+        {REMINDER_INTERVALS.map((it) => {
+          const on = current.includes(it.value)
+          return (
+            <button
+              key={it.value}
+              type="button"
+              onClick={() => toggleInterval(it.value)}
+              className={cn(
+                "font-display cursor-pointer rounded-[11px] border-[1.5px] px-[13px] py-2 text-[13.5px] font-bold",
+                on
+                  ? "border-miniapp-accent bg-miniapp-accent-soft text-miniapp-accent"
+                  : "border-miniapp-border bg-miniapp-card text-miniapp-muted"
+              )}
+            >
+              {on ? "✓ " : ""}
+              {t(it.labelKey)}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+    {/* timezone + language groups unchanged */}
+  </>
+)
+```
+
+Removed: `useState(["15m"])`, `useState(true)`, `remOn && (...)` wrapper, local `intervals` array.
 
 ### i18n keys
 
@@ -333,7 +407,7 @@ export function useUpdateReminderMinutes() {
 | `remindersOff` | "Напоминания выключены — выбери интервалы" | "Reminders are off — pick intervals" | "Хабарландырулар сөнді — интервалды таңда" |
 | `settingsSaveFailed` | "Не удалось сохранить" | "Failed to save" | "Сақтау сәтсіз" |
 
-Existing keys `"10m"`, `"15m"`, etc. preserved — may be referenced elsewhere.
+Existing keys `"10m"`, `"15m"`, etc. are preserved — they may be referenced elsewhere (meeting detail, etc.).
 
 ### Tests
 
@@ -347,10 +421,37 @@ Both `backend/openapi/openapi.json` and `backend/docs/openapi.json` (byte-identi
 
 ### New paths
 
-`GET /api/miniapp/settings` with `200` returning `MiniAppUserSettings`, `401`, `500`.
-`PATCH /api/miniapp/settings` with body `MiniAppUserSettingsPatch`, returns `204`, `400 validation_failed`, `401`, `500`.
-
-Both tagged `miniapp`, both `security: [{bearerAuth: []}]`.
+```json
+"/api/miniapp/settings": {
+  "get": {
+    "operationId": "miniapp_settings_get",
+    "tags": ["miniapp"],
+    "summary": "Get current user settings",
+    "security": [{ "bearerAuth": [] }],
+    "responses": {
+      "200": { ... "$ref": "#/components/schemas/MiniAppUserSettings" ... },
+      "401": { ... "$ref": "#/components/schemas/ApiErrorResponse" ... },
+      "500": { ... }
+    }
+  },
+  "patch": {
+    "operationId": "miniapp_settings_patch",
+    "tags": ["miniapp"],
+    "summary": "Update reminder minutes",
+    "security": [{ "bearerAuth": [] }],
+    "requestBody": {
+      "required": true,
+      "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MiniAppUserSettingsPatch" } } }
+    },
+    "responses": {
+      "204": { "description": "Saved" },
+      "400": { ... "validation_failed" ... },
+      "401": { ... },
+      "500": { ... }
+    }
+  }
+}
+```
 
 ### New schemas
 
@@ -377,6 +478,8 @@ Both tagged `miniapp`, both `security: [{bearerAuth: []}]`.
 }
 ```
 
+The `enum` constraint in the patch schema mirrors the backend whitelist.
+
 ### Frontend schema regen
 
 `npx openapi-typescript backend/openapi/openapi.json -o frontend/src/shared/api/generated/schema.ts` (run from `frontend/`).
@@ -388,17 +491,17 @@ Both tagged `miniapp`, both `security: [{bearerAuth: []}]`.
 | Risk | Severity | Mitigation |
 |------|----------|------------|
 | Frontend `REMINDER_INTERVALS` drifts from backend `botsettings.Intervals` | Med | Comment "must stay in sync" on both sides. Slice H may add codegen. |
-| Reminder scheduler picks up changes lazily | Low | Scheduler reads `bot_users.reminder_minutes` per tick (no cache). Changes propagate within one tick. |
-| Concurrent edits via bot `/settings` and Mini App | Low | Single-row last-write-wins. Acceptable. |
+| Reminder scheduler picks up changes lazily | Low | Scheduler reads `bot_users.reminder_minutes` per tick (no cache). Changes propagate within one tick. Document in UI hint if needed. |
+| Concurrent edits via bot `/settings` and Mini App | Low | Single-row last-write-wins. Acceptable — both write the same column. |
 | Empty PATCH body resets settings | Low | `*[]int` pointer check; nil → 400. Empty array → write empty CSV intentionally. |
-| Legacy DB values outside whitelist | Low | `Parse` returns them; UI doesn't render unknown chips. Next PATCH overwrites with whitelist-only set. |
-| Optimistic update / server reject divergence | Low | TanStack `onError` rolls back; toast surfaces cause. Chips constrain input. |
+| Legacy DB values outside whitelist (e.g. `45`) | Low | `Parse` returns them as is; UI does not render unknown chips, so they're invisible. Next user PATCH overwrites with whitelist-only set. KISS, no migration. |
+| Optimistic update / server reject divergence | Low | TanStack `onError` rolls back; toast surfaces cause. Chips constrain input, so divergence only via curl. |
 
 ### Open questions (resolved)
 
-1. **PATCH returns updated settings?** → No, 204. Frontend already knows next.
-2. **PATCH idempotency** → Yes — same body → same CSV → same 204.
-3. **Legacy non-whitelist DB values?** → Read silently passes through; invisible in UI; canonicalized on next write.
+1. **Should the API return updated settings in PATCH response?** → No, 204. Frontend already knows next (optimistic). Saves bytes.
+2. **PATCH idempotency** → Yes — same body produces same CSV → same 204.
+3. **What about `bot_users.reminder_minutes` values from old data?** → Read silently passes through `Parse`; non-whitelist values surface as ignored chips. Next write canonicalizes.
 
 ## 6. File structure (final)
 
@@ -445,6 +548,8 @@ docs/
 | Profile-page rewrite + i18n | ~120 | 0.5 day |
 | Docs + verification | ~80 | 0.25 day |
 | **Total** | **~680** | **~2 days (≈0.5 week)** |
+
+Smallest slice in the roadmap — backend bones already exist; this slice is HTTP exposure + frontend wire only.
 
 ## 8. Self-review
 
