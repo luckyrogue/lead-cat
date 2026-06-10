@@ -2,7 +2,7 @@
 	backend backend-watch frontend dev test lint fmt fmt-check typecheck build smoke docker-build clean
 
 ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
-BACKEND := $(ROOT)backend
+BACKEND := $(ROOT)apps/backend
 FRONTEND := $(ROOT)frontend
 COMPOSE := docker compose -f deploy/docker-compose.yml
 GO := env -u GOROOT go

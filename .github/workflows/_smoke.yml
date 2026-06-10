@@ -10,7 +10,7 @@ jobs:
     timeout-minutes: 15
     defaults:
       run:
-        working-directory: backend
+        working-directory: apps/backend
     services:
       postgres:
         image: postgres:18-alpine
@@ -40,8 +40,8 @@ jobs:
 
       - uses: actions/setup-go@v6
         with:
-          go-version-file: backend/go.mod
-          cache-dependency-path: backend/go.sum
+          go-version-file: apps/backend/go.mod
+          cache-dependency-path: apps/backend/go.sum
 
       - run: go mod download
       - run: go run ./cmd/migrate up

@@ -11,9 +11,9 @@ RUN pnpm build
 
 FROM golang:1.26-alpine AS builder
 WORKDIR /src
-COPY backend/go.mod backend/go.sum ./
+COPY apps/backend/go.mod apps/backend/go.sum ./
 RUN go mod download
-COPY backend/ .
+COPY apps/backend/ .
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags='-s -w' -o /out/lead-cat ./cmd/server && \
     CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags='-s -w' -o /out/migrate ./cmd/migrate
 
