@@ -7,6 +7,16 @@ import (
 	"github.com/google/uuid"
 )
 
+type PlatformUser struct {
+	ID         uuid.UUID
+	AuthSub    string
+	Email      string
+	TelegramID *int64
+	AvatarURL  string
+	AuthMethod string
+	CreatedAt  time.Time
+}
+
 type User struct {
 	ID         uuid.UUID
 	AuthSub    string

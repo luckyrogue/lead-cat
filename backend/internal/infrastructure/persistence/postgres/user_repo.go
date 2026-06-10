@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+
+	"github.com/luckyrogue/lead-cat/internal/platform/auth"
 )
 
 func (s *Store) UpsertUser(ctx context.Context, authSub, email string) (User, error) {
@@ -68,4 +70,23 @@ func (s *Store) GetUserTelegramID(ctx context.Context, userID uuid.UUID) (int64,
 		return 0, false, nil
 	}
 	return *tg, true, nil
+}
+
+// UpsertWebIdentity provisions/refreshes the canonical account for a web sign-in,
+// keyed by auth_sub ("email:<lower>"). Returns the platform_users row.
+// name is accepted for future use (platform_users has no name column yet).
+func (s *Store) UpsertWebIdentity(ctx context.Context, email, _ string, avatarURL, authMethod string) (PlatformUser, error) {
+	sub := auth.SubEmail(email)
+	const q = `
+	INSERT INTO platform_users (auth_sub, email, avatar_url, auth_method)
+	VALUES ($1, $2, $3, $4)
+	ON CONFLICT (auth_sub) DO UPDATE SET
+	  email = EXCLUDED.email,
+	  avatar_url = CASE WHEN EXCLUDED.avatar_url <> '' THEN EXCLUDED.avatar_url ELSE platform_users.avatar_url END,
+	  auth_method = EXCLUDED.auth_method
+	RETURNING id, auth_sub, email, telegram_id, avatar_url, auth_method, created_at`
+	var u PlatformUser
+	err := s.pool.QueryRow(ctx, q, sub, email, avatarURL, authMethod).
+		Scan(&u.ID, &u.AuthSub, &u.Email, &u.TelegramID, &u.AvatarURL, &u.AuthMethod, &u.CreatedAt)
+	return u, err
 }
