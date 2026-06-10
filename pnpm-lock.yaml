@@ -165,6 +165,12 @@ importers:
       '@fontsource-variable/inter':
         specifier: ^5.2.8
         version: 5.2.8
+      '@hookform/resolvers':
+        specifier: ^5.4.0
+        version: 5.4.0(react-hook-form@7.78.0(react@19.2.7))
+      '@leadcat/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@leadcat/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -174,6 +180,12 @@ importers:
       '@react-router/serve':
         specifier: 7.17.0
         version: 7.17.0(react-router@7.17.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(typescript@5.9.3)
+      '@tanstack/react-query':
+        specifier: ^5.101.0
+        version: 5.101.0(react@19.2.7)
+      axios:
+        specifier: ^1.7.9
+        version: 1.17.0
       isbot:
         specifier: ^5.1.36
         version: 5.1.42
@@ -183,9 +195,15 @@ importers:
       react-dom:
         specifier: ^19.2.4
         version: 19.2.7(react@19.2.7)
+      react-hook-form:
+        specifier: ^7.78.0
+        version: 7.78.0(react@19.2.7)
       react-router:
         specifier: 7.17.0
         version: 7.17.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@leadcat/config':
         specifier: workspace:*
