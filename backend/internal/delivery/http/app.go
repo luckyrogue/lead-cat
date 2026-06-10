@@ -44,9 +44,14 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	for i := range origins {
 		origins[i] = strings.TrimSpace(origins[i])
 	}
+	if cfg.AppBaseURL != "" {
+		origins = append(origins, cfg.AppBaseURL)
+	}
+	origins = dedupeNonEmpty(origins)
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: strings.Join(origins, ","),
-		AllowHeaders: "Authorization, Content-Type, X-Telegram-Init-Data",
+		AllowOrigins:     strings.Join(origins, ","),
+		AllowHeaders:     "Authorization, Content-Type, X-Telegram-Init-Data, X-CSRF-Token, X-Org-Id",
+		AllowCredentials: true,
 	}))
 
 	miniappToken, err := platformauth.NewMiniAppToken(cfg.JWTSecret, cfg.JWTIssuer, 24*time.Hour)
@@ -63,6 +68,8 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 		Version:      os.Getenv("APP_VERSION"),
 		MiniAppToken: miniappToken,
 		AuthDevMode:  cfg.AuthDevMode,
+
+		WebCookieDomain: cfg.WebCookieDomain,
 	}
 
 	app.Get("/api/health", api.Health)
@@ -75,6 +82,15 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	app.All("/api/me/*", handlers.PlatformGone)
 	app.All("/api/workspaces", handlers.PlatformGone)
 	app.All("/api/workspaces/*", handlers.PlatformGone)
+
+	webAuth := middleware.NewWebAuth(services)
+	web := app.Group("/api/auth/web")
+	web.Get("/:provider/start", api.WebAuthStart)
+	web.Get("/:provider/callback", api.WebAuthCallback)
+	web.Post("/magic/request", api.WebMagicRequest)
+	web.Get("/magic/verify", api.WebMagicVerify)
+	web.Post("/logout", webAuth.Middleware, api.WebLogout)
+	web.Get("/me", webAuth.Middleware, api.WebMe)
 
 	miniappAuth := middleware.NewMiniAppAuth(miniappToken, store)
 	miniapp := app.Group("/api/miniapp", miniappAuth.Middleware)
@@ -116,4 +132,22 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	}
 
 	return app, nil
+}
+
+// dedupeNonEmpty returns the input with empty strings removed and duplicates
+// collapsed, preserving first-seen order.
+func dedupeNonEmpty(in []string) []string {
+	seen := make(map[string]struct{}, len(in))
+	out := make([]string, 0, len(in))
+	for _, s := range in {
+		if s == "" {
+			continue
+		}
+		if _, ok := seen[s]; ok {
+			continue
+		}
+		seen[s] = struct{}{}
+		out = append(out, s)
+	}
+	return out
 }

@@ -24,6 +24,8 @@ type API struct {
 	MiniAppToken *platformauth.MiniAppToken
 	AuthDevMode  bool
 	Version      string
+
+	WebCookieDomain string
 }
 
 func (a *API) Health(c *fiber.Ctx) error {
