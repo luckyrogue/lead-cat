@@ -1,3 +1,4 @@
+import { useEffect, type ReactNode } from "react"
 import { RouterProvider } from "@tanstack/react-router"
 
 import { MaintenanceScreen } from "@/components/maintenance-screen"
@@ -10,6 +11,22 @@ import { detectSurface } from "@/shared/lib/surface"
 import { queryClient, router } from "@/app/router"
 
 const surface = detectSurface(getTelegramWebApp())
+
+/**
+ * For web users landing on `/`, the router would otherwise match the parked
+ * Telegram MiniApp index route (fullPath `/`). This component fires once on
+ * mount and navigates to `/dashboard`; the WebLayout guard then takes over
+ * (anonymous → /login, authed+0orgs → /onboarding, else stays on /dashboard).
+ */
+function WebRootRedirect({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    if (window.location.pathname === "/") {
+      void router.navigate({ to: "/dashboard", replace: true })
+    }
+  }, [])
+
+  return <>{children}</>
+}
 
 export function AppContent() {
   const healthQuery = useAppHealth()
@@ -29,7 +46,11 @@ export function AppContent() {
   )
 
   if (surface === "web") {
-    return <WebAuthProvider>{routerProvider}</WebAuthProvider>
+    return (
+      <WebAuthProvider>
+        <WebRootRedirect>{routerProvider}</WebRootRedirect>
+      </WebAuthProvider>
+    )
   }
 
   return routerProvider
