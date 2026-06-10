@@ -29,7 +29,7 @@ func TestUserCanAccessOrganization_Integration(t *testing.T) {
 		t.Fatal(err)
 	}
 	slug := "test-" + uuid.New().String()[:8]
-	org, err := store.CreateOrganization(ctx, slug, "test-org", u.ID)
+	org, err := store.CreateOrganization(ctx, "Test Org", slug, u.ID)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
 // CreateInvite inserts a new pending invitation row and returns it.
@@ -115,7 +114,7 @@ func (s *Store) AcceptInvitesForEmail(ctx context.Context, email string, userID 
 			VALUES ($1, $2, $3)
 			ON CONFLICT (organization_id, user_id) DO NOTHING`,
 			inv.orgID, userID, inv.role)
-		if err != nil && err != pgx.ErrNoRows {
+		if err != nil {
 			return 0, err
 		}
 
