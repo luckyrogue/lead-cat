@@ -11,19 +11,19 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
-// SyncChatMembers imports chat administrators into workspace_members.
+// SyncChatMembers imports chat administrators into organization_members.
 // Telegram Bot API does not expose full member lists; admins + anyone who posts are tracked.
-func SyncChatMembers(ctx context.Context, b *bot.Bot, store *postgres.Store, workspaceID uuid.UUID) (int, error) {
-	ws, err := store.GetWorkspace(ctx, workspaceID)
+func SyncChatMembers(ctx context.Context, b *bot.Bot, store *postgres.Store, organizationID uuid.UUID) (int, error) {
+	org, err := store.GetOrganization(ctx, organizationID)
 	if err != nil {
 		return 0, err
 	}
-	if ws.NotifyChatID == nil {
+	if org.NotifyChatID == nil {
 		return 0, fmt.Errorf("chat not linked")
 	}
 
 	admins, err := b.GetChatAdministrators(ctx, &bot.GetChatAdministratorsParams{
-		ChatID: *ws.NotifyChatID,
+		ChatID: *org.NotifyChatID,
 	})
 	if err != nil {
 		return 0, err
@@ -35,7 +35,7 @@ func SyncChatMembers(ctx context.Context, b *bot.Bot, store *postgres.Store, wor
 		if user == nil || user.IsBot || user.Username == "" {
 			continue
 		}
-		if err := store.UpsertMemberFromChat(ctx, workspaceID, user.Username, role); err != nil {
+		if err := store.UpsertMemberFromChat(ctx, organizationID, user.Username, role); err != nil {
 			return n, err
 		}
 		n++

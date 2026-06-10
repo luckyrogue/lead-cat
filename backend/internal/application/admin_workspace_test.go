@@ -8,15 +8,15 @@ import (
 	"github.com/google/uuid"
 )
 
-type fakeWSStore struct {
-	id         uuid.UUID
-	createErr  error
-	createdTZ  string
-	createdML  string
-	created    bool
+type fakeOrgStore struct {
+	id        uuid.UUID
+	createErr error
+	createdTZ string
+	createdML string
+	created   bool
 }
 
-func (f *fakeWSStore) EnsureLeadCatWorkspaceID(_ context.Context, tz, ml string, _ uuid.UUID) (uuid.UUID, error) {
+func (f *fakeOrgStore) EnsureDefaultOrganizationID(_ context.Context, tz, ml string, _ uuid.UUID) (uuid.UUID, error) {
 	if f.createErr != nil {
 		return uuid.Nil, f.createErr
 	}
@@ -26,10 +26,10 @@ func (f *fakeWSStore) EnsureLeadCatWorkspaceID(_ context.Context, tz, ml string,
 	return f.id, nil
 }
 
-func TestEnsureSingleWorkspace_Defaults(t *testing.T) {
+func TestEnsureDefaultOrganization_Defaults(t *testing.T) {
 	want := uuid.New()
-	f := &fakeWSStore{id: want}
-	got, err := ensureSingleWorkspace(context.Background(), f, uuid.New())
+	f := &fakeOrgStore{id: want}
+	got, err := ensureDefaultOrganization(context.Background(), f, uuid.New())
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
@@ -44,10 +44,10 @@ func TestEnsureSingleWorkspace_Defaults(t *testing.T) {
 	}
 }
 
-func TestEnsureSingleWorkspace_PropagatesStoreError(t *testing.T) {
+func TestEnsureDefaultOrganization_PropagatesStoreError(t *testing.T) {
 	boom := errors.New("db down")
-	f := &fakeWSStore{createErr: boom}
-	if _, err := ensureSingleWorkspace(context.Background(), f, uuid.New()); !errors.Is(err, boom) {
+	f := &fakeOrgStore{createErr: boom}
+	if _, err := ensureDefaultOrganization(context.Background(), f, uuid.New()); !errors.Is(err, boom) {
 		t.Fatalf("expected boom, got %v", err)
 	}
 }

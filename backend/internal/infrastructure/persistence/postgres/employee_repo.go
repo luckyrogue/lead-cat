@@ -6,10 +6,10 @@ import (
 	"github.com/google/uuid"
 )
 
-func (s *Store) ListEmployees(ctx context.Context, workspaceID uuid.UUID) ([]Employee, error) {
+func (s *Store) ListEmployees(ctx context.Context, organizationID uuid.UUID) ([]Employee, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT id, workspace_id, full_name, email, dept, has_telegram
-		FROM employees WHERE workspace_id = $1 ORDER BY full_name`, workspaceID)
+		SELECT id, organization_id, full_name, email, dept, has_telegram
+		FROM employees WHERE organization_id = $1 ORDER BY full_name`, organizationID)
 	if err != nil {
 		return nil, err
 	}
@@ -17,7 +17,7 @@ func (s *Store) ListEmployees(ctx context.Context, workspaceID uuid.UUID) ([]Emp
 	var out []Employee
 	for rows.Next() {
 		var e Employee
-		if err := rows.Scan(&e.ID, &e.WorkspaceID, &e.FullName, &e.Email, &e.Dept, &e.HasTelegram); err != nil {
+		if err := rows.Scan(&e.ID, &e.OrganizationID, &e.FullName, &e.Email, &e.Dept, &e.HasTelegram); err != nil {
 			return nil, err
 		}
 		out = append(out, e)
@@ -25,11 +25,11 @@ func (s *Store) ListEmployees(ctx context.Context, workspaceID uuid.UUID) ([]Emp
 	return out, rows.Err()
 }
 
-// SearchEmployeesGlobal finds directory entries across all workspaces whose name
+// SearchEmployeesGlobal finds directory entries across all organizations whose name
 // or email contains query (case-insensitive), capped at 20.
 func (s *Store) SearchEmployeesGlobal(ctx context.Context, query string) ([]Employee, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT id, workspace_id, full_name, email, dept, has_telegram
+		SELECT id, organization_id, full_name, email, dept, has_telegram
 		FROM employees
 		WHERE full_name ILIKE '%' || $1 || '%' OR email ILIKE '%' || $1 || '%'
 		ORDER BY full_name LIMIT 20`, query)
@@ -40,7 +40,7 @@ func (s *Store) SearchEmployeesGlobal(ctx context.Context, query string) ([]Empl
 	var out []Employee
 	for rows.Next() {
 		var e Employee
-		if err := rows.Scan(&e.ID, &e.WorkspaceID, &e.FullName, &e.Email, &e.Dept, &e.HasTelegram); err != nil {
+		if err := rows.Scan(&e.ID, &e.OrganizationID, &e.FullName, &e.Email, &e.Dept, &e.HasTelegram); err != nil {
 			return nil, err
 		}
 		out = append(out, e)
@@ -48,14 +48,14 @@ func (s *Store) SearchEmployeesGlobal(ctx context.Context, query string) ([]Empl
 	return out, rows.Err()
 }
 
-func (s *Store) CreateEmployee(ctx context.Context, workspaceID uuid.UUID, fullName, email, dept string, hasTelegram bool) (Employee, error) {
+func (s *Store) CreateEmployee(ctx context.Context, organizationID uuid.UUID, fullName, email, dept string, hasTelegram bool) (Employee, error) {
 	var e Employee
 	err := s.pool.QueryRow(ctx, `
-		INSERT INTO employees (workspace_id, full_name, email, dept, has_telegram)
+		INSERT INTO employees (organization_id, full_name, email, dept, has_telegram)
 		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id, workspace_id, full_name, email, dept, has_telegram`,
-		workspaceID, fullName, email, dept, hasTelegram).
-		Scan(&e.ID, &e.WorkspaceID, &e.FullName, &e.Email, &e.Dept, &e.HasTelegram)
+		RETURNING id, organization_id, full_name, email, dept, has_telegram`,
+		organizationID, fullName, email, dept, hasTelegram).
+		Scan(&e.ID, &e.OrganizationID, &e.FullName, &e.Email, &e.Dept, &e.HasTelegram)
 	return e, err
 }
 
@@ -68,10 +68,10 @@ type EmployeeSeed struct {
 	Dept     string
 }
 
-// ListWorkspacesWithGoogle returns IDs of workspaces that have Google
+// ListOrganizationsWithGoogle returns IDs of organizations that have Google
 // service-account credentials configured (google_sa_json_enc IS NOT NULL).
-func (s *Store) ListWorkspacesWithGoogle(ctx context.Context) ([]uuid.UUID, error) {
-	rows, err := s.pool.Query(ctx, `SELECT id FROM workspaces WHERE google_sa_json_enc IS NOT NULL ORDER BY id`)
+func (s *Store) ListOrganizationsWithGoogle(ctx context.Context) ([]uuid.UUID, error) {
+	rows, err := s.pool.Query(ctx, `SELECT id FROM organizations WHERE google_sa_json_enc IS NOT NULL ORDER BY id`)
 	if err != nil {
 		return nil, err
 	}
@@ -87,13 +87,13 @@ func (s *Store) ListWorkspacesWithGoogle(ctx context.Context) ([]uuid.UUID, erro
 	return out, rows.Err()
 }
 
-// SyncEmployees makes workspaceID's employees rows mirror seeds in one
+// SyncEmployees makes organizationID's employees rows mirror seeds in one
 // transaction: rows whose email is not in seeds are deleted; present rows are
 // upserted (full_name, dept). has_telegram is left untouched on existing rows.
 // Returns per-op counts. Empty seeds is a no-op (caller guards against an empty
 // CSV; this is belt-and-suspenders so a stray empty call never wipes the table).
 // §9.4
-func (s *Store) SyncEmployees(ctx context.Context, workspaceID uuid.UUID, seeds []EmployeeSeed) (added, updated, deleted int, err error) {
+func (s *Store) SyncEmployees(ctx context.Context, organizationID uuid.UUID, seeds []EmployeeSeed) (added, updated, deleted int, err error) {
 	if len(seeds) == 0 {
 		return 0, 0, 0, nil
 	}
@@ -107,7 +107,7 @@ func (s *Store) SyncEmployees(ctx context.Context, workspaceID uuid.UUID, seeds 
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
-	ct, err := tx.Exec(ctx, `DELETE FROM employees WHERE workspace_id = $1 AND email <> ALL($2)`, workspaceID, emails)
+	ct, err := tx.Exec(ctx, `DELETE FROM employees WHERE organization_id = $1 AND email <> ALL($2)`, organizationID, emails)
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -116,12 +116,12 @@ func (s *Store) SyncEmployees(ctx context.Context, workspaceID uuid.UUID, seeds 
 	for _, sd := range seeds {
 		var inserted bool
 		if err = tx.QueryRow(ctx, `
-			INSERT INTO employees (workspace_id, full_name, email, dept)
+			INSERT INTO employees (organization_id, full_name, email, dept)
 			VALUES ($1, $2, $3, $4)
-			ON CONFLICT (workspace_id, email) DO UPDATE
+			ON CONFLICT (organization_id, email) DO UPDATE
 				SET full_name = EXCLUDED.full_name, dept = EXCLUDED.dept
 			RETURNING (xmax = 0)`,
-			workspaceID, sd.FullName, sd.Email, sd.Dept).Scan(&inserted); err != nil {
+			organizationID, sd.FullName, sd.Email, sd.Dept).Scan(&inserted); err != nil {
 			return 0, 0, 0, err
 		}
 		if inserted {

@@ -28,14 +28,14 @@ func New(store *postgres.Store, b *bot.Bot, log *zap.Logger) *Notifier {
 // HandleCreated DMs the meeting's recipients. Returns an error only when the
 // meeting/workspace/recipients cannot be read (asynq should retry); a single
 // failed send is logged and skipped so a retry does not re-DM everyone else.
-func (n *Notifier) HandleCreated(ctx context.Context, workspaceID, meetingID uuid.UUID) error {
-	m, err := n.store.GetMeeting(ctx, workspaceID, meetingID)
+func (n *Notifier) HandleCreated(ctx context.Context, organizationID, meetingID uuid.UUID) error {
+	m, err := n.store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
 		return fmt.Errorf("get meeting: %w", err)
 	}
-	w, err := n.store.GetWorkspace(ctx, workspaceID)
+	w, err := n.store.GetOrganization(ctx, organizationID)
 	if err != nil {
-		return fmt.Errorf("get workspace: %w", err)
+		return fmt.Errorf("get organization: %w", err)
 	}
 	loc, err := time.LoadLocation(cmp.Or(w.TZ, "Asia/Almaty"))
 	if err != nil {
@@ -70,23 +70,23 @@ func (n *Notifier) HandleCreated(ctx context.Context, workspaceID, meetingID uui
 }
 
 // HandleParticipantAdded DMs a newly-added participant (if they have a bot account).
-func (n *Notifier) HandleParticipantAdded(ctx context.Context, workspaceID, meetingID uuid.UUID, email string) error {
-	return n.notifyParticipant(ctx, workspaceID, meetingID, email, true)
+func (n *Notifier) HandleParticipantAdded(ctx context.Context, organizationID, meetingID uuid.UUID, email string) error {
+	return n.notifyParticipant(ctx, organizationID, meetingID, email, true)
 }
 
 // HandleParticipantRemoved DMs a removed participant (if they have a bot account).
-func (n *Notifier) HandleParticipantRemoved(ctx context.Context, workspaceID, meetingID uuid.UUID, email string) error {
-	return n.notifyParticipant(ctx, workspaceID, meetingID, email, false)
+func (n *Notifier) HandleParticipantRemoved(ctx context.Context, organizationID, meetingID uuid.UUID, email string) error {
+	return n.notifyParticipant(ctx, organizationID, meetingID, email, false)
 }
 
-func (n *Notifier) notifyParticipant(ctx context.Context, workspaceID, meetingID uuid.UUID, email string, added bool) error {
-	m, err := n.store.GetMeeting(ctx, workspaceID, meetingID)
+func (n *Notifier) notifyParticipant(ctx context.Context, organizationID, meetingID uuid.UUID, email string, added bool) error {
+	m, err := n.store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
 		return fmt.Errorf("get meeting: %w", err)
 	}
-	w, err := n.store.GetWorkspace(ctx, workspaceID)
+	w, err := n.store.GetOrganization(ctx, organizationID)
 	if err != nil {
-		return fmt.Errorf("get workspace: %w", err)
+		return fmt.Errorf("get organization: %w", err)
 	}
 	loc, err := time.LoadLocation(cmp.Or(w.TZ, "Asia/Almaty"))
 	if err != nil {
@@ -120,14 +120,14 @@ func (n *Notifier) notifyParticipant(ctx context.Context, workspaceID, meetingID
 // HandleCancelled DMs the meeting's recipients that it was cancelled. The meeting
 // is already status='cancelled' but GetMeeting has no status filter. Best-effort
 // sends; returns an error only on read failures (asynq retries before any send).
-func (n *Notifier) HandleCancelled(ctx context.Context, workspaceID, meetingID uuid.UUID) error {
-	m, err := n.store.GetMeeting(ctx, workspaceID, meetingID)
+func (n *Notifier) HandleCancelled(ctx context.Context, organizationID, meetingID uuid.UUID) error {
+	m, err := n.store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
 		return fmt.Errorf("get meeting: %w", err)
 	}
-	w, err := n.store.GetWorkspace(ctx, workspaceID)
+	w, err := n.store.GetOrganization(ctx, organizationID)
 	if err != nil {
-		return fmt.Errorf("get workspace: %w", err)
+		return fmt.Errorf("get organization: %w", err)
 	}
 	loc, err := time.LoadLocation(cmp.Or(w.TZ, "Asia/Almaty"))
 	if err != nil {
@@ -157,14 +157,14 @@ func (n *Notifier) HandleCancelled(ctx context.Context, workspaceID, meetingID u
 // HandleUpdated DMs the meeting's recipients that it changed. Like HandleCreated
 // it returns an error only on read failures (asynq retries before any send);
 // sends are best-effort. No dedup: each edit is its own notification.
-func (n *Notifier) HandleUpdated(ctx context.Context, workspaceID, meetingID uuid.UUID) error {
-	m, err := n.store.GetMeeting(ctx, workspaceID, meetingID)
+func (n *Notifier) HandleUpdated(ctx context.Context, organizationID, meetingID uuid.UUID) error {
+	m, err := n.store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
 		return fmt.Errorf("get meeting: %w", err)
 	}
-	w, err := n.store.GetWorkspace(ctx, workspaceID)
+	w, err := n.store.GetOrganization(ctx, organizationID)
 	if err != nil {
-		return fmt.Errorf("get workspace: %w", err)
+		return fmt.Errorf("get organization: %w", err)
 	}
 	loc, err := time.LoadLocation(cmp.Or(w.TZ, "Asia/Almaty"))
 	if err != nil {

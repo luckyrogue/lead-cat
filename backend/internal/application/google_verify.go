@@ -25,10 +25,10 @@ type GoogleVerifyResult struct {
 	AccessRole      string `json:"access_role,omitempty"`
 }
 
-// VerifyGoogleIntegration reads the workspace's stored Google config,
+// VerifyGoogleIntegration reads the organization's stored Google config,
 // decrypts the SA JSON, runs Probe, and maps errors to public codes.
-func (s *Services) VerifyGoogleIntegration(ctx context.Context, workspaceID uuid.UUID) (*GoogleVerifyResult, error) {
-	enc, subject, calendarID, err := s.Store.GetGoogleConfig(ctx, workspaceID)
+func (s *Services) VerifyGoogleIntegration(ctx context.Context, organizationID uuid.UUID) (*GoogleVerifyResult, error) {
+	enc, subject, calendarID, err := s.Store.GetGoogleConfig(ctx, organizationID)
 	if err != nil {
 		return nil, err
 	}

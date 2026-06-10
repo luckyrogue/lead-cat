@@ -31,26 +31,26 @@ func (a *API) withAuditActor(c *fiber.Ctx) {
 	}))
 }
 
-// adminWorkspaceID returns the singleton Lead Cat workspace id, creating it
+// adminOrganizationID returns the default Lead Cat organization id, creating it
 // implicitly on first call. The admin's platform user_id (if any) becomes
 // owner_user_id; if the admin has no paired platform account, NULL is stored.
-func (a *API) adminWorkspaceID(c *fiber.Ctx) (uuid.UUID, error) {
+func (a *API) adminOrganizationID(c *fiber.Ctx) (uuid.UUID, error) {
 	bu, _ := miniappAdminBotUser(c)
 	ownerID := uuid.Nil
 	if u, ok, err := a.App.PlatformUserIDForTelegram(c.Context(), bu.TelegramID); err == nil && ok {
 		ownerID = u
 	}
-	return a.App.EnsureSingleWorkspace(c.Context(), ownerID)
+	return a.App.EnsureDefaultOrganization(c.Context(), ownerID)
 }
 
 // GET /api/miniapp/admin/workspace
 func (a *API) MiniAppAdminGetWorkspace(c *fiber.Ctx) error {
 	a.withAuditActor(c)
-	id, err := a.adminWorkspaceID(c)
+	id, err := a.adminOrganizationID(c)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
 	}
-	w, err := a.App.GetWorkspace(c.Context(), id)
+	w, err := a.App.GetOrganization(c.Context(), id)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
@@ -78,7 +78,7 @@ func (a *API) MiniAppAdminGetWorkspace(c *fiber.Ctx) error {
 // POST /api/miniapp/admin/workspace
 func (a *API) MiniAppAdminCreateWorkspace(c *fiber.Ctx) error {
 	a.withAuditActor(c)
-	id, err := a.adminWorkspaceID(c)
+	id, err := a.adminOrganizationID(c)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
 	}
@@ -88,7 +88,7 @@ func (a *API) MiniAppAdminCreateWorkspace(c *fiber.Ctx) error {
 // GET /api/miniapp/admin/integrations
 func (a *API) MiniAppAdminGetIntegrations(c *fiber.Ctx) error {
 	a.withAuditActor(c)
-	id, err := a.adminWorkspaceID(c)
+	id, err := a.adminOrganizationID(c)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
 	}
@@ -108,7 +108,7 @@ func (a *API) MiniAppAdminGetIntegrations(c *fiber.Ctx) error {
 // PATCH /api/miniapp/admin/integrations
 func (a *API) MiniAppAdminPatchIntegrations(c *fiber.Ctx) error {
 	a.withAuditActor(c)
-	id, err := a.adminWorkspaceID(c)
+	id, err := a.adminOrganizationID(c)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
 	}
@@ -143,7 +143,7 @@ func (a *API) MiniAppAdminPatchIntegrations(c *fiber.Ctx) error {
 // POST /api/miniapp/admin/integrations/verify
 func (a *API) MiniAppAdminVerifyIntegrations(c *fiber.Ctx) error {
 	a.withAuditActor(c)
-	id, err := a.adminWorkspaceID(c)
+	id, err := a.adminOrganizationID(c)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
 	}
@@ -184,11 +184,11 @@ func mapVerifyError(err error) (code string, status int) {
 // GET /api/miniapp/admin/chat/status
 func (a *API) MiniAppAdminChatStatus(c *fiber.Ctx) error {
 	a.withAuditActor(c)
-	id, err := a.adminWorkspaceID(c)
+	id, err := a.adminOrganizationID(c)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
 	}
-	w, err := a.App.GetWorkspace(c.Context(), id)
+	w, err := a.App.GetOrganization(c.Context(), id)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
@@ -205,7 +205,7 @@ func (a *API) MiniAppAdminChatStatus(c *fiber.Ctx) error {
 // POST /api/miniapp/admin/chat/link
 func (a *API) MiniAppAdminChatLink(c *fiber.Ctx) error {
 	a.withAuditActor(c)
-	id, err := a.adminWorkspaceID(c)
+	id, err := a.adminOrganizationID(c)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
 	}
@@ -229,7 +229,7 @@ func (a *API) MiniAppAdminChatLink(c *fiber.Ctx) error {
 // GET /api/miniapp/admin/members
 func (a *API) MiniAppAdminListMembers(c *fiber.Ctx) error {
 	a.withAuditActor(c)
-	id, err := a.adminWorkspaceID(c)
+	id, err := a.adminOrganizationID(c)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
 	}
@@ -243,7 +243,7 @@ func (a *API) MiniAppAdminListMembers(c *fiber.Ctx) error {
 // POST /api/miniapp/admin/members/sync-chat
 func (a *API) MiniAppAdminMembersSyncChat(c *fiber.Ctx) error {
 	a.withAuditActor(c)
-	id, err := a.adminWorkspaceID(c)
+	id, err := a.adminOrganizationID(c)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
 	}

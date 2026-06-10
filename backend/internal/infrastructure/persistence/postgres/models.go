@@ -14,19 +14,19 @@ type User struct {
 	TelegramID *int64
 }
 
-type Workspace struct {
+type Organization struct {
 	ID           uuid.UUID  `json:"id"`
 	Slug         string     `json:"slug"`
 	Name         string     `json:"name"`
 	NotifyChatID *int64     `json:"notify_chat_id,omitempty"`
 	MeetLink     string     `json:"meet_link,omitempty"`
 	TZ           string     `json:"tz,omitempty"`
-	OwnerUserID *uuid.UUID `json:"owner_user_id,omitempty"`
+	OwnerUserID  *uuid.UUID `json:"owner_user_id,omitempty"`
 }
 
 type Member struct {
 	ID               uuid.UUID
-	WorkspaceID      uuid.UUID
+	OrganizationID   uuid.UUID
 	UserID           *uuid.UUID
 	TelegramUsername string
 	Role             string
@@ -34,19 +34,19 @@ type Member struct {
 
 type PendingChat struct {
 	ID             uuid.UUID
-	WorkspaceID    *uuid.UUID
+	OrganizationID *uuid.UUID
 	TelegramUserID int64
 	ChatID         int64
 	ChatTitle      string
 }
 
 type Employee struct {
-	ID          uuid.UUID `json:"id"`
-	WorkspaceID uuid.UUID `json:"workspace_id"`
-	FullName    string    `json:"full_name"`
-	Email       string    `json:"email"`
-	Dept        string    `json:"dept"`
-	HasTelegram bool      `json:"has_telegram"`
+	ID             uuid.UUID `json:"id"`
+	OrganizationID uuid.UUID `json:"organization_id"`
+	FullName       string    `json:"full_name"`
+	Email          string    `json:"email"`
+	Dept           string    `json:"dept"`
+	HasTelegram    bool      `json:"has_telegram"`
 }
 
 type MeetingParticipant struct {
@@ -56,7 +56,7 @@ type MeetingParticipant struct {
 
 type Meeting struct {
 	ID              uuid.UUID            `json:"id"`
-	WorkspaceID     uuid.UUID            `json:"workspace_id"`
+	OrganizationID  uuid.UUID            `json:"organization_id"`
 	OrganizerUserID *uuid.UUID           `json:"organizer_user_id,omitempty"`
 	Dept            string               `json:"dept"`
 	Type            string               `json:"type"`

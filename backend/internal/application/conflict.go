@@ -102,12 +102,12 @@ func (s *Services) MeetingConflicts(ctx context.Context, emails []string, start,
 // MeetingUpdateConflicts resolves a pending single-meeting edit's effective time,
 // participants and organizer, then checks §4.7 conflicts (excluding the meeting
 // itself). Returns nil when the edit does not change the time (overlap unchanged).
-func (s *Services) MeetingUpdateConflicts(ctx context.Context, workspaceID, meetingID uuid.UUID, in UpdateMeetingInput) ([]Conflict, error) {
+func (s *Services) MeetingUpdateConflicts(ctx context.Context, organizationID, meetingID uuid.UUID, in UpdateMeetingInput) ([]Conflict, error) {
 	if in.Date == nil || in.Start == nil || in.End == nil {
 		// No date/time edit (or only a partial one) → the overlap set is unchanged; nothing to warn about.
 		return nil, nil
 	}
-	w, err := s.Store.GetWorkspace(ctx, workspaceID)
+	w, err := s.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (s *Services) MeetingUpdateConflicts(ctx context.Context, workspaceID, meet
 	if err != nil {
 		return nil, nil
 	}
-	emails, err := s.meetingEmails(ctx, workspaceID, meetingID)
+	emails, err := s.meetingEmails(ctx, organizationID, meetingID)
 	if err != nil {
 		return nil, err
 	}
@@ -131,8 +131,8 @@ func (s *Services) MeetingUpdateConflicts(ctx context.Context, workspaceID, meet
 }
 
 // meetingEmails returns a meeting's participant emails plus its organizer email.
-func (s *Services) meetingEmails(ctx context.Context, workspaceID, meetingID uuid.UUID) ([]string, error) {
-	m, err := s.Store.GetMeeting(ctx, workspaceID, meetingID)
+func (s *Services) meetingEmails(ctx context.Context, organizationID, meetingID uuid.UUID) ([]string, error) {
+	m, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
 		return nil, err
 	}

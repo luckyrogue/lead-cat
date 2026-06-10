@@ -20,14 +20,14 @@ type CalendarResult = docalendar.CalendarResult
 // production, a stub in tests/local). Implemented in infrastructure/calendar/*.
 type CalendarService = docalendar.Service
 
-// ErrGoogleNotConfigured is returned when a workspace has no Google credentials.
+// ErrGoogleNotConfigured is returned when an organization has no Google credentials.
 var ErrGoogleNotConfigured = docalendar.ErrNotConfigured
 
 // ErrInvalidInput marks client-side input errors (bad fields or times) so the
 // HTTP layer can map them to 400 instead of 500.
 var ErrInvalidInput = errors.New("invalid input")
 
-// CalendarProvider resolves the CalendarService to use for a given workspace.
+// CalendarProvider resolves the CalendarService to use for a given organization.
 type CalendarProvider interface {
-	For(ctx context.Context, workspaceID uuid.UUID) (CalendarService, error)
+	For(ctx context.Context, organizationID uuid.UUID) (CalendarService, error)
 }

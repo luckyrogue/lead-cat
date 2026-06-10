@@ -121,7 +121,7 @@ func main() {
 		if err != nil {
 			return err
 		}
-		wid, _ := uuid.Parse(p.WorkspaceID)
+		wid, _ := uuid.Parse(p.OrganizationID)
 		mid, _ := uuid.Parse(p.MeetingID)
 		return notifier.HandleCreated(c, wid, mid)
 	}
@@ -130,7 +130,7 @@ func main() {
 		if err != nil {
 			return err
 		}
-		wid, _ := uuid.Parse(p.WorkspaceID)
+		wid, _ := uuid.Parse(p.OrganizationID)
 		mid, _ := uuid.Parse(p.MeetingID)
 		return notifier.HandleUpdated(c, wid, mid)
 	}
@@ -139,7 +139,7 @@ func main() {
 		if err != nil {
 			return err
 		}
-		wid, _ := uuid.Parse(p.WorkspaceID)
+		wid, _ := uuid.Parse(p.OrganizationID)
 		mid, _ := uuid.Parse(p.MeetingID)
 		return notifier.HandleParticipantAdded(c, wid, mid, p.Email)
 	}
@@ -148,7 +148,7 @@ func main() {
 		if err != nil {
 			return err
 		}
-		wid, _ := uuid.Parse(p.WorkspaceID)
+		wid, _ := uuid.Parse(p.OrganizationID)
 		mid, _ := uuid.Parse(p.MeetingID)
 		return notifier.HandleParticipantRemoved(c, wid, mid, p.Email)
 	}
@@ -157,7 +157,7 @@ func main() {
 		if err != nil {
 			return err
 		}
-		wid, _ := uuid.Parse(p.WorkspaceID)
+		wid, _ := uuid.Parse(p.OrganizationID)
 		mid, _ := uuid.Parse(p.MeetingID)
 		return notifier.HandleCancelled(c, wid, mid)
 	}

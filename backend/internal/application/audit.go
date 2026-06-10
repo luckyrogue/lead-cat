@@ -14,8 +14,8 @@ import (
 var auditWhitelist = map[string]map[string]struct{}{
 	"google_config_updated": {"subject": {}, "calendar_id": {}, "has_new_sa_json": {}},
 	"google_verified":       {"ok": {}, "calendar_summary": {}, "time_zone": {}, "error_code": {}},
-	"chat_linked":    {"chat_id": {}, "chat_title": {}},
-	"members_synced": {"added": {}, "removed": {}, "unchanged": {}},
+	"chat_linked":           {"chat_id": {}, "chat_title": {}},
+	"members_synced":        {"added": {}, "removed": {}, "unchanged": {}},
 }
 
 // sanitizeAuditDetails filters details by the action's whitelist. Returns the

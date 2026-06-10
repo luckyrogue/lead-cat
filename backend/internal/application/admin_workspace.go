@@ -7,23 +7,23 @@ import (
 )
 
 const (
-	defaultWorkspaceTZ       = "Asia/Almaty"
-	defaultWorkspaceMeetLink = ""
+	defaultOrganizationTZ       = "Asia/Almaty"
+	defaultOrganizationMeetLink = ""
 )
 
-// workspaceEnsurer is the narrow store interface used by EnsureSingleWorkspace
+// organizationEnsurer is the narrow store interface used by EnsureDefaultOrganization
 // — defined here so unit tests can mock it.
-type workspaceEnsurer interface {
-	EnsureLeadCatWorkspaceID(ctx context.Context, tz, meetLink string, ownerID uuid.UUID) (uuid.UUID, error)
+type organizationEnsurer interface {
+	EnsureDefaultOrganizationID(ctx context.Context, tz, meetLink string, ownerID uuid.UUID) (uuid.UUID, error)
 }
 
-// EnsureSingleWorkspace returns the id of the singleton Lead Cat workspace,
+// EnsureDefaultOrganization returns the id of the default Lead Cat organization,
 // creating it on first call. ownerID may be uuid.Nil — the persistence layer
-// translates that to a NULL FK (workspaces.owner_user_id is nullable).
-func (s *Services) EnsureSingleWorkspace(ctx context.Context, ownerID uuid.UUID) (uuid.UUID, error) {
-	return ensureSingleWorkspace(ctx, s.Store, ownerID)
+// translates that to a NULL FK (organizations.owner_user_id is nullable).
+func (s *Services) EnsureDefaultOrganization(ctx context.Context, ownerID uuid.UUID) (uuid.UUID, error) {
+	return ensureDefaultOrganization(ctx, s.Store, ownerID)
 }
 
-func ensureSingleWorkspace(ctx context.Context, store workspaceEnsurer, ownerID uuid.UUID) (uuid.UUID, error) {
-	return store.EnsureLeadCatWorkspaceID(ctx, defaultWorkspaceTZ, defaultWorkspaceMeetLink, ownerID)
+func ensureDefaultOrganization(ctx context.Context, store organizationEnsurer, ownerID uuid.UUID) (uuid.UUID, error) {
+	return store.EnsureDefaultOrganizationID(ctx, defaultOrganizationTZ, defaultOrganizationMeetLink, ownerID)
 }

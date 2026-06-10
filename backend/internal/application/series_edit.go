@@ -70,12 +70,12 @@ func applySeriesUpdate(cur postgres.Meeting, in SeriesUpdateInput, loc *time.Loc
 // ones (organizer or owner only): validates per occurrence, persists atomically,
 // patches Google best-effort, and enqueues one change notification. Returns the
 // number of occurrences updated.
-func (s *Services) UpdateSeries(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, in SeriesUpdateInput) (int, error) {
-	picked, err := s.Store.GetMeeting(ctx, workspaceID, meetingID)
+func (s *Services) UpdateSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID, in SeriesUpdateInput) (int, error) {
+	picked, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
 		return 0, err
 	}
-	w, err := s.Store.GetWorkspace(ctx, workspaceID)
+	w, err := s.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
 		return 0, err
 	}
@@ -89,7 +89,7 @@ func (s *Services) UpdateSeries(ctx context.Context, workspaceID, userID, meetin
 	if err != nil {
 		return 0, fmt.Errorf("bad timezone: %w", err)
 	}
-	occs, err := s.Store.ListSeriesOccurrences(ctx, workspaceID, *picked.SeriesID, picked.StartsAt)
+	occs, err := s.Store.ListSeriesOccurrences(ctx, organizationID, *picked.SeriesID, picked.StartsAt)
 	if err != nil {
 		return 0, err
 	}
@@ -101,14 +101,14 @@ func (s *Services) UpdateSeries(ctx context.Context, workspaceID, userID, meetin
 		}
 		rows = append(rows, upd)
 	}
-	if err := s.Store.UpdateMeetingsTx(ctx, workspaceID, rows); err != nil {
+	if err := s.Store.UpdateMeetingsTx(ctx, organizationID, rows); err != nil {
 		return 0, err
 	}
 	// Google best-effort: DB is the source of truth; a failed patch is reconciled
 	// by re-editing (series patches are not reversible, so we don't compensate).
-	if calSvc, ferr := s.Calendar.For(ctx, workspaceID); ferr != nil {
+	if calSvc, ferr := s.Calendar.For(ctx, organizationID); ferr != nil {
 		if s.Log != nil {
-			s.Log.Warn("series update calendar provider", zap.String("workspace_id", workspaceID.String()), zap.Error(ferr))
+			s.Log.Warn("series update calendar provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))
 		}
 	} else {
 		for _, m := range rows {
@@ -123,9 +123,9 @@ func (s *Services) UpdateSeries(ctx context.Context, workspaceID, userID, meetin
 		}
 	}
 	if s.Queue != nil {
-		if err := s.Queue.EnqueueMeetingUpdated(ctx, workspaceID, meetingID); err != nil && s.Log != nil {
+		if err := s.Queue.EnqueueMeetingUpdated(ctx, organizationID, meetingID); err != nil && s.Log != nil {
 			s.Log.Warn("enqueue meeting updated",
-				zap.String("workspace_id", workspaceID.String()),
+				zap.String("organization_id", organizationID.String()),
 				zap.String("meeting_id", meetingID.String()),
 				zap.Error(err))
 		}
@@ -138,12 +138,12 @@ func (s *Services) UpdateSeries(ctx context.Context, workspaceID, userID, meetin
 // series (organizer or owner only): cancels in one atomic UPDATE, deletes the
 // Google events best-effort, and enqueues one cancellation notification. Returns
 // the number of occurrences cancelled.
-func (s *Services) CancelSeries(ctx context.Context, workspaceID, userID, meetingID uuid.UUID) (int, error) {
-	picked, err := s.Store.GetMeeting(ctx, workspaceID, meetingID)
+func (s *Services) CancelSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID) (int, error) {
+	picked, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
 		return 0, err
 	}
-	w, err := s.Store.GetWorkspace(ctx, workspaceID)
+	w, err := s.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
 		return 0, err
 	}
@@ -153,19 +153,19 @@ func (s *Services) CancelSeries(ctx context.Context, workspaceID, userID, meetin
 	if picked.SeriesID == nil {
 		return 0, fmt.Errorf("%w: not a series", ErrInvalidInput)
 	}
-	occs, err := s.Store.ListSeriesOccurrences(ctx, workspaceID, *picked.SeriesID, picked.StartsAt)
+	occs, err := s.Store.ListSeriesOccurrences(ctx, organizationID, *picked.SeriesID, picked.StartsAt)
 	if err != nil {
 		return 0, err
 	}
-	n, err := s.Store.CancelSeriesOccurrences(ctx, workspaceID, *picked.SeriesID, picked.StartsAt)
+	n, err := s.Store.CancelSeriesOccurrences(ctx, organizationID, *picked.SeriesID, picked.StartsAt)
 	if err != nil {
 		return 0, err
 	}
 	// Google best-effort: deletes are irreversible, so DB-first (above) keeps
 	// Postgres the source of truth; a lingering event is logged, not fatal.
-	if calSvc, ferr := s.Calendar.For(ctx, workspaceID); ferr != nil {
+	if calSvc, ferr := s.Calendar.For(ctx, organizationID); ferr != nil {
 		if s.Log != nil {
-			s.Log.Warn("cancel series calendar provider", zap.String("workspace_id", workspaceID.String()), zap.Error(ferr))
+			s.Log.Warn("cancel series calendar provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))
 		}
 	} else {
 		var ids []string
@@ -176,19 +176,19 @@ func (s *Services) CancelSeries(ctx context.Context, workspaceID, userID, meetin
 		}
 		s.deleteEventsBestEffort(ctx, calSvc, ids)
 	}
-	s.enqueueCancelled(ctx, workspaceID, meetingID)
+	s.enqueueCancelled(ctx, organizationID, meetingID)
 	return n, nil
 }
 
 // UpdateWholeSeries applies a series-wide edit to EVERY occurrence in the series
-// (including past ones), keyed by series_id. Auth: organizer or workspace owner.
+// (including past ones), keyed by series_id. Auth: organizer or organization owner.
 // Returns the count of occurrences updated.
-func (s *Services) UpdateWholeSeries(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, in SeriesUpdateInput) (int, error) {
-	picked, err := s.Store.GetMeeting(ctx, workspaceID, meetingID)
+func (s *Services) UpdateWholeSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID, in SeriesUpdateInput) (int, error) {
+	picked, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
 		return 0, err
 	}
-	w, err := s.Store.GetWorkspace(ctx, workspaceID)
+	w, err := s.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
 		return 0, err
 	}
@@ -202,7 +202,7 @@ func (s *Services) UpdateWholeSeries(ctx context.Context, workspaceID, userID, m
 	if err != nil {
 		return 0, fmt.Errorf("bad timezone: %w", err)
 	}
-	occs, err := s.Store.ListSeriesAllOccurrences(ctx, workspaceID, *picked.SeriesID)
+	occs, err := s.Store.ListSeriesAllOccurrences(ctx, organizationID, *picked.SeriesID)
 	if err != nil {
 		return 0, err
 	}
@@ -214,12 +214,12 @@ func (s *Services) UpdateWholeSeries(ctx context.Context, workspaceID, userID, m
 		}
 		rows = append(rows, upd)
 	}
-	if err := s.Store.UpdateMeetingsTx(ctx, workspaceID, rows); err != nil {
+	if err := s.Store.UpdateMeetingsTx(ctx, organizationID, rows); err != nil {
 		return 0, err
 	}
-	if calSvc, ferr := s.Calendar.For(ctx, workspaceID); ferr != nil {
+	if calSvc, ferr := s.Calendar.For(ctx, organizationID); ferr != nil {
 		if s.Log != nil {
-			s.Log.Warn("whole_series_update_calendar_provider", zap.String("workspace_id", workspaceID.String()), zap.Error(ferr))
+			s.Log.Warn("whole_series_update_calendar_provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))
 		}
 	} else {
 		for _, m := range rows {
@@ -234,9 +234,9 @@ func (s *Services) UpdateWholeSeries(ctx context.Context, workspaceID, userID, m
 		}
 	}
 	if s.Queue != nil {
-		if err := s.Queue.EnqueueMeetingUpdated(ctx, workspaceID, meetingID); err != nil && s.Log != nil {
+		if err := s.Queue.EnqueueMeetingUpdated(ctx, organizationID, meetingID); err != nil && s.Log != nil {
 			s.Log.Warn("enqueue_meeting_updated_whole_series",
-				zap.String("workspace_id", workspaceID.String()),
+				zap.String("organization_id", organizationID.String()),
 				zap.String("meeting_id", meetingID.String()),
 				zap.Error(err))
 		}
@@ -245,13 +245,13 @@ func (s *Services) UpdateWholeSeries(ctx context.Context, workspaceID, userID, m
 }
 
 // CancelWholeSeries cancels EVERY occurrence in the series (including past ones),
-// keyed by series_id. Auth: organizer or workspace owner. Returns the count.
-func (s *Services) CancelWholeSeries(ctx context.Context, workspaceID, userID, meetingID uuid.UUID) (int, error) {
-	picked, err := s.Store.GetMeeting(ctx, workspaceID, meetingID)
+// keyed by series_id. Auth: organizer or organization owner. Returns the count.
+func (s *Services) CancelWholeSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID) (int, error) {
+	picked, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
 		return 0, err
 	}
-	w, err := s.Store.GetWorkspace(ctx, workspaceID)
+	w, err := s.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
 		return 0, err
 	}
@@ -261,17 +261,17 @@ func (s *Services) CancelWholeSeries(ctx context.Context, workspaceID, userID, m
 	if picked.SeriesID == nil {
 		return 0, fmt.Errorf("%w: not a series", ErrInvalidInput)
 	}
-	occs, err := s.Store.ListSeriesAllOccurrences(ctx, workspaceID, *picked.SeriesID)
+	occs, err := s.Store.ListSeriesAllOccurrences(ctx, organizationID, *picked.SeriesID)
 	if err != nil {
 		return 0, err
 	}
-	n, err := s.Store.CancelAllSeriesOccurrences(ctx, workspaceID, *picked.SeriesID)
+	n, err := s.Store.CancelAllSeriesOccurrences(ctx, organizationID, *picked.SeriesID)
 	if err != nil {
 		return 0, err
 	}
-	if calSvc, ferr := s.Calendar.For(ctx, workspaceID); ferr != nil {
+	if calSvc, ferr := s.Calendar.For(ctx, organizationID); ferr != nil {
 		if s.Log != nil {
-			s.Log.Warn("whole_series_cancel_calendar_provider", zap.String("workspace_id", workspaceID.String()), zap.Error(ferr))
+			s.Log.Warn("whole_series_cancel_calendar_provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))
 		}
 	} else {
 		var ids []string
@@ -282,6 +282,6 @@ func (s *Services) CancelWholeSeries(ctx context.Context, workspaceID, userID, m
 		}
 		s.deleteEventsBestEffort(ctx, calSvc, ids)
 	}
-	s.enqueueCancelled(ctx, workspaceID, meetingID)
+	s.enqueueCancelled(ctx, organizationID, meetingID)
 	return n, nil
 }

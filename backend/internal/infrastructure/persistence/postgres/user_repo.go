@@ -44,12 +44,12 @@ func (s *Store) LinkTelegram(ctx context.Context, userID uuid.UUID, telegramID i
 	return err
 }
 
-func (s *Store) OwnerTelegramID(ctx context.Context, workspaceID uuid.UUID) (int64, error) {
+func (s *Store) OwnerTelegramID(ctx context.Context, organizationID uuid.UUID) (int64, error) {
 	var tid *int64
 	err := s.pool.QueryRow(ctx, `
-		SELECT u.telegram_id FROM workspaces w
+		SELECT u.telegram_id FROM organizations w
 		JOIN platform_users u ON u.id = w.owner_user_id
-		WHERE w.id = $1`, workspaceID).Scan(&tid)
+		WHERE w.id = $1`, organizationID).Scan(&tid)
 	if err != nil || tid == nil {
 		return 0, fmt.Errorf("owner telegram not linked")
 	}

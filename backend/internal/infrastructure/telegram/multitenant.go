@@ -273,11 +273,11 @@ func (h *MultiHandler) trackChatMember(ctx context.Context, msg *models.Message)
 	if msg.Chat.Type == models.ChatTypePrivate || msg.From == nil {
 		return
 	}
-	ws, err := h.store.GetWorkspaceByChatID(ctx, msg.Chat.ID)
+	org, err := h.store.GetOrganizationByChatID(ctx, msg.Chat.ID)
 	if err != nil || msg.From.Username == "" {
 		return
 	}
-	_ = h.store.UpsertMemberFromChat(ctx, ws.ID, msg.From.Username, "developer")
+	_ = h.store.UpsertMemberFromChat(ctx, org.ID, msg.From.Username, "developer")
 }
 
 func parseCommand(text string) (string, bool) {

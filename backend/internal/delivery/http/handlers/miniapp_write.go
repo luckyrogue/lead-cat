@@ -102,15 +102,15 @@ func (a *API) MiniAppCreateMeeting(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
 	}
-	wsIDs, err := a.App.ListWorkspacesWithGoogle(c.Context())
+	wsIDs, err := a.App.ListOrganizationsWithGoogle(c.Context())
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
 	if len(wsIDs) == 0 {
 		return fiber.NewError(fiber.StatusBadRequest, "meetings_not_configured")
 	}
-	// Use the first Google-configured workspace; multi-workspace targeting is deferred.
-	workspaceID := wsIDs[0]
+	// Use the first Google-configured organization; multi-organization targeting is deferred.
+	organizationID := wsIDs[0]
 	organizerID, err := a.App.EnsureMiniAppOrganizer(c.Context(), bu.Email, bu.TelegramID)
 	if err != nil {
 		if errors.Is(err, application.ErrTelegramLinkedToOtherAccount) {
@@ -118,7 +118,7 @@ func (a *API) MiniAppCreateMeeting(c *fiber.Ctx) error {
 		}
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
-	m, err := a.App.CreateMeeting(c.Context(), workspaceID, organizerID, toCreateMeetingInput(req, bu.FullName))
+	m, err := a.App.CreateMeeting(c.Context(), organizationID, organizerID, toCreateMeetingInput(req, bu.FullName))
 	if err != nil {
 		if errors.Is(err, application.ErrInvalidInput) || errors.Is(err, application.ErrGoogleNotConfigured) {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
@@ -128,7 +128,7 @@ func (a *API) MiniAppCreateMeeting(c *fiber.Ctx) error {
 	a.App.Log.Info("miniapp_meeting_created",
 		zap.Int64("telegram_id", bu.TelegramID),
 		zap.String("meeting_id", m.ID.String()),
-		zap.String("workspace_id", workspaceID.String()))
+		zap.String("organization_id", organizationID.String()))
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m)})
 }
 
@@ -154,9 +154,9 @@ func toConflictDTO(c application.Conflict, loc *time.Location) miniappConflictDT
 // miniappOccurrenceConflictsDTO is one occurrence's date/time + its conflicts list,
 // rendered in Almaty TZ. Always wrapped in {"occurrences":[...]} on the wire.
 type miniappOccurrenceConflictsDTO struct {
-	Date      string           `json:"date"`  // YYYY-MM-DD
-	Start     string           `json:"start"` // HH:MM Almaty
-	End       string           `json:"end"`   // HH:MM Almaty
+	Date      string               `json:"date"`  // YYYY-MM-DD
+	Start     string               `json:"start"` // HH:MM Almaty
+	End       string               `json:"end"`   // HH:MM Almaty
 	Conflicts []miniappConflictDTO `json:"conflicts"`
 }
 
@@ -259,17 +259,17 @@ func (a *API) MiniAppConflicts(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"occurrences": occurrences})
 }
 
-// editableWorkspace returns the workspace of a meeting the TMA user may edit,
+// editableOrganization returns the organization of a meeting the TMA user may edit,
 // or false if the meeting is not in their editable set (not theirs / not
 // scheduled / past). Used by edit + delete.
-func (a *API) editableWorkspace(c *fiber.Ctx, telegramID int64, meetingID uuid.UUID) (uuid.UUID, bool, error) {
+func (a *API) editableOrganization(c *fiber.Ctx, telegramID int64, meetingID uuid.UUID) (uuid.UUID, bool, error) {
 	ms, err := a.App.ListEditableMeetings(c.Context(), telegramID)
 	if err != nil {
 		return uuid.Nil, false, err
 	}
 	for _, m := range ms {
 		if m.ID == meetingID {
-			return m.WorkspaceID, true, nil
+			return m.OrganizationID, true, nil
 		}
 	}
 	return uuid.Nil, false, nil
@@ -303,7 +303,7 @@ func (a *API) MiniAppUpdateMeeting(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	workspaceID, found, err := a.editableWorkspace(c, bu.TelegramID, meetingID)
+	organizationID, found, err := a.editableOrganization(c, bu.TelegramID, meetingID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
@@ -318,7 +318,7 @@ func (a *API) MiniAppUpdateMeeting(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
 	if scope == "this" {
-		m, err := a.App.UpdateMeeting(c.Context(), workspaceID, organizerID, meetingID, application.UpdateMeetingInput{
+		m, err := a.App.UpdateMeeting(c.Context(), organizationID, organizerID, meetingID, application.UpdateMeetingInput{
 			Dept: req.Dept, Type: req.Type, Host: req.Host,
 			Date: req.Date, Start: req.Start, End: req.End, Description: req.Desc,
 		})
@@ -335,14 +335,14 @@ func (a *API) MiniAppUpdateMeeting(c *fiber.Ctx) error {
 		a.App.Log.Info("miniapp_meeting_updated",
 			zap.Int64("telegram_id", bu.TelegramID),
 			zap.String("meeting_id", meetingID.String()),
-			zap.String("workspace_id", workspaceID.String()))
+			zap.String("organization_id", organizationID.String()))
 		return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m)})
 	}
 	// scope == "whole"
 	if req.Date != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "date cannot be changed for whole-series edit")
 	}
-	n, err := a.App.UpdateWholeSeries(c.Context(), workspaceID, organizerID, meetingID, mapToSeriesUpdateInput(req))
+	n, err := a.App.UpdateWholeSeries(c.Context(), organizationID, organizerID, meetingID, mapToSeriesUpdateInput(req))
 	if err != nil {
 		switch {
 		case errors.Is(err, application.ErrForbidden):
@@ -356,10 +356,10 @@ func (a *API) MiniAppUpdateMeeting(c *fiber.Ctx) error {
 	a.App.Log.Info("miniapp_meeting_whole_series_updated",
 		zap.Int64("telegram_id", bu.TelegramID),
 		zap.String("meeting_id", meetingID.String()),
-		zap.String("workspace_id", workspaceID.String()),
+		zap.String("organization_id", organizationID.String()),
 		zap.Int("count", n))
 	// Refetch the picked occurrence so the response shape mirrors scope=this.
-	m, err := a.App.GetMeeting(c.Context(), workspaceID, meetingID)
+	m, err := a.App.GetMeeting(c.Context(), organizationID, meetingID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
@@ -380,7 +380,7 @@ func (a *API) MiniAppDeleteMeeting(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	workspaceID, found, err := a.editableWorkspace(c, bu.TelegramID, meetingID)
+	organizationID, found, err := a.editableOrganization(c, bu.TelegramID, meetingID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
@@ -395,7 +395,7 @@ func (a *API) MiniAppDeleteMeeting(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
 	if scope == "this" {
-		if err := a.App.CancelMeeting(c.Context(), workspaceID, organizerID, meetingID); err != nil {
+		if err := a.App.CancelMeeting(c.Context(), organizationID, organizerID, meetingID); err != nil {
 			if errors.Is(err, application.ErrForbidden) {
 				return fiber.NewError(fiber.StatusForbidden, "forbidden")
 			}
@@ -404,11 +404,11 @@ func (a *API) MiniAppDeleteMeeting(c *fiber.Ctx) error {
 		a.App.Log.Info("miniapp_meeting_cancelled",
 			zap.Int64("telegram_id", bu.TelegramID),
 			zap.String("meeting_id", meetingID.String()),
-			zap.String("workspace_id", workspaceID.String()))
+			zap.String("organization_id", organizationID.String()))
 		return c.SendStatus(fiber.StatusNoContent)
 	}
 	// scope == "whole"
-	n, err := a.App.CancelWholeSeries(c.Context(), workspaceID, organizerID, meetingID)
+	n, err := a.App.CancelWholeSeries(c.Context(), organizationID, organizerID, meetingID)
 	if err != nil {
 		switch {
 		case errors.Is(err, application.ErrForbidden):
@@ -422,7 +422,7 @@ func (a *API) MiniAppDeleteMeeting(c *fiber.Ctx) error {
 	a.App.Log.Info("miniapp_meeting_cancelled_whole_series",
 		zap.Int64("telegram_id", bu.TelegramID),
 		zap.String("meeting_id", meetingID.String()),
-		zap.String("workspace_id", workspaceID.String()),
+		zap.String("organization_id", organizationID.String()),
 		zap.Int("count", n))
 	return c.SendStatus(fiber.StatusNoContent)
 }

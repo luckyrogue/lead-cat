@@ -32,10 +32,10 @@ type Service interface {
 	DeleteEvent(ctx context.Context, eventID string) error
 }
 
-// Provider resolves the Service to use for a given workspace.
+// Provider resolves the Service to use for a given organization.
 type Provider interface {
-	For(ctx context.Context, workspaceID uuid.UUID) (Service, error)
+	For(ctx context.Context, organizationID uuid.UUID) (Service, error)
 }
 
-// ErrNotConfigured is returned when a workspace has no Google credentials.
+// ErrNotConfigured is returned when an organization has no Google credentials.
 var ErrNotConfigured = errors.New("google not configured")

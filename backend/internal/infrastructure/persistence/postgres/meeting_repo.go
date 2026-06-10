@@ -13,13 +13,13 @@ import (
 // not in the 'scheduled' state (e.g. already cancelled).
 var ErrMeetingNotEditable = errors.New("meeting not found or not editable")
 
-const meetingCols = `id, workspace_id, organizer_user_id, dept, type, host,
+const meetingCols = `id, organization_id, organizer_user_id, dept, type, host,
 	starts_at, ends_at, recurrence, name, description, google_event_id, meet_link, status,
 	series_id, recurrence_until, recurrence_days`
 
 // meetingColsM is meetingCols qualified with the `m` alias for joins.
 // Keep its columns (and the scanMeeting scan order) in sync with meetingCols.
-const meetingColsM = `m.id, m.workspace_id, m.organizer_user_id, m.dept, m.type, m.host,
+const meetingColsM = `m.id, m.organization_id, m.organizer_user_id, m.dept, m.type, m.host,
 	m.starts_at, m.ends_at, m.recurrence, m.name, m.description, m.google_event_id, m.meet_link, m.status,
 	m.series_id, m.recurrence_until, m.recurrence_days`
 
@@ -34,7 +34,7 @@ func scanMeeting(row interface {
 }) (Meeting, error) {
 	var m Meeting
 	var daysRaw []byte
-	err := row.Scan(&m.ID, &m.WorkspaceID, &m.OrganizerUserID, &m.Dept, &m.Type, &m.Host,
+	err := row.Scan(&m.ID, &m.OrganizationID, &m.OrganizerUserID, &m.Dept, &m.Type, &m.Host,
 		&m.StartsAt, &m.EndsAt, &m.Recurrence, &m.Name, &m.Description, &m.GoogleEventID, &m.MeetLink, &m.Status,
 		&m.SeriesID, &m.RecurrenceUntil, &daysRaw)
 	if err == nil && len(daysRaw) > 0 {
@@ -44,7 +44,7 @@ func scanMeeting(row interface {
 }
 
 const insertMeetingSQL = `
-	INSERT INTO meetings (workspace_id, organizer_user_id, dept, type, host,
+	INSERT INTO meetings (organization_id, organizer_user_id, dept, type, host,
 		starts_at, ends_at, recurrence, name, description, google_event_id, meet_link,
 		series_id, recurrence_until, recurrence_days)
 	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
@@ -57,7 +57,7 @@ func meetingInsertArgs(m Meeting) []any {
 		b, _ := json.Marshal(m.RecurrenceDays)
 		daysJSON = b
 	}
-	return []any{m.WorkspaceID, m.OrganizerUserID, m.Dept, m.Type, m.Host,
+	return []any{m.OrganizationID, m.OrganizerUserID, m.Dept, m.Type, m.Host,
 		m.StartsAt, m.EndsAt, m.Recurrence, m.Name, m.Description, m.GoogleEventID, m.MeetLink,
 		m.SeriesID, m.RecurrenceUntil, daysJSON}
 }
@@ -65,11 +65,11 @@ func meetingInsertArgs(m Meeting) []any {
 const updateMeetingSQL = `
 	UPDATE meetings SET dept=$3, type=$4, host=$5, starts_at=$6, ends_at=$7,
 		recurrence=$8, name=$9, description=$10, updated_at=now()
-	WHERE id=$1 AND workspace_id=$2 AND status='scheduled'`
+	WHERE id=$1 AND organization_id=$2 AND status='scheduled'`
 
 // updateMeetingArgs returns the args for updateMeetingSQL; order MUST match its $1..$10.
-func updateMeetingArgs(workspaceID, id uuid.UUID, m Meeting) []any {
-	return []any{id, workspaceID, m.Dept, m.Type, m.Host, m.StartsAt, m.EndsAt, m.Recurrence, m.Name, m.Description}
+func updateMeetingArgs(organizationID, id uuid.UUID, m Meeting) []any {
+	return []any{id, organizationID, m.Dept, m.Type, m.Host, m.StartsAt, m.EndsAt, m.Recurrence, m.Name, m.Description}
 }
 
 func (s *Store) CreateMeeting(ctx context.Context, m Meeting) (Meeting, error) {
@@ -143,16 +143,16 @@ func (s *Store) RemoveParticipant(ctx context.Context, meetingID uuid.UUID, emai
 	return err
 }
 
-func (s *Store) ListMeetings(ctx context.Context, workspaceID uuid.UUID) ([]Meeting, error) {
+func (s *Store) ListMeetings(ctx context.Context, organizationID uuid.UUID) ([]Meeting, error) {
 	return s.queryMeetings(ctx, `
 		SELECT `+meetingCols+` FROM meetings
-		WHERE workspace_id = $1 ORDER BY starts_at DESC`, workspaceID)
+		WHERE organization_id = $1 ORDER BY starts_at DESC`, organizationID)
 }
 
-func (s *Store) ListMeetingsByOrganizer(ctx context.Context, workspaceID, organizerID uuid.UUID) ([]Meeting, error) {
+func (s *Store) ListMeetingsByOrganizer(ctx context.Context, organizationID, organizerID uuid.UUID) ([]Meeting, error) {
 	return s.queryMeetings(ctx, `
 		SELECT `+meetingCols+` FROM meetings
-		WHERE workspace_id = $1 AND organizer_user_id = $2 ORDER BY starts_at DESC`, workspaceID, organizerID)
+		WHERE organization_id = $1 AND organizer_user_id = $2 ORDER BY starts_at DESC`, organizationID, organizerID)
 }
 
 func (s *Store) queryMeetings(ctx context.Context, sql string, args ...any) ([]Meeting, error) {
@@ -174,31 +174,31 @@ func (s *Store) queryMeetings(ctx context.Context, sql string, args ...any) ([]M
 
 // ListSeriesOccurrences returns the scheduled occurrences of a series at or after
 // fromStart, in the workspace, ordered by start.
-func (s *Store) ListSeriesOccurrences(ctx context.Context, workspaceID, seriesID uuid.UUID, fromStart time.Time) ([]Meeting, error) {
+func (s *Store) ListSeriesOccurrences(ctx context.Context, organizationID, seriesID uuid.UUID, fromStart time.Time) ([]Meeting, error) {
 	return s.queryMeetings(ctx, `
 		SELECT `+meetingCols+` FROM meetings
-		WHERE series_id = $1 AND workspace_id = $2 AND starts_at >= $3 AND status = 'scheduled'
-		ORDER BY starts_at`, seriesID, workspaceID, fromStart)
+		WHERE series_id = $1 AND organization_id = $2 AND starts_at >= $3 AND status = 'scheduled'
+		ORDER BY starts_at`, seriesID, organizationID, fromStart)
 }
 
 // ListSeriesAllOccurrences returns ALL scheduled occurrences of a series in the
 // workspace, regardless of start time, ordered by start. Used for whole-series
 // edit (slice B). Past occurrences are included.
-func (s *Store) ListSeriesAllOccurrences(ctx context.Context, workspaceID, seriesID uuid.UUID) ([]Meeting, error) {
+func (s *Store) ListSeriesAllOccurrences(ctx context.Context, organizationID, seriesID uuid.UUID) ([]Meeting, error) {
 	return s.queryMeetings(ctx, `
 		SELECT `+meetingCols+` FROM meetings
-		WHERE series_id = $1 AND workspace_id = $2 AND status = 'scheduled'
-		ORDER BY starts_at`, seriesID, workspaceID)
+		WHERE series_id = $1 AND organization_id = $2 AND status = 'scheduled'
+		ORDER BY starts_at`, seriesID, organizationID)
 }
 
-func (s *Store) GetMeeting(ctx context.Context, workspaceID, id uuid.UUID) (Meeting, error) {
-	row := s.pool.QueryRow(ctx, `SELECT `+meetingCols+` FROM meetings WHERE id = $1 AND workspace_id = $2`, id, workspaceID)
+func (s *Store) GetMeeting(ctx context.Context, organizationID, id uuid.UUID) (Meeting, error) {
+	row := s.pool.QueryRow(ctx, `SELECT `+meetingCols+` FROM meetings WHERE id = $1 AND organization_id = $2`, id, organizationID)
 	return scanMeeting(row)
 }
 
 // UpdateMeeting overwrites the editable fields of a scheduled meeting.
-func (s *Store) UpdateMeeting(ctx context.Context, workspaceID, id uuid.UUID, m Meeting) error {
-	ct, err := s.pool.Exec(ctx, updateMeetingSQL, updateMeetingArgs(workspaceID, id, m)...)
+func (s *Store) UpdateMeeting(ctx context.Context, organizationID, id uuid.UUID, m Meeting) error {
+	ct, err := s.pool.Exec(ctx, updateMeetingSQL, updateMeetingArgs(organizationID, id, m)...)
 	if err != nil {
 		return err
 	}
@@ -210,14 +210,14 @@ func (s *Store) UpdateMeeting(ctx context.Context, workspaceID, id uuid.UUID, m 
 
 // UpdateMeetingsTx updates all meetings in one transaction (all-or-nothing). Each
 // must still be scheduled in the workspace, else ErrMeetingNotEditable rolls back.
-func (s *Store) UpdateMeetingsTx(ctx context.Context, workspaceID uuid.UUID, ms []Meeting) error {
+func (s *Store) UpdateMeetingsTx(ctx context.Context, organizationID uuid.UUID, ms []Meeting) error {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	for _, m := range ms {
-		ct, err := tx.Exec(ctx, updateMeetingSQL, updateMeetingArgs(workspaceID, m.ID, m)...)
+		ct, err := tx.Exec(ctx, updateMeetingSQL, updateMeetingArgs(organizationID, m.ID, m)...)
 		if err != nil {
 			return err
 		}
@@ -235,7 +235,7 @@ func (s *Store) ListMeetingsByOrganizerTelegram(ctx context.Context, telegramID 
 		SELECT `+meetingColsM+`, w.tz
 		FROM meetings m
 		JOIN platform_users pu ON pu.id = m.organizer_user_id
-		JOIN workspaces w ON w.id = m.workspace_id
+		JOIN organizations w ON w.id = m.organization_id
 		WHERE pu.telegram_id = $1 AND m.status = 'scheduled' AND m.starts_at > now()
 		ORDER BY m.starts_at`, telegramID)
 	if err != nil {
@@ -246,7 +246,7 @@ func (s *Store) ListMeetingsByOrganizerTelegram(ctx context.Context, telegramID 
 	for rows.Next() {
 		var mt MeetingWithTZ
 		var daysRaw []byte
-		if err := rows.Scan(&mt.ID, &mt.WorkspaceID, &mt.OrganizerUserID, &mt.Dept, &mt.Type, &mt.Host,
+		if err := rows.Scan(&mt.ID, &mt.OrganizationID, &mt.OrganizerUserID, &mt.Dept, &mt.Type, &mt.Host,
 			&mt.StartsAt, &mt.EndsAt, &mt.Recurrence, &mt.Name, &mt.Description, &mt.GoogleEventID, &mt.MeetLink, &mt.Status,
 			&mt.SeriesID, &mt.RecurrenceUntil, &daysRaw,
 			&mt.TZ); err != nil {
@@ -294,20 +294,20 @@ func (s *Store) ListMeetingsOverlapping(ctx context.Context, emails []string, fr
 		ORDER BY m.starts_at`, emails, from, to)
 }
 
-func (s *Store) CancelMeeting(ctx context.Context, workspaceID, id uuid.UUID) error {
+func (s *Store) CancelMeeting(ctx context.Context, organizationID, id uuid.UUID) error {
 	_, err := s.pool.Exec(ctx, `
 		UPDATE meetings SET status = 'cancelled', updated_at = now()
-		WHERE id = $1 AND workspace_id = $2 AND status = 'scheduled'`, id, workspaceID)
+		WHERE id = $1 AND organization_id = $2 AND status = 'scheduled'`, id, organizationID)
 	return err
 }
 
 // CancelSeriesOccurrences cancels (status='cancelled') the scheduled occurrences
 // of a series at or after fromStart, in one atomic statement. Returns the count.
-func (s *Store) CancelSeriesOccurrences(ctx context.Context, workspaceID, seriesID uuid.UUID, fromStart time.Time) (int, error) {
+func (s *Store) CancelSeriesOccurrences(ctx context.Context, organizationID, seriesID uuid.UUID, fromStart time.Time) (int, error) {
 	ct, err := s.pool.Exec(ctx, `
 		UPDATE meetings SET status = 'cancelled', updated_at = now()
-		WHERE series_id = $1 AND workspace_id = $2 AND starts_at >= $3 AND status = 'scheduled'`,
-		seriesID, workspaceID, fromStart)
+		WHERE series_id = $1 AND organization_id = $2 AND starts_at >= $3 AND status = 'scheduled'`,
+		seriesID, organizationID, fromStart)
 	if err != nil {
 		return 0, err
 	}
@@ -317,11 +317,11 @@ func (s *Store) CancelSeriesOccurrences(ctx context.Context, workspaceID, series
 // CancelAllSeriesOccurrences cancels (status='cancelled') ALL scheduled
 // occurrences of a series in the workspace, in one atomic statement.
 // Returns the count.
-func (s *Store) CancelAllSeriesOccurrences(ctx context.Context, workspaceID, seriesID uuid.UUID) (int, error) {
+func (s *Store) CancelAllSeriesOccurrences(ctx context.Context, organizationID, seriesID uuid.UUID) (int, error) {
 	ct, err := s.pool.Exec(ctx, `
 		UPDATE meetings SET status = 'cancelled', updated_at = now()
-		WHERE series_id = $1 AND workspace_id = $2 AND status = 'scheduled'`,
-		seriesID, workspaceID)
+		WHERE series_id = $1 AND organization_id = $2 AND status = 'scheduled'`,
+		seriesID, organizationID)
 	if err != nil {
 		return 0, err
 	}

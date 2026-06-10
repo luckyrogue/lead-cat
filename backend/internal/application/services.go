@@ -16,10 +16,10 @@ import (
 	asynqqueue "github.com/luckyrogue/lead-cat/internal/infrastructure/queue/asynq"
 )
 
-// ChatSyncer is a function that syncs chat administrators into workspace_members.
+// ChatSyncer is a function that syncs chat administrators into organization_members.
 // It is injected at startup to avoid an import cycle between application and
 // the telegram infrastructure package.
-type ChatSyncer func(ctx context.Context, workspaceID uuid.UUID) (int, error)
+type ChatSyncer func(ctx context.Context, organizationID uuid.UUID) (int, error)
 
 type Services struct {
 	Store    *postgres.Store
@@ -28,7 +28,7 @@ type Services struct {
 	Calendar CalendarProvider
 	Log      *zap.Logger
 	Bot      *bot.Bot
-	Queries *query.Meetings
+	Queries  *query.Meetings
 	syncChat ChatSyncer
 }
 
@@ -54,8 +54,8 @@ func (s *Services) ListAudit(ctx context.Context, f postgres.AuditFilter) ([]pos
 	return s.Store.ListAuditEntries(ctx, f)
 }
 
-func (s *Services) ListWorkspacesWithGoogle(ctx context.Context) ([]uuid.UUID, error) {
-	return s.Store.ListWorkspacesWithGoogle(ctx)
+func (s *Services) ListOrganizationsWithGoogle(ctx context.Context) ([]uuid.UUID, error) {
+	return s.Store.ListOrganizationsWithGoogle(ctx)
 }
 
 func (s *Services) MiniAppMeetingDTO(ctx context.Context, m postgres.Meeting, loc *time.Location) query.MiniAppMeeting {
@@ -81,12 +81,12 @@ func (s *Services) linkTelegram(ctx context.Context, userID uuid.UUID, telegramI
 	return s.Store.LinkMemberUserIDsByTelegram(ctx, userID, username)
 }
 
-func (s *Services) GetWorkspace(ctx context.Context, id uuid.UUID) (postgres.Workspace, error) {
-	return s.Store.GetWorkspace(ctx, id)
+func (s *Services) GetOrganization(ctx context.Context, id uuid.UUID) (postgres.Organization, error) {
+	return s.Store.GetOrganization(ctx, id)
 }
 
-func (s *Services) LinkChat(ctx context.Context, workspaceID uuid.UUID, chatID int64) error {
-	return s.Store.LinkChat(ctx, workspaceID, chatID)
+func (s *Services) LinkChat(ctx context.Context, organizationID uuid.UUID, chatID int64) error {
+	return s.Store.LinkChat(ctx, organizationID, chatID)
 }
 
 // SetChatSyncer injects the ChatSyncer function after bot initialisation.
@@ -96,13 +96,13 @@ func (s *Services) SetChatSyncer(fn ChatSyncer) {
 }
 
 // SyncChatMembers imports current Telegram chat administrators into the
-// workspace_members table. Thin wrapper around the telegram helper so HTTP
+// organization_members table. Thin wrapper around the telegram helper so HTTP
 // handlers don't reach into infrastructure.
-func (s *Services) SyncChatMembers(ctx context.Context, workspaceID uuid.UUID) (int, error) {
+func (s *Services) SyncChatMembers(ctx context.Context, organizationID uuid.UUID) (int, error) {
 	if s.syncChat == nil {
 		return 0, fmt.Errorf("bot not configured")
 	}
-	return s.syncChat(ctx, workspaceID)
+	return s.syncChat(ctx, organizationID)
 }
 
 type IntegrationsView struct {
@@ -113,12 +113,12 @@ type IntegrationsView struct {
 	GoogleCalendarID string `json:"google_calendar_id"`
 }
 
-func (s *Services) GetIntegrations(ctx context.Context, workspaceID uuid.UUID) (IntegrationsView, error) {
-	w, err := s.Store.GetWorkspace(ctx, workspaceID)
+func (s *Services) GetIntegrations(ctx context.Context, organizationID uuid.UUID) (IntegrationsView, error) {
+	w, err := s.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
 		return IntegrationsView{}, err
 	}
-	encG, subjectG, calIDG, _ := s.Store.GetGoogleConfig(ctx, workspaceID)
+	encG, subjectG, calIDG, _ := s.Store.GetGoogleConfig(ctx, organizationID)
 	return IntegrationsView{
 		MeetLink:         w.MeetLink,
 		TZ:               w.TZ,
@@ -128,11 +128,11 @@ func (s *Services) GetIntegrations(ctx context.Context, workspaceID uuid.UUID) (
 	}, nil
 }
 
-func (s *Services) PatchIntegrations(ctx context.Context, workspaceID uuid.UUID, meetLink, tz string) error {
+func (s *Services) PatchIntegrations(ctx context.Context, organizationID uuid.UUID, meetLink, tz string) error {
 	if meetLink == "" && tz == "" {
 		return nil
 	}
-	w, err := s.Store.GetWorkspace(ctx, workspaceID)
+	w, err := s.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
 		return err
 	}
@@ -142,12 +142,12 @@ func (s *Services) PatchIntegrations(ctx context.Context, workspaceID uuid.UUID,
 	if tz == "" {
 		tz = w.TZ
 	}
-	return s.Store.UpdateWorkspace(ctx, workspaceID, meetLink, tz)
+	return s.Store.UpdateOrganization(ctx, organizationID, meetLink, tz)
 }
 
-// SetGoogleConfig encrypts and stores per-workspace Google credentials. An empty
+// SetGoogleConfig encrypts and stores per-organization Google credentials. An empty
 // saJSON keeps the existing key (so subject/calendar can be updated alone).
-func (s *Services) SetGoogleConfig(ctx context.Context, workspaceID uuid.UUID, saJSON, subject, calendarID string) error {
+func (s *Services) SetGoogleConfig(ctx context.Context, organizationID uuid.UUID, saJSON, subject, calendarID string) error {
 	var enc []byte
 	if saJSON != "" {
 		e, err := s.Cipher.Encrypt(saJSON)
@@ -156,7 +156,7 @@ func (s *Services) SetGoogleConfig(ctx context.Context, workspaceID uuid.UUID, s
 		}
 		enc = e
 	} else {
-		e, _, _, err := s.Store.GetGoogleConfig(ctx, workspaceID)
+		e, _, _, err := s.Store.GetGoogleConfig(ctx, organizationID)
 		if err != nil {
 			return err
 		}
@@ -165,20 +165,20 @@ func (s *Services) SetGoogleConfig(ctx context.Context, workspaceID uuid.UUID, s
 	if calendarID == "" {
 		calendarID = "primary"
 	}
-	return s.Store.SetGoogleConfig(ctx, workspaceID, enc, subject, calendarID)
+	return s.Store.SetGoogleConfig(ctx, organizationID, enc, subject, calendarID)
 }
 
-func (s *Services) VerifyIntegrations(ctx context.Context, workspaceID uuid.UUID) error {
-	_, err := s.VerifyGoogleIntegration(ctx, workspaceID)
+func (s *Services) VerifyIntegrations(ctx context.Context, organizationID uuid.UUID) error {
+	_, err := s.VerifyGoogleIntegration(ctx, organizationID)
 	return err
 }
 
-func (s *Services) ListMembers(ctx context.Context, workspaceID uuid.UUID) ([]postgres.Member, error) {
-	return s.Store.ListMembers(ctx, workspaceID)
+func (s *Services) ListMembers(ctx context.Context, organizationID uuid.UUID) ([]postgres.Member, error) {
+	return s.Store.ListMembers(ctx, organizationID)
 }
 
-func (s *Services) AddMember(ctx context.Context, workspaceID uuid.UUID, username, role string) (postgres.Member, error) {
-	return s.Store.AddMember(ctx, workspaceID, username, role)
+func (s *Services) AddMember(ctx context.Context, organizationID uuid.UUID, username, role string) (postgres.Member, error) {
+	return s.Store.AddMember(ctx, organizationID, username, role)
 }
 
 func (s *Services) DeleteMember(ctx context.Context, memberID uuid.UUID) error {

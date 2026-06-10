@@ -19,15 +19,15 @@ import (
 // Backend is the application surface the FSM needs (satisfied by *application.Services).
 type Backend interface {
 	ListEditableMeetings(ctx context.Context, telegramID int64) ([]postgres.MeetingWithTZ, error)
-	UpdateMeeting(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, in application.UpdateMeetingInput) (postgres.Meeting, error)
-	UpdateSeries(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, in application.SeriesUpdateInput) (int, error)
+	UpdateMeeting(ctx context.Context, organizationID, userID, meetingID uuid.UUID, in application.UpdateMeetingInput) (postgres.Meeting, error)
+	UpdateSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID, in application.SeriesUpdateInput) (int, error)
 	ListParticipants(ctx context.Context, meetingID uuid.UUID) ([]postgres.MeetingParticipant, error)
-	SearchEmployees(ctx context.Context, workspaceID uuid.UUID, query string) ([]postgres.Employee, error)
-	AddParticipant(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, email string) error
-	RemoveParticipant(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, email string) error
-	CancelMeeting(ctx context.Context, workspaceID, userID, meetingID uuid.UUID) error
-	CancelSeries(ctx context.Context, workspaceID, userID, meetingID uuid.UUID) (int, error)
-	MeetingUpdateConflicts(ctx context.Context, workspaceID, meetingID uuid.UUID, in application.UpdateMeetingInput) ([]application.Conflict, error)
+	SearchEmployees(ctx context.Context, organizationID uuid.UUID, query string) ([]postgres.Employee, error)
+	AddParticipant(ctx context.Context, organizationID, userID, meetingID uuid.UUID, email string) error
+	RemoveParticipant(ctx context.Context, organizationID, userID, meetingID uuid.UUID, email string) error
+	CancelMeeting(ctx context.Context, organizationID, userID, meetingID uuid.UUID) error
+	CancelSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID) (int, error)
+	MeetingUpdateConflicts(ctx context.Context, organizationID, meetingID uuid.UUID, in application.UpdateMeetingInput) ([]application.Conflict, error)
 }
 
 type sessions interface {
@@ -166,12 +166,12 @@ func (s *Service) pick(ctx context.Context, telegramID int64, idStr string) Repl
 	}
 	loc := loadLoc(found.TZ)
 	st := State{
-		Step:        stepMenu,
-		MeetingID:   mid.String(),
-		WorkspaceID: found.WorkspaceID.String(),
-		UserID:      found.OrganizerUserID.String(),
-		Cur:         snapshot(found.Meeting, loc),
-		Overrides:   map[string]string{},
+		Step:           stepMenu,
+		MeetingID:      mid.String(),
+		OrganizationID: found.OrganizationID.String(),
+		UserID:         found.OrganizerUserID.String(),
+		Cur:            snapshot(found.Meeting, loc),
+		Overrides:      map[string]string{},
 	}
 	if found.SeriesID != nil {
 		st.SeriesID = found.SeriesID.String()
@@ -236,9 +236,9 @@ func (s *Service) apply(ctx context.Context, telegramID int64) Reply {
 	// §4.7: on a single-meeting time change, warn about participant/organizer overlaps.
 	if st.Scope != "series" {
 		if _, ok := st.Overrides["date"]; ok {
-			ws, _ := uuid.Parse(st.WorkspaceID)
+			orgID, _ := uuid.Parse(st.OrganizationID)
 			mid, _ := uuid.Parse(st.MeetingID)
-			conflicts, cerr := s.backend.MeetingUpdateConflicts(ctx, ws, mid, toInput(st.Overrides))
+			conflicts, cerr := s.backend.MeetingUpdateConflicts(ctx, orgID, mid, toInput(st.Overrides))
 			if cerr == nil && len(conflicts) > 0 {
 				return Reply{Text: formatConflictWarning(conflicts), Keyboard: conflictKeyboard(), Edit: true}
 			}
@@ -260,11 +260,11 @@ func (s *Service) doApply(ctx context.Context, telegramID int64, st *State) Repl
 	// IDs come from our own session (set in pick from uuid.UUID.String()); a parse
 	// failure would yield a zero UUID that UpdateMeeting rejects as ErrForbidden —
 	// safe degradation, so the parse errors are intentionally ignored.
-	ws, _ := uuid.Parse(st.WorkspaceID)
+	orgID, _ := uuid.Parse(st.OrganizationID)
 	uid, _ := uuid.Parse(st.UserID)
 	mid, _ := uuid.Parse(st.MeetingID)
 	if st.Scope == "series" {
-		n, err := s.backend.UpdateSeries(ctx, ws, uid, mid, seriesInput(st.Overrides))
+		n, err := s.backend.UpdateSeries(ctx, orgID, uid, mid, seriesInput(st.Overrides))
 		if err != nil {
 			switch {
 			case errors.Is(err, application.ErrInvalidInput):
@@ -282,7 +282,7 @@ func (s *Service) doApply(ctx context.Context, telegramID int64, st *State) Repl
 		_ = s.sessions.Del(ctx, telegramID)
 		return Reply{Text: fmt.Sprintf("Готово ✏️ — обновлено встреч серии: %d", n)}
 	}
-	m, err := s.backend.UpdateMeeting(ctx, ws, uid, mid, toInput(st.Overrides))
+	m, err := s.backend.UpdateMeeting(ctx, orgID, uid, mid, toInput(st.Overrides))
 	if err != nil {
 		switch {
 		case errors.Is(err, application.ErrInvalidInput):
@@ -383,8 +383,8 @@ func (s *Service) padd(ctx context.Context, telegramID int64) Reply {
 // searchParticipant offers directory matches (plus the raw email if valid) as add
 // buttons. Stays in the awaiting step so re-typing re-searches.
 func (s *Service) searchParticipant(ctx context.Context, telegramID int64, st *State, query string) Reply {
-	ws, _ := uuid.Parse(st.WorkspaceID)
-	emps, err := s.backend.SearchEmployees(ctx, ws, query)
+	orgID, _ := uuid.Parse(st.OrganizationID)
+	emps, err := s.backend.SearchEmployees(ctx, orgID, query)
 	if err != nil {
 		return Reply{Text: "Не удалось выполнить поиск, попробуй ещё раз:"}
 	}
@@ -426,10 +426,10 @@ func (s *Service) paddPick(ctx context.Context, telegramID int64, idxStr string)
 	if !ok {
 		return Reply{Text: "Кандидат не найден, начни добавление заново."}
 	}
-	ws, _ := uuid.Parse(st.WorkspaceID)
+	orgID, _ := uuid.Parse(st.OrganizationID)
 	uid, _ := uuid.Parse(st.UserID)
 	mid, _ := uuid.Parse(st.MeetingID)
-	if err := s.backend.AddParticipant(ctx, ws, uid, mid, email); err != nil {
+	if err := s.backend.AddParticipant(ctx, orgID, uid, mid, email); err != nil {
 		switch {
 		case errors.Is(err, application.ErrInvalidInput):
 			return Reply{Text: "Уже участник или неверный email."}
@@ -473,10 +473,10 @@ func (s *Service) premConfirm(ctx context.Context, telegramID int64) Reply {
 	if email == "" {
 		return Reply{Text: "Нечего удалять, открой список заново."}
 	}
-	ws, _ := uuid.Parse(st.WorkspaceID)
+	orgID, _ := uuid.Parse(st.OrganizationID)
 	uid, _ := uuid.Parse(st.UserID)
 	mid, _ := uuid.Parse(st.MeetingID)
-	if err := s.backend.RemoveParticipant(ctx, ws, uid, mid, email); err != nil {
+	if err := s.backend.RemoveParticipant(ctx, orgID, uid, mid, email); err != nil {
 		if errors.Is(err, application.ErrForbidden) {
 			_ = s.sessions.Del(ctx, telegramID)
 			return Reply{Text: "Нет доступа к этой встрече."}
@@ -561,19 +561,19 @@ func (s *Service) doDelete(ctx context.Context, telegramID int64) Reply {
 	if err != nil || st == nil {
 		return Reply{Text: "Сессия истекла. Начни заново: /edit"}
 	}
-	ws, _ := uuid.Parse(st.WorkspaceID)
+	orgID, _ := uuid.Parse(st.OrganizationID)
 	uid, _ := uuid.Parse(st.UserID)
 	mid, _ := uuid.Parse(st.MeetingID)
 
 	if st.Scope == "series" {
-		n, err := s.backend.CancelSeries(ctx, ws, uid, mid)
+		n, err := s.backend.CancelSeries(ctx, orgID, uid, mid)
 		if err != nil {
 			return s.deleteErrReply(ctx, telegramID, err)
 		}
 		_ = s.sessions.Del(ctx, telegramID)
 		return Reply{Text: fmt.Sprintf("Удалено встреч серии: %d ❌", n)}
 	}
-	if err := s.backend.CancelMeeting(ctx, ws, uid, mid); err != nil {
+	if err := s.backend.CancelMeeting(ctx, orgID, uid, mid); err != nil {
 		return s.deleteErrReply(ctx, telegramID, err)
 	}
 	_ = s.sessions.Del(ctx, telegramID)

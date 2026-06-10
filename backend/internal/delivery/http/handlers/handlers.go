@@ -16,14 +16,14 @@ import (
 )
 
 type API struct {
-	App         *application.Services
-	Bot         *bot.Bot
-	RDB         *redis.Client
-	Log         *zap.Logger
-	InitData    *telegram.InitDataValidator
+	App          *application.Services
+	Bot          *bot.Bot
+	RDB          *redis.Client
+	Log          *zap.Logger
+	InitData     *telegram.InitDataValidator
 	MiniAppToken *platformauth.MiniAppToken
-	AuthDevMode bool
-	Version     string
+	AuthDevMode  bool
+	Version      string
 }
 
 func (a *API) Health(c *fiber.Ctx) error {

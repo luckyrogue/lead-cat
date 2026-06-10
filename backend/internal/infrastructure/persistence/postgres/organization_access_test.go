@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func TestUserCanAccessWorkspace_Integration(t *testing.T) {
+func TestUserCanAccessOrganization_Integration(t *testing.T) {
 	dsn := os.Getenv("TEST_DATABASE_URL")
 	if dsn == "" {
 		t.Skip("TEST_DATABASE_URL not set")
@@ -29,7 +29,7 @@ func TestUserCanAccessWorkspace_Integration(t *testing.T) {
 		t.Fatal(err)
 	}
 	slug := "test-" + uuid.New().String()[:8]
-	ws, err := store.CreateWorkspace(ctx, slug, "test-ws", u.ID)
+	org, err := store.CreateOrganization(ctx, slug, "test-org", u.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,16 +42,16 @@ func TestUserCanAccessWorkspace_Integration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ok, err := store.UserCanAccessWorkspace(ctx, u.ID, ws.ID)
+	ok, err := store.UserCanAccessOrganization(ctx, u.ID, org.ID)
 	if err != nil || !ok {
 		t.Fatalf("owner access: ok=%v err=%v", ok, err)
 	}
 
-	ok, err = store.UserCanAccessWorkspace(ctx, stranger.ID, ws.ID)
+	ok, err = store.UserCanAccessOrganization(ctx, stranger.ID, org.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if ok {
-		t.Fatal("stranger should not access workspace")
+		t.Fatal("stranger should not access organization")
 	}
 }

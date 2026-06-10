@@ -31,24 +31,24 @@ type CreateMeetingInput struct {
 	Participants    []postgres.MeetingParticipant
 }
 
-func (s *Services) ListEmployees(ctx context.Context, workspaceID uuid.UUID) ([]postgres.Employee, error) {
-	return s.Store.ListEmployees(ctx, workspaceID)
+func (s *Services) ListEmployees(ctx context.Context, organizationID uuid.UUID) ([]postgres.Employee, error) {
+	return s.Store.ListEmployees(ctx, organizationID)
 }
 
-func (s *Services) ListMeetings(ctx context.Context, workspaceID, userID uuid.UUID) ([]postgres.Meeting, error) {
-	w, err := s.Store.GetWorkspace(ctx, workspaceID)
+func (s *Services) ListMeetings(ctx context.Context, organizationID, userID uuid.UUID) ([]postgres.Meeting, error) {
+	w, err := s.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
 		return nil, err
 	}
-	// Workspace owner sees all meetings; everyone else sees their own (ТЗ §2).
+	// Organization owner sees all meetings; everyone else sees their own (ТЗ §2).
 	if w.OwnerUserID != nil && *w.OwnerUserID == userID {
-		return s.Store.ListMeetings(ctx, workspaceID)
+		return s.Store.ListMeetings(ctx, organizationID)
 	}
-	return s.Store.ListMeetingsByOrganizer(ctx, workspaceID, userID)
+	return s.Store.ListMeetingsByOrganizer(ctx, organizationID, userID)
 }
 
-func (s *Services) GetMeeting(ctx context.Context, workspaceID, id uuid.UUID) (postgres.Meeting, error) {
-	m, err := s.Store.GetMeeting(ctx, workspaceID, id)
+func (s *Services) GetMeeting(ctx context.Context, organizationID, id uuid.UUID) (postgres.Meeting, error) {
+	m, err := s.Store.GetMeeting(ctx, organizationID, id)
 	if err != nil {
 		return m, err
 	}
@@ -56,8 +56,8 @@ func (s *Services) GetMeeting(ctx context.Context, workspaceID, id uuid.UUID) (p
 	return m, err
 }
 
-func (s *Services) CreateMeeting(ctx context.Context, workspaceID, organizerID uuid.UUID, in CreateMeetingInput) (postgres.Meeting, error) {
-	w, err := s.Store.GetWorkspace(ctx, workspaceID)
+func (s *Services) CreateMeeting(ctx context.Context, organizationID, organizerID uuid.UUID, in CreateMeetingInput) (postgres.Meeting, error) {
+	w, err := s.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
 		return postgres.Meeting{}, err
 	}
@@ -103,7 +103,7 @@ func (s *Services) CreateMeeting(ctx context.Context, workspaceID, organizerID u
 			emails = append(emails, p.Email)
 		}
 	}
-	calSvc, err := s.Calendar.For(ctx, workspaceID)
+	calSvc, err := s.Calendar.For(ctx, organizationID)
 	if err != nil {
 		return postgres.Meeting{}, err
 	}
@@ -118,7 +118,7 @@ func (s *Services) CreateMeeting(ctx context.Context, workspaceID, organizerID u
 			return postgres.Meeting{}, fmt.Errorf("calendar: %w", err)
 		}
 		m, err := s.Store.CreateMeeting(ctx, postgres.Meeting{
-			WorkspaceID: workspaceID, OrganizerUserID: &organizerID,
+			OrganizationID: organizationID, OrganizerUserID: &organizerID,
 			Dept: in.Dept, Type: in.Type, Host: in.Host,
 			StartsAt: startsAt.UTC(), EndsAt: endsAt.UTC(),
 			Recurrence: string(rec), Name: name, Description: in.Description,
@@ -133,7 +133,7 @@ func (s *Services) CreateMeeting(ctx context.Context, workspaceID, organizerID u
 			}
 			m.Participants = in.Participants
 		}
-		s.enqueueCreated(ctx, workspaceID, m.ID)
+		s.enqueueCreated(ctx, organizationID, m.ID)
 		return m, nil
 	}
 
@@ -147,11 +147,11 @@ func (s *Services) CreateMeeting(ctx context.Context, workspaceID, organizerID u
 		return postgres.Meeting{}, err
 	}
 	seriesID := uuid.New()
-	recUntil := until // midnight in the workspace TZ; its date component is the intended end day (no .UTC() — column is DATE)
+	recUntil := until // midnight in the organization TZ; its date component is the intended end day (no .UTC() — column is DATE)
 	rows := make([]postgres.Meeting, len(evs))
 	for i, e := range evs {
 		rows[i] = postgres.Meeting{
-			WorkspaceID: workspaceID, OrganizerUserID: &organizerID,
+			OrganizationID: organizationID, OrganizerUserID: &organizerID,
 			Dept: in.Dept, Type: in.Type, Host: in.Host,
 			StartsAt: e.Span.Start.UTC(), EndsAt: e.Span.End.UTC(),
 			Recurrence: string(rec), Name: e.Name, Description: in.Description,
@@ -165,31 +165,31 @@ func (s *Services) CreateMeeting(ctx context.Context, workspaceID, organizerID u
 		return postgres.Meeting{}, err
 	}
 	anchor := created[0]
-	s.enqueueCreated(ctx, workspaceID, anchor.ID)
+	s.enqueueCreated(ctx, organizationID, anchor.ID)
 	return anchor, nil
 }
 
 // enqueueCreated best-effort enqueues the meeting-created notification (once).
-func (s *Services) enqueueCreated(ctx context.Context, workspaceID, meetingID uuid.UUID) {
+func (s *Services) enqueueCreated(ctx context.Context, organizationID, meetingID uuid.UUID) {
 	if s.Queue == nil {
 		return
 	}
-	if err := s.Queue.EnqueueMeetingCreated(ctx, workspaceID, meetingID); err != nil && s.Log != nil {
+	if err := s.Queue.EnqueueMeetingCreated(ctx, organizationID, meetingID); err != nil && s.Log != nil {
 		s.Log.Warn("enqueue meeting created",
-			zap.String("workspace_id", workspaceID.String()),
+			zap.String("organization_id", organizationID.String()),
 			zap.String("meeting_id", meetingID.String()),
 			zap.Error(err))
 	}
 }
 
 // enqueueCancelled best-effort enqueues the meeting-cancelled notification.
-func (s *Services) enqueueCancelled(ctx context.Context, workspaceID, meetingID uuid.UUID) {
+func (s *Services) enqueueCancelled(ctx context.Context, organizationID, meetingID uuid.UUID) {
 	if s.Queue == nil {
 		return
 	}
-	if err := s.Queue.EnqueueMeetingCancelled(ctx, workspaceID, meetingID); err != nil && s.Log != nil {
+	if err := s.Queue.EnqueueMeetingCancelled(ctx, organizationID, meetingID); err != nil && s.Log != nil {
 		s.Log.Warn("enqueue meeting cancelled",
-			zap.String("workspace_id", workspaceID.String()),
+			zap.String("organization_id", organizationID.String()),
 			zap.String("meeting_id", meetingID.String()),
 			zap.Error(err))
 	}
@@ -238,15 +238,15 @@ func eventIDs(evs []seriesEvent) []string {
 	return ids
 }
 
-// UpdateMeeting applies field overrides to a meeting (organizer or workspace
+// UpdateMeeting applies field overrides to a meeting (organizer or organization
 // owner only): validates, recomputes the name, patches the Google event, persists,
 // and enqueues a change notification. Mirrors CreateMeeting.
-func (s *Services) UpdateMeeting(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, in UpdateMeetingInput) (postgres.Meeting, error) {
-	cur, err := s.Store.GetMeeting(ctx, workspaceID, meetingID)
+func (s *Services) UpdateMeeting(ctx context.Context, organizationID, userID, meetingID uuid.UUID, in UpdateMeetingInput) (postgres.Meeting, error) {
+	cur, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
 		return postgres.Meeting{}, err
 	}
-	w, err := s.Store.GetWorkspace(ctx, workspaceID)
+	w, err := s.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
 		return postgres.Meeting{}, err
 	}
@@ -266,7 +266,7 @@ func (s *Services) UpdateMeeting(ctx context.Context, workspaceID, userID, meeti
 	// clean retry; the rare DB-write-after-Google-success skew is reconciled by
 	// a subsequent edit/retry. Postgres remains the source of truth.
 	if updated.GoogleEventID != "" {
-		calSvc, err := s.Calendar.For(ctx, workspaceID)
+		calSvc, err := s.Calendar.For(ctx, organizationID)
 		if err != nil {
 			return postgres.Meeting{}, err
 		}
@@ -277,13 +277,13 @@ func (s *Services) UpdateMeeting(ctx context.Context, workspaceID, userID, meeti
 			return postgres.Meeting{}, fmt.Errorf("calendar: %w", err)
 		}
 	}
-	if err := s.Store.UpdateMeeting(ctx, workspaceID, meetingID, updated); err != nil {
+	if err := s.Store.UpdateMeeting(ctx, organizationID, meetingID, updated); err != nil {
 		return postgres.Meeting{}, err
 	}
 	if s.Queue != nil {
-		if err := s.Queue.EnqueueMeetingUpdated(ctx, workspaceID, meetingID); err != nil && s.Log != nil {
+		if err := s.Queue.EnqueueMeetingUpdated(ctx, organizationID, meetingID); err != nil && s.Log != nil {
 			s.Log.Warn("enqueue meeting updated",
-				zap.String("workspace_id", workspaceID.String()),
+				zap.String("organization_id", organizationID.String()),
 				zap.String("meeting_id", meetingID.String()),
 				zap.Error(err))
 		}
@@ -292,17 +292,17 @@ func (s *Services) UpdateMeeting(ctx context.Context, workspaceID, userID, meeti
 }
 
 // ListEditableMeetings returns the upcoming meetings the Telegram user organizes,
-// each with its workspace timezone (for the bot edit FSM).
+// each with its organization timezone (for the bot edit FSM).
 func (s *Services) ListEditableMeetings(ctx context.Context, telegramID int64) ([]postgres.MeetingWithTZ, error) {
 	return s.Store.ListMeetingsByOrganizerTelegram(ctx, telegramID)
 }
 
-func (s *Services) CancelMeeting(ctx context.Context, workspaceID, userID, id uuid.UUID) error {
-	m, err := s.Store.GetMeeting(ctx, workspaceID, id)
+func (s *Services) CancelMeeting(ctx context.Context, organizationID, userID, id uuid.UUID) error {
+	m, err := s.Store.GetMeeting(ctx, organizationID, id)
 	if err != nil {
 		return err
 	}
-	w, err := s.Store.GetWorkspace(ctx, workspaceID)
+	w, err := s.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
 		return err
 	}
@@ -313,14 +313,14 @@ func (s *Services) CancelMeeting(ctx context.Context, workspaceID, userID, id uu
 		return nil // already cancelled or past — nothing to do
 	}
 	if m.GoogleEventID != "" {
-		if calSvc, ferr := s.Calendar.For(ctx, workspaceID); ferr == nil {
+		if calSvc, ferr := s.Calendar.For(ctx, organizationID); ferr == nil {
 			_ = calSvc.DeleteEvent(ctx, m.GoogleEventID) // best-effort
 		}
 	}
-	if err := s.Store.CancelMeeting(ctx, workspaceID, id); err != nil {
+	if err := s.Store.CancelMeeting(ctx, organizationID, id); err != nil {
 		return err
 	}
-	s.enqueueCancelled(ctx, workspaceID, id)
+	s.enqueueCancelled(ctx, organizationID, id)
 	return nil
 }
 

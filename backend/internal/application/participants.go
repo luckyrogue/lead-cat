@@ -13,8 +13,8 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
-// ownerOrOrganizer reports whether userID is the workspace owner or the meeting's organizer.
-func ownerOrOrganizer(w postgres.Workspace, organizerUserID *uuid.UUID, userID uuid.UUID) bool {
+// ownerOrOrganizer reports whether userID is the organization owner or the meeting's organizer.
+func ownerOrOrganizer(w postgres.Organization, organizerUserID *uuid.UUID, userID uuid.UUID) bool {
 	if w.OwnerUserID != nil && *w.OwnerUserID == userID {
 		return true
 	}
@@ -44,16 +44,16 @@ func filterEmployees(all []postgres.Employee, query string) []postgres.Employee 
 }
 
 // SearchEmployees returns directory entries whose name or email contains query.
-func (s *Services) SearchEmployees(ctx context.Context, workspaceID uuid.UUID, query string) ([]postgres.Employee, error) {
-	all, err := s.Store.ListEmployees(ctx, workspaceID)
+func (s *Services) SearchEmployees(ctx context.Context, organizationID uuid.UUID, query string) ([]postgres.Employee, error) {
+	all, err := s.Store.ListEmployees(ctx, organizationID)
 	if err != nil {
 		return nil, err
 	}
 	return filterEmployees(all, query), nil
 }
 
-// SearchEmployeesGlobal finds directory entries across all workspaces (for the
-// bot schedule view, which has no workspace context).
+// SearchEmployeesGlobal finds directory entries across all organizations (for the
+// bot schedule view, which has no organization context).
 func (s *Services) SearchEmployeesGlobal(ctx context.Context, query string) ([]postgres.Employee, error) {
 	return s.Store.SearchEmployeesGlobal(ctx, query)
 }
@@ -71,8 +71,8 @@ func (s *Services) ListParticipants(ctx context.Context, meetingID uuid.UUID) ([
 
 // AddParticipant adds a guest by email (organizer or owner only): persists, syncs
 // the Google attendee list, and enqueues a notification.
-func (s *Services) AddParticipant(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, email string) error {
-	m, _, err := s.loadForParticipantOp(ctx, workspaceID, meetingID, userID)
+func (s *Services) AddParticipant(ctx context.Context, organizationID, userID, meetingID uuid.UUID, email string) error {
+	m, _, err := s.loadForParticipantOp(ctx, organizationID, meetingID, userID)
 	if err != nil {
 		return err
 	}
@@ -92,11 +92,11 @@ func (s *Services) AddParticipant(ctx context.Context, workspaceID, userID, meet
 	if err := s.Store.AddParticipants(ctx, meetingID, []postgres.MeetingParticipant{{Email: email}}); err != nil {
 		return err
 	}
-	if err := s.syncAttendees(ctx, workspaceID, m.GoogleEventID, meetingID); err != nil {
+	if err := s.syncAttendees(ctx, organizationID, m.GoogleEventID, meetingID); err != nil {
 		return err
 	}
 	if s.Queue != nil {
-		if err := s.Queue.EnqueueParticipantAdded(ctx, workspaceID, meetingID, email); err != nil && s.Log != nil {
+		if err := s.Queue.EnqueueParticipantAdded(ctx, organizationID, meetingID, email); err != nil && s.Log != nil {
 			s.Log.Warn("enqueue participant added", zap.String("meeting_id", meetingID.String()), zap.Error(err))
 		}
 	}
@@ -105,8 +105,8 @@ func (s *Services) AddParticipant(ctx context.Context, workspaceID, userID, meet
 
 // RemoveParticipant removes a guest by email (organizer or owner only): persists,
 // syncs the Google attendee list, and enqueues a notification.
-func (s *Services) RemoveParticipant(ctx context.Context, workspaceID, userID, meetingID uuid.UUID, email string) error {
-	m, _, err := s.loadForParticipantOp(ctx, workspaceID, meetingID, userID)
+func (s *Services) RemoveParticipant(ctx context.Context, organizationID, userID, meetingID uuid.UUID, email string) error {
+	m, _, err := s.loadForParticipantOp(ctx, organizationID, meetingID, userID)
 	if err != nil {
 		return err
 	}
@@ -117,39 +117,39 @@ func (s *Services) RemoveParticipant(ctx context.Context, workspaceID, userID, m
 	if err := s.Store.RemoveParticipant(ctx, meetingID, email); err != nil {
 		return err
 	}
-	if err := s.syncAttendees(ctx, workspaceID, m.GoogleEventID, meetingID); err != nil {
+	if err := s.syncAttendees(ctx, organizationID, m.GoogleEventID, meetingID); err != nil {
 		return err
 	}
 	if s.Queue != nil {
-		if err := s.Queue.EnqueueParticipantRemoved(ctx, workspaceID, meetingID, email); err != nil && s.Log != nil {
+		if err := s.Queue.EnqueueParticipantRemoved(ctx, organizationID, meetingID, email); err != nil && s.Log != nil {
 			s.Log.Warn("enqueue participant removed", zap.String("meeting_id", meetingID.String()), zap.Error(err))
 		}
 	}
 	return nil
 }
 
-// loadForParticipantOp loads the meeting + workspace and enforces the ACL.
-func (s *Services) loadForParticipantOp(ctx context.Context, workspaceID, meetingID, userID uuid.UUID) (postgres.Meeting, postgres.Workspace, error) {
-	m, err := s.Store.GetMeeting(ctx, workspaceID, meetingID)
+// loadForParticipantOp loads the meeting + organization and enforces the ACL.
+func (s *Services) loadForParticipantOp(ctx context.Context, organizationID, meetingID, userID uuid.UUID) (postgres.Meeting, postgres.Organization, error) {
+	m, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
-		return postgres.Meeting{}, postgres.Workspace{}, err
+		return postgres.Meeting{}, postgres.Organization{}, err
 	}
-	w, err := s.Store.GetWorkspace(ctx, workspaceID)
+	org, err := s.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
-		return postgres.Meeting{}, postgres.Workspace{}, err
+		return postgres.Meeting{}, postgres.Organization{}, err
 	}
-	if !ownerOrOrganizer(w, m.OrganizerUserID, userID) {
-		return postgres.Meeting{}, postgres.Workspace{}, ErrForbidden
+	if !ownerOrOrganizer(org, m.OrganizerUserID, userID) {
+		return postgres.Meeting{}, postgres.Organization{}, ErrForbidden
 	}
 	if m.Status != "scheduled" {
-		return postgres.Meeting{}, postgres.Workspace{}, postgres.ErrMeetingNotEditable
+		return postgres.Meeting{}, postgres.Organization{}, postgres.ErrMeetingNotEditable
 	}
-	return m, w, nil
+	return m, org, nil
 }
 
 // syncAttendees patches the Google event's guest list to the meeting's current
 // participants (no-op when the meeting has no Google event).
-func (s *Services) syncAttendees(ctx context.Context, workspaceID uuid.UUID, googleEventID string, meetingID uuid.UUID) error {
+func (s *Services) syncAttendees(ctx context.Context, organizationID uuid.UUID, googleEventID string, meetingID uuid.UUID) error {
 	if googleEventID == "" {
 		return nil
 	}
@@ -163,7 +163,7 @@ func (s *Services) syncAttendees(ctx context.Context, workspaceID uuid.UUID, goo
 			emails = append(emails, p.Email)
 		}
 	}
-	calSvc, err := s.Calendar.For(ctx, workspaceID)
+	calSvc, err := s.Calendar.For(ctx, organizationID)
 	if err != nil {
 		return err
 	}

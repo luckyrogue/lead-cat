@@ -64,16 +64,15 @@ func (s *Store) ListAuditEntries(ctx context.Context, f AuditFilter) ([]AuditEnt
 	return out, rows.Err()
 }
 
-// EnsureLeadCatWorkspaceID returns the single Lead Cat workspace id, creating
-// it on first call. Idempotent — safe under concurrency thanks to
-// workspaces_singleton_idx unique partial index (added in migration
-// 20260609120000).
+// EnsureDefaultOrganizationID returns the single Lead Cat organization id, creating
+// it on first call. Idempotent — safe under concurrency thanks to the slug
+// uniqueness constraint on the organizations table.
 //
-// ownerUserID may be uuid.Nil — in that case the workspace is created with
+// ownerUserID may be uuid.Nil — in that case the organization is created with
 // owner_user_id = NULL (which is permitted by the FK definition).
-func (s *Store) EnsureLeadCatWorkspaceID(ctx context.Context, defaultTZ, defaultMeetLink string, ownerUserID uuid.UUID) (uuid.UUID, error) {
+func (s *Store) EnsureDefaultOrganizationID(ctx context.Context, defaultTZ, defaultMeetLink string, ownerUserID uuid.UUID) (uuid.UUID, error) {
 	var id uuid.UUID
-	err := s.pool.QueryRow(ctx, `SELECT id FROM workspaces WHERE name = 'Lead Cat' LIMIT 1`).Scan(&id)
+	err := s.pool.QueryRow(ctx, `SELECT id FROM organizations WHERE name = 'Lead Cat' LIMIT 1`).Scan(&id)
 	if err == nil {
 		return id, nil
 	}
@@ -86,18 +85,17 @@ func (s *Store) EnsureLeadCatWorkspaceID(ctx context.Context, defaultTZ, default
 		ownerArg = nil
 	}
 
-	// Try INSERT. Two unique constraints can race: slug uniqueness and the
-	// new workspaces_singleton_idx. ON CONFLICT DO NOTHING swallows both;
+	// Try INSERT. ON CONFLICT DO NOTHING swallows slug uniqueness races;
 	// re-SELECT to pick up the winner's row.
 	if err := s.pool.QueryRow(ctx, `
-		INSERT INTO workspaces (slug, name, owner_user_id, tz, meet_link)
+		INSERT INTO organizations (slug, name, owner_user_id, tz, meet_link)
 		VALUES ('lead-cat', 'Lead Cat', $1, $2, $3)
 		ON CONFLICT DO NOTHING
 		RETURNING id`, ownerArg, defaultTZ, defaultMeetLink).Scan(&id); err == nil {
 		return id, nil
 	}
 	// Race: re-select.
-	if err := s.pool.QueryRow(ctx, `SELECT id FROM workspaces WHERE name = 'Lead Cat' LIMIT 1`).Scan(&id); err != nil {
+	if err := s.pool.QueryRow(ctx, `SELECT id FROM organizations WHERE name = 'Lead Cat' LIMIT 1`).Scan(&id); err != nil {
 		return uuid.Nil, err
 	}
 	return id, nil

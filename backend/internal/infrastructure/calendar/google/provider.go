@@ -16,7 +16,7 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
-// Provider builds a per-workspace Google Calendar client from the workspace's
+// Provider builds a per-organization Google Calendar client from the organization's
 // encrypted service-account credentials. Built adapters are cached, keyed by a
 // hash of the encrypted creds + subject + calendar id, so changing any of them
 // transparently yields a fresh client (no explicit invalidation needed).
@@ -30,8 +30,8 @@ func NewProvider(store *postgres.Store, cipher *crypto.TokenCipher) *Provider {
 	return &Provider{store: store, cipher: cipher}
 }
 
-func (p *Provider) For(ctx context.Context, workspaceID uuid.UUID) (docalendar.Service, error) {
-	enc, subject, calendarID, err := p.store.GetGoogleConfig(ctx, workspaceID)
+func (p *Provider) For(ctx context.Context, organizationID uuid.UUID) (docalendar.Service, error) {
+	enc, subject, calendarID, err := p.store.GetGoogleConfig(ctx, organizationID)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (p *Provider) For(ctx context.Context, workspaceID uuid.UUID) (docalendar.S
 	}
 
 	sum := sha256.Sum256(enc)
-	key := workspaceID.String() + "|" + subject + "|" + calendarID + "|" + hex.EncodeToString(sum[:])
+	key := organizationID.String() + "|" + subject + "|" + calendarID + "|" + hex.EncodeToString(sum[:])
 	if v, ok := p.cache.Load(key); ok {
 		return v.(*adapter), nil
 	}

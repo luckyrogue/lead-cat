@@ -27,14 +27,14 @@ func (c *Client) Close() error { return c.client.Close() }
 const TaskMeetingCreated = "meeting:created"
 
 type MeetingCreatedPayload struct {
-	WorkspaceID string `json:"workspace_id"`
-	MeetingID   string `json:"meeting_id"`
+	OrganizationID string `json:"organization_id"`
+	MeetingID      string `json:"meeting_id"`
 }
 
-func (c *Client) EnqueueMeetingCreated(ctx context.Context, workspaceID, meetingID uuid.UUID) error {
+func (c *Client) EnqueueMeetingCreated(ctx context.Context, organizationID, meetingID uuid.UUID) error {
 	p, _ := json.Marshal(MeetingCreatedPayload{
-		WorkspaceID: workspaceID.String(),
-		MeetingID:   meetingID.String(),
+		OrganizationID: organizationID.String(),
+		MeetingID:      meetingID.String(),
 	})
 	task := asynq.NewTask(TaskMeetingCreated, p)
 	_, err := c.client.EnqueueContext(ctx, task, asynq.MaxRetry(5))
@@ -50,14 +50,14 @@ func ParseMeetingCreated(t *asynq.Task) (MeetingCreatedPayload, error) {
 const TaskMeetingUpdated = "meeting:updated"
 
 type MeetingUpdatedPayload struct {
-	WorkspaceID string `json:"workspace_id"`
-	MeetingID   string `json:"meeting_id"`
+	OrganizationID string `json:"organization_id"`
+	MeetingID      string `json:"meeting_id"`
 }
 
-func (c *Client) EnqueueMeetingUpdated(ctx context.Context, workspaceID, meetingID uuid.UUID) error {
+func (c *Client) EnqueueMeetingUpdated(ctx context.Context, organizationID, meetingID uuid.UUID) error {
 	p, _ := json.Marshal(MeetingUpdatedPayload{
-		WorkspaceID: workspaceID.String(),
-		MeetingID:   meetingID.String(),
+		OrganizationID: organizationID.String(),
+		MeetingID:      meetingID.String(),
 	})
 	task := asynq.NewTask(TaskMeetingUpdated, p)
 	_, err := c.client.EnqueueContext(ctx, task, asynq.MaxRetry(5))
@@ -73,14 +73,14 @@ func ParseMeetingUpdated(t *asynq.Task) (MeetingUpdatedPayload, error) {
 const TaskMeetingCancelled = "meeting:cancelled"
 
 type MeetingCancelledPayload struct {
-	WorkspaceID string `json:"workspace_id"`
-	MeetingID   string `json:"meeting_id"`
+	OrganizationID string `json:"organization_id"`
+	MeetingID      string `json:"meeting_id"`
 }
 
-func (c *Client) EnqueueMeetingCancelled(ctx context.Context, workspaceID, meetingID uuid.UUID) error {
+func (c *Client) EnqueueMeetingCancelled(ctx context.Context, organizationID, meetingID uuid.UUID) error {
 	p, _ := json.Marshal(MeetingCancelledPayload{
-		WorkspaceID: workspaceID.String(),
-		MeetingID:   meetingID.String(),
+		OrganizationID: organizationID.String(),
+		MeetingID:      meetingID.String(),
 	})
 	task := asynq.NewTask(TaskMeetingCancelled, p)
 	_, err := c.client.EnqueueContext(ctx, task, asynq.MaxRetry(5))
@@ -99,24 +99,24 @@ const (
 )
 
 type ParticipantPayload struct {
-	WorkspaceID string `json:"workspace_id"`
-	MeetingID   string `json:"meeting_id"`
-	Email       string `json:"email"`
+	OrganizationID string `json:"organization_id"`
+	MeetingID      string `json:"meeting_id"`
+	Email          string `json:"email"`
 }
 
-func (c *Client) EnqueueParticipantAdded(ctx context.Context, workspaceID, meetingID uuid.UUID, email string) error {
-	return c.enqueueParticipant(ctx, TaskParticipantAdded, workspaceID, meetingID, email)
+func (c *Client) EnqueueParticipantAdded(ctx context.Context, organizationID, meetingID uuid.UUID, email string) error {
+	return c.enqueueParticipant(ctx, TaskParticipantAdded, organizationID, meetingID, email)
 }
 
-func (c *Client) EnqueueParticipantRemoved(ctx context.Context, workspaceID, meetingID uuid.UUID, email string) error {
-	return c.enqueueParticipant(ctx, TaskParticipantRemoved, workspaceID, meetingID, email)
+func (c *Client) EnqueueParticipantRemoved(ctx context.Context, organizationID, meetingID uuid.UUID, email string) error {
+	return c.enqueueParticipant(ctx, TaskParticipantRemoved, organizationID, meetingID, email)
 }
 
-func (c *Client) enqueueParticipant(ctx context.Context, taskType string, workspaceID, meetingID uuid.UUID, email string) error {
+func (c *Client) enqueueParticipant(ctx context.Context, taskType string, organizationID, meetingID uuid.UUID, email string) error {
 	p, _ := json.Marshal(ParticipantPayload{
-		WorkspaceID: workspaceID.String(),
-		MeetingID:   meetingID.String(),
-		Email:       email,
+		OrganizationID: organizationID.String(),
+		MeetingID:      meetingID.String(),
+		Email:          email,
 	})
 	task := asynq.NewTask(taskType, p)
 	_, err := c.client.EnqueueContext(ctx, task, asynq.MaxRetry(5))

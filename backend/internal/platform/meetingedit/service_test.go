@@ -106,7 +106,7 @@ func sampleMeeting() postgres.MeetingWithTZ {
 	org := uuid.New()
 	return postgres.MeetingWithTZ{
 		Meeting: postgres.Meeting{
-			ID: uuid.New(), WorkspaceID: uuid.New(), OrganizerUserID: &org,
+			ID: uuid.New(), OrganizationID: uuid.New(), OrganizerUserID: &org,
 			Dept: "Разработка", Type: "Планёрка", Host: "Иванов",
 			StartsAt:   time.Date(2026, 6, 1, 14, 0, 0, 0, loc).UTC(),
 			EndsAt:     time.Date(2026, 6, 1, 15, 0, 0, 0, loc).UTC(),
@@ -143,7 +143,7 @@ func TestEditFlow_TextField(t *testing.T) {
 	if be.gotIn.Dept == nil || *be.gotIn.Dept != "Маркетинг" {
 		t.Fatalf("apply did not pass dept override: %+v", be.gotIn)
 	}
-	if be.gotWS != m.WorkspaceID || be.gotUser != *m.OrganizerUserID || be.gotMID != m.ID {
+	if be.gotWS != m.OrganizationID || be.gotUser != *m.OrganizerUserID || be.gotMID != m.ID {
 		t.Fatal("apply passed wrong ids")
 	}
 }
