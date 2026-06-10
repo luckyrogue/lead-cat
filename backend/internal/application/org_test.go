@@ -1,6 +1,47 @@
 package application
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/google/uuid"
+
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+)
+
+func TestMemberViews(t *testing.T) {
+	ownerID := uuid.New()
+	memberID := uuid.New()
+	unknownID := uuid.New()
+
+	members := []postgres.Member{
+		{UserID: &ownerID, Role: "owner"},
+		{UserID: &memberID, Role: "member"},
+	}
+
+	// target = owner -> idx 0
+	views, idx := memberViews(members, ownerID)
+	if idx != 0 {
+		t.Fatalf("expected idx=0 for owner, got %d", idx)
+	}
+	if len(views) != 2 {
+		t.Fatalf("expected 2 views, got %d", len(views))
+	}
+	if views[0].Role != "owner" || views[1].Role != "member" {
+		t.Fatalf("unexpected roles: %v", views)
+	}
+
+	// target = member -> idx 1
+	_, idx = memberViews(members, memberID)
+	if idx != 1 {
+		t.Fatalf("expected idx=1 for member, got %d", idx)
+	}
+
+	// target = unknown -> idx -1
+	_, idx = memberViews(members, unknownID)
+	if idx != -1 {
+		t.Fatalf("expected idx=-1 for unknown, got %d", idx)
+	}
+}
 
 func TestSlugify(t *testing.T) {
 	cases := map[string]string{

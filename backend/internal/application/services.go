@@ -252,6 +252,73 @@ func (s *Services) ListMembers(ctx context.Context, organizationID uuid.UUID) ([
 	return s.Store.ListMembers(ctx, organizationID)
 }
 
+// InviteToOrg records a pending invite and emails the invitee a sign-in link.
+func (s *Services) InviteToOrg(ctx context.Context, orgID uuid.UUID, email, role string, inviterUserID uuid.UUID) (postgres.OrganizationInvite, error) {
+	raw, err := authweb.NewState(nil)
+	if err != nil {
+		return postgres.OrganizationInvite{}, err
+	}
+	inv, err := s.Store.CreateInvite(ctx, orgID, email, role, authweb.HashToken(raw), time.Now().Add(14*24*time.Hour), inviterUserID)
+	if err != nil {
+		return postgres.OrganizationInvite{}, err
+	}
+	if s.email != nil {
+		link := s.appBaseURL + "/login"
+		body := fmt.Sprintf(`<p>You've been invited to a Lead Cat organization.</p><p>Sign in to accept: <a href="%s">%s</a></p>`, link, link)
+		if err := s.email.Send(ctx, email, "You're invited to Lead Cat", body); err != nil {
+			s.Log.Warn("invite_email_failed", zap.Error(err))
+		}
+	}
+	return inv, nil
+}
+
+func (s *Services) ListOrgInvites(ctx context.Context, orgID uuid.UUID) ([]postgres.OrganizationInvite, error) {
+	return s.Store.ListInvites(ctx, orgID)
+}
+
+func (s *Services) DeleteOrgInvite(ctx context.Context, orgID, inviteID uuid.UUID) error {
+	return s.Store.DeleteInvite(ctx, orgID, inviteID)
+}
+
+func (s *Services) ListOrgMembers(ctx context.Context, orgID uuid.UUID) ([]postgres.Member, error) {
+	return s.Store.ListOrgMembers(ctx, orgID)
+}
+
+// RemoveOrgMember applies the last-owner guard then removes the member.
+func (s *Services) RemoveOrgMember(ctx context.Context, orgID, targetUserID uuid.UUID) error {
+	members, err := s.Store.ListOrgMembers(ctx, orgID)
+	if err != nil {
+		return err
+	}
+	views, idx := memberViews(members, targetUserID)
+	if idx < 0 {
+		return nil // not a member -> no-op
+	}
+	if err := canDemoteOrRemove(views, idx); err != nil {
+		return err
+	}
+	return s.Store.RemoveMember(ctx, orgID, targetUserID)
+}
+
+// SetOrgMemberRole applies the last-owner guard (when demoting from owner) then updates the role.
+func (s *Services) SetOrgMemberRole(ctx context.Context, orgID, targetUserID uuid.UUID, newRole string) error {
+	members, err := s.Store.ListOrgMembers(ctx, orgID)
+	if err != nil {
+		return err
+	}
+	views, idx := memberViews(members, targetUserID)
+	if idx < 0 {
+		return nil
+	}
+	// only guard when this change would remove the user's owner status
+	if newRole != "owner" {
+		if err := canDemoteOrRemove(views, idx); err != nil {
+			return err
+		}
+	}
+	return s.Store.UpdateMemberRole(ctx, orgID, targetUserID, newRole)
+}
+
 func (s *Services) AddMember(ctx context.Context, organizationID uuid.UUID, username, role string) (postgres.Member, error) {
 	return s.Store.AddMember(ctx, organizationID, username, role)
 }

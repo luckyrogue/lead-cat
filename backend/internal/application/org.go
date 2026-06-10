@@ -5,9 +5,12 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/google/uuid"
 	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
+
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // ErrLastOwner is returned when an operation would remove the last owner of an
@@ -51,6 +54,20 @@ func canDemoteOrRemove(members []OrgMemberView, idx int) error {
 		}
 	}
 	return ErrLastOwner
+}
+
+// memberViews projects members to OrgMemberView and returns the index of the
+// member whose UserID == target (-1 if absent).
+func memberViews(members []postgres.Member, target uuid.UUID) ([]OrgMemberView, int) {
+	views := make([]OrgMemberView, len(members))
+	idx := -1
+	for i, m := range members {
+		views[i] = OrgMemberView{Role: m.Role}
+		if m.UserID != nil && *m.UserID == target {
+			idx = i
+		}
+	}
+	return views, idx
 }
 
 // slugify converts a human-readable name into a URL-safe slug:

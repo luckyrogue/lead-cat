@@ -92,6 +92,17 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	web.Post("/logout", webAuth.Middleware, api.WebLogout)
 	web.Get("/me", webAuth.Middleware, api.WebMe)
 
+	orgs := app.Group("/api/orgs", webAuth.Middleware)
+	orgs.Post("", api.CreateOrg)
+	orgs.Get("", api.ListMyOrgs)
+	scoped := orgs.Group("/:id", middleware.RequireOrgMember(store))
+	scoped.Get("/members", api.ListOrgMembers)
+	scoped.Patch("/members/:uid/role", middleware.RequireOrgRole("admin"), api.UpdateMemberRole)
+	scoped.Delete("/members/:uid", middleware.RequireOrgRole("admin"), api.RemoveMember)
+	scoped.Get("/invites", middleware.RequireOrgRole("admin"), api.ListInvites)
+	scoped.Post("/invites", middleware.RequireOrgRole("admin"), api.InviteMember)
+	scoped.Delete("/invites/:iid", middleware.RequireOrgRole("admin"), api.DeleteInvite)
+
 	miniappAuth := middleware.NewMiniAppAuth(miniappToken, store)
 	miniapp := app.Group("/api/miniapp", miniappAuth.Middleware)
 	miniapp.Get("/me", api.MiniAppMe)
