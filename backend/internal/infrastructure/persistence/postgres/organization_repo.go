@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/google/uuid"
@@ -10,14 +11,11 @@ import (
 
 func (s *Store) ListOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]Organization, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT DISTINCT w.id, w.slug, w.name, w.notify_chat_id, w.meet_link, w.tz, w.owner_user_id
-		FROM organizations w
-		WHERE w.owner_user_id = $1
-			OR EXISTS (
-				SELECT 1 FROM organization_members m
-				WHERE m.organization_id = w.id AND m.user_id = $1
-			)
-		ORDER BY w.name`, userID)
+		SELECT o.id, o.slug, o.name, o.notify_chat_id, o.meet_link, o.tz, o.owner_user_id
+		FROM organizations o
+		JOIN organization_members m ON m.organization_id = o.id
+		WHERE m.user_id = $1
+		ORDER BY o.created_at`, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -25,15 +23,95 @@ func (s *Store) ListOrganizationsForUser(ctx context.Context, userID uuid.UUID) 
 	return scanOrganizations(rows)
 }
 
-func (s *Store) CreateOrganization(ctx context.Context, slug, name string, ownerID uuid.UUID) (Organization, error) {
+// CreateOrganization inserts a new organization and adds ownerUserID as its
+// owner member in a single transaction.
+func (s *Store) CreateOrganization(ctx context.Context, name, slug string, ownerUserID uuid.UUID) (Organization, error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return Organization{}, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
 	var w Organization
-	err := s.pool.QueryRow(ctx, `
-		INSERT INTO organizations (slug, name, owner_user_id, tz)
+	err = tx.QueryRow(ctx, `
+		INSERT INTO organizations (name, slug, owner_user_id, tz)
 		VALUES ($1, $2, $3, 'Asia/Almaty')
 		RETURNING id, slug, name, notify_chat_id, meet_link, tz, owner_user_id`,
-		slug, name, ownerID).Scan(
+		name, slug, ownerUserID).Scan(
 		&w.ID, &w.Slug, &w.Name, &w.NotifyChatID, &w.MeetLink, &w.TZ, &w.OwnerUserID)
-	return w, err
+	if err != nil {
+		return Organization{}, err
+	}
+
+	_, err = tx.Exec(ctx, `
+		INSERT INTO organization_members (organization_id, user_id, role)
+		VALUES ($1, $2, 'owner')`,
+		w.ID, ownerUserID)
+	if err != nil {
+		return Organization{}, err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return Organization{}, err
+	}
+	return w, nil
+}
+
+// GetOrgMember returns the member row for (orgID, userID). Returns (Member{}, false, nil) if not found.
+func (s *Store) GetOrgMember(ctx context.Context, orgID, userID uuid.UUID) (Member, bool, error) {
+	var m Member
+	err := s.pool.QueryRow(ctx, `
+		SELECT id, organization_id, user_id, telegram_username, role, invited_email
+		FROM organization_members
+		WHERE organization_id = $1 AND user_id = $2`,
+		orgID, userID).Scan(&m.ID, &m.OrganizationID, &m.UserID, &m.TelegramUsername, &m.Role, &m.InvitedEmail)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return Member{}, false, nil
+		}
+		return Member{}, false, err
+	}
+	return m, true, nil
+}
+
+// ListOrgMembers returns all members of an organisation ordered by telegram_username.
+func (s *Store) ListOrgMembers(ctx context.Context, orgID uuid.UUID) ([]Member, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT id, organization_id, user_id, telegram_username, role, invited_email
+		FROM organization_members
+		WHERE organization_id = $1
+		ORDER BY telegram_username`, orgID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []Member
+	for rows.Next() {
+		var m Member
+		if err := rows.Scan(&m.ID, &m.OrganizationID, &m.UserID, &m.TelegramUsername, &m.Role, &m.InvitedEmail); err != nil {
+			return nil, err
+		}
+		out = append(out, m)
+	}
+	return out, rows.Err()
+}
+
+// UpdateMemberRole sets the role for the member identified by (orgID, userID).
+func (s *Store) UpdateMemberRole(ctx context.Context, orgID, userID uuid.UUID, role string) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE organization_members SET role = $3
+		WHERE organization_id = $1 AND user_id = $2`,
+		orgID, userID, role)
+	return err
+}
+
+// RemoveMember deletes the member identified by (orgID, userID).
+func (s *Store) RemoveMember(ctx context.Context, orgID, userID uuid.UUID) error {
+	_, err := s.pool.Exec(ctx, `
+		DELETE FROM organization_members
+		WHERE organization_id = $1 AND user_id = $2`,
+		orgID, userID)
+	return err
 }
 
 func (s *Store) GetOrganization(ctx context.Context, id uuid.UUID) (Organization, error) {
