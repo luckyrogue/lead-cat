@@ -1398,26 +1398,6 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
           }
         }
-      },
-      "post": {
-        "operationId": "webAuthProviderStartPost",
-        "tags": ["web-auth"],
-        "summary": "Begin OAuth SSO flow (POST variant)",
-        "parameters": [
-          {
-            "name": "provider",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "enum": ["google", "microsoft"] }
-          }
-        ],
-        "responses": {
-          "302": { "description": "Redirect to OAuth provider" },
-          "400": {
-            "description": "Unknown provider",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
-          }
-        }
       }
     },
     "/api/auth/web/{provider}/callback": {
@@ -1453,26 +1433,6 @@
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
-          }
-        }
-      },
-      "post": {
-        "operationId": "webAuthProviderCallbackPost",
-        "tags": ["web-auth"],
-        "summary": "OAuth SSO callback (POST variant)",
-        "parameters": [
-          {
-            "name": "provider",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "enum": ["google", "microsoft"] }
-          }
-        ],
-        "responses": {
-          "302": { "description": "Redirect to web dashboard (session cookie set)" },
-          "400": {
-            "description": "OAuth error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
           }
         }
