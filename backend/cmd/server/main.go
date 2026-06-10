@@ -22,6 +22,9 @@ import (
 	calendargoogle "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/google"
 	calendarstub "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/stub"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/crypto"
+	smtpemail "github.com/luckyrogue/lead-cat/internal/infrastructure/email/smtp"
+	google "github.com/luckyrogue/lead-cat/internal/infrastructure/oauth/google"
+	microsoft "github.com/luckyrogue/lead-cat/internal/infrastructure/oauth/microsoft"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 	asynqqueue "github.com/luckyrogue/lead-cat/internal/infrastructure/queue/asynq"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/telegram"
@@ -82,6 +85,29 @@ func main() {
 	}
 	services := &application.Services{Store: store, Cipher: cipher, Queue: queueClient, Calendar: calProvider, Log: logger}
 	services.WireCQRS()
+
+	sso := map[string]application.SSOProvider{}
+	if cfg.GoogleClientID != "" {
+		if p, err := google.New(context.Background(), cfg.GoogleClientID, cfg.GoogleClientSecret); err != nil {
+			logger.Warn("google_oidc_init_failed", zap.Error(err))
+		} else {
+			sso["google"] = p
+			logger.Info("web_auth_provider_configured", zap.String("provider", "google"))
+		}
+	}
+	if cfg.MicrosoftClientID != "" {
+		if p, err := microsoft.New(context.Background(), cfg.MicrosoftClientID, cfg.MicrosoftClientSecret); err != nil {
+			logger.Warn("microsoft_oidc_init_failed", zap.Error(err))
+		} else {
+			sso["microsoft"] = p
+			logger.Info("web_auth_provider_configured", zap.String("provider", "microsoft"))
+		}
+	}
+	sender := smtpemail.New(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUsername, cfg.SMTPPassword, cfg.SMTPFrom)
+	if len(sso) == 0 && cfg.SMTPHost == "" {
+		logger.Info("web_auth_disabled_missing_config")
+	}
+	services.ConfigureWebAuth(sso, sender, cfg.AppBaseURL, cfg.WebSessionTTL, cfg.MagicLinkTTL)
 
 	var tgHandler *telegram.MultiHandler
 	botOpts := []bot.Option{

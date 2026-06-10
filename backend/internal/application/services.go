@@ -14,6 +14,7 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/crypto"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 	asynqqueue "github.com/luckyrogue/lead-cat/internal/infrastructure/queue/asynq"
+	"github.com/luckyrogue/lead-cat/internal/platform/authweb"
 )
 
 // ChatSyncer is a function that syncs chat administrators into organization_members.
@@ -30,6 +31,80 @@ type Services struct {
 	Bot      *bot.Bot
 	Queries  *query.Meetings
 	syncChat ChatSyncer
+
+	sso        map[string]SSOProvider
+	email      EmailSender
+	magic      *magicLinkService
+	sessions   *webSessionService
+	appBaseURL string
+}
+
+// ConfigureWebAuth constructs the web-auth services. Call once at startup after Store is set.
+func (s *Services) ConfigureWebAuth(sso map[string]SSOProvider, email EmailSender, appBaseURL string, sessionTTL, magicTTL time.Duration) {
+	s.sso = sso
+	s.email = email
+	s.appBaseURL = appBaseURL
+	s.magic = newMagicLinkService(s.Store, email, appBaseURL, magicTTL, time.Now)
+	s.sessions = newWebSessionService(s.Store, sessionTTL, time.Now)
+}
+
+// AppBaseURL returns the configured public base URL (for building redirects/links).
+func (s *Services) AppBaseURL() string { return s.appBaseURL }
+
+// ResolveWebUser resolves a session cookie to the web account (for WebAuth middleware).
+func (s *Services) ResolveWebUser(ctx context.Context, rawToken string) (postgres.PlatformUser, bool, error) {
+	ws, ok, err := s.sessions.ResolveSession(ctx, rawToken)
+	if err != nil || !ok {
+		return postgres.PlatformUser{}, false, err
+	}
+	return s.Store.GetPlatformUserByID(ctx, ws.UserID)
+}
+
+func (s *Services) CreateWebSession(ctx context.Context, userID uuid.UUID, ua, ip string) (string, error) {
+	return s.sessions.CreateSession(ctx, userID, ua, ip)
+}
+
+func (s *Services) RevokeWebSession(ctx context.Context, rawToken string) error {
+	return s.sessions.RevokeSession(ctx, rawToken)
+}
+
+func (s *Services) RequestMagicLink(ctx context.Context, email string) error {
+	return s.magic.RequestMagicLink(ctx, email)
+}
+
+func (s *Services) VerifyMagicLink(ctx context.Context, rawToken string) (string, error) {
+	return s.magic.VerifyMagicLink(ctx, rawToken)
+}
+
+func (s *Services) UpsertWebIdentity(ctx context.Context, email, name, avatarURL, authMethod string) (postgres.PlatformUser, error) {
+	return s.Store.UpsertWebIdentity(ctx, email, name, avatarURL, authMethod)
+}
+
+func (s *Services) AcceptInvitesForEmail(ctx context.Context, email string, userID uuid.UUID) (int, error) {
+	return s.Store.AcceptInvitesForEmail(ctx, email, userID)
+}
+
+func (s *Services) SSOProviderByName(name string) (SSOProvider, bool) {
+	p, ok := s.sso[name]
+	return p, ok
+}
+
+func (s *Services) ListOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]postgres.Organization, error) {
+	return s.Store.ListOrganizationsForUser(ctx, userID)
+}
+
+// CreateOrganizationForOwner derives a unique slug from name and creates the org with the user as owner.
+func (s *Services) CreateOrganizationForOwner(ctx context.Context, name string, ownerUserID uuid.UUID) (postgres.Organization, error) {
+	base := slugify(name)
+	if base == "" {
+		base = "org"
+	}
+	suffix, err := authweb.NewState(nil) // url-safe random
+	if err != nil {
+		return postgres.Organization{}, err
+	}
+	slug := base + "-" + suffix[:6]
+	return s.Store.CreateOrganization(ctx, name, slug, ownerUserID)
 }
 
 func (s *Services) WireCQRS() {

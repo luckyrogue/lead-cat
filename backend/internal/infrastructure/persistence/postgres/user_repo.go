@@ -40,6 +40,22 @@ func (s *Store) GetPlatformUserIDByTelegramID(ctx context.Context, telegramID in
 	return id, true, nil
 }
 
+// GetPlatformUserByID returns the platform user by id. ok is false when no row exists.
+func (s *Store) GetPlatformUserByID(ctx context.Context, id uuid.UUID) (PlatformUser, bool, error) {
+	var u PlatformUser
+	err := s.pool.QueryRow(ctx, `
+		SELECT id, auth_sub, email, telegram_id, avatar_url, auth_method, created_at
+		FROM platform_users WHERE id = $1`, id).
+		Scan(&u.ID, &u.AuthSub, &u.Email, &u.TelegramID, &u.AvatarURL, &u.AuthMethod, &u.CreatedAt)
+	if IsNotFound(err) {
+		return PlatformUser{}, false, nil
+	}
+	if err != nil {
+		return PlatformUser{}, false, err
+	}
+	return u, true, nil
+}
+
 func (s *Store) LinkTelegram(ctx context.Context, userID uuid.UUID, telegramID int64) error {
 	_, err := s.pool.Exec(ctx, `
 		UPDATE platform_users SET telegram_id = $2 WHERE id = $1`, userID, telegramID)

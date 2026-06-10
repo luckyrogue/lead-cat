@@ -30,6 +30,22 @@ type Config struct {
 	CORSAllowedOrigins string
 
 	BotAdminTelegramIDs []int64
+
+	AppBaseURL      string
+	WebCookieDomain string
+	WebSessionTTL   time.Duration
+	MagicLinkTTL    time.Duration
+
+	GoogleClientID        string
+	GoogleClientSecret    string
+	MicrosoftClientID     string
+	MicrosoftClientSecret string
+
+	SMTPHost     string
+	SMTPPort     string
+	SMTPUsername string
+	SMTPPassword string
+	SMTPFrom     string
 }
 
 func Load() (Config, error) {
@@ -46,6 +62,20 @@ func Load() (Config, error) {
 		JWTSecret:           strings.TrimSpace(os.Getenv("JWT_SECRET")),
 		JWTIssuer:           envOr("JWT_ISSUER", "lead-cat"),
 		CORSAllowedOrigins:  envOr("CORS_ALLOWED_ORIGINS", ""),
+
+		AppBaseURL:      envOr("APP_BASE_URL", "http://localhost:8080"),
+		WebCookieDomain: envOr("WEB_COOKIE_DOMAIN", ""),
+
+		GoogleClientID:        strings.TrimSpace(os.Getenv("GOOGLE_OAUTH_CLIENT_ID")),
+		GoogleClientSecret:    strings.TrimSpace(os.Getenv("GOOGLE_OAUTH_CLIENT_SECRET")),
+		MicrosoftClientID:     strings.TrimSpace(os.Getenv("MICROSOFT_OAUTH_CLIENT_ID")),
+		MicrosoftClientSecret: strings.TrimSpace(os.Getenv("MICROSOFT_OAUTH_CLIENT_SECRET")),
+
+		SMTPHost:     strings.TrimSpace(os.Getenv("SMTP_HOST")),
+		SMTPPort:     envOr("SMTP_PORT", "587"),
+		SMTPUsername: strings.TrimSpace(os.Getenv("SMTP_USERNAME")),
+		SMTPPassword: strings.TrimSpace(os.Getenv("SMTP_PASSWORD")),
+		SMTPFrom:     strings.TrimSpace(os.Getenv("SMTP_FROM")),
 	}
 	if cfg.CORSAllowedOrigins == "" && cfg.WebappURL != "" {
 		cfg.CORSAllowedOrigins = cfg.WebappURL
@@ -73,6 +103,22 @@ func Load() (Config, error) {
 		}
 	}
 	cfg.JWTTTL = time.Duration(ttlHours) * time.Hour
+
+	sessionHours := 720
+	if v := strings.TrimSpace(os.Getenv("WEB_SESSION_TTL_HOURS")); v != "" {
+		if _, err := fmt.Sscanf(v, "%d", &sessionHours); err != nil {
+			return cfg, fmt.Errorf("invalid WEB_SESSION_TTL_HOURS")
+		}
+	}
+	cfg.WebSessionTTL = time.Duration(sessionHours) * time.Hour
+
+	magicMinutes := 15
+	if v := strings.TrimSpace(os.Getenv("MAGIC_LINK_TTL_MINUTES")); v != "" {
+		if _, err := fmt.Sscanf(v, "%d", &magicMinutes); err != nil {
+			return cfg, fmt.Errorf("invalid MAGIC_LINK_TTL_MINUTES")
+		}
+	}
+	cfg.MagicLinkTTL = time.Duration(magicMinutes) * time.Minute
 
 	if cfg.BotToken == "" {
 		if cfg.AuthDevMode {
