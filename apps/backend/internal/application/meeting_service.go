@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // ErrForbidden is returned when a caller may not act on a meeting.
@@ -28,14 +28,14 @@ type CreateMeetingInput struct {
 	RecurrenceUntil string // YYYY-MM-DD; required when Recurrence != once
 	RecurrenceDays  []int  // 1..7 (Mon..Sun); required when Recurrence == "custom"
 	Description     string
-	Participants    []postgres.MeetingParticipant
+	Participants    []model.MeetingParticipant
 }
 
-func (s *Services) ListEmployees(ctx context.Context, organizationID uuid.UUID) ([]postgres.Employee, error) {
+func (s *Services) ListEmployees(ctx context.Context, organizationID uuid.UUID) ([]model.Employee, error) {
 	return s.Store.ListEmployees(ctx, organizationID)
 }
 
-func (s *Services) ListMeetings(ctx context.Context, organizationID, userID uuid.UUID) ([]postgres.Meeting, error) {
+func (s *Services) ListMeetings(ctx context.Context, organizationID, userID uuid.UUID) ([]model.Meeting, error) {
 	w, err := s.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func (s *Services) ListMeetings(ctx context.Context, organizationID, userID uuid
 	return s.Store.ListMeetingsByOrganizer(ctx, organizationID, userID)
 }
 
-func (s *Services) GetMeeting(ctx context.Context, organizationID, id uuid.UUID) (postgres.Meeting, error) {
+func (s *Services) GetMeeting(ctx context.Context, organizationID, id uuid.UUID) (model.Meeting, error) {
 	m, err := s.Store.GetMeeting(ctx, organizationID, id)
 	if err != nil {
 		return m, err
@@ -56,22 +56,22 @@ func (s *Services) GetMeeting(ctx context.Context, organizationID, id uuid.UUID)
 	return m, err
 }
 
-func (s *Services) CreateMeeting(ctx context.Context, organizationID, organizerID uuid.UUID, in CreateMeetingInput) (postgres.Meeting, error) {
+func (s *Services) CreateMeeting(ctx context.Context, organizationID, organizerID uuid.UUID, in CreateMeetingInput) (model.Meeting, error) {
 	w, err := s.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
-		return postgres.Meeting{}, err
+		return model.Meeting{}, err
 	}
 	loc, err := time.LoadLocation(orDefault(w.TZ, "Asia/Almaty"))
 	if err != nil {
-		return postgres.Meeting{}, fmt.Errorf("bad timezone: %w", err)
+		return model.Meeting{}, fmt.Errorf("bad timezone: %w", err)
 	}
 	startsAt, err := time.ParseInLocation("2006-01-02 15:04", in.Date+" "+in.Start, loc)
 	if err != nil {
-		return postgres.Meeting{}, fmt.Errorf("%w: bad start time", ErrInvalidInput)
+		return model.Meeting{}, fmt.Errorf("%w: bad start time", ErrInvalidInput)
 	}
 	endsAt, err := time.ParseInLocation("2006-01-02 15:04", in.Date+" "+in.End, loc)
 	if err != nil {
-		return postgres.Meeting{}, fmt.Errorf("%w: bad end time", ErrInvalidInput)
+		return model.Meeting{}, fmt.Errorf("%w: bad end time", ErrInvalidInput)
 	}
 
 	rec := meeting.Recurrence(orDefault(in.Recurrence, string(meeting.Once)))
@@ -82,19 +82,19 @@ func (s *Services) CreateMeeting(ctx context.Context, organizationID, organizerI
 		Description: in.Description,
 	}
 	if err := dom.Validate(); err != nil {
-		return postgres.Meeting{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+		return model.Meeting{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
 	}
 
 	var until time.Time
 	if in.RecurrenceUntil != "" {
 		until, err = time.ParseInLocation("2006-01-02", in.RecurrenceUntil, loc)
 		if err != nil {
-			return postgres.Meeting{}, fmt.Errorf("%w: bad recurrence_until", ErrInvalidInput)
+			return model.Meeting{}, fmt.Errorf("%w: bad recurrence_until", ErrInvalidInput)
 		}
 	}
 	spansList, err := meeting.Occurrences(startsAt, endsAt, rec, in.RecurrenceDays, until)
 	if err != nil {
-		return postgres.Meeting{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+		return model.Meeting{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
 	}
 
 	var emails []string
@@ -105,7 +105,7 @@ func (s *Services) CreateMeeting(ctx context.Context, organizationID, organizerI
 	}
 	calSvc, err := s.Calendar.For(ctx, organizationID)
 	if err != nil {
-		return postgres.Meeting{}, err
+		return model.Meeting{}, err
 	}
 
 	if rec == meeting.Once {
@@ -114,9 +114,9 @@ func (s *Services) CreateMeeting(ctx context.Context, organizationID, organizerI
 			Title: name, Description: in.Description, Start: startsAt, End: endsAt, AttendeeEmails: emails,
 		})
 		if err != nil {
-			return postgres.Meeting{}, fmt.Errorf("calendar: %w", err)
+			return model.Meeting{}, fmt.Errorf("calendar: %w", err)
 		}
-		m, err := s.Store.CreateMeeting(ctx, postgres.Meeting{
+		m, err := s.Store.CreateMeeting(ctx, model.Meeting{
 			OrganizationID: organizationID, OrganizerUserID: &organizerID,
 			Dept: in.Dept, Type: in.Type, Host: in.Host,
 			StartsAt: startsAt.UTC(), EndsAt: endsAt.UTC(),
@@ -124,7 +124,7 @@ func (s *Services) CreateMeeting(ctx context.Context, organizationID, organizerI
 			GoogleEventID: cal.EventID, MeetLink: cal.MeetLink,
 		})
 		if err != nil {
-			return postgres.Meeting{}, err
+			return model.Meeting{}, err
 		}
 		if len(in.Participants) > 0 {
 			if err := s.Store.AddParticipants(ctx, m.ID, in.Participants); err != nil {
@@ -142,13 +142,13 @@ func (s *Services) CreateMeeting(ctx context.Context, organizationID, organizerI
 	}
 	evs, err := s.createSeriesEvents(ctx, calSvc, names, in.Description, emails, spansList)
 	if err != nil {
-		return postgres.Meeting{}, err
+		return model.Meeting{}, err
 	}
 	seriesID := uuid.New()
 	recUntil := until
-	rows := make([]postgres.Meeting, len(evs))
+	rows := make([]model.Meeting, len(evs))
 	for i, e := range evs {
-		rows[i] = postgres.Meeting{
+		rows[i] = model.Meeting{
 			OrganizationID: organizationID, OrganizerUserID: &organizerID,
 			Dept: in.Dept, Type: in.Type, Host: in.Host,
 			StartsAt: e.Span.Start.UTC(), EndsAt: e.Span.End.UTC(),
@@ -160,7 +160,7 @@ func (s *Services) CreateMeeting(ctx context.Context, organizationID, organizerI
 	created, err := s.Store.CreateMeetingSeries(ctx, rows, in.Participants)
 	if err != nil {
 		s.deleteEventsBestEffort(ctx, calSvc, eventIDs(evs))
-		return postgres.Meeting{}, err
+		return model.Meeting{}, err
 	}
 	anchor := created[0]
 	s.enqueueCreated(ctx, organizationID, anchor.ID)
@@ -239,41 +239,41 @@ func eventIDs(evs []seriesEvent) []string {
 // UpdateMeeting applies field overrides to a meeting (organizer or organization
 // owner only): validates, recomputes the name, patches the Google event, persists,
 // and enqueues a change notification. Mirrors CreateMeeting.
-func (s *Services) UpdateMeeting(ctx context.Context, organizationID, userID, meetingID uuid.UUID, in UpdateMeetingInput) (postgres.Meeting, error) {
+func (s *Services) UpdateMeeting(ctx context.Context, organizationID, userID, meetingID uuid.UUID, in UpdateMeetingInput) (model.Meeting, error) {
 	cur, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
-		return postgres.Meeting{}, err
+		return model.Meeting{}, err
 	}
 	w, err := s.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
-		return postgres.Meeting{}, err
+		return model.Meeting{}, err
 	}
 	if !ownerOrOrganizer(w, cur.OrganizerUserID, userID) {
-		return postgres.Meeting{}, ErrForbidden
+		return model.Meeting{}, ErrForbidden
 	}
 	loc, err := time.LoadLocation(orDefault(w.TZ, "Asia/Almaty"))
 	if err != nil {
-		return postgres.Meeting{}, fmt.Errorf("bad timezone: %w", err)
+		return model.Meeting{}, fmt.Errorf("bad timezone: %w", err)
 	}
 	updated, err := applyMeetingUpdate(cur, in, loc)
 	if err != nil {
-		return postgres.Meeting{}, err
+		return model.Meeting{}, err
 	}
 
 	if updated.GoogleEventID != "" {
 		calSvc, err := s.Calendar.For(ctx, organizationID)
 		if err != nil {
-			return postgres.Meeting{}, err
+			return model.Meeting{}, err
 		}
 		if err := calSvc.UpdateEvent(ctx, updated.GoogleEventID, CalendarEvent{
 			Title: updated.Name, Description: updated.Description,
 			Start: updated.StartsAt, End: updated.EndsAt,
 		}); err != nil {
-			return postgres.Meeting{}, fmt.Errorf("calendar: %w", err)
+			return model.Meeting{}, fmt.Errorf("calendar: %w", err)
 		}
 	}
 	if err := s.Store.UpdateMeeting(ctx, organizationID, meetingID, updated); err != nil {
-		return postgres.Meeting{}, err
+		return model.Meeting{}, err
 	}
 	if s.Queue != nil {
 		if err := s.Queue.EnqueueMeetingUpdated(ctx, organizationID, meetingID); err != nil && s.Log != nil {
@@ -288,7 +288,7 @@ func (s *Services) UpdateMeeting(ctx context.Context, organizationID, userID, me
 
 // ListEditableMeetings returns the upcoming meetings the Telegram user organizes,
 // each with its organization timezone (for the bot edit FSM).
-func (s *Services) ListEditableMeetings(ctx context.Context, telegramID int64) ([]postgres.MeetingWithTZ, error) {
+func (s *Services) ListEditableMeetings(ctx context.Context, telegramID int64) ([]model.MeetingWithTZ, error) {
 	return s.Store.ListMeetingsByOrganizerTelegram(ctx, telegramID)
 }
 

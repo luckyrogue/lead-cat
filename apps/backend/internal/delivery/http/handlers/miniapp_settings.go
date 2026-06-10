@@ -6,11 +6,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
-func miniAppSettingsBotUser(c *fiber.Ctx) (postgres.BotUser, bool) {
-	bu, ok := c.Locals("bot_user").(postgres.BotUser)
+func miniAppSettingsBotUser(c *fiber.Ctx) (model.BotUser, bool) {
+	bu, ok := c.Locals("bot_user").(model.BotUser)
 	return bu, ok
 }
 

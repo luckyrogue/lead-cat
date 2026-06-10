@@ -7,11 +7,11 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
-func miniappAdminBotUser(c *fiber.Ctx) (postgres.BotUser, bool) {
-	bu, ok := c.Locals("bot_user").(postgres.BotUser)
+func miniappAdminBotUser(c *fiber.Ctx) (model.BotUser, bool) {
+	bu, ok := c.Locals("bot_user").(model.BotUser)
 	return bu, ok && bu.Role == "admin"
 }
 
@@ -243,7 +243,7 @@ func (a *API) MiniAppAdminMembersSyncChat(c *fiber.Ctx) error {
 
 func (a *API) MiniAppAdminListAudit(c *fiber.Ctx) error {
 	a.withAuditActor(c)
-	entries, err := a.App.ListAudit(c.Context(), postgres.AuditFilter{
+	entries, err := a.App.ListAudit(c.Context(), model.AuditFilter{
 		Action:     c.Query("action"),
 		ActorEmail: c.Query("actor"),
 		Limit:      c.QueryInt("limit", 50),

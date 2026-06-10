@@ -6,11 +6,11 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
 type WebUserResolver interface {
-	ResolveWebUser(ctx context.Context, rawSessionToken string) (postgres.PlatformUser, bool, error)
+	ResolveWebUser(ctx context.Context, rawSessionToken string) (model.PlatformUser, bool, error)
 }
 
 type WebAuth struct{ resolver WebUserResolver }

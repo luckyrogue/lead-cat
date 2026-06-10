@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
 func TestMemberViews(t *testing.T) {
@@ -13,7 +13,7 @@ func TestMemberViews(t *testing.T) {
 	memberID := uuid.New()
 	unknownID := uuid.New()
 
-	members := []postgres.Member{
+	members := []model.Member{
 		{UserID: &ownerID, Role: "owner"},
 		{UserID: &memberID, Role: "member"},
 	}

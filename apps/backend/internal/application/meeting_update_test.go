@@ -5,14 +5,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
 func strp(s string) *string { return &s }
 
-func baseMeeting() postgres.Meeting {
+func baseMeeting() model.Meeting {
 	loc, _ := time.LoadLocation("Asia/Almaty")
-	return postgres.Meeting{
+	return model.Meeting{
 		Dept: "Разработка", Type: "Планёрка", Host: "Иванов А.А.",
 		StartsAt:   time.Date(2026, 6, 1, 14, 0, 0, 0, loc).UTC(),
 		EndsAt:     time.Date(2026, 6, 1, 15, 0, 0, 0, loc).UTC(),

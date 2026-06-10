@@ -7,8 +7,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/application/query"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
 )
 
 type miniappMeetingDTO struct {
@@ -71,11 +71,11 @@ func miniappMeetingFromQuery(d query.MiniAppMeeting) miniappMeetingDTO {
 	}
 }
 
-func (a *API) toMeetingDTO(ctx context.Context, m postgres.Meeting) miniappMeetingDTO {
+func (a *API) toMeetingDTO(ctx context.Context, m model.Meeting) miniappMeetingDTO {
 	return miniappMeetingFromQuery(a.App.MiniAppMeetingDTO(ctx, m, almatyLoc()))
 }
 
-func (a *API) toMeetingDTOs(ctx context.Context, ms []postgres.Meeting) []miniappMeetingDTO {
+func (a *API) toMeetingDTOs(ctx context.Context, ms []model.Meeting) []miniappMeetingDTO {
 	out := make([]miniappMeetingDTO, 0, len(ms))
 	for _, m := range ms {
 		out = append(out, a.toMeetingDTO(ctx, m))

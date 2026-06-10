@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
 // auditWhitelist maps action -> allowed detail keys.
@@ -81,7 +81,7 @@ func (s *Services) Audit(ctx context.Context, action, targetKind, targetID strin
 	if kind == "" {
 		kind = "bot"
 	}
-	err := s.Store.InsertAuditEntry(ctx, postgres.AuditEntry{
+	err := s.Store.InsertAuditEntry(ctx, model.AuditEntry{
 		ActorUserID:     actor.UserID,
 		ActorTelegramID: actor.TelegramID,
 		ActorEmail:      actor.Email,

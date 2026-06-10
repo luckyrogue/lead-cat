@@ -18,13 +18,12 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/delivery/http/handlers"
 	"github.com/luckyrogue/lead-cat/internal/delivery/http/middleware"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/crypto"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/telegram"
 	platformauth "github.com/luckyrogue/lead-cat/internal/platform/auth"
 	"github.com/luckyrogue/lead-cat/internal/platform/config"
 )
 
-func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher, rdb *redis.Client, tg *bot.Bot, log *zap.Logger, services *application.Services) (*fiber.App, error) {
+func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypto.TokenCipher, rdb *redis.Client, tg *bot.Bot, log *zap.Logger, services *application.Services) (*fiber.App, error) {
 	_ = cipher
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
@@ -103,7 +102,7 @@ func NewApp(cfg config.Config, store *postgres.Store, cipher *crypto.TokenCipher
 	scoped.Post("/invites", middleware.RequireOrgRole("admin"), api.InviteMember)
 	scoped.Delete("/invites/:iid", middleware.RequireOrgRole("admin"), api.DeleteInvite)
 
-	miniappAuth := middleware.NewMiniAppAuth(miniappToken, store)
+	miniappAuth := middleware.NewMiniAppAuth(miniappToken, services)
 	miniapp := app.Group("/api/miniapp", miniappAuth.Middleware)
 	miniapp.Get("/me", api.MiniAppMe)
 	miniapp.Get("/settings", api.MiniAppGetSettings)

@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // SeriesUpdateInput carries series-wide field overrides (nil = unchanged) plus an
@@ -27,7 +27,7 @@ type SeriesUpdateInput struct {
 // applySeriesUpdate applies field overrides + an optional time-of-day to one
 // occurrence, keeping the occurrence's own date and recurrence. Pure; recomputes
 // the name. Returns ErrInvalidInput on bad time.
-func applySeriesUpdate(cur postgres.Meeting, in SeriesUpdateInput, loc *time.Location) (postgres.Meeting, error) {
+func applySeriesUpdate(cur model.Meeting, in SeriesUpdateInput, loc *time.Location) (model.Meeting, error) {
 	dept := orStr(in.Dept, cur.Dept)
 	typ := orStr(in.Type, cur.Type)
 	host := orStr(in.Host, cur.Host)
@@ -40,11 +40,11 @@ func applySeriesUpdate(cur postgres.Meeting, in SeriesUpdateInput, loc *time.Loc
 		day := cur.StartsAt.In(loc).Format("2006-01-02")
 		s, err := time.ParseInLocation("2006-01-02 15:04", day+" "+*in.Start, loc)
 		if err != nil {
-			return postgres.Meeting{}, fmt.Errorf("%w: bad start time", ErrInvalidInput)
+			return model.Meeting{}, fmt.Errorf("%w: bad start time", ErrInvalidInput)
 		}
 		e, err := time.ParseInLocation("2006-01-02 15:04", day+" "+*in.End, loc)
 		if err != nil {
-			return postgres.Meeting{}, fmt.Errorf("%w: bad end time", ErrInvalidInput)
+			return model.Meeting{}, fmt.Errorf("%w: bad end time", ErrInvalidInput)
 		}
 		startLocal = s
 		startsAt = s.UTC()
@@ -54,7 +54,7 @@ func applySeriesUpdate(cur postgres.Meeting, in SeriesUpdateInput, loc *time.Loc
 	rec := meeting.Recurrence(cur.Recurrence)
 	dom := meeting.Input{Dept: dept, Type: typ, Host: host, StartsAt: startsAt, EndsAt: endsAt, Recurrence: rec, Description: desc}
 	if err := dom.Validate(); err != nil {
-		return postgres.Meeting{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+		return model.Meeting{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
 	}
 
 	out := cur
@@ -93,7 +93,7 @@ func (s *Services) UpdateSeries(ctx context.Context, organizationID, userID, mee
 	if err != nil {
 		return 0, err
 	}
-	rows := make([]postgres.Meeting, 0, len(occs))
+	rows := make([]model.Meeting, 0, len(occs))
 	for _, oc := range occs {
 		upd, err := applySeriesUpdate(oc, in, loc)
 		if err != nil {
@@ -204,7 +204,7 @@ func (s *Services) UpdateWholeSeries(ctx context.Context, organizationID, userID
 	if err != nil {
 		return 0, err
 	}
-	rows := make([]postgres.Meeting, 0, len(occs))
+	rows := make([]model.Meeting, 0, len(occs))
 	for _, oc := range occs {
 		upd, err := applySeriesUpdate(oc, in, loc)
 		if err != nil {

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"slices"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/platform/botsettings"
 )
 
@@ -21,7 +21,7 @@ type UserSettings struct {
 // userSettingsStore is the narrow store interface used by GetUserSettings /
 // SetUserReminderMinutes — defined here so unit tests can mock it.
 type userSettingsStore interface {
-	GetBotUserByTelegramID(ctx context.Context, telegramID int64) (postgres.BotUser, error)
+	GetBotUserByTelegramID(ctx context.Context, telegramID int64) (model.BotUser, error)
 	SetReminderMinutes(ctx context.Context, telegramID int64, csv string) error
 }
 

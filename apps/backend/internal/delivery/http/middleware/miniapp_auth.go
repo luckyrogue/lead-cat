@@ -6,12 +6,12 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/platform/auth"
 )
 
 type miniappStore interface {
-	GetBotUserByTelegramID(ctx context.Context, telegramID int64) (postgres.BotUser, error)
+	GetBotUserByTelegramID(ctx context.Context, telegramID int64) (model.BotUser, error)
 }
 
 type MiniAppAuth struct {
@@ -19,7 +19,7 @@ type MiniAppAuth struct {
 	store miniappStore
 }
 
-func NewMiniAppAuth(token *auth.MiniAppToken, store *postgres.Store) *MiniAppAuth {
+func NewMiniAppAuth(token *auth.MiniAppToken, store miniappStore) *MiniAppAuth {
 	return &MiniAppAuth{token: token, store: store}
 }
 

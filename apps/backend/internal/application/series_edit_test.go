@@ -5,12 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
-func occ() postgres.Meeting {
+func occ() model.Meeting {
 	loc, _ := time.LoadLocation("Asia/Almaty")
-	return postgres.Meeting{
+	return model.Meeting{
 		Dept: "Разработка", Type: "Планёрка", Host: "Иванов",
 		StartsAt:   time.Date(2026, 6, 8, 14, 0, 0, 0, loc).UTC(),
 		EndsAt:     time.Date(2026, 6, 8, 15, 0, 0, 0, loc).UTC(),

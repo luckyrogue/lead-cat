@@ -7,16 +7,16 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
 type OrgMemberResolver interface {
-	GetOrgMember(ctx context.Context, orgID, userID uuid.UUID) (postgres.Member, bool, error)
+	GetOrgMember(ctx context.Context, orgID, userID uuid.UUID) (model.Member, bool, error)
 }
 
 func RequireOrgMember(r OrgMemberResolver) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		user, ok := c.Locals("web_user").(postgres.PlatformUser)
+		user, ok := c.Locals("web_user").(model.PlatformUser)
 		if !ok {
 			return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
 		}
@@ -42,7 +42,7 @@ func RequireOrgMember(r OrgMemberResolver) fiber.Handler {
 
 func RequireOrgRole(minRole string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		m, ok := c.Locals("org_member").(postgres.Member)
+		m, ok := c.Locals("org_member").(model.Member)
 		if !ok {
 			return fiber.NewError(fiber.StatusForbidden, "forbidden")
 		}

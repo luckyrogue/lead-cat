@@ -3,7 +3,7 @@ package application
 import (
 	"testing"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
 func TestNormalizeEmail(t *testing.T) {
@@ -17,7 +17,7 @@ func TestNormalizeEmail(t *testing.T) {
 }
 
 func TestFilterEmployees(t *testing.T) {
-	all := []postgres.Employee{
+	all := []model.Employee{
 		{FullName: "Иван Иванов", Email: "ivan@corp.kz"},
 		{FullName: "Пётр Петров", Email: "petr@corp.kz"},
 		{FullName: "Анна Сидорова", Email: "anna@corp.kz"},

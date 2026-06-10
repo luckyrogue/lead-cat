@@ -3,11 +3,11 @@ package handlers
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
 func (a *API) MiniAppMe(c *fiber.Ctx) error {
-	bu, ok := c.Locals("bot_user").(postgres.BotUser)
+	bu, ok := c.Locals("bot_user").(model.BotUser)
 	if !ok {
 		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
 	}

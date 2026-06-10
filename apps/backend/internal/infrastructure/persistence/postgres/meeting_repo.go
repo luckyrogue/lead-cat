@@ -3,15 +3,10 @@ package postgres
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
 )
-
-// ErrMeetingNotEditable means the meeting does not exist in the workspace or is
-// not in the 'scheduled' state (e.g. already cancelled).
-var ErrMeetingNotEditable = errors.New("meeting not found or not editable")
 
 const meetingCols = `id, organization_id, organizer_user_id, dept, type, host,
 	starts_at, ends_at, recurrence, name, description, google_event_id, meet_link, status,
@@ -22,12 +17,6 @@ const meetingCols = `id, organization_id, organizer_user_id, dept, type, host,
 const meetingColsM = `m.id, m.organization_id, m.organizer_user_id, m.dept, m.type, m.host,
 	m.starts_at, m.ends_at, m.recurrence, m.name, m.description, m.google_event_id, m.meet_link, m.status,
 	m.series_id, m.recurrence_until, m.recurrence_days`
-
-// MeetingWithTZ is a meeting plus its workspace timezone (for bot rendering).
-type MeetingWithTZ struct {
-	Meeting
-	TZ string
-}
 
 func scanMeeting(row interface {
 	Scan(dest ...any) error

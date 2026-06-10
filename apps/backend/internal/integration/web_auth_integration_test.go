@@ -1,4 +1,4 @@
-package handlers
+package integration
 
 import (
 	"context"
@@ -11,12 +11,13 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/jackc/pgx/v5/pgxpool" //nolint:depguard
+	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
+	"github.com/luckyrogue/lead-cat/internal/delivery/http/handlers"
 	"github.com/luckyrogue/lead-cat/internal/delivery/http/middleware"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 type captureMailer struct{ lastBody string }
@@ -58,7 +59,7 @@ func TestMagicLinkRoundTripIssuesSession(t *testing.T) {
 		"http://localhost:8080", 720*time.Hour, 15*time.Minute)
 	services.WireCQRS()
 
-	api := &API{App: services, Log: zap.NewNop()}
+	api := &handlers.API{App: services, Log: zap.NewNop()}
 	webAuth := middleware.NewWebAuth(services)
 
 	app := fiber.New()

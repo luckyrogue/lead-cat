@@ -5,20 +5,20 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
 type fakeUserSettingsStore struct {
-	bu        postgres.BotUser
+	bu        model.BotUser
 	getErr    error
 	setCSV    string
 	setErr    error
 	setCalled bool
 }
 
-func (f *fakeUserSettingsStore) GetBotUserByTelegramID(_ context.Context, _ int64) (postgres.BotUser, error) {
+func (f *fakeUserSettingsStore) GetBotUserByTelegramID(_ context.Context, _ int64) (model.BotUser, error) {
 	if f.getErr != nil {
-		return postgres.BotUser{}, f.getErr
+		return model.BotUser{}, f.getErr
 	}
 	return f.bu, nil
 }
@@ -75,7 +75,7 @@ func TestSetUserReminderMinutes_Empty(t *testing.T) {
 }
 
 func TestGetUserSettings_ParsesCSV(t *testing.T) {
-	f := &fakeUserSettingsStore{bu: postgres.BotUser{ReminderMinutes: "15,60"}}
+	f := &fakeUserSettingsStore{bu: model.BotUser{ReminderMinutes: "15,60"}}
 	got, err := getUserSettings(context.Background(), f, 42)
 	if err != nil {
 		t.Fatalf("err: %v", err)

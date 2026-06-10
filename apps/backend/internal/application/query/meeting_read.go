@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
 // MiniAppMeeting is the Mini App list/detail meeting shape.
@@ -27,12 +27,12 @@ type MiniAppMeeting struct {
 }
 
 type meetingStore interface {
-	GetUserByID(ctx context.Context, id uuid.UUID) (postgres.User, error)
-	ListParticipants(ctx context.Context, meetingID uuid.UUID) ([]postgres.MeetingParticipant, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (model.User, error)
+	ListParticipants(ctx context.Context, meetingID uuid.UUID) ([]model.MeetingParticipant, error)
 }
 
 // MeetingDTO maps a meeting row to the TMA UI shape, resolving organizer and participant emails.
-func MeetingDTO(ctx context.Context, store meetingStore, m postgres.Meeting, loc *time.Location) MiniAppMeeting {
+func MeetingDTO(ctx context.Context, store meetingStore, m model.Meeting, loc *time.Location) MiniAppMeeting {
 	s := m.StartsAt.In(loc)
 	e := m.EndsAt.In(loc)
 	organizer := ""

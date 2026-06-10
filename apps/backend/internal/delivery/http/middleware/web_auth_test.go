@@ -9,7 +9,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
 func TestCSRFMatches(t *testing.T) {
@@ -28,11 +28,11 @@ func TestCSRFMatches(t *testing.T) {
 }
 
 type fakeResolver struct {
-	user postgres.PlatformUser
+	user model.PlatformUser
 	ok   bool
 }
 
-func (f fakeResolver) ResolveWebUser(_ context.Context, _ string) (postgres.PlatformUser, bool, error) {
+func (f fakeResolver) ResolveWebUser(_ context.Context, _ string) (model.PlatformUser, bool, error) {
 	return f.user, f.ok, nil
 }
 
@@ -55,7 +55,7 @@ func TestWebAuthRejectsMissingCookie(t *testing.T) {
 }
 
 func TestWebAuthAllowsValidGet(t *testing.T) {
-	app := newTestApp(fakeResolver{ok: true, user: postgres.PlatformUser{Email: "a@b.com"}})
+	app := newTestApp(fakeResolver{ok: true, user: model.PlatformUser{Email: "a@b.com"}})
 	req := httptest.NewRequest("GET", "/x", nil)
 	req.AddCookie(&http.Cookie{Name: "lc_session", Value: "rawtoken"})
 	resp, _ := app.Test(req)
@@ -66,7 +66,7 @@ func TestWebAuthAllowsValidGet(t *testing.T) {
 }
 
 func TestWebAuthBlocksPostWithoutCSRF(t *testing.T) {
-	app := newTestApp(fakeResolver{ok: true, user: postgres.PlatformUser{Email: "a@b.com"}})
+	app := newTestApp(fakeResolver{ok: true, user: model.PlatformUser{Email: "a@b.com"}})
 	req := httptest.NewRequest("POST", "/x", nil)
 	req.AddCookie(&http.Cookie{Name: "lc_session", Value: "rawtoken"})
 	resp, _ := app.Test(req)
@@ -77,7 +77,7 @@ func TestWebAuthBlocksPostWithoutCSRF(t *testing.T) {
 }
 
 func TestWebAuthAllowsPostWithMatchingCSRF(t *testing.T) {
-	app := newTestApp(fakeResolver{ok: true, user: postgres.PlatformUser{Email: "a@b.com"}})
+	app := newTestApp(fakeResolver{ok: true, user: model.PlatformUser{Email: "a@b.com"}})
 	req := httptest.NewRequest("POST", "/x", nil)
 	req.AddCookie(&http.Cookie{Name: "lc_session", Value: "rawtoken"})
 	req.AddCookie(&http.Cookie{Name: "lc_csrf", Value: "tok123"})

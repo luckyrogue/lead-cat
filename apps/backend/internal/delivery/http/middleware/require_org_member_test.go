@@ -9,15 +9,15 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
 type fakeOrgResolver struct {
-	member postgres.Member
+	member model.Member
 	ok     bool
 }
 
-func (f fakeOrgResolver) GetOrgMember(_ context.Context, _, _ uuid.UUID) (postgres.Member, bool, error) {
+func (f fakeOrgResolver) GetOrgMember(_ context.Context, _, _ uuid.UUID) (model.Member, bool, error) {
 	return f.member, f.ok, nil
 }
 
@@ -25,7 +25,7 @@ func appWithWebUser(handler fiber.Handler, mws ...fiber.Handler) *fiber.App {
 	app := fiber.New()
 
 	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("web_user", postgres.PlatformUser{ID: uuid.New()})
+		c.Locals("web_user", model.PlatformUser{ID: uuid.New()})
 		return c.Next()
 	})
 	chain := append(mws, handler)
@@ -47,7 +47,7 @@ func TestRequireOrgMemberRejectsNonMember(t *testing.T) {
 }
 
 func TestRequireOrgMemberAllowsMember(t *testing.T) {
-	app := appWithWebUser(okHandler, RequireOrgMember(fakeOrgResolver{ok: true, member: postgres.Member{Role: "member"}}))
+	app := appWithWebUser(okHandler, RequireOrgMember(fakeOrgResolver{ok: true, member: model.Member{Role: "member"}}))
 	req := httptest.NewRequest(http.MethodGet, "/orgs/"+uuid.NewString()+"/x", nil)
 	resp, _ := app.Test(req)
 	defer resp.Body.Close()
@@ -67,7 +67,7 @@ func TestRequireOrgMemberBadOrgID(t *testing.T) {
 }
 
 func TestRequireOrgRoleBlocksInsufficient(t *testing.T) {
-	res := fakeOrgResolver{ok: true, member: postgres.Member{Role: "member"}}
+	res := fakeOrgResolver{ok: true, member: model.Member{Role: "member"}}
 	app := appWithWebUser(okHandler, RequireOrgMember(res), RequireOrgRole("admin"))
 	req := httptest.NewRequest(http.MethodPatch, "/orgs/"+uuid.NewString()+"/x", nil)
 	resp, _ := app.Test(req)
@@ -78,7 +78,7 @@ func TestRequireOrgRoleBlocksInsufficient(t *testing.T) {
 }
 
 func TestRequireOrgRoleAllowsSufficient(t *testing.T) {
-	res := fakeOrgResolver{ok: true, member: postgres.Member{Role: "admin"}}
+	res := fakeOrgResolver{ok: true, member: model.Member{Role: "admin"}}
 	app := appWithWebUser(okHandler, RequireOrgMember(res), RequireOrgRole("admin"))
 	req := httptest.NewRequest(http.MethodPatch, "/orgs/"+uuid.NewString()+"/x", nil)
 	resp, _ := app.Test(req)

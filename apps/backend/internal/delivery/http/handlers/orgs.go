@@ -9,11 +9,11 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
 func (a *API) withWebAuditActor(c *fiber.Ctx) {
-	u, ok := c.Locals("web_user").(postgres.PlatformUser)
+	u, ok := c.Locals("web_user").(model.PlatformUser)
 	if !ok {
 		return
 	}
@@ -27,7 +27,7 @@ var validRoles = map[string]struct{}{
 }
 
 func (a *API) CreateOrg(c *fiber.Ctx) error {
-	user := c.Locals("web_user").(postgres.PlatformUser)
+	user := c.Locals("web_user").(model.PlatformUser)
 	var body struct {
 		Name string `json:"name"`
 	}
@@ -47,7 +47,7 @@ func (a *API) CreateOrg(c *fiber.Ctx) error {
 }
 
 func (a *API) ListMyOrgs(c *fiber.Ctx) error {
-	user := c.Locals("web_user").(postgres.PlatformUser)
+	user := c.Locals("web_user").(model.PlatformUser)
 	orgs, err := a.App.ListOrganizationsForUser(c.UserContext(), user.ID)
 	if err != nil {
 		a.Log.Error("org_list_failed", zap.Error(err))
@@ -88,7 +88,7 @@ func (a *API) ListOrgMembers(c *fiber.Ctx) error {
 }
 
 func (a *API) InviteMember(c *fiber.Ctx) error {
-	user := c.Locals("web_user").(postgres.PlatformUser)
+	user := c.Locals("web_user").(model.PlatformUser)
 	orgID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid_org_id")

@@ -10,9 +10,9 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/application/query"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/crypto"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 	asynqqueue "github.com/luckyrogue/lead-cat/internal/infrastructure/queue/asynq"
 	"github.com/luckyrogue/lead-cat/internal/platform/authweb"
 )
@@ -23,7 +23,7 @@ import (
 type ChatSyncer func(ctx context.Context, organizationID uuid.UUID) (int, error)
 
 type Services struct {
-	Store    *postgres.Store
+	Store    Repository
 	Cipher   *crypto.TokenCipher
 	Queue    *asynqqueue.Client
 	Calendar CalendarProvider
@@ -52,10 +52,10 @@ func (s *Services) ConfigureWebAuth(sso map[string]SSOProvider, email EmailSende
 func (s *Services) AppBaseURL() string { return s.appBaseURL }
 
 // ResolveWebUser resolves a session cookie to the web account (for WebAuth middleware).
-func (s *Services) ResolveWebUser(ctx context.Context, rawToken string) (postgres.PlatformUser, bool, error) {
+func (s *Services) ResolveWebUser(ctx context.Context, rawToken string) (model.PlatformUser, bool, error) {
 	ws, ok, err := s.sessions.ResolveSession(ctx, rawToken)
 	if err != nil || !ok {
-		return postgres.PlatformUser{}, false, err
+		return model.PlatformUser{}, false, err
 	}
 	return s.Store.GetPlatformUserByID(ctx, ws.UserID)
 }
@@ -76,7 +76,7 @@ func (s *Services) VerifyMagicLink(ctx context.Context, rawToken string) (string
 	return s.magic.VerifyMagicLink(ctx, rawToken)
 }
 
-func (s *Services) UpsertWebIdentity(ctx context.Context, email, name, avatarURL, authMethod string) (postgres.PlatformUser, error) {
+func (s *Services) UpsertWebIdentity(ctx context.Context, email, name, avatarURL, authMethod string) (model.PlatformUser, error) {
 	return s.Store.UpsertWebIdentity(ctx, email, name, avatarURL, authMethod)
 }
 
@@ -89,19 +89,19 @@ func (s *Services) SSOProviderByName(name string) (SSOProvider, bool) {
 	return p, ok
 }
 
-func (s *Services) ListOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]postgres.Organization, error) {
+func (s *Services) ListOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]model.Organization, error) {
 	return s.Store.ListOrganizationsForUser(ctx, userID)
 }
 
 // CreateOrganizationForOwner derives a unique slug from name and creates the org with the user as owner.
-func (s *Services) CreateOrganizationForOwner(ctx context.Context, name string, ownerUserID uuid.UUID) (postgres.Organization, error) {
+func (s *Services) CreateOrganizationForOwner(ctx context.Context, name string, ownerUserID uuid.UUID) (model.Organization, error) {
 	base := slugify(name)
 	if base == "" {
 		base = "org"
 	}
 	suffix, err := authweb.NewState(nil)
 	if err != nil {
-		return postgres.Organization{}, err
+		return model.Organization{}, err
 	}
 	slug := base + "-" + suffix[:6]
 	return s.Store.CreateOrganization(ctx, name, slug, ownerUserID)
@@ -117,7 +117,7 @@ func (s *Services) Ping(ctx context.Context) error {
 	return s.Store.Ping(ctx)
 }
 
-func (s *Services) GetBotUserByTelegramID(ctx context.Context, telegramID int64) (postgres.BotUser, error) {
+func (s *Services) GetBotUserByTelegramID(ctx context.Context, telegramID int64) (model.BotUser, error) {
 	return s.Store.GetBotUserByTelegramID(ctx, telegramID)
 }
 
@@ -125,7 +125,7 @@ func (s *Services) PlatformUserIDForTelegram(ctx context.Context, telegramID int
 	return s.Store.GetPlatformUserIDByTelegramID(ctx, telegramID)
 }
 
-func (s *Services) ListAudit(ctx context.Context, f postgres.AuditFilter) ([]postgres.AuditEntry, error) {
+func (s *Services) ListAudit(ctx context.Context, f model.AuditFilter) ([]model.AuditEntry, error) {
 	return s.Store.ListAuditEntries(ctx, f)
 }
 
@@ -133,7 +133,7 @@ func (s *Services) ListOrganizationsWithGoogle(ctx context.Context) ([]uuid.UUID
 	return s.Store.ListOrganizationsWithGoogle(ctx)
 }
 
-func (s *Services) MiniAppMeetingDTO(ctx context.Context, m postgres.Meeting, loc *time.Location) query.MiniAppMeeting {
+func (s *Services) MiniAppMeetingDTO(ctx context.Context, m model.Meeting, loc *time.Location) query.MiniAppMeeting {
 	return query.MeetingDTO(ctx, s.Store, m, loc)
 }
 
@@ -156,7 +156,7 @@ func (s *Services) linkTelegram(ctx context.Context, userID uuid.UUID, telegramI
 	return s.Store.LinkMemberUserIDsByTelegram(ctx, userID, username)
 }
 
-func (s *Services) GetOrganization(ctx context.Context, id uuid.UUID) (postgres.Organization, error) {
+func (s *Services) GetOrganization(ctx context.Context, id uuid.UUID) (model.Organization, error) {
 	return s.Store.GetOrganization(ctx, id)
 }
 
@@ -248,19 +248,19 @@ func (s *Services) VerifyIntegrations(ctx context.Context, organizationID uuid.U
 	return err
 }
 
-func (s *Services) ListMembers(ctx context.Context, organizationID uuid.UUID) ([]postgres.Member, error) {
+func (s *Services) ListMembers(ctx context.Context, organizationID uuid.UUID) ([]model.Member, error) {
 	return s.Store.ListMembers(ctx, organizationID)
 }
 
 // InviteToOrg records a pending invite and emails the invitee a sign-in link.
-func (s *Services) InviteToOrg(ctx context.Context, orgID uuid.UUID, email, role string, inviterUserID uuid.UUID) (postgres.OrganizationInvite, error) {
+func (s *Services) InviteToOrg(ctx context.Context, orgID uuid.UUID, email, role string, inviterUserID uuid.UUID) (model.OrganizationInvite, error) {
 	raw, err := authweb.NewState(nil)
 	if err != nil {
-		return postgres.OrganizationInvite{}, err
+		return model.OrganizationInvite{}, err
 	}
 	inv, err := s.Store.CreateInvite(ctx, orgID, email, role, authweb.HashToken(raw), time.Now().Add(14*24*time.Hour), inviterUserID)
 	if err != nil {
-		return postgres.OrganizationInvite{}, err
+		return model.OrganizationInvite{}, err
 	}
 	if s.email != nil {
 		link := s.appBaseURL + "/login"
@@ -272,7 +272,7 @@ func (s *Services) InviteToOrg(ctx context.Context, orgID uuid.UUID, email, role
 	return inv, nil
 }
 
-func (s *Services) ListOrgInvites(ctx context.Context, orgID uuid.UUID) ([]postgres.OrganizationInvite, error) {
+func (s *Services) ListOrgInvites(ctx context.Context, orgID uuid.UUID) ([]model.OrganizationInvite, error) {
 	return s.Store.ListInvites(ctx, orgID)
 }
 
@@ -280,7 +280,7 @@ func (s *Services) DeleteOrgInvite(ctx context.Context, orgID, inviteID uuid.UUI
 	return s.Store.DeleteInvite(ctx, orgID, inviteID)
 }
 
-func (s *Services) ListOrgMembers(ctx context.Context, orgID uuid.UUID) ([]postgres.Member, error) {
+func (s *Services) ListOrgMembers(ctx context.Context, orgID uuid.UUID) ([]model.Member, error) {
 	return s.Store.ListOrgMembers(ctx, orgID)
 }
 
@@ -319,7 +319,7 @@ func (s *Services) SetOrgMemberRole(ctx context.Context, orgID, targetUserID uui
 	return s.Store.UpdateMemberRole(ctx, orgID, targetUserID, newRole)
 }
 
-func (s *Services) AddMember(ctx context.Context, organizationID uuid.UUID, username, role string) (postgres.Member, error) {
+func (s *Services) AddMember(ctx context.Context, organizationID uuid.UUID, username, role string) (model.Member, error) {
 	return s.Store.AddMember(ctx, organizationID, username, role)
 }
 

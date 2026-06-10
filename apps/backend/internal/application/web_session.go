@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/platform/authweb"
 )
 
@@ -17,8 +17,8 @@ func shouldSlide(created, _ time.Time, now time.Time, ttl time.Duration) bool {
 }
 
 type webSessionRepo interface {
-	CreateWebSession(ctx context.Context, tokenHash []byte, userID uuid.UUID, expiresAt time.Time, ua, ip string) (postgres.WebSession, error)
-	ResolveWebSession(ctx context.Context, tokenHash []byte, now time.Time) (postgres.WebSession, bool, error)
+	CreateWebSession(ctx context.Context, tokenHash []byte, userID uuid.UUID, expiresAt time.Time, ua, ip string) (model.WebSession, error)
+	ResolveWebSession(ctx context.Context, tokenHash []byte, now time.Time) (model.WebSession, bool, error)
 	TouchWebSession(ctx context.Context, id uuid.UUID, lastSeen, expiresAt time.Time) error
 	RevokeWebSession(ctx context.Context, tokenHash []byte, now time.Time) error
 }
@@ -50,11 +50,11 @@ func (s *webSessionService) CreateSession(ctx context.Context, userID uuid.UUID,
 }
 
 // ResolveSession returns the platform_users id for a valid session cookie, sliding expiry if past half-life.
-func (s *webSessionService) ResolveSession(ctx context.Context, rawToken string) (postgres.WebSession, bool, error) {
+func (s *webSessionService) ResolveSession(ctx context.Context, rawToken string) (model.WebSession, bool, error) {
 	now := s.clock()
 	w, ok, err := s.repo.ResolveWebSession(ctx, authweb.HashToken(rawToken), now)
 	if err != nil || !ok {
-		return postgres.WebSession{}, false, err
+		return model.WebSession{}, false, err
 	}
 	if shouldSlide(w.CreatedAt, w.ExpiresAt, now, s.ttl) {
 		_ = s.repo.TouchWebSession(ctx, w.ID, now, now.Add(s.ttl))

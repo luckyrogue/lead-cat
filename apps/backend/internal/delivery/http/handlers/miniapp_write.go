@@ -11,8 +11,8 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
 )
 
 func parseScope(c *fiber.Ctx) (string, error) {
@@ -54,10 +54,10 @@ func toCreateMeetingInput(req miniappCreateRequest, hostFallback string) applica
 	if host == "" {
 		host = hostFallback
 	}
-	parts := make([]postgres.MeetingParticipant, 0, len(req.Participants))
+	parts := make([]model.MeetingParticipant, 0, len(req.Participants))
 	for _, e := range req.Participants {
 		if e = strings.TrimSpace(e); e != "" {
-			parts = append(parts, postgres.MeetingParticipant{Email: e})
+			parts = append(parts, model.MeetingParticipant{Email: e})
 		}
 	}
 	in := application.CreateMeetingInput{
@@ -75,8 +75,8 @@ func toCreateMeetingInput(req miniappCreateRequest, hostFallback string) applica
 	return in
 }
 
-func botUser(c *fiber.Ctx) (postgres.BotUser, bool) {
-	bu, ok := c.Locals("bot_user").(postgres.BotUser)
+func botUser(c *fiber.Ctx) (model.BotUser, bool) {
+	bu, ok := c.Locals("bot_user").(model.BotUser)
 	return bu, ok
 }
 

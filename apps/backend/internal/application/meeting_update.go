@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
 // UpdateMeetingInput carries optional field overrides (nil = leave unchanged).
@@ -25,7 +25,7 @@ type UpdateMeetingInput struct {
 // applyMeetingUpdate applies non-nil overrides to cur, parsing date/time in loc,
 // validating via the domain, and recomputing the name (from the LOCAL start, as
 // CreateMeeting does). Pure; returns a patched copy or ErrInvalidInput.
-func applyMeetingUpdate(cur postgres.Meeting, in UpdateMeetingInput, loc *time.Location) (postgres.Meeting, error) {
+func applyMeetingUpdate(cur model.Meeting, in UpdateMeetingInput, loc *time.Location) (model.Meeting, error) {
 	dept := orStr(in.Dept, cur.Dept)
 	typ := orStr(in.Type, cur.Type)
 	host := orStr(in.Host, cur.Host)
@@ -39,17 +39,17 @@ func applyMeetingUpdate(cur postgres.Meeting, in UpdateMeetingInput, loc *time.L
 	hasDate := in.Date != nil || in.Start != nil || in.End != nil
 	allDate := in.Date != nil && in.Start != nil && in.End != nil
 	if hasDate && !allDate {
-		return postgres.Meeting{}, fmt.Errorf("%w: date, start, and end must be supplied together", ErrInvalidInput)
+		return model.Meeting{}, fmt.Errorf("%w: date, start, and end must be supplied together", ErrInvalidInput)
 	}
 
 	if allDate {
 		s, err := time.ParseInLocation("2006-01-02 15:04", *in.Date+" "+*in.Start, loc)
 		if err != nil {
-			return postgres.Meeting{}, fmt.Errorf("%w: bad start time", ErrInvalidInput)
+			return model.Meeting{}, fmt.Errorf("%w: bad start time", ErrInvalidInput)
 		}
 		e, err := time.ParseInLocation("2006-01-02 15:04", *in.Date+" "+*in.End, loc)
 		if err != nil {
-			return postgres.Meeting{}, fmt.Errorf("%w: bad end time", ErrInvalidInput)
+			return model.Meeting{}, fmt.Errorf("%w: bad end time", ErrInvalidInput)
 		}
 		startLocal = s
 		startsAt = s.UTC()
@@ -58,7 +58,7 @@ func applyMeetingUpdate(cur postgres.Meeting, in UpdateMeetingInput, loc *time.L
 
 	dom := meeting.Input{Dept: dept, Type: typ, Host: host, StartsAt: startsAt, EndsAt: endsAt, Recurrence: rec, Description: desc}
 	if err := dom.Validate(); err != nil {
-		return postgres.Meeting{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+		return model.Meeting{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
 	}
 
 	out := cur

@@ -8,7 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/telegram"
 )
 
@@ -50,7 +50,7 @@ func (a *API) MiniAppAuth(c *fiber.Ctx) error {
 	}
 	bu, err := a.App.GetBotUserByTelegramID(c.Context(), tgID)
 	if err != nil {
-		if postgres.IsNotFound(err) {
+		if model.IsNotFound(err) {
 			a.Log.Info("miniapp_auth_unregistered", zap.Int64("telegram_id", tgID))
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"code": "not_registered"})
 		}

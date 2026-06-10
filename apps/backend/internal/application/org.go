@@ -10,7 +10,7 @@ import (
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
 // ErrLastOwner is returned when an operation would remove the last owner of an
@@ -58,7 +58,7 @@ func canDemoteOrRemove(members []OrgMemberView, idx int) error {
 
 // memberViews projects members to OrgMemberView and returns the index of the
 // member whose UserID == target (-1 if absent).
-func memberViews(members []postgres.Member, target uuid.UUID) ([]OrgMemberView, int) {
+func memberViews(members []model.Member, target uuid.UUID) ([]OrgMemberView, int) {
 	views := make([]OrgMemberView, len(members))
 	idx := -1
 	for i, m := range members {

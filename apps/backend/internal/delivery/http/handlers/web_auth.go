@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres" //nolint:depguard
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/platform/authweb"
 )
 
@@ -209,7 +209,7 @@ func (a *API) WebLogout(c *fiber.Ctx) error {
 }
 
 func (a *API) WebMe(c *fiber.Ctx) error {
-	user := c.Locals("web_user").(postgres.PlatformUser)
+	user := c.Locals("web_user").(model.PlatformUser)
 	orgs, err := a.App.ListOrganizationsForUser(c.UserContext(), user.ID)
 	if err != nil {
 		a.Log.Error("web_list_organizations_failed", zap.Error(err))

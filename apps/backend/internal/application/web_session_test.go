@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
 func mustTime(s string) time.Time { t, _ := time.Parse(time.RFC3339, s); return t }
@@ -26,15 +26,15 @@ func TestShouldSlideWhenPastHalfLife(t *testing.T) {
 
 // fakeWebSessionRepo is a minimal in-memory stub that satisfies webSessionRepo.
 type fakeWebSessionRepo struct {
-	sessions map[string]postgres.WebSession // key = hex(tokenHash)
+	sessions map[string]model.WebSession // key = hex(tokenHash)
 }
 
 func newFakeWebSessionRepo() *fakeWebSessionRepo {
-	return &fakeWebSessionRepo{sessions: map[string]postgres.WebSession{}}
+	return &fakeWebSessionRepo{sessions: map[string]model.WebSession{}}
 }
 
-func (f *fakeWebSessionRepo) CreateWebSession(_ context.Context, tokenHash []byte, userID uuid.UUID, expiresAt time.Time, ua, ip string) (postgres.WebSession, error) {
-	w := postgres.WebSession{
+func (f *fakeWebSessionRepo) CreateWebSession(_ context.Context, tokenHash []byte, userID uuid.UUID, expiresAt time.Time, ua, ip string) (model.WebSession, error) {
+	w := model.WebSession{
 		ID: uuid.New(), TokenHash: tokenHash, UserID: userID,
 		CreatedAt: time.Now(), LastSeenAt: time.Now(), ExpiresAt: expiresAt,
 		UserAgent: ua, IP: ip,
@@ -43,10 +43,10 @@ func (f *fakeWebSessionRepo) CreateWebSession(_ context.Context, tokenHash []byt
 	return w, nil
 }
 
-func (f *fakeWebSessionRepo) ResolveWebSession(_ context.Context, tokenHash []byte, now time.Time) (postgres.WebSession, bool, error) {
+func (f *fakeWebSessionRepo) ResolveWebSession(_ context.Context, tokenHash []byte, now time.Time) (model.WebSession, bool, error) {
 	w, ok := f.sessions[string(tokenHash)]
 	if !ok || w.RevokedAt != nil || !w.ExpiresAt.After(now) {
-		return postgres.WebSession{}, false, nil
+		return model.WebSession{}, false, nil
 	}
 	return w, true, nil
 }

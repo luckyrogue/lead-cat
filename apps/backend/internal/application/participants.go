@@ -10,11 +10,11 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
 // ownerOrOrganizer reports whether userID is the organization owner or the meeting's organizer.
-func ownerOrOrganizer(w postgres.Organization, organizerUserID *uuid.UUID, userID uuid.UUID) bool {
+func ownerOrOrganizer(w model.Organization, organizerUserID *uuid.UUID, userID uuid.UUID) bool {
 	if w.OwnerUserID != nil && *w.OwnerUserID == userID {
 		return true
 	}
@@ -29,12 +29,12 @@ func normalizeEmail(s string) (string, error) {
 	return strings.ToLower(addr.Address), nil
 }
 
-func filterEmployees(all []postgres.Employee, query string) []postgres.Employee {
+func filterEmployees(all []model.Employee, query string) []model.Employee {
 	q := strings.ToLower(strings.TrimSpace(query))
 	if q == "" {
 		return nil
 	}
-	var out []postgres.Employee
+	var out []model.Employee
 	for _, e := range all {
 		if strings.Contains(strings.ToLower(e.FullName), q) || strings.Contains(strings.ToLower(e.Email), q) {
 			out = append(out, e)
@@ -44,7 +44,7 @@ func filterEmployees(all []postgres.Employee, query string) []postgres.Employee 
 }
 
 // SearchEmployees returns directory entries whose name or email contains query.
-func (s *Services) SearchEmployees(ctx context.Context, organizationID uuid.UUID, query string) ([]postgres.Employee, error) {
+func (s *Services) SearchEmployees(ctx context.Context, organizationID uuid.UUID, query string) ([]model.Employee, error) {
 	all, err := s.Store.ListEmployees(ctx, organizationID)
 	if err != nil {
 		return nil, err
@@ -54,18 +54,18 @@ func (s *Services) SearchEmployees(ctx context.Context, organizationID uuid.UUID
 
 // SearchEmployeesGlobal finds directory entries across all organizations (for the
 // bot schedule view, which has no organization context).
-func (s *Services) SearchEmployeesGlobal(ctx context.Context, query string) ([]postgres.Employee, error) {
+func (s *Services) SearchEmployeesGlobal(ctx context.Context, query string) ([]model.Employee, error) {
 	return s.Store.SearchEmployeesGlobal(ctx, query)
 }
 
 // EmployeeSchedule returns the scheduled meetings in [from,to) for an email
 // (participant or organizer).
-func (s *Services) EmployeeSchedule(ctx context.Context, email string, from, to time.Time) ([]postgres.Meeting, error) {
+func (s *Services) EmployeeSchedule(ctx context.Context, email string, from, to time.Time) ([]model.Meeting, error) {
 	return s.Store.ListScheduleForEmail(ctx, email, from, to)
 }
 
 // ListParticipants returns a meeting's participants (for the bot FSM).
-func (s *Services) ListParticipants(ctx context.Context, meetingID uuid.UUID) ([]postgres.MeetingParticipant, error) {
+func (s *Services) ListParticipants(ctx context.Context, meetingID uuid.UUID) ([]model.MeetingParticipant, error) {
 	return s.Store.ListParticipants(ctx, meetingID)
 }
 
@@ -89,7 +89,7 @@ func (s *Services) AddParticipant(ctx context.Context, organizationID, userID, m
 			return fmt.Errorf("%w: already a participant", ErrInvalidInput)
 		}
 	}
-	if err := s.Store.AddParticipants(ctx, meetingID, []postgres.MeetingParticipant{{Email: email}}); err != nil {
+	if err := s.Store.AddParticipants(ctx, meetingID, []model.MeetingParticipant{{Email: email}}); err != nil {
 		return err
 	}
 	if err := s.syncAttendees(ctx, organizationID, m.GoogleEventID, meetingID); err != nil {
@@ -129,20 +129,20 @@ func (s *Services) RemoveParticipant(ctx context.Context, organizationID, userID
 }
 
 // loadForParticipantOp loads the meeting + organization and enforces the ACL.
-func (s *Services) loadForParticipantOp(ctx context.Context, organizationID, meetingID, userID uuid.UUID) (postgres.Meeting, postgres.Organization, error) {
+func (s *Services) loadForParticipantOp(ctx context.Context, organizationID, meetingID, userID uuid.UUID) (model.Meeting, model.Organization, error) {
 	m, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
-		return postgres.Meeting{}, postgres.Organization{}, err
+		return model.Meeting{}, model.Organization{}, err
 	}
 	org, err := s.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
-		return postgres.Meeting{}, postgres.Organization{}, err
+		return model.Meeting{}, model.Organization{}, err
 	}
 	if !ownerOrOrganizer(org, m.OrganizerUserID, userID) {
-		return postgres.Meeting{}, postgres.Organization{}, ErrForbidden
+		return model.Meeting{}, model.Organization{}, ErrForbidden
 	}
 	if m.Status != "scheduled" {
-		return postgres.Meeting{}, postgres.Organization{}, postgres.ErrMeetingNotEditable
+		return model.Meeting{}, model.Organization{}, model.ErrMeetingNotEditable
 	}
 	return m, org, nil
 }
