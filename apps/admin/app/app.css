@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/inter";
+@import "@leadcat/config/theme.css";
+
+@source "../../../packages/ui/src/**/*.{ts,tsx}";

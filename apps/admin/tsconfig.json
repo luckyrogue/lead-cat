@@ -1,10 +1,16 @@
 {
   "extends": "@leadcat/config/tsconfig.base.json",
+  "include": [
+    "**/*",
+    "**/.server/**/*",
+    "**/.client/**/*",
+    ".react-router/types/**/*"
+  ],
   "compilerOptions": {
+    "rootDirs": [".", "./.react-router/types"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "~/*": ["./app/*"]
     }
-  },
-  "include": ["src", "vite.config.ts"]
+  }
 }
