@@ -1,21 +1,31 @@
-import { CalendarDays, Paw, Users, Video } from "@leadcat/ui"
+import { LayoutDashboard, Mailbox, Paw, Users, Video } from "@leadcat/ui"
 import { Link, useLocation } from "react-router"
 
+import { SidebarUserCard } from "~/components/sidebar-user-card"
 import { cn } from "~/shared/lib/cn"
+import type { Me } from "~/shared/auth/types"
 
 const navItems = [
-  { href: "/", label: "Overview", icon: CalendarDays },
+  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/members", label: "Members", icon: Users },
+  { href: "/invites", label: "Invites", icon: Mailbox },
   { href: "/meetings", label: "Meetings", icon: Video },
-  { href: "/operators", label: "Operators", icon: Users },
 ]
 
-export function AppSidebar() {
+type AppSidebarProps = {
+  me: Me
+}
+
+export function AppSidebar({ me }: AppSidebarProps) {
   const location = useLocation()
 
   return (
     <aside className="surface-card flex flex-col overflow-hidden rounded-[calc(var(--radius)*1.6)] xl:h-full xl:min-h-0">
       <div className="shrink-0 border-b border-border/70 px-5 py-5">
-        <Link to="/" className="flex items-center gap-2 font-bold text-kitty-800">
+        <Link
+          to="/"
+          className="flex items-center gap-2 font-bold text-kitty-800"
+        >
           <span className="grid size-9 place-items-center rounded-2xl bg-coral-400 text-white">
             <Paw className="size-5" />
           </span>
@@ -55,6 +65,8 @@ export function AppSidebar() {
           )
         })}
       </nav>
+
+      <SidebarUserCard me={me} />
     </aside>
   )
 }

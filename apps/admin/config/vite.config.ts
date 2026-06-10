@@ -3,8 +3,18 @@ import tailwindcss from "@tailwindcss/vite"
 import { defineConfig } from "vite"
 import tsconfigPaths from "vite-tsconfig-paths"
 
+const API_TARGET = process.env.VITE_API_PROXY ?? "http://localhost:8080"
+
 export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
+  server: {
+    proxy: {
+      "/api": {
+        target: API_TARGET,
+        changeOrigin: true,
+      },
+    },
+  },
   ssr: {
     noExternal: ["@leadcat/ui"],
   },
