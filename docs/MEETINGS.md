@@ -71,3 +71,13 @@ Admin setup (Google integration, chat link, members sync, audit log) is live in 
 Reminder intervals are user-configurable in the Profile screen, persisted in `bot_users.reminder_minutes`. See [`docs/superpowers/specs/2026-06-09-slice-c-user-settings-design.md`](superpowers/specs/2026-06-09-slice-c-user-settings-design.md). Timezone + language remain Slice H scope.
 
 See [API.md](API.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
+
+## SaaS Phase 0 (web dashboard pivot)
+
+SaaS Phase 0 introduces a **web dashboard** alongside the Telegram Mini App. Key additions:
+
+- **Web auth:** SSO via Google and Microsoft OAuth (optional; provider skipped if credentials are unset), plus magic-link email sign-in for passwordless access. Sessions are server-side HTTP cookies (`web_session`), not JWTs. Routes: `/api/auth/web/{provider}/start|callback`, `/api/auth/web/magic/request|verify`, `/api/auth/web/logout`, `/api/auth/web/me`.
+- **Multi-tenant organizations:** Users belong to `organizations`; membership and roles (`owner`, `admin`, `member`) are tracked in `organization_members`. Routes: `GET|POST /api/orgs`, `GET /api/orgs/:id/members`, `PATCH /api/orgs/:id/members/:uid/role`, `DELETE /api/orgs/:id/members/:uid`, `GET|POST /api/orgs/:id/invites`, `DELETE /api/orgs/:id/invites/:iid`.
+- **Telegram Mini App path** is parked this phase — existing `/api/miniapp/*` routes remain functional but are not the focus of Phase 0 development.
+
+Spec and plan: [docs/superpowers/](superpowers/) — see the Phase 0 spec files for full requirements. New env keys and local dev SMTP setup (Mailpit): [LOCAL_DEV.md](LOCAL_DEV.md).

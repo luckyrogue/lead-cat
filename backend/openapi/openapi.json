@@ -1377,6 +1377,563 @@
           }
         }
       }
+    },
+    "/api/auth/web/{provider}/start": {
+      "get": {
+        "operationId": "webAuthProviderStart",
+        "tags": ["web-auth"],
+        "summary": "Begin OAuth SSO flow (redirect to provider)",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "enum": ["google", "microsoft"] }
+          }
+        ],
+        "responses": {
+          "302": { "description": "Redirect to OAuth provider" },
+          "400": {
+            "description": "Unknown provider",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      },
+      "post": {
+        "operationId": "webAuthProviderStartPost",
+        "tags": ["web-auth"],
+        "summary": "Begin OAuth SSO flow (POST variant)",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "enum": ["google", "microsoft"] }
+          }
+        ],
+        "responses": {
+          "302": { "description": "Redirect to OAuth provider" },
+          "400": {
+            "description": "Unknown provider",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/auth/web/{provider}/callback": {
+      "get": {
+        "operationId": "webAuthProviderCallback",
+        "tags": ["web-auth"],
+        "summary": "OAuth SSO callback — exchange code for session cookie",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "enum": ["google", "microsoft"] }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "302": { "description": "Redirect to web dashboard (session cookie set)" },
+          "400": {
+            "description": "OAuth error / state mismatch",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      },
+      "post": {
+        "operationId": "webAuthProviderCallbackPost",
+        "tags": ["web-auth"],
+        "summary": "OAuth SSO callback (POST variant)",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "enum": ["google", "microsoft"] }
+          }
+        ],
+        "responses": {
+          "302": { "description": "Redirect to web dashboard (session cookie set)" },
+          "400": {
+            "description": "OAuth error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/auth/web/magic/request": {
+      "post": {
+        "operationId": "webAuthMagicRequest",
+        "tags": ["web-auth"],
+        "summary": "Request a magic-link email",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email sent (or silently accepted if address unknown)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "ok": { "type": "boolean" } }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/auth/web/magic/verify": {
+      "get": {
+        "operationId": "webAuthMagicVerify",
+        "tags": ["web-auth"],
+        "summary": "Verify magic-link token and issue session cookie",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "302": { "description": "Redirect to web dashboard (session cookie set)" },
+          "400": {
+            "description": "Token missing",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "401": {
+            "description": "Token invalid or expired",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/auth/web/logout": {
+      "post": {
+        "operationId": "webAuthLogout",
+        "tags": ["web-auth"],
+        "summary": "Invalidate current web session",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "204": { "description": "Session destroyed" },
+          "401": {
+            "description": "Not authenticated",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/auth/web/me": {
+      "get": {
+        "operationId": "webAuthMe",
+        "tags": ["web-auth"],
+        "summary": "Get current web-session user identity",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Authenticated user",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WebUser" }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/orgs": {
+      "get": {
+        "operationId": "orgsList",
+        "tags": ["organizations"],
+        "summary": "List organizations accessible to the current user",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Organizations list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["orgs"],
+                  "properties": {
+                    "orgs": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Org" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      },
+      "post": {
+        "operationId": "orgsCreate",
+        "tags": ["organizations"],
+        "summary": "Create a new organization",
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "slug": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created organization",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Org" }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "409": {
+            "description": "Slug conflict",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/orgs/{id}/members": {
+      "get": {
+        "operationId": "orgMembersList",
+        "tags": ["organizations"],
+        "summary": "List members of an organization",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Members list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["members"],
+                  "properties": {
+                    "members": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OrgMember" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "404": {
+            "description": "Organization not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/orgs/{id}/members/{uid}/role": {
+      "patch": {
+        "operationId": "orgMemberUpdateRole",
+        "tags": ["organizations"],
+        "summary": "Update a member's role in the organization",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "uid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["role"],
+                "properties": {
+                  "role": { "type": "string", "enum": ["owner", "admin", "member"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "Role updated" },
+          "400": {
+            "description": "Invalid role",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "404": {
+            "description": "Member not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/orgs/{id}/members/{uid}": {
+      "delete": {
+        "operationId": "orgMemberRemove",
+        "tags": ["organizations"],
+        "summary": "Remove a member from the organization",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "uid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Member removed" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "404": {
+            "description": "Member not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/orgs/{id}/invites": {
+      "get": {
+        "operationId": "orgInvitesList",
+        "tags": ["organizations"],
+        "summary": "List pending invites for an organization",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invites list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["invites"],
+                  "properties": {
+                    "invites": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OrgInvite" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "404": {
+            "description": "Organization not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      },
+      "post": {
+        "operationId": "orgInviteCreate",
+        "tags": ["organizations"],
+        "summary": "Create (send) an invite to the organization",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "role": { "type": "string", "enum": ["admin", "member"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Invite created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrgInvite" }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "404": {
+            "description": "Organization not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "409": {
+            "description": "Already a member or invite pending",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/orgs/{id}/invites/{iid}": {
+      "delete": {
+        "operationId": "orgInviteDelete",
+        "tags": ["organizations"],
+        "summary": "Revoke a pending invite",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "iid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Invite revoked" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "404": {
+            "description": "Invite not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1385,6 +1942,11 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT"
+      },
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "web_session"
       }
     },
     "schemas": {
@@ -2142,6 +2704,49 @@
               "enum": [10, 15, 30, 60, 120, 1440]
             }
           }
+        }
+      },
+      "WebUser": {
+        "type": "object",
+        "required": ["id", "email", "name"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "format": "email" },
+          "name": { "type": "string" },
+          "provider": { "type": "string", "description": "google | microsoft | magic_link" }
+        }
+      },
+      "Org": {
+        "type": "object",
+        "required": ["id", "name", "slug", "role"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "role": { "type": "string", "enum": ["owner", "admin", "member"] },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "OrgMember": {
+        "type": "object",
+        "required": ["id", "email", "name", "role"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "format": "email" },
+          "name": { "type": "string" },
+          "role": { "type": "string", "enum": ["owner", "admin", "member"] },
+          "joined_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "OrgInvite": {
+        "type": "object",
+        "required": ["id", "email", "role", "created_at"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "format": "email" },
+          "role": { "type": "string", "enum": ["admin", "member"] },
+          "created_at": { "type": "string", "format": "date-time" },
+          "expires_at": { "type": "string", "format": "date-time" }
         }
       }
     }
