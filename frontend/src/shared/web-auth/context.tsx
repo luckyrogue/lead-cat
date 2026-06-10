@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react"
 import { useMe, useLogout } from "./queries"
+import { ACTIVE_ORG_KEY } from "./api"
 import type { WebOrg, WebUser } from "./api"
 
 // ---------------------------------------------------------------------------
@@ -25,10 +26,8 @@ type WebAuthValue = {
 }
 
 // ---------------------------------------------------------------------------
-// localStorage key (shared with api.ts readActiveOrgId)
+// localStorage helpers (key imported from api.ts — single source of truth)
 // ---------------------------------------------------------------------------
-
-const ACTIVE_ORG_KEY = "lc.web.activeOrg"
 
 function loadStoredOrgId(): string | null {
   try {

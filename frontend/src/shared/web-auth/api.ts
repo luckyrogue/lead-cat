@@ -29,7 +29,7 @@ export function readCookie(name: string): string {
   return match ? decodeURIComponent(match.split("=")[1] ?? "") : ""
 }
 
-const ACTIVE_ORG_KEY = "lc.web.activeOrg"
+export const ACTIVE_ORG_KEY = "lc.web.activeOrg"
 
 function readActiveOrgId(): string {
   try {

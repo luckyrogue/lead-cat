@@ -9,8 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as WebRouteImport } from './routes/_web'
 import { Route as MiniappRouteImport } from './routes/_miniapp'
 import { Route as MiniappIndexRouteImport } from './routes/_miniapp/index'
+import { Route as WebDashboardRouteImport } from './routes/_web/dashboard'
 import { Route as MiniappProfileRouteImport } from './routes/_miniapp/profile'
 import { Route as MiniappMeetingsRouteImport } from './routes/_miniapp/meetings'
 import { Route as MiniappCheckerRouteImport } from './routes/_miniapp/checker'
@@ -21,6 +25,20 @@ import { Route as MiniappMeetingsMeetingIdRouteImport } from './routes/_miniapp/
 import { Route as MiniappProfileAdminSetupRouteImport } from './routes/_miniapp/profile.admin.setup'
 import { Route as MiniappMeetingsCreateEditIdRouteImport } from './routes/_miniapp/meetings.create.$editId'
 
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WebRoute = WebRouteImport.update({
+  id: '/_web',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MiniappRoute = MiniappRouteImport.update({
   id: '/_miniapp',
   getParentRoute: () => rootRouteImport,
@@ -29,6 +47,11 @@ const MiniappIndexRoute = MiniappIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MiniappRoute,
+} as any)
+const WebDashboardRoute = WebDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => WebRoute,
 } as any)
 const MiniappProfileRoute = MiniappProfileRouteImport.update({
   id: '/profile',
@@ -81,9 +104,12 @@ const MiniappMeetingsCreateEditIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof MiniappIndexRoute
+  '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/checker': typeof MiniappCheckerRoute
   '/meetings': typeof MiniappMeetingsRouteWithChildren
   '/profile': typeof MiniappProfileRouteWithChildren
+  '/dashboard': typeof WebDashboardRoute
   '/meetings/$meetingId': typeof MiniappMeetingsMeetingIdRoute
   '/meetings/create': typeof MiniappMeetingsCreateRouteWithChildren
   '/profile/admin': typeof MiniappProfileAdminRouteWithChildren
@@ -92,10 +118,13 @@ export interface FileRoutesByFullPath {
   '/profile/admin/setup': typeof MiniappProfileAdminSetupRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof MiniappIndexRoute
+  '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/checker': typeof MiniappCheckerRoute
   '/meetings': typeof MiniappMeetingsRouteWithChildren
   '/profile': typeof MiniappProfileRouteWithChildren
-  '/': typeof MiniappIndexRoute
+  '/dashboard': typeof WebDashboardRoute
   '/meetings/$meetingId': typeof MiniappMeetingsMeetingIdRoute
   '/meetings/create': typeof MiniappMeetingsCreateRouteWithChildren
   '/profile/admin': typeof MiniappProfileAdminRouteWithChildren
@@ -106,9 +135,13 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_miniapp': typeof MiniappRouteWithChildren
+  '/_web': typeof WebRouteWithChildren
+  '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/_miniapp/checker': typeof MiniappCheckerRoute
   '/_miniapp/meetings': typeof MiniappMeetingsRouteWithChildren
   '/_miniapp/profile': typeof MiniappProfileRouteWithChildren
+  '/_web/dashboard': typeof WebDashboardRoute
   '/_miniapp/': typeof MiniappIndexRoute
   '/_miniapp/meetings/$meetingId': typeof MiniappMeetingsMeetingIdRoute
   '/_miniapp/meetings/create': typeof MiniappMeetingsCreateRouteWithChildren
@@ -121,9 +154,12 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/login'
+    | '/onboarding'
     | '/checker'
     | '/meetings'
     | '/profile'
+    | '/dashboard'
     | '/meetings/$meetingId'
     | '/meetings/create'
     | '/profile/admin'
@@ -132,10 +168,13 @@ export interface FileRouteTypes {
     | '/profile/admin/setup'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
+    | '/login'
+    | '/onboarding'
     | '/checker'
     | '/meetings'
     | '/profile'
-    | '/'
+    | '/dashboard'
     | '/meetings/$meetingId'
     | '/meetings/create'
     | '/profile/admin'
@@ -145,9 +184,13 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_miniapp'
+    | '/_web'
+    | '/login'
+    | '/onboarding'
     | '/_miniapp/checker'
     | '/_miniapp/meetings'
     | '/_miniapp/profile'
+    | '/_web/dashboard'
     | '/_miniapp/'
     | '/_miniapp/meetings/$meetingId'
     | '/_miniapp/meetings/create'
@@ -159,10 +202,34 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   MiniappRoute: typeof MiniappRouteWithChildren
+  WebRoute: typeof WebRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  OnboardingRoute: typeof OnboardingRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_web': {
+      id: '/_web'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof WebRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_miniapp': {
       id: '/_miniapp'
       path: ''
@@ -176,6 +243,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof MiniappIndexRouteImport
       parentRoute: typeof MiniappRoute
+    }
+    '/_web/dashboard': {
+      id: '/_web/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof WebDashboardRouteImport
+      parentRoute: typeof WebRoute
     }
     '/_miniapp/profile': {
       id: '/_miniapp/profile'
@@ -312,8 +386,21 @@ const MiniappRouteChildren: MiniappRouteChildren = {
 const MiniappRouteWithChildren =
   MiniappRoute._addFileChildren(MiniappRouteChildren)
 
+interface WebRouteChildren {
+  WebDashboardRoute: typeof WebDashboardRoute
+}
+
+const WebRouteChildren: WebRouteChildren = {
+  WebDashboardRoute: WebDashboardRoute,
+}
+
+const WebRouteWithChildren = WebRoute._addFileChildren(WebRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   MiniappRoute: MiniappRouteWithChildren,
+  WebRoute: WebRouteWithChildren,
+  LoginRoute: LoginRoute,
+  OnboardingRoute: OnboardingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
