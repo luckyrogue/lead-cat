@@ -1,6 +1,6 @@
-import type { SVGProps } from "react";
+import type { IconProps } from "./types";
 
-export function PawIcon(props: SVGProps<SVGSVGElement>) {
+export function Paw(props: IconProps) {
   return (
     <svg
       viewBox="0 0 64 64"

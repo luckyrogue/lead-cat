@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
-import { Badge, Button, PawIcon, motion } from "@leadcat/ui";
-import { FloatingMotifs } from "./FloatingMotifs";
+import { Badge, Button, Paw, motion } from "@leadcat/ui";
+import { FloatingMotifs } from "@/components/landing/FloatingMotifs";
 
 const CatScene = lazy(() =>
   import("@leadcat/ui/3d").then((m) => ({ default: m.CatScene })),
@@ -10,7 +10,7 @@ function SceneFallback() {
   return (
     <div className="grid h-full w-full place-items-center">
       <div className="flex flex-col items-center gap-3 text-coral-400">
-        <PawIcon className="h-14 w-14 animate-bounce-soft" />
+        <Paw className="h-14 w-14 animate-bounce-soft" />
         <span className="text-sm font-semibold">Waking the kitty…</span>
       </div>
     </div>
@@ -34,7 +34,10 @@ export function Hero() {
             transition={{ delay: 0.15, type: "spring", stiffness: 260, damping: 16 }}
             className="mb-5 inline-block"
           >
-            <Badge tone="sunny">🐾 Scheduling, but cuddly</Badge>
+            <Badge tone="sunny">
+              <Paw className="h-3.5 w-3.5" />
+              Scheduling, but cuddly
+            </Badge>
           </motion.div>
           <h1 className="text-4xl font-bold leading-tight text-kitty-800 sm:text-5xl lg:text-6xl">
             Meetings your team will{" "}
@@ -48,7 +51,7 @@ export function Hero() {
                 style={{ originX: 0 }}
               />
             </span>{" "}
-            🐾
+            <Paw className="inline-block h-8 w-8 align-middle text-coral-400 sm:h-10 sm:w-10" />
           </h1>
           <p className="mx-auto mt-6 max-w-md text-lg text-kitty-600 md:mx-0">
             Lead Cat sniffs out the purrfect time across everyone's calendars — no

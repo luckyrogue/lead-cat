@@ -1,4 +1,4 @@
-import { Button, CatFace, PawIcon, motion } from "@leadcat/ui";
+import { Button, CatFace, Paw, motion } from "@leadcat/ui";
 
 export function Footer() {
   return (
@@ -20,12 +20,15 @@ export function Footer() {
           Join the teams that traded scheduling chaos for a happy little cat.
         </p>
         <div className="mt-7 flex justify-center">
-          <Button size="lg">Adopt Lead Cat 🐾</Button>
+          <Button size="lg">
+            Adopt Lead Cat
+            <Paw className="h-5 w-5" />
+          </Button>
         </div>
 
         <div className="mt-14 flex flex-col items-center gap-3 text-sm text-kitty-400">
           <div className="flex items-center gap-2 font-bold text-kitty-600">
-            <PawIcon className="h-5 w-5 text-coral-400" />
+            <Paw className="h-5 w-5 text-coral-400" />
             Lead Cat
           </div>
           <p>© {new Date().getFullYear()} Lead Cat. Made with whiskers & warmth.</p>

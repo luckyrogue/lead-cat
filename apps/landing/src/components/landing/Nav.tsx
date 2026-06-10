@@ -1,10 +1,6 @@
-import { PawIcon, motion } from "@leadcat/ui";
-import { Hero } from "./components/Hero";
-import { Features } from "./components/Features";
-import { HowItWorks } from "./components/HowItWorks";
-import { Footer } from "./components/Footer";
+import { Paw, motion } from "@leadcat/ui";
 
-function Nav() {
+export function Nav() {
   return (
     <motion.nav
       initial={{ opacity: 0, y: -16 }}
@@ -14,7 +10,7 @@ function Nav() {
     >
       <div className="flex items-center gap-2 text-xl font-bold text-kitty-800">
         <span className="grid h-9 w-9 place-items-center rounded-full bg-coral-500 text-white shadow-pop">
-          <PawIcon className="h-5 w-5" />
+          <Paw className="h-5 w-5" />
         </span>
         Lead Cat
       </div>
@@ -25,17 +21,5 @@ function Nav() {
         Sign in
       </a>
     </motion.nav>
-  );
-}
-
-export function App() {
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-cream-100 via-peach-50 to-cream-200 font-sans text-kitty-800">
-      <Nav />
-      <Hero />
-      <Features />
-      <HowItWorks />
-      <Footer />
-    </div>
   );
 }

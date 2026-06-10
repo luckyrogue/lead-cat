@@ -6,8 +6,21 @@ export { Badge } from "./components/Badge";
 export type { BadgeProps } from "./components/Badge";
 export { Tag } from "./components/Tag";
 export type { TagProps } from "./components/Tag";
-export { PawIcon } from "./cat/PawIcon";
-export { CatFace } from "./cat/CatFace";
+export {
+  Paw,
+  PawIcon,
+  CatFace,
+  CatHead,
+  Sparkle,
+  Calendar,
+  Bell,
+  Clock,
+  Check,
+  ArrowRight,
+  Heart,
+  Star,
+} from "./icons";
+export type { IconProps } from "./icons";
 export { cn } from "./lib/cn";
 export type { ClassValue } from "./lib/cn";
 export { motion } from "motion/react";

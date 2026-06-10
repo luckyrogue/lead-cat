@@ -1,6 +1,6 @@
-import type { SVGProps } from "react";
+import type { IconProps } from "./types";
 
-export function CatFace(props: SVGProps<SVGSVGElement>) {
+export function CatFace(props: IconProps) {
   return (
     <svg
       viewBox="0 0 96 96"

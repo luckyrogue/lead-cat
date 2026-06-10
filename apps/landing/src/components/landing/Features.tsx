@@ -1,26 +1,35 @@
-import { Card, CatFace, PawIcon, motion } from "@leadcat/ui";
+import type { ComponentType } from "react";
+import { Card, CatFace, Paw, Calendar, Bell, Heart, Star, motion } from "@leadcat/ui";
+import type { IconProps } from "@leadcat/ui";
 
-const features = [
+type Feature = {
+  Icon: ComponentType<IconProps>;
+  title: string;
+  body: string;
+  tint: string;
+};
+
+const features: Feature[] = [
   {
-    emoji: "📅",
+    Icon: Calendar,
     title: "One calm calendar view",
     body: "Lead Cat merges every calendar into one tidy availability map — Google, work, personal. See open paws at a glance.",
     tint: "from-peach-100 to-cream-200",
   },
   {
-    emoji: "🔔",
+    Icon: Bell,
     title: "Reminders that don't nag",
     body: "Gentle, smart nudges right when they matter. Your team shows up on time without a single grumpy meow.",
     tint: "from-sunny-100 to-cream-200",
   },
   {
-    emoji: "🤝",
+    Icon: Heart,
     title: "Team scheduling, sorted",
     body: "Pick a group, and Lead Cat pounces on the slot that works for everyone. Round-robin and pooled hosts included.",
     tint: "from-coral-100 to-peach-100",
   },
   {
-    emoji: "🔗",
+    Icon: Star,
     title: "Lives where you work",
     body: "Native Google Calendar sync and a cozy Telegram Mini App. Book, reschedule and confirm without leaving chat.",
     tint: "from-kitty-100 to-cream-200",
@@ -65,22 +74,22 @@ export function Features() {
           viewport={{ once: true, margin: "-80px" }}
           className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
         >
-          {features.map((f) => (
-            <motion.div key={f.title} variants={item}>
+          {features.map(({ Icon, title, body, tint }) => (
+            <motion.div key={title} variants={item}>
               <Card
                 bordered
                 className="group h-full transition-transform duration-300 ease-spring hover:-translate-y-2 hover:rotate-1"
               >
                 <div
-                  className={`mb-5 inline-grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br ${f.tint} text-3xl transition-transform duration-300 ease-spring group-hover:scale-110 group-hover:-rotate-6`}
+                  className={`mb-5 inline-grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br ${tint} text-coral-500 transition-transform duration-300 ease-spring group-hover:scale-110 group-hover:-rotate-6`}
                 >
-                  {f.emoji}
+                  <Icon className="h-8 w-8" />
                 </div>
                 <h3 className="flex items-center gap-2 text-lg font-bold text-kitty-800">
-                  <PawIcon className="h-4 w-4 text-coral-400" />
-                  {f.title}
+                  <Paw className="h-4 w-4 text-coral-400" />
+                  {title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-kitty-600">{f.body}</p>
+                <p className="mt-2 text-sm leading-relaxed text-kitty-600">{body}</p>
               </Card>
             </motion.div>
           ))}
