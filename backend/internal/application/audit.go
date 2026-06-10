@@ -12,10 +12,13 @@ import (
 
 // auditWhitelist maps action -> allowed detail keys.
 var auditWhitelist = map[string]map[string]struct{}{
-	"google_config_updated": {"subject": {}, "calendar_id": {}, "has_new_sa_json": {}},
-	"google_verified":       {"ok": {}, "calendar_summary": {}, "time_zone": {}, "error_code": {}},
-	"chat_linked":           {"chat_id": {}, "chat_title": {}},
-	"members_synced":        {"added": {}, "removed": {}, "unchanged": {}},
+	"google_config_updated":   {"subject": {}, "calendar_id": {}, "has_new_sa_json": {}},
+	"google_verified":         {"ok": {}, "calendar_summary": {}, "time_zone": {}, "error_code": {}},
+	"chat_linked":             {"chat_id": {}, "chat_title": {}},
+	"members_synced":          {"added": {}, "removed": {}, "unchanged": {}},
+	"org_invited":             {"email": {}, "role": {}},
+	"org_member_role_changed": {"target_user_id": {}, "role": {}},
+	"org_member_removed":      {"target_user_id": {}},
 }
 
 // sanitizeAuditDetails filters details by the action's whitelist. Returns the
@@ -40,6 +43,7 @@ type AuditContext struct {
 	UserID     uuid.UUID
 	TelegramID int64
 	Email      string
+	Kind       string // "bot" (default) or "web"
 }
 
 type auditCtxKey struct{}
@@ -47,6 +51,11 @@ type auditCtxKey struct{}
 // WithAuditActor stores the actor in ctx (set by the middleware/handler).
 func WithAuditActor(ctx context.Context, a AuditContext) context.Context {
 	return context.WithValue(ctx, auditCtxKey{}, a)
+}
+
+// WithWebAuditActor builds an audit actor for a web platform user.
+func WithWebAuditActor(ctx context.Context, userID uuid.UUID, email string) context.Context {
+	return WithAuditActor(ctx, AuditContext{UserID: userID, Email: email, Kind: "web"})
 }
 
 // auditActor returns (actor, ok). ok=false when the ctx has no audit actor —
@@ -68,10 +77,15 @@ func (s *Services) Audit(ctx context.Context, action, targetKind, targetID strin
 	if len(dropped) > 0 {
 		s.Log.Warn("audit_unexpected_keys", zap.String("action", action), zap.Strings("dropped", dropped))
 	}
+	kind := actor.Kind
+	if kind == "" {
+		kind = "bot"
+	}
 	err := s.Store.InsertAuditEntry(ctx, postgres.AuditEntry{
 		ActorUserID:     actor.UserID,
 		ActorTelegramID: actor.TelegramID,
 		ActorEmail:      actor.Email,
+		ActorKind:       kind,
 		Action:          action,
 		TargetKind:      targetKind,
 		TargetID:        targetID,

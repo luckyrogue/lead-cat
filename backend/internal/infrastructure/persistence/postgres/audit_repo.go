@@ -8,17 +8,21 @@ import (
 	"github.com/google/uuid"
 )
 
-const auditCols = `id, actor_user_id, actor_telegram_id, actor_email, action, target_kind, target_id, details, created_at`
+const auditCols = `id, actor_user_id, actor_telegram_id, actor_email, actor_kind, action, target_kind, target_id, details, created_at`
 
 // InsertAuditEntry writes a new row. details may be empty/nil; we coerce to '{}'.
 func (s *Store) InsertAuditEntry(ctx context.Context, e AuditEntry) error {
 	if len(e.Details) == 0 {
 		e.Details = json.RawMessage(`{}`)
 	}
+	kind := e.ActorKind
+	if kind == "" {
+		kind = "bot"
+	}
 	_, err := s.pool.Exec(ctx, `
-		INSERT INTO admin_audit_log (actor_user_id, actor_telegram_id, actor_email, action, target_kind, target_id, details)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-		e.ActorUserID, e.ActorTelegramID, e.ActorEmail, e.Action, e.TargetKind, e.TargetID, []byte(e.Details))
+		INSERT INTO admin_audit_log (actor_user_id, actor_telegram_id, actor_email, actor_kind, action, target_kind, target_id, details)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		e.ActorUserID, e.ActorTelegramID, e.ActorEmail, kind, e.Action, e.TargetKind, e.TargetID, []byte(e.Details))
 	return err
 }
 
@@ -55,7 +59,7 @@ func (s *Store) ListAuditEntries(ctx context.Context, f AuditFilter) ([]AuditEnt
 	for rows.Next() {
 		var e AuditEntry
 		var detailsRaw []byte
-		if err := rows.Scan(&e.ID, &e.ActorUserID, &e.ActorTelegramID, &e.ActorEmail, &e.Action, &e.TargetKind, &e.TargetID, &detailsRaw, &e.CreatedAt); err != nil {
+		if err := rows.Scan(&e.ID, &e.ActorUserID, &e.ActorTelegramID, &e.ActorEmail, &e.ActorKind, &e.Action, &e.TargetKind, &e.TargetID, &detailsRaw, &e.CreatedAt); err != nil {
 			return nil, err
 		}
 		e.Details = detailsRaw

@@ -12,6 +12,16 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
+// withWebAuditActor enriches the user-context with the actor identity for a
+// web platform user, mirroring withAuditActor for the bot path.
+func (a *API) withWebAuditActor(c *fiber.Ctx) {
+	u, ok := c.Locals("web_user").(postgres.PlatformUser)
+	if !ok {
+		return
+	}
+	c.SetUserContext(application.WithWebAuditActor(c.UserContext(), u.ID, u.Email))
+}
+
 // validRoles is the set of roles that may be assigned via the API.
 var validRoles = map[string]struct{}{
 	"member": {},
@@ -111,6 +121,8 @@ func (a *API) InviteMember(c *fiber.Ctx) error {
 		a.Log.Error("org_invite_failed", zap.String("org_id", orgID.String()), zap.Error(err))
 		return fiber.NewError(fiber.StatusInternalServerError, "invite_failed")
 	}
+	a.withWebAuditActor(c)
+	a.App.Audit(c.UserContext(), "org_invited", "organization", orgID.String(), map[string]any{"email": body.Email, "role": body.Role})
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"id":    inv.ID,
 		"email": inv.Email,
@@ -184,6 +196,8 @@ func (a *API) UpdateMemberRole(c *fiber.Ctx) error {
 		a.Log.Error("org_member_role_update_failed", zap.String("org_id", orgID.String()), zap.Error(err))
 		return fiber.NewError(fiber.StatusInternalServerError, "update_failed")
 	}
+	a.withWebAuditActor(c)
+	a.App.Audit(c.UserContext(), "org_member_role_changed", "organization", orgID.String(), map[string]any{"target_user_id": targetUID.String(), "role": body.Role})
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
@@ -204,5 +218,7 @@ func (a *API) RemoveMember(c *fiber.Ctx) error {
 		a.Log.Error("org_member_remove_failed", zap.String("org_id", orgID.String()), zap.Error(err))
 		return fiber.NewError(fiber.StatusInternalServerError, "remove_failed")
 	}
+	a.withWebAuditActor(c)
+	a.App.Audit(c.UserContext(), "org_member_removed", "organization", orgID.String(), map[string]any{"target_user_id": targetUID.String()})
 	return c.SendStatus(fiber.StatusNoContent)
 }

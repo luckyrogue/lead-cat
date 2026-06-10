@@ -101,6 +101,7 @@ type AuditEntry struct {
 	ActorUserID     uuid.UUID       `json:"actor_user_id"`
 	ActorTelegramID int64           `json:"actor_telegram_id"`
 	ActorEmail      string          `json:"actor_email"`
+	ActorKind       string          `json:"actor_kind"`
 	Action          string          `json:"action"`
 	TargetKind      string          `json:"target_kind"`
 	TargetID        string          `json:"target_id"`
