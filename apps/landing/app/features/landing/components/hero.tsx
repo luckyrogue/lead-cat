@@ -41,9 +41,13 @@ export function Hero() {
           </p>
         </div>
 
-        <div className="relative mx-auto aspect-square w-full max-w-md">
-          <div className="rounded-blob absolute inset-4 bg-gradient-to-br from-peach-200 via-cream-300 to-sunny-200 blur-2xl" />
-          <div className="animate-purr relative h-full w-full">
+        <div className="relative mx-auto aspect-square w-full max-w-lg">
+          {/* Clean, soft circular backdrop — sits behind the cat, no smudgy blur. */}
+          <div
+            className="absolute inset-x-6 bottom-6 top-10 rounded-full bg-gradient-to-b from-peach-100 to-cream-200"
+            aria-hidden="true"
+          />
+          <div className="relative h-full w-full">
             <CatStage />
           </div>
         </div>
