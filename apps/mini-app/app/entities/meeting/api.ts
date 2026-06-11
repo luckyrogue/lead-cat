@@ -55,6 +55,22 @@ export async function deleteMeeting(
   })
 }
 
+export async function addParticipant(id: string, email: string): Promise<Meeting> {
+  const res = await apiFetch<{ meeting: Meeting }>(
+    `/api/miniapp/meetings/${id}/participants`,
+    { method: "POST", body: { email } }
+  )
+  return res.meeting
+}
+
+export async function removeParticipant(id: string, email: string): Promise<Meeting> {
+  const res = await apiFetch<{ meeting: Meeting }>(
+    `/api/miniapp/meetings/${id}/participants`,
+    { method: "DELETE", params: { email } }
+  )
+  return res.meeting
+}
+
 type ConflictsInput = {
   participants: string[]
   date: string

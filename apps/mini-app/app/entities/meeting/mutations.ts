@@ -1,8 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import {
+  addParticipant,
   createMeeting,
   deleteMeeting,
+  removeParticipant,
   updateMeeting,
 } from "~/entities/meeting/api"
 import type {
@@ -45,6 +47,28 @@ export function useDeleteMeeting() {
   return useMutation({
     mutationFn: ({ id, scope }: { id: string; scope?: MeetingMutationScope }) =>
       deleteMeeting(id, scope),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: meetingKeys.all })
+    },
+  })
+}
+
+export function useAddParticipant() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, email }: { id: string; email: string }) =>
+      addParticipant(id, email),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: meetingKeys.all })
+    },
+  })
+}
+
+export function useRemoveParticipant() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, email }: { id: string; email: string }) =>
+      removeParticipant(id, email),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: meetingKeys.all })
     },

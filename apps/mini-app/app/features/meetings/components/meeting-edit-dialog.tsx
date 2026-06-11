@@ -17,6 +17,7 @@ import {
   type Meeting,
   type MeetingMutationScope,
 } from "~/entities/meeting/types"
+import { ParticipantsEditor } from "~/features/meetings/components/participants-editor"
 import { ScopeToggle } from "~/features/meetings/components/scope-toggle"
 
 type Props = {
@@ -109,6 +110,11 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
           <Field label="Description">
             <Input value={desc} onChange={(e) => setDesc(e.target.value)} />
           </Field>
+          <ParticipantsEditor
+            meetingId={meeting.id}
+            participants={meeting.participants}
+            series={series}
+          />
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>

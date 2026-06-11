@@ -1,9 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import {
+  addParticipant,
   createMeeting,
   deleteMeeting,
+  getMeeting,
   listMeetings,
+  removeParticipant,
   updateMeeting,
 } from "~/entities/meeting/api"
 import type {
@@ -14,6 +17,8 @@ import type {
 
 export const meetingKeys = {
   list: (orgId: string) => ["orgs", orgId, "meetings"] as const,
+  detail: (orgId: string, meetingId: string) =>
+    ["orgs", orgId, "meetings", meetingId] as const,
 }
 
 export function useMeetings(orgId: string | null) {
@@ -22,6 +27,42 @@ export function useMeetings(orgId: string | null) {
     queryFn: () => listMeetings(orgId as string),
     enabled: Boolean(orgId),
   })
+}
+
+export function useMeeting(orgId: string, meetingId: string | null) {
+  return useQuery({
+    queryKey: meetingKeys.detail(orgId, meetingId ?? ""),
+    queryFn: () => getMeeting(orgId, meetingId as string),
+    enabled: Boolean(orgId) && Boolean(meetingId),
+  })
+}
+
+function useParticipantMutation(
+  orgId: string,
+  mutationFn: (input: { meetingId: string; email: string }) => Promise<unknown>
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn,
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: meetingKeys.detail(orgId, variables.meetingId),
+      })
+      queryClient.invalidateQueries({ queryKey: meetingKeys.list(orgId) })
+    },
+  })
+}
+
+export function useAddParticipant(orgId: string) {
+  return useParticipantMutation(orgId, ({ meetingId, email }) =>
+    addParticipant(orgId, meetingId, email)
+  )
+}
+
+export function useRemoveParticipant(orgId: string) {
+  return useParticipantMutation(orgId, ({ meetingId, email }) =>
+    removeParticipant(orgId, meetingId, email)
+  )
 }
 
 export function useCreateMeeting(orgId: string) {

@@ -16,6 +16,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Separator,
 } from "@leadcat/ui"
 
 import { ListPageShell } from "~/components/list-page-shell"
@@ -38,6 +39,7 @@ import {
   type MeetingFormValues,
 } from "~/features/meetings/components/meeting-form"
 import { MeetingsTable } from "~/features/meetings/components/meetings-table"
+import { ParticipantsEditor } from "~/features/meetings/components/participants-editor"
 import { useActiveOrg } from "~/shared/auth/use-active-org"
 import { useMe } from "~/shared/auth/use-me"
 import { toastError, toastSuccess } from "~/shared/lib/toast"
@@ -237,13 +239,25 @@ export function MeetingsPage() {
             </DialogDescription>
           </DialogHeader>
           {toEdit ? (
-            <MeetingForm
-              mode="edit"
-              pending={updateMeeting.isPending}
-              series={isSeries(toEdit)}
-              defaults={editDefaults(toEdit)}
-              onSubmit={handleEdit}
-            />
+            <>
+              <MeetingForm
+                mode="edit"
+                pending={updateMeeting.isPending}
+                series={isSeries(toEdit)}
+                defaults={editDefaults(toEdit)}
+                onSubmit={handleEdit}
+              />
+              {activeOrgId ? (
+                <>
+                  <Separator />
+                  <ParticipantsEditor
+                    orgId={activeOrgId}
+                    meetingId={toEdit.id}
+                    series={isSeries(toEdit)}
+                  />
+                </>
+              ) : null}
+            </>
           ) : null}
         </DialogContent>
       </Dialog>

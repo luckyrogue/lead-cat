@@ -397,3 +397,86 @@ func (a *API) MiniAppDeleteMeeting(c *fiber.Ctx) error {
 		zap.Int("count", n))
 	return c.SendStatus(fiber.StatusNoContent)
 }
+
+type miniappParticipantRequest struct {
+	Email string `json:"email"`
+}
+
+func mapMiniAppParticipantError(err error) error {
+	switch {
+	case errors.Is(err, application.ErrForbidden):
+		return fiber.NewError(fiber.StatusForbidden, "forbidden")
+	case errors.Is(err, model.ErrMeetingNotEditable):
+		return fiber.NewError(fiber.StatusConflict, "meeting_not_editable")
+	case errors.Is(err, application.ErrInvalidInput):
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	default:
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+}
+
+// resolveParticipantOp parses the meeting id, resolves the organizer's
+// organization and id, and returns them for a participant add/remove op.
+func (a *API) resolveParticipantOp(c *fiber.Ctx) (orgID, organizerID, meetingID uuid.UUID, err error) {
+	bu, ok := botUser(c)
+	if !ok {
+		return uuid.Nil, uuid.Nil, uuid.Nil, fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
+	}
+	meetingID, perr := uuid.Parse(c.Params("id"))
+	if perr != nil {
+		return uuid.Nil, uuid.Nil, uuid.Nil, fiber.NewError(fiber.StatusBadRequest, "invalid meeting id")
+	}
+	orgID, found, ferr := a.editableOrganization(c, bu.TelegramID, meetingID)
+	if ferr != nil {
+		return uuid.Nil, uuid.Nil, uuid.Nil, fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	if !found {
+		return uuid.Nil, uuid.Nil, uuid.Nil, fiber.NewError(fiber.StatusNotFound, "not_found")
+	}
+	organizerID, eerr := a.App.EnsureMiniAppOrganizer(c.Context(), bu.Email, bu.TelegramID)
+	if eerr != nil {
+		if errors.Is(eerr, application.ErrTelegramLinkedToOtherAccount) {
+			return uuid.Nil, uuid.Nil, uuid.Nil, fiber.NewError(fiber.StatusConflict, "telegram_linked_to_other_account")
+		}
+		return uuid.Nil, uuid.Nil, uuid.Nil, fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	return orgID, organizerID, meetingID, nil
+}
+
+func (a *API) MiniAppAddParticipant(c *fiber.Ctx) error {
+	orgID, organizerID, meetingID, err := a.resolveParticipantOp(c)
+	if err != nil {
+		return err
+	}
+	var req miniappParticipantRequest
+	if err := c.BodyParser(&req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
+	}
+	if err := a.App.AddParticipant(c.Context(), orgID, organizerID, meetingID, req.Email); err != nil {
+		return mapMiniAppParticipantError(err)
+	}
+	m, err := a.App.GetMeeting(c.Context(), orgID, meetingID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m)})
+}
+
+func (a *API) MiniAppRemoveParticipant(c *fiber.Ctx) error {
+	orgID, organizerID, meetingID, err := a.resolveParticipantOp(c)
+	if err != nil {
+		return err
+	}
+	email := strings.TrimSpace(c.Query("email"))
+	if email == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "email required")
+	}
+	if err := a.App.RemoveParticipant(c.Context(), orgID, organizerID, meetingID, email); err != nil {
+		return mapMiniAppParticipantError(err)
+	}
+	m, err := a.App.GetMeeting(c.Context(), orgID, meetingID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m)})
+}

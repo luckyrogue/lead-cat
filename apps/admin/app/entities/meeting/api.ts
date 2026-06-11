@@ -13,6 +13,40 @@ export async function listMeetings(orgId: string): Promise<Meeting[]> {
   return data.meetings ?? []
 }
 
+export async function getMeeting(
+  orgId: string,
+  meetingId: string
+): Promise<Meeting> {
+  const { data } = await api.get<{ meeting: Meeting }>(
+    `/api/orgs/${orgId}/meetings/${meetingId}`
+  )
+  return data.meeting
+}
+
+export async function addParticipant(
+  orgId: string,
+  meetingId: string,
+  email: string
+): Promise<Meeting> {
+  const { data } = await api.post<{ meeting: Meeting }>(
+    `/api/orgs/${orgId}/meetings/${meetingId}/participants`,
+    { email }
+  )
+  return data.meeting
+}
+
+export async function removeParticipant(
+  orgId: string,
+  meetingId: string,
+  email: string
+): Promise<Meeting> {
+  const { data } = await api.delete<{ meeting: Meeting }>(
+    `/api/orgs/${orgId}/meetings/${meetingId}/participants`,
+    { params: { email } }
+  )
+  return data.meeting
+}
+
 export async function createMeeting(
   orgId: string,
   input: CreateMeetingInput
