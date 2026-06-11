@@ -77,10 +77,12 @@ func (s *Store) GetOrgMember(ctx context.Context, orgID, userID uuid.UUID) (Memb
 // ListOrgMembers returns all members of an organisation ordered by telegram_username.
 func (s *Store) ListOrgMembers(ctx context.Context, orgID uuid.UUID) ([]Member, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT id, organization_id, user_id, telegram_username, role, invited_email
-		FROM organization_members
-		WHERE organization_id = $1
-		ORDER BY telegram_username`, orgID)
+		SELECT om.id, om.organization_id, om.user_id, om.telegram_username, om.role, om.invited_email,
+		       COALESCE(pu.email, '')
+		FROM organization_members om
+		LEFT JOIN platform_users pu ON pu.id = om.user_id
+		WHERE om.organization_id = $1
+		ORDER BY om.telegram_username`, orgID)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +90,7 @@ func (s *Store) ListOrgMembers(ctx context.Context, orgID uuid.UUID) ([]Member, 
 	var out []Member
 	for rows.Next() {
 		var m Member
-		if err := rows.Scan(&m.ID, &m.OrganizationID, &m.UserID, &m.TelegramUsername, &m.Role, &m.InvitedEmail); err != nil {
+		if err := rows.Scan(&m.ID, &m.OrganizationID, &m.UserID, &m.TelegramUsername, &m.Role, &m.InvitedEmail, &m.Email); err != nil {
 			return nil, err
 		}
 		out = append(out, m)

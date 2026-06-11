@@ -1552,9 +1552,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["orgs"],
+                  "required": ["organizations"],
                   "properties": {
-                    "orgs": {
+                    "organizations": {
                       "type": "array",
                       "items": { "$ref": "#/components/schemas/Org" }
                     }
@@ -1608,6 +1608,260 @@
           },
           "409": {
             "description": "Slug conflict",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/orgs/{id}/meetings": {
+      "get": {
+        "operationId": "orgMeetingsList",
+        "tags": ["meetings"],
+        "summary": "List meetings visible to the current user in an organization",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Meetings list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["meetings"],
+                  "properties": {
+                    "meetings": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Meeting" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      },
+      "post": {
+        "operationId": "orgMeetingsCreate",
+        "tags": ["meetings"],
+        "summary": "Create a meeting in an organization",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/WebMeetingCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created meeting",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["meeting"],
+                  "properties": {
+                    "meeting": { "$ref": "#/components/schemas/Meeting" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/orgs/{id}/meetings/{mid}": {
+      "get": {
+        "operationId": "orgMeetingGet",
+        "tags": ["meetings"],
+        "summary": "Get a single meeting",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "mid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Meeting",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["meeting"],
+                  "properties": {
+                    "meeting": { "$ref": "#/components/schemas/Meeting" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "404": {
+            "description": "Not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "orgMeetingUpdate",
+        "tags": ["meetings"],
+        "summary": "Update a meeting (scope=this) or its whole series (scope=whole)",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "mid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["this", "whole"], "default": "this" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/WebMeetingUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated meeting",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["meeting"],
+                  "properties": {
+                    "meeting": { "$ref": "#/components/schemas/Meeting" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "404": {
+            "description": "Not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "orgMeetingDelete",
+        "tags": ["meetings"],
+        "summary": "Cancel a meeting (scope=this) or its whole series (scope=whole)",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "mid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["this", "whole"], "default": "this" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Cancelled" },
+          "400": {
+            "description": "Validation failed",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "404": {
+            "description": "Not found",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
           }
         }
@@ -2678,35 +2932,124 @@
       },
       "Org": {
         "type": "object",
-        "required": ["id", "name", "slug", "role"],
+        "required": ["id", "name", "slug"],
         "properties": {
           "id": { "type": "string", "format": "uuid" },
           "name": { "type": "string" },
-          "slug": { "type": "string" },
-          "role": { "type": "string", "enum": ["owner", "admin", "member"] },
-          "created_at": { "type": "string", "format": "date-time" }
+          "slug": { "type": "string" }
         }
       },
       "OrgMember": {
         "type": "object",
-        "required": ["id", "email", "name", "role"],
+        "required": ["role", "email", "name", "status"],
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "email": { "type": "string", "format": "email" },
-          "name": { "type": "string" },
+          "user_id": { "type": "string", "format": "uuid", "nullable": true },
           "role": { "type": "string", "enum": ["owner", "admin", "member"] },
-          "joined_at": { "type": "string", "format": "date-time" }
+          "email": { "type": "string" },
+          "name": { "type": "string" },
+          "status": { "type": "string", "enum": ["active", "invited"] },
+          "invited_email": { "type": "string", "format": "email", "nullable": true },
+          "telegram_username": { "type": "string" }
         }
       },
       "OrgInvite": {
         "type": "object",
-        "required": ["id", "email", "role", "created_at"],
+        "required": ["id", "email", "role", "expires_at"],
         "properties": {
           "id": { "type": "string", "format": "uuid" },
           "email": { "type": "string", "format": "email" },
           "role": { "type": "string", "enum": ["admin", "member"] },
-          "created_at": { "type": "string", "format": "date-time" },
           "expires_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "MeetingParticipant": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "employee_id": { "type": "string", "format": "uuid", "nullable": true },
+          "email": { "type": "string", "format": "email" }
+        }
+      },
+      "Meeting": {
+        "type": "object",
+        "required": [
+          "id",
+          "organization_id",
+          "dept",
+          "type",
+          "host",
+          "starts_at",
+          "ends_at",
+          "recurrence",
+          "name",
+          "description",
+          "google_event_id",
+          "meet_link",
+          "status",
+          "participants"
+        ],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "organization_id": { "type": "string", "format": "uuid" },
+          "organizer_user_id": { "type": "string", "format": "uuid", "nullable": true },
+          "dept": { "type": "string" },
+          "type": { "type": "string" },
+          "host": { "type": "string" },
+          "starts_at": { "type": "string", "format": "date-time" },
+          "ends_at": { "type": "string", "format": "date-time" },
+          "recurrence": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "google_event_id": { "type": "string" },
+          "meet_link": { "type": "string" },
+          "status": { "type": "string" },
+          "series_id": { "type": "string", "format": "uuid", "nullable": true },
+          "recurrence_until": { "type": "string", "format": "date-time", "nullable": true },
+          "recurrence_days": {
+            "type": "array",
+            "items": { "type": "integer" },
+            "nullable": true
+          },
+          "participants": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/MeetingParticipant" }
+          }
+        }
+      },
+      "WebMeetingCreateRequest": {
+        "type": "object",
+        "required": ["dept", "type", "date", "start", "end", "recurrence"],
+        "properties": {
+          "dept": { "type": "string" },
+          "type": { "type": "string" },
+          "host": { "type": "string" },
+          "date": { "type": "string", "format": "date" },
+          "start": { "type": "string" },
+          "end": { "type": "string" },
+          "recurrence": { "type": "string" },
+          "desc": { "type": "string" },
+          "participants": {
+            "type": "array",
+            "items": { "type": "string", "format": "email" }
+          },
+          "recurrence_until": { "type": "string", "format": "date", "nullable": true },
+          "recurrence_days": {
+            "type": "array",
+            "items": { "type": "integer" },
+            "nullable": true
+          }
+        }
+      },
+      "WebMeetingUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "dept": { "type": "string" },
+          "type": { "type": "string" },
+          "host": { "type": "string" },
+          "date": { "type": "string", "format": "date" },
+          "start": { "type": "string" },
+          "end": { "type": "string" },
+          "desc": { "type": "string" }
         }
       }
     }

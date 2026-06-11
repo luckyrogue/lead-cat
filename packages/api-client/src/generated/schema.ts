@@ -435,6 +435,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orgs/{id}/meetings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List meetings visible to the current user in an organization */
+        get: operations["orgMeetingsList"];
+        put?: never;
+        /** Create a meeting in an organization */
+        post: operations["orgMeetingsCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orgs/{id}/meetings/{mid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a single meeting */
+        get: operations["orgMeetingGet"];
+        put?: never;
+        post?: never;
+        /** Cancel a meeting (scope=this) or its whole series (scope=whole) */
+        delete: operations["orgMeetingDelete"];
+        options?: never;
+        head?: never;
+        /** Update a meeting (scope=this) or its whole series (scope=whole) */
+        patch: operations["orgMeetingUpdate"];
+        trace?: never;
+    };
     "/api/orgs/{id}/members": {
         parameters: {
             query?: never;
@@ -754,21 +791,19 @@ export interface components {
             id: string;
             name: string;
             slug: string;
-            /** @enum {string} */
-            role: "owner" | "admin" | "member";
-            /** Format: date-time */
-            created_at?: string;
         };
         OrgMember: {
             /** Format: uuid */
-            id: string;
-            /** Format: email */
+            user_id?: string | null;
+            /** @enum {string} */
+            role: "owner" | "admin" | "member";
             email: string;
             name: string;
             /** @enum {string} */
-            role: "owner" | "admin" | "member";
-            /** Format: date-time */
-            joined_at?: string;
+            status: "active" | "invited";
+            /** Format: email */
+            invited_email?: string | null;
+            telegram_username?: string;
         };
         OrgInvite: {
             /** Format: uuid */
@@ -778,9 +813,65 @@ export interface components {
             /** @enum {string} */
             role: "admin" | "member";
             /** Format: date-time */
-            created_at: string;
+            expires_at: string;
+        };
+        MeetingParticipant: {
+            /** Format: uuid */
+            employee_id?: string | null;
+            /** Format: email */
+            email: string;
+        };
+        Meeting: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            organization_id: string;
+            /** Format: uuid */
+            organizer_user_id?: string | null;
+            dept: string;
+            type: string;
+            host: string;
             /** Format: date-time */
-            expires_at?: string;
+            starts_at: string;
+            /** Format: date-time */
+            ends_at: string;
+            recurrence: string;
+            name: string;
+            description: string;
+            google_event_id: string;
+            meet_link: string;
+            status: string;
+            /** Format: uuid */
+            series_id?: string | null;
+            /** Format: date-time */
+            recurrence_until?: string | null;
+            recurrence_days?: number[] | null;
+            participants: components["schemas"]["MeetingParticipant"][];
+        };
+        WebMeetingCreateRequest: {
+            dept: string;
+            type: string;
+            host?: string;
+            /** Format: date */
+            date: string;
+            start: string;
+            end: string;
+            recurrence: string;
+            desc?: string;
+            participants?: string[];
+            /** Format: date */
+            recurrence_until?: string | null;
+            recurrence_days?: number[] | null;
+        };
+        WebMeetingUpdateRequest: {
+            dept?: string;
+            type?: string;
+            host?: string;
+            /** Format: date */
+            date?: string;
+            start?: string;
+            end?: string;
+            desc?: string;
         };
     };
     responses: never;
@@ -2076,7 +2167,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        orgs: components["schemas"]["Org"][];
+                        organizations: components["schemas"]["Org"][];
                     };
                 };
             };
@@ -2136,6 +2227,281 @@ export interface operations {
             };
             /** @description Slug conflict */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    orgMeetingsList: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Meetings list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        meetings: components["schemas"]["Meeting"][];
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    orgMeetingsCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WebMeetingCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Created meeting */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        meeting: components["schemas"]["Meeting"];
+                    };
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    orgMeetingGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                mid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Meeting */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        meeting: components["schemas"]["Meeting"];
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    orgMeetingDelete: {
+        parameters: {
+            query?: {
+                scope?: "this" | "whole";
+            };
+            header?: never;
+            path: {
+                id: string;
+                mid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cancelled */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    orgMeetingUpdate: {
+        parameters: {
+            query?: {
+                scope?: "this" | "whole";
+            };
+            header?: never;
+            path: {
+                id: string;
+                mid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WebMeetingUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated meeting */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        meeting: components["schemas"]["Meeting"];
+                    };
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

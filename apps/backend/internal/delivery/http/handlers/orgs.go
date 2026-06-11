@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/mail"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -76,15 +77,36 @@ func (a *API) ListOrgMembers(c *fiber.Ctx) error {
 	}
 	out := make([]fiber.Map, 0, len(members))
 	for _, m := range members {
-		entry := fiber.Map{
+		email, name, status := memberView(m)
+		out = append(out, fiber.Map{
 			"user_id":           m.UserID,
 			"role":              m.Role,
+			"email":             email,
+			"name":              name,
+			"status":            status,
 			"invited_email":     m.InvitedEmail,
 			"telegram_username": m.TelegramUsername,
-		}
-		out = append(out, entry)
+		})
 	}
 	return c.JSON(fiber.Map{"members": out})
+}
+
+func memberView(m model.Member) (email, name, status string) {
+	email = m.Email
+	if email == "" && m.InvitedEmail != nil {
+		email = *m.InvitedEmail
+	}
+	status = "invited"
+	if m.UserID != nil {
+		status = "active"
+	}
+	switch {
+	case m.TelegramUsername != "":
+		name = "@" + strings.TrimPrefix(m.TelegramUsername, "@")
+	case email != "":
+		name = email[:strings.IndexByte(email+"@", '@')]
+	}
+	return email, name, status
 }
 
 func (a *API) InviteMember(c *fiber.Ctx) error {

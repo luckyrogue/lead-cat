@@ -41,6 +41,7 @@ type Member struct {
 	TelegramUsername string
 	Role             string
 	InvitedEmail     *string
+	Email            string
 }
 
 type PendingChat struct {
