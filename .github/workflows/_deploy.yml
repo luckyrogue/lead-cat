@@ -35,8 +35,8 @@ jobs:
             exit 1
           fi
           OWNER_LC=$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')
-          IMAGE="ghcr.io/${OWNER_LC}/lead-cat"
-          echo "Deploying ${IMAGE}:${IMAGE_TAG}"
+          PREFIX="ghcr.io/${OWNER_LC}/lead-cat"
+          echo "Redeploying ${PREFIX}-{backend,landing,admin,mini-app}:${IMAGE_TAG}"
           curl -fsSL -X POST "$WEBHOOK" \
             -H "Content-Type: application/json" \
-            -d "{\"image\":\"${IMAGE}\",\"tag\":\"${IMAGE_TAG}\"}"
+            -d "{\"tag\":\"${IMAGE_TAG}\"}"

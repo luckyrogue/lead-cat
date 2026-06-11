@@ -1,129 +1,155 @@
 # Deploy on Dokploy
 
-Lead Cat runs as a single Go binary that serves the Mini App frontend, REST API, and Telegram bot.
+Lead Cat deploys as **four independent services** built from one monorepo:
+
+| Service    | Source              | Runtime           | Port | Notes                                              |
+| ---------- | ------------------- | ----------------- | ---- | -------------------------------------------------- |
+| `backend`  | `apps/backend`      | Go binary         | 8080 | REST `/api`, Telegram bot, asynq workers, migrate. |
+| `landing`  | `apps/landing`      | Node (SSR)        | 3000 | Marketing site, `ssr: true`, `react-router-serve`. |
+| `admin`    | `apps/admin`        | nginx (static)    | 80   | SPA dashboard; nginx proxies `/api/*` → backend.   |
+| `mini-app` | `apps/mini-app`     | nginx (static)    | 80   | Telegram Mini App SPA; same `/api` proxy.          |
+
+Each app has its own `Dockerfile`. **Build context is the repository root** (the pnpm
+workspace must resolve), so in Dokploy set the build context to `.` and the Dockerfile
+path to `apps/<service>/Dockerfile`.
+
+The SPA containers (`admin`, `mini-app`) run nginx that serves the static build **and**
+reverse-proxies `/api/*` to the backend. This keeps the browser same-origin, so the
+admin cookie session works with `SameSite=Lax` and no CORS is needed. The proxy target
+is the `API_UPSTREAM` env var (default `http://backend:8080`). The SPAs are built with
+`VITE_API_URL` empty so the client calls relative `/api` paths.
 
 ## 1. Postgres
 
-Create a Postgres service → copy the connection string as `DATABASE_URL`.
+Create a Postgres service → copy the connection string as `DATABASE_URL` on `backend`.
 
 ## 2. Redis
 
-Create a Redis 7 service → set `REDIS_URL=redis://:password@host:6379/0`.
+Create a Redis service → set `REDIS_URL=redis://:password@host:6379/0` on `backend`.
 
-## 3. Lead Cat app (pull-only)
+## 3. backend
 
-CI builds and pushes the image; Dokploy only pulls from the registry.
+| Item       | Value                                                              |
+| ---------- | ------------------------------------------------------------------ |
+| Dockerfile | `apps/backend/Dockerfile` (context `.`)                            |
+| Port       | `8080`                                                             |
+| Health     | `GET /api/health` (also in image `HEALTHCHECK`)                    |
+| Entrypoint | `/app/lead-cat` (runs migrations on start when `AUTO_MIGRATE=true`)|
 
-| Item       | Value                                                                 |
-| ---------- | --------------------------------------------------------------------- |
-| Registry   | `ghcr.io/<github-owner>/lead-cat`                                     |
-| Tag        | commit SHA on `main`, or `v*` on release tag (webhook sends this tag) |
-| Port       | `8080`                                                                |
-| Health     | `GET /api/health` (also in image `HEALTHCHECK`)                       |
-| Entrypoint | `/app/lead-cat` (runs migrations on start when `AUTO_MIGRATE=true`)   |
-
-**GHCR access:** make the package public, or add a registry credential in Dokploy with read-packages scope.
-
-**Do not build on Dokploy** — set deploy type to _Docker image_ and point at the GHCR image above.
-
-### GitHub Actions checklist
-
-| Type   | Name              |
-| ------ | ----------------- |
-| Secret | `DOKPLOY_WEBHOOK` |
-
-The Mini App frontend is compiled into the image with `VITE_AUTH_DEV_MODE=false`. No separate OIDC issuer is needed in CI.
-
-### Environment variables
-
-All variables are set by name in Dokploy's environment panel. Never paste real secrets into docs; use placeholders as shown.
-
-#### Required
+### Required env
 
 ```env
-# Telegram bot
 BOT_TOKEN=<telegram-bot-token>
 BOT_ADMIN_TELEGRAM_IDS=<comma-separated-telegram-user-ids>
-
-# Data stores
 DATABASE_URL=postgres://user:pass@host:5432/dbname?sslmode=require
 REDIS_URL=redis://:password@host:6379/0
-
-# Encryption & auth
 MASTER_ENCRYPTION_KEY=<min-32-char-random-secret>
 JWT_SECRET=<min-16-char-random-secret>
 JWT_ISSUER=lead-cat
 JWT_TTL_HOURS=168
-
-# App
-WEBAPP_URL=https://your-domain.example.com
-CORS_ALLOWED_ORIGINS=https://your-domain.example.com
 HTTP_ADDR=:8080
 AUTO_MIGRATE=true
 ```
 
-#### Optional / production tuning
+### Web auth + origins
 
 ```env
-# Logging
-LOG_LEVEL=info          # debug | info | warn | error
-LOG_FORMAT=json         # json (prod) | console (local)
-
-# Calendar
-CALENDAR_STUB=false     # true = skip real Google Calendar calls (staging/testing only)
-
-# Static files (override embedded default)
-STATIC_DIR=frontend/dist
+APP_BASE_URL=https://admin.your-domain.example.com   # admin origin (magic-link/SSO redirects)
+WEBAPP_URL=https://app.your-domain.example.com        # mini-app / bot deep links
+WEB_COOKIE_DOMAIN=                                    # set to a parent domain only if sharing cookies across subdomains
+WEB_SESSION_TTL_HOURS=168
+MAGIC_LINK_TTL_MINUTES=15
+CORS_ALLOWED_ORIGINS=https://admin.your-domain.example.com
 ```
 
-#### Variable reference
+With the nginx `/api` proxy the admin browser is same-origin with the API, so
+`CORS_ALLOWED_ORIGINS` only matters for any client that calls the API cross-origin.
 
-| Variable                 | Purpose                                                                |
-| ------------------------ | ---------------------------------------------------------------------- |
-| `BOT_TOKEN`              | Telegram Bot API token; required in production.                        |
-| `BOT_ADMIN_TELEGRAM_IDS` | Comma-separated Telegram user IDs granted the `admin` role in the app. |
-| `DATABASE_URL`           | Postgres connection string (source of truth for all data).             |
-| `REDIS_URL`              | Redis connection string used by the asynq job queue.                   |
-| `JWT_SECRET`             | HMAC secret for signing JWT access tokens.                             |
-| `JWT_ISSUER`             | `iss` claim embedded in issued JWTs.                                   |
-| `JWT_TTL_HOURS`          | Token lifetime in hours (default 168 = 7 days).                        |
-| `MASTER_ENCRYPTION_KEY`  | AES key for encrypting credentials at rest (Google SA JSON, etc.).     |
-| `CALENDAR_STUB`          | When `true`, bypasses real Google Calendar/Meet API (for staging).     |
-| `WEBAPP_URL`             | Public HTTPS base URL of the app; used in bot deep links and CORS.     |
-| `STATIC_DIR`             | Directory for embedded frontend assets (default `frontend/dist`).      |
-| `HTTP_ADDR`              | TCP address the server listens on (default `:8080`).                   |
-| `AUTO_MIGRATE`           | When `true`, runs forward-only SQL migrations on startup.              |
-| `CORS_ALLOWED_ORIGINS`   | Comma-separated allowed origins for CORS; defaults to `WEBAPP_URL`.    |
-| `LOG_LEVEL`              | Structured log verbosity passed to zap.                                |
-| `LOG_FORMAT`             | `json` for production; `console` for human-readable local output.      |
+### Optional
 
-### Domains
+```env
+GOOGLE_OAUTH_CLIENT_ID=        # SSO; empty disables the provider
+GOOGLE_OAUTH_CLIENT_SECRET=
+MICROSOFT_OAUTH_CLIENT_ID=
+MICROSOFT_OAUTH_CLIENT_SECRET=
+SMTP_HOST=                     # outbound email for magic links / invites
+SMTP_PORT=587
+SMTP_USERNAME=
+SMTP_PASSWORD=
+SMTP_FROM=Lead Cat <no-reply@your-domain.example.com>
+LOG_LEVEL=info                 # debug | info | warn | error
+LOG_FORMAT=json                # json (prod) | console (local)
+CALENDAR_STUB=false            # true = skip real Google Calendar calls (staging)
+```
 
-- App: `https://your-domain.example.com` → port 8080 (Mini App + `/api`)
+The backend no longer serves the frontend; leave `STATIC_DIR` unset.
 
-## 4. CI deploy webhook
+## 4. landing
 
-Configure the Dokploy deploy hook to trigger on image push (`.github/workflows/_docker.yml` sets the `DOKPLOY_WEBHOOK` secret).
+| Item       | Value                                   |
+| ---------- | --------------------------------------- |
+| Dockerfile | `apps/landing/Dockerfile` (context `.`) |
+| Port       | `3000` (`PORT` env, default 3000)       |
+| Runtime    | Node SSR via `react-router-serve`       |
 
-## 5. Google Calendar / Meet integration
+No env required. Point its domain (e.g. `https://your-domain.example.com`) at port 3000.
 
-The Google service account is configured at runtime — no env var is needed for the credentials themselves. An admin uses the Mini App admin overlay (Profile → Admin → Integrations) to paste the service account JSON and verify the connection. This calls `PATCH /api/miniapp/admin/integrations`. Credentials are encrypted with `MASTER_ENCRYPTION_KEY` before storage.
+## 5. admin
 
-Set `CALENDAR_STUB=false` (or omit it) in production to use the real Google API.
+| Item       | Value                                                      |
+| ---------- | ---------------------------------------------------------- |
+| Dockerfile | `apps/admin/Dockerfile` (context `.`)                      |
+| Port       | `80`                                                       |
+| Env        | `API_UPSTREAM=http://backend:8080` (internal backend URL)  |
+| Build arg  | `VITE_API_URL` — leave empty (relative `/api` via proxy)   |
 
-## 6. Employee directory
+Domain example: `https://admin.your-domain.example.com` → port 80. Set `API_UPSTREAM`
+to the backend's internal service URL on the Dokploy network.
 
-The employee directory is embedded in the binary as a CSV file at `backend/internal/platform/employeedir/employees.csv`. To update the directory: edit the CSV, rebuild the image, and redeploy. No env var or external service is required.
+## 6. mini-app
+
+| Item       | Value                                                                  |
+| ---------- | ---------------------------------------------------------------------- |
+| Dockerfile | `apps/mini-app/Dockerfile` (context `.`)                               |
+| Port       | `80`                                                                   |
+| Env        | `API_UPSTREAM=http://backend:8080`                                     |
+| Build args | `VITE_API_URL` (empty), `VITE_BOT_USERNAME`, `VITE_TMA_DEV_TG_ID` (empty in prod) |
+
+Domain example: `https://app.your-domain.example.com` → port 80. Configure this URL as
+the Telegram Mini App URL in BotFather.
+
+## Local full-stack run
+
+```bash
+cp deploy/.env.example deploy/.env   # fill secrets
+docker compose -f deploy/docker-compose.full.yml up --build
+```
+
+Brings up Postgres, Redis, mailpit, and all four services wired together
+(backend :8080, landing :3000, admin :3001, mini-app :3002). `deploy/docker-compose.yml`
+remains the lightweight infra-only stack used by `make up` for local development.
+
+## Google Calendar / Meet integration
+
+The Google service account is configured at runtime — no env var holds the credentials.
+An admin pastes the service-account JSON via the Mini App admin overlay
+(Profile → Admin → Integrations), which calls `PATCH /api/miniapp/admin/integrations`.
+Credentials are encrypted with `MASTER_ENCRYPTION_KEY` before storage. Set
+`CALENDAR_STUB=false` (or omit) in production.
+
+## Employee directory
+
+Embedded in the backend binary as `apps/backend/internal/platform/employeedir/employees.csv`.
+To update: edit the CSV, rebuild the `backend` image, redeploy.
 
 ## Rollback
 
-Redeploy the previous image tag in Dokploy. Migrations are forward-only — test on staging before promoting to production.
-
----
+Redeploy the previous image tag per service in Dokploy. Migrations are forward-only —
+test on staging before promoting.
 
 ## Dev-only variables
 
-| Variable          | Status                                              |
-| ----------------- | --------------------------------------------------- |
-| `AUTH_DEV_MODE`   | Mini App dev bypass — **must not be set in production**. |
-| `VITE_AUTH_DEV_MODE` / `VITE_MINIAPP_DEV_TG_ID` | Frontend browser dev — local only. |
+| Variable                              | Status                                            |
+| ------------------------------------- | ------------------------------------------------- |
+| `AUTH_DEV_MODE`                       | Mini App dev bypass — **must not be set in prod**. |
+| `VITE_TMA_DEV_TG_ID`                  | Frontend browser dev (mini-app) — local only.     |

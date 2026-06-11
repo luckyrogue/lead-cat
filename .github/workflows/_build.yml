@@ -31,7 +31,7 @@ jobs:
       - run: go build -o /dev/null ./cmd/server ./cmd/migrate
 
   frontend:
-    name: pnpm / typecheck + build
+    name: pnpm / build workspace
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -46,11 +46,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       - run: pnpm install --frozen-lockfile
-        working-directory: frontend
-      - run: pnpm typecheck
-        working-directory: frontend
-      - run: pnpm build
-        working-directory: frontend
+      - run: pnpm --filter admin --filter mini-app --filter landing build
