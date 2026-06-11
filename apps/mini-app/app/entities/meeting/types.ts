@@ -14,6 +14,8 @@ export type Meeting = {
   status: string
 }
 
+export type MeetingRecurrence = "once" | "daily" | "weekly" | "monthly"
+
 export type CreateMeetingInput = {
   dept: string
   type: string
@@ -22,6 +24,7 @@ export type CreateMeetingInput = {
   start: string
   end: string
   recurrence: string
+  recurrence_until?: string
   desc: string
   participants: string[]
 }
@@ -59,3 +62,7 @@ export type FreeSlot = {
 }
 
 export type MeetingMutationScope = "this" | "whole"
+
+export function isSeriesMeeting(meeting: Pick<Meeting, "rec">): boolean {
+  return meeting.rec !== "" && meeting.rec !== "once"
+}

@@ -12,7 +12,12 @@ import {
 import { useEffect, useState } from "react"
 
 import { useUpdateMeeting } from "~/entities/meeting/mutations"
-import type { Meeting } from "~/entities/meeting/types"
+import {
+  isSeriesMeeting,
+  type Meeting,
+  type MeetingMutationScope,
+} from "~/entities/meeting/types"
+import { ScopeToggle } from "~/features/meetings/components/scope-toggle"
 
 type Props = {
   open: boolean
@@ -27,6 +32,10 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
   const [start, setStart] = useState(meeting.start)
   const [end, setEnd] = useState(meeting.end)
   const [desc, setDesc] = useState(meeting.desc)
+  const [scope, setScope] = useState<MeetingMutationScope>("this")
+
+  const series = isSeriesMeeting(meeting)
+  const lockDate = series && scope === "whole"
 
   useEffect(() => {
     if (open) {
@@ -35,6 +44,7 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
       setStart(meeting.start)
       setEnd(meeting.end)
       setDesc(meeting.desc)
+      setScope("this")
     }
   }, [open, meeting])
 
@@ -42,8 +52,14 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
     update.mutate(
       {
         id: meeting.id,
-        scope: "this",
-        input: { type, date, start, end, desc },
+        scope,
+        input: {
+          type,
+          start,
+          end,
+          desc,
+          ...(lockDate ? {} : { date }),
+        },
       },
       {
         onSuccess: () => {
@@ -62,18 +78,32 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
           <DialogTitle>Edit meeting</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-3">
+          {series ? <ScopeToggle value={scope} onChange={setScope} /> : null}
           <Field label="Title">
             <Input value={type} onChange={(e) => setType(e.target.value)} />
           </Field>
-          <Field label="Date">
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          <Field label={lockDate ? "Date (locked for series)" : "Date"}>
+            <Input
+              type="date"
+              value={date}
+              disabled={lockDate}
+              onChange={(e) => setDate(e.target.value)}
+            />
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Start">
-              <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
+              <Input
+                type="time"
+                value={start}
+                onChange={(e) => setStart(e.target.value)}
+              />
             </Field>
             <Field label="End">
-              <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
+              <Input
+                type="time"
+                value={end}
+                onChange={(e) => setEnd(e.target.value)}
+              />
             </Field>
           </div>
           <Field label="Description">
@@ -93,7 +123,13 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
   )
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string
+  children: React.ReactNode
+}) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label>{label}</Label>

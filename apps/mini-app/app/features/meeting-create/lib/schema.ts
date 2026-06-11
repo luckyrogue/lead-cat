@@ -7,11 +7,17 @@ export const createMeetingSchema = z
     date: z.string().min(1, "Date is required"),
     start: z.string().min(1, "Start time is required"),
     end: z.string().min(1, "End time is required"),
+    recurrence: z.enum(["once", "daily", "weekly", "monthly"]),
+    recurrence_until: z.string(),
     desc: z.string(),
   })
   .refine((v) => v.end > v.start, {
     message: "End must be after start",
     path: ["end"],
+  })
+  .refine((v) => v.recurrence === "once" || v.recurrence_until.length > 0, {
+    message: "Pick an end date for a repeating meeting",
+    path: ["recurrence_until"],
   })
 
 export type CreateMeetingForm = z.infer<typeof createMeetingSchema>

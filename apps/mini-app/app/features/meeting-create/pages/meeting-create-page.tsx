@@ -21,13 +21,16 @@ export function MeetingCreatePage() {
   const navigate = useNavigate()
   const create = useCreateMeeting()
   const [participants, setParticipants] = useState<Employee[]>([])
-  const [conflicts, setConflicts] = useState<OccurrenceConflicts[] | undefined>(undefined)
+  const [conflicts, setConflicts] = useState<OccurrenceConflicts[] | undefined>(
+    undefined
+  )
   const [checking, setChecking] = useState(false)
 
   const {
     register,
     handleSubmit,
     getValues,
+    watch,
     formState: { errors },
   } = useForm<CreateMeetingForm>({
     resolver: zodResolver(createMeetingSchema),
@@ -37,9 +40,13 @@ export function MeetingCreatePage() {
       date: todayIso(),
       start: "10:00",
       end: addMinutesToTime("10:00", 30),
+      recurrence: "once",
+      recurrence_until: "",
       desc: "",
     },
   })
+
+  const recurrence = watch("recurrence")
 
   async function onCheckConflicts() {
     const v = getValues()
@@ -73,7 +80,9 @@ export function MeetingCreatePage() {
         date: values.date,
         start: values.start,
         end: values.end,
-        recurrence: "once",
+        recurrence: values.recurrence,
+        recurrence_until:
+          values.recurrence === "once" ? undefined : values.recurrence_until,
         desc: values.desc,
         participants: participants.map((p) => p.email),
       },
@@ -116,6 +125,28 @@ export function MeetingCreatePage() {
           <Field label="End" error={errors.end?.message}>
             <Input type="time" {...register("end")} />
           </Field>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Repeats" error={errors.recurrence?.message}>
+            <select
+              className="h-10 rounded-[var(--radius)] border border-border bg-background px-3 text-sm"
+              {...register("recurrence")}
+            >
+              <option value="once">One-time</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </Field>
+          {recurrence !== "once" ? (
+            <Field
+              label="Repeat until"
+              error={errors.recurrence_until?.message}
+            >
+              <Input type="date" {...register("recurrence_until")} />
+            </Field>
+          ) : null}
         </div>
 
         <div className="flex flex-col gap-1.5">

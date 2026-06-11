@@ -14,13 +14,12 @@ import { useState } from "react"
 import { useNavigate, useParams } from "react-router"
 
 import { EmptyState, ErrorState, LoadingState } from "~/components/states"
+import { MeetingCancelDialog } from "~/features/meetings/components/meeting-cancel-dialog"
 import { MeetingEditDialog } from "~/features/meetings/components/meeting-edit-dialog"
 import { myMeetingsQuery } from "~/entities/meeting/queries"
-import { useDeleteMeeting } from "~/entities/meeting/mutations"
 import type { Meeting } from "~/entities/meeting/types"
 import { useAuth } from "~/shared/auth/auth-context"
 import { formatDateLong, formatTimeRange } from "~/shared/lib/format"
-import { toast } from "@leadcat/ui"
 
 export function MeetingDetailPage() {
   const { meetingId = "" } = useParams()
@@ -28,29 +27,10 @@ export function MeetingDetailPage() {
   const { user } = useAuth()
   const meetings = useQuery(myMeetingsQuery("all"))
   const [editing, setEditing] = useState(false)
-  const del = useDeleteMeeting()
+  const [cancelling, setCancelling] = useState(false)
 
   const meeting = (meetings.data ?? []).find((m) => m.id === meetingId)
-  const canManage = Boolean(meeting && user && meeting.organizer === user.name)
-
-  function onDelete() {
-    if (!meeting) {
-      return
-    }
-    if (!window.confirm("Cancel this meeting?")) {
-      return
-    }
-    del.mutate(
-      { id: meeting.id, scope: "this" },
-      {
-        onSuccess: () => {
-          toast.success("Meeting cancelled")
-          void navigate("/meetings")
-        },
-        onError: () => toast.error("Couldn't cancel meeting"),
-      }
-    )
-  }
+  const canManage = Boolean(meeting && user && meeting.organizer === user.email)
 
   return (
     <div className="flex flex-col gap-4">
@@ -66,21 +46,34 @@ export function MeetingDetailPage() {
       {meetings.isLoading ? (
         <LoadingState />
       ) : meetings.isError ? (
-        <ErrorState title="Couldn't load meeting" onRetry={() => meetings.refetch()} />
+        <ErrorState
+          title="Couldn't load meeting"
+          onRetry={() => meetings.refetch()}
+        />
       ) : !meeting ? (
         <EmptyState title="Meeting not found" />
       ) : (
         <MeetingDetail
           meeting={meeting}
           canManage={canManage}
-          deleting={del.isPending}
           onEdit={() => setEditing(true)}
-          onDelete={onDelete}
+          onDelete={() => setCancelling(true)}
         />
       )}
 
       {meeting ? (
-        <MeetingEditDialog open={editing} onOpenChange={setEditing} meeting={meeting} />
+        <>
+          <MeetingEditDialog
+            open={editing}
+            onOpenChange={setEditing}
+            meeting={meeting}
+          />
+          <MeetingCancelDialog
+            open={cancelling}
+            onOpenChange={setCancelling}
+            meeting={meeting}
+          />
+        </>
       ) : null}
     </div>
   )
@@ -89,12 +82,11 @@ export function MeetingDetailPage() {
 type DetailProps = {
   meeting: Meeting
   canManage: boolean
-  deleting: boolean
   onEdit: () => void
   onDelete: () => void
 }
 
-function MeetingDetail({ meeting, canManage, deleting, onEdit, onDelete }: DetailProps) {
+function MeetingDetail({ meeting, canManage, onEdit, onDelete }: DetailProps) {
   const title = meeting.type || meeting.dept || "Meeting"
   return (
     <div className="flex flex-col gap-4">
@@ -108,9 +100,17 @@ function MeetingDetail({ meeting, canManage, deleting, onEdit, onDelete }: Detai
       </div>
 
       <div className="flex flex-col gap-3 rounded-[var(--radius)] border border-border/60 bg-card p-4">
-        <Row icon={<CalendarClock className="size-4" />} text={formatDateLong(meeting.date)} />
-        <Row icon={<Clock className="size-4" />} text={formatTimeRange(meeting.start, meeting.end)} />
-        {meeting.host ? <Row icon={<MapPin className="size-4" />} text={meeting.host} /> : null}
+        <Row
+          icon={<CalendarClock className="size-4" />}
+          text={formatDateLong(meeting.date)}
+        />
+        <Row
+          icon={<Clock className="size-4" />}
+          text={formatTimeRange(meeting.start, meeting.end)}
+        />
+        {meeting.host ? (
+          <Row icon={<MapPin className="size-4" />} text={meeting.host} />
+        ) : null}
         {meeting.meet_link ? (
           <a
             href={meeting.meet_link}
@@ -125,7 +125,9 @@ function MeetingDetail({ meeting, canManage, deleting, onEdit, onDelete }: Detai
       </div>
 
       {meeting.desc ? (
-        <p className="whitespace-pre-wrap text-sm text-muted-foreground">{meeting.desc}</p>
+        <p className="text-sm whitespace-pre-wrap text-muted-foreground">
+          {meeting.desc}
+        </p>
       ) : null}
 
       {meeting.participants.length > 0 ? (
@@ -150,7 +152,7 @@ function MeetingDetail({ meeting, canManage, deleting, onEdit, onDelete }: Detai
             <Pencil className="size-4" />
             Edit
           </Button>
-          <Button variant="destructive" className="flex-1" onClick={onDelete} disabled={deleting}>
+          <Button variant="destructive" className="flex-1" onClick={onDelete}>
             <Trash2 className="size-4" />
             Cancel
           </Button>
