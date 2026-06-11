@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button, ChevronLeft, Input, Label, toast } from "@leadcat/ui"
 import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { useNavigate } from "react-router"
 
 import { EmployeePicker } from "~/components/employee-picker"
@@ -11,6 +11,7 @@ import {
   createMeetingSchema,
   type CreateMeetingForm,
 } from "~/features/meeting-create/lib/schema"
+import { WEEKDAYS, toggleDay } from "~/features/meeting-create/lib/weekdays"
 import { fetchConflicts } from "~/entities/meeting/api"
 import { useCreateMeeting } from "~/entities/meeting/mutations"
 import type { Employee } from "~/entities/employee/types"
@@ -31,6 +32,7 @@ export function MeetingCreatePage() {
     handleSubmit,
     getValues,
     watch,
+    control,
     formState: { errors },
   } = useForm<CreateMeetingForm>({
     resolver: zodResolver(createMeetingSchema),
@@ -42,6 +44,7 @@ export function MeetingCreatePage() {
       end: addMinutesToTime("10:00", 30),
       recurrence: "once",
       recurrence_until: "",
+      recurrence_days: [],
       desc: "",
     },
   })
@@ -83,6 +86,8 @@ export function MeetingCreatePage() {
         recurrence: values.recurrence,
         recurrence_until:
           values.recurrence === "once" ? undefined : values.recurrence_until,
+        recurrence_days:
+          values.recurrence === "custom" ? values.recurrence_days : undefined,
         desc: values.desc,
         participants: participants.map((p) => p.email),
       },
@@ -137,6 +142,7 @@ export function MeetingCreatePage() {
               <option value="daily">Daily</option>
               <option value="weekly">Weekly</option>
               <option value="monthly">Monthly</option>
+              <option value="custom">Custom days</option>
             </select>
           </Field>
           {recurrence !== "once" ? (
@@ -148,6 +154,39 @@ export function MeetingCreatePage() {
             </Field>
           ) : null}
         </div>
+
+        {recurrence === "custom" ? (
+          <Field label="On days" error={errors.recurrence_days?.message}>
+            <Controller
+              control={control}
+              name="recurrence_days"
+              render={({ field }) => (
+                <div className="flex flex-wrap gap-2">
+                  {WEEKDAYS.map((day) => {
+                    const active = field.value.includes(day.value)
+                    return (
+                      <button
+                        key={day.value}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() =>
+                          field.onChange(toggleDay(field.value, day.value))
+                        }
+                        className={
+                          active
+                            ? "rounded-[var(--radius)] border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
+                            : "rounded-[var(--radius)] border border-border bg-background px-3 py-1.5 text-sm text-foreground"
+                        }
+                      >
+                        {day.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            />
+          </Field>
+        ) : null}
 
         <div className="flex flex-col gap-1.5">
           <Label>Participants</Label>

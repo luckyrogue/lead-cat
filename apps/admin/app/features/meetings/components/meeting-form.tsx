@@ -17,8 +17,23 @@ import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 
 import type { MeetingRecurrence, MeetingScope } from "~/entities/meeting/types"
+import { WEEKDAYS, toggleDay } from "~/features/meetings/lib/weekdays"
 
-const RECURRENCES: MeetingRecurrence[] = ["once", "daily", "weekly", "monthly"]
+const RECURRENCES: MeetingRecurrence[] = [
+  "once",
+  "daily",
+  "weekly",
+  "monthly",
+  "custom",
+]
+
+const RECURRENCE_LABELS: Record<MeetingRecurrence, string> = {
+  once: "One-time",
+  daily: "Daily",
+  weekly: "Weekly",
+  monthly: "Monthly",
+  custom: "Custom days",
+}
 
 const schema = z
   .object({
@@ -28,8 +43,9 @@ const schema = z
     date: z.string().min(1, "Date is required"),
     start: z.string().min(1, "Start time is required"),
     end: z.string().min(1, "End time is required"),
-    recurrence: z.enum(["once", "daily", "weekly", "monthly"]),
+    recurrence: z.enum(["once", "daily", "weekly", "monthly", "custom"]),
     recurrence_until: z.string(),
+    recurrence_days: z.array(z.number().int().min(1).max(7)),
     participants: z.string(),
     desc: z.string(),
   })
@@ -40,6 +56,10 @@ const schema = z
   .refine((v) => v.recurrence === "once" || v.recurrence_until.length > 0, {
     path: ["recurrence_until"],
     message: "Pick an end date for a repeating meeting",
+  })
+  .refine((v) => v.recurrence !== "custom" || v.recurrence_days.length > 0, {
+    path: ["recurrence_days"],
+    message: "Pick at least one weekday",
   })
 
 export type MeetingFormValues = z.infer<typeof schema>
@@ -63,6 +83,7 @@ const EMPTY: MeetingFormValues = {
   end: "",
   recurrence: "once",
   recurrence_until: "",
+  recurrence_days: [],
   participants: "",
   desc: "",
 }
@@ -144,36 +165,70 @@ export function MeetingForm({
       </div>
 
       {!isEdit ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Repeats">
-            <Controller
-              control={control}
-              name="recurrence"
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {RECURRENCES.map((r) => (
-                      <SelectItem key={r} value={r}>
-                        {r}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-          </Field>
-          {recurrence !== "once" ? (
-            <Field
-              label="Repeat until"
-              error={errors.recurrence_until?.message}
-            >
-              <Input type="date" {...register("recurrence_until")} />
+        <>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Repeats">
+              <Controller
+                control={control}
+                name="recurrence"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {RECURRENCES.map((r) => (
+                        <SelectItem key={r} value={r}>
+                          {RECURRENCE_LABELS[r]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </Field>
+            {recurrence !== "once" ? (
+              <Field
+                label="Repeat until"
+                error={errors.recurrence_until?.message}
+              >
+                <Input type="date" {...register("recurrence_until")} />
+              </Field>
+            ) : null}
+          </div>
+          {recurrence === "custom" ? (
+            <Field label="On days" error={errors.recurrence_days?.message}>
+              <Controller
+                control={control}
+                name="recurrence_days"
+                render={({ field }) => (
+                  <div className="flex flex-wrap gap-2">
+                    {WEEKDAYS.map((day) => {
+                      const active = field.value.includes(day.value)
+                      return (
+                        <button
+                          key={day.value}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() =>
+                            field.onChange(toggleDay(field.value, day.value))
+                          }
+                          className={
+                            active
+                              ? "rounded-[calc(var(--radius)*0.75)] border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
+                              : "rounded-[calc(var(--radius)*0.75)] border border-border bg-background px-3 py-1.5 text-sm text-foreground transition hover:bg-muted"
+                          }
+                        >
+                          {day.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              />
             </Field>
           ) : null}
-        </div>
+        </>
       ) : null}
 
       {!isEdit ? (

@@ -24,7 +24,12 @@ export type Meeting = {
   participants: MeetingParticipant[]
 }
 
-export type MeetingRecurrence = "once" | "daily" | "weekly" | "monthly"
+export type MeetingRecurrence =
+  | "once"
+  | "daily"
+  | "weekly"
+  | "monthly"
+  | "custom"
 
 export type MeetingScope = "this" | "whole"
 
@@ -43,6 +48,7 @@ export type CreateMeetingInput = {
   desc?: string
   participants?: string[]
   recurrence_until?: string
+  recurrence_days?: number[]
 }
 
 export type UpdateMeetingInput = {

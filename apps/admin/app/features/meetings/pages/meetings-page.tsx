@@ -64,6 +64,8 @@ function toCreateInput(values: MeetingFormValues): CreateMeetingInput {
     participants: splitParticipants(values.participants),
     recurrence_until:
       values.recurrence === "once" ? undefined : values.recurrence_until,
+    recurrence_days:
+      values.recurrence === "custom" ? values.recurrence_days : undefined,
   }
 }
 
