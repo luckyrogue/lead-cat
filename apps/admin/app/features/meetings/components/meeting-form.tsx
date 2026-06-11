@@ -12,10 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@leadcat/ui"
+import { useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 
-import type { MeetingRecurrence } from "~/entities/meeting/types"
+import type { MeetingRecurrence, MeetingScope } from "~/entities/meeting/types"
 
 const RECURRENCES: MeetingRecurrence[] = ["once", "daily", "weekly", "monthly"]
 
@@ -48,8 +49,9 @@ export type MeetingFormDefaults = Partial<MeetingFormValues>
 type MeetingFormProps = {
   mode: "create" | "edit"
   pending: boolean
+  series?: boolean
   defaults?: MeetingFormDefaults
-  onSubmit: (values: MeetingFormValues) => void
+  onSubmit: (values: MeetingFormValues, scope: MeetingScope) => void
 }
 
 const EMPTY: MeetingFormValues = {
@@ -68,6 +70,7 @@ const EMPTY: MeetingFormValues = {
 export function MeetingForm({
   mode,
   pending,
+  series = false,
   defaults,
   onSubmit,
 }: MeetingFormProps) {
@@ -84,13 +87,33 @@ export function MeetingForm({
 
   const recurrence = watch("recurrence")
   const isEdit = mode === "edit"
+  const showScope = isEdit && series
+  const [scope, setScope] = useState<MeetingScope>("this")
+  const lockDate = showScope && scope === "whole"
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit((values) => onSubmit(values, scope))}
       className="flex flex-col gap-4"
       id="meeting-form"
     >
+      {showScope ? (
+        <Field label="Apply to">
+          <Select
+            value={scope}
+            onValueChange={(value) => setScope(value as MeetingScope)}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="this">This meeting only</SelectItem>
+              <SelectItem value="whole">The whole series</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+      ) : null}
+
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Department" error={errors.dept?.message}>
           <Input placeholder="Engineering" {...register("dept")} />
@@ -105,8 +128,12 @@ export function MeetingForm({
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Field label="Date" error={errors.date?.message}>
-          <Input type="date" {...register("date")} />
+        <Field
+          label="Date"
+          hint={lockDate ? "Locked for series edits" : undefined}
+          error={errors.date?.message}
+        >
+          <Input type="date" disabled={lockDate} {...register("date")} />
         </Field>
         <Field label="Start" error={errors.start?.message}>
           <Input type="time" {...register("start")} />

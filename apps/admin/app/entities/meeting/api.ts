@@ -2,6 +2,7 @@ import { api } from "~/shared/api/client"
 import type {
   CreateMeetingInput,
   Meeting,
+  MeetingScope,
   UpdateMeetingInput,
 } from "~/entities/meeting/types"
 
@@ -26,18 +27,23 @@ export async function createMeeting(
 export async function updateMeeting(
   orgId: string,
   meetingId: string,
-  input: UpdateMeetingInput
+  input: UpdateMeetingInput,
+  scope: MeetingScope = "this"
 ): Promise<Meeting> {
   const { data } = await api.patch<{ meeting: Meeting }>(
     `/api/orgs/${orgId}/meetings/${meetingId}`,
-    input
+    input,
+    { params: { scope } }
   )
   return data.meeting
 }
 
 export async function deleteMeeting(
   orgId: string,
-  meetingId: string
+  meetingId: string,
+  scope: MeetingScope = "this"
 ): Promise<void> {
-  await api.delete(`/api/orgs/${orgId}/meetings/${meetingId}`)
+  await api.delete(`/api/orgs/${orgId}/meetings/${meetingId}`, {
+    params: { scope },
+  })
 }

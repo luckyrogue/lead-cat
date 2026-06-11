@@ -8,6 +8,7 @@ import {
 } from "~/entities/meeting/api"
 import type {
   CreateMeetingInput,
+  MeetingScope,
   UpdateMeetingInput,
 } from "~/entities/meeting/types"
 
@@ -36,8 +37,11 @@ export function useCreateMeeting(orgId: string) {
 export function useUpdateMeeting(orgId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (input: { meetingId: string; values: UpdateMeetingInput }) =>
-      updateMeeting(orgId, input.meetingId, input.values),
+    mutationFn: (input: {
+      meetingId: string
+      values: UpdateMeetingInput
+      scope: MeetingScope
+    }) => updateMeeting(orgId, input.meetingId, input.values, input.scope),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: meetingKeys.list(orgId) })
     },
@@ -47,7 +51,8 @@ export function useUpdateMeeting(orgId: string) {
 export function useDeleteMeeting(orgId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (meetingId: string) => deleteMeeting(orgId, meetingId),
+    mutationFn: (input: { meetingId: string; scope: MeetingScope }) =>
+      deleteMeeting(orgId, input.meetingId, input.scope),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: meetingKeys.list(orgId) })
     },

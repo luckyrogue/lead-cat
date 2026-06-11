@@ -26,6 +26,12 @@ export type Meeting = {
 
 export type MeetingRecurrence = "once" | "daily" | "weekly" | "monthly"
 
+export type MeetingScope = "this" | "whole"
+
+export function isSeries(meeting: Meeting): boolean {
+  return meeting.recurrence !== "once" || Boolean(meeting.series_id)
+}
+
 export type CreateMeetingInput = {
   dept: string
   type: string

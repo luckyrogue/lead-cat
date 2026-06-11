@@ -10,6 +10,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@leadcat/ui"
 
 import { ListPageShell } from "~/components/list-page-shell"
@@ -19,10 +25,12 @@ import {
   useMeetings,
   useUpdateMeeting,
 } from "~/entities/meeting/queries"
-import type {
-  CreateMeetingInput,
-  Meeting,
-  UpdateMeetingInput,
+import {
+  isSeries,
+  type CreateMeetingInput,
+  type Meeting,
+  type MeetingScope,
+  type UpdateMeetingInput,
 } from "~/entities/meeting/types"
 import {
   MeetingForm,
@@ -57,12 +65,15 @@ function toCreateInput(values: MeetingFormValues): CreateMeetingInput {
   }
 }
 
-function toUpdateInput(values: MeetingFormValues): UpdateMeetingInput {
+function toUpdateInput(
+  values: MeetingFormValues,
+  scope: MeetingScope
+): UpdateMeetingInput {
   return {
     dept: values.dept,
     type: values.type,
     host: values.host || undefined,
-    date: values.date,
+    date: scope === "whole" ? undefined : values.date,
     start: values.start,
     end: values.end,
     desc: values.desc,
@@ -110,6 +121,12 @@ export function MeetingsPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const [toEdit, setToEdit] = useState<Meeting | null>(null)
   const [toDelete, setToDelete] = useState<Meeting | null>(null)
+  const [deleteScope, setDeleteScope] = useState<MeetingScope>("this")
+
+  function openDelete(meeting: Meeting) {
+    setDeleteScope("this")
+    setToDelete(meeting)
+  }
 
   function handleCreate(values: MeetingFormValues) {
     createMeeting.mutate(toCreateInput(values), {
@@ -121,12 +138,12 @@ export function MeetingsPage() {
     })
   }
 
-  function handleEdit(values: MeetingFormValues) {
+  function handleEdit(values: MeetingFormValues, scope: MeetingScope) {
     if (!toEdit) {
       return
     }
     updateMeeting.mutate(
-      { meetingId: toEdit.id, values: toUpdateInput(values) },
+      { meetingId: toEdit.id, values: toUpdateInput(values, scope), scope },
       {
         onSuccess: () => {
           toastSuccess("Meeting updated.")
@@ -141,16 +158,19 @@ export function MeetingsPage() {
     if (!toDelete) {
       return
     }
-    deleteMeeting.mutate(toDelete.id, {
-      onSuccess: () => {
-        toastSuccess("Meeting cancelled.")
-        setToDelete(null)
-      },
-      onError: (error) => {
-        toastError(error, "Could not cancel the meeting.")
-        setToDelete(null)
-      },
-    })
+    deleteMeeting.mutate(
+      { meetingId: toDelete.id, scope: deleteScope },
+      {
+        onSuccess: () => {
+          toastSuccess("Meeting cancelled.")
+          setToDelete(null)
+        },
+        onError: (error) => {
+          toastError(error, "Could not cancel the meeting.")
+          setToDelete(null)
+        },
+      }
+    )
   }
 
   return (
@@ -181,11 +201,11 @@ export function MeetingsPage() {
             updateMeeting.isPending
               ? (updateMeeting.variables?.meetingId ?? null)
               : deleteMeeting.isPending
-                ? (deleteMeeting.variables ?? null)
+                ? (deleteMeeting.variables?.meetingId ?? null)
                 : null
           }
           onEdit={setToEdit}
-          onDelete={setToDelete}
+          onDelete={openDelete}
         />
       </ListPageShell>
 
@@ -220,6 +240,7 @@ export function MeetingsPage() {
             <MeetingForm
               mode="edit"
               pending={updateMeeting.isPending}
+              series={isSeries(toEdit)}
               defaults={editDefaults(toEdit)}
               onSubmit={handleEdit}
             />
@@ -239,6 +260,23 @@ export function MeetingsPage() {
               This cannot be undone.
             </DialogDescription>
           </DialogHeader>
+          {toDelete && isSeries(toDelete) ? (
+            <div className="space-y-2">
+              <Label>Apply to</Label>
+              <Select
+                value={deleteScope}
+                onValueChange={(value) => setDeleteScope(value as MeetingScope)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="this">This meeting only</SelectItem>
+                  <SelectItem value="whole">The whole series</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          ) : null}
           <DialogFooter>
             <DialogClose asChild>
               <Button variant="outline">Keep meeting</Button>
