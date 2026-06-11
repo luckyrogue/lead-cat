@@ -6,10 +6,15 @@ export type Organization = {
   slug: string
 }
 
+export type OrgMemberStatus = "active" | "invited"
+
 export type OrgMember = {
-  user_id: string
+  user_id: string | null
   role: OrgRole
-  invited_email: string
+  email: string
+  name: string
+  status: OrgMemberStatus
+  invited_email: string | null
   telegram_username: string
 }
 

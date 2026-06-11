@@ -1,0 +1,43 @@
+import type { Meeting } from "~/entities/meeting/types"
+
+export function formatDateTime(value: string): string {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return "—"
+  }
+  return date.toLocaleString(undefined, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
+
+export function formatTimeRange(meeting: Meeting): string {
+  const start = new Date(meeting.starts_at)
+  const end = new Date(meeting.ends_at)
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return "—"
+  }
+  const time = (d: Date) =>
+    d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
+  return `${time(start)} – ${time(end)}`
+}
+
+export function recurrenceLabel(recurrence: string): string {
+  switch (recurrence) {
+    case "once":
+      return "One-time"
+    case "daily":
+      return "Daily"
+    case "weekly":
+      return "Weekly"
+    case "monthly":
+      return "Monthly"
+    case "custom":
+      return "Custom"
+    default:
+      return recurrence || "—"
+  }
+}

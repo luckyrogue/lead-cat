@@ -20,13 +20,7 @@ import type { OrgMember, OrgRole } from "~/entities/org/types"
 const ROLES: OrgRole[] = ["owner", "admin", "member"]
 
 function memberLabel(member: OrgMember) {
-  if (member.telegram_username) {
-    return `@${member.telegram_username}`
-  }
-  if (member.invited_email) {
-    return member.invited_email
-  }
-  return member.user_id
+  return member.name || member.email || member.telegram_username || "Member"
 }
 
 type MembersTableProps = {
@@ -50,26 +44,37 @@ export function MembersTable({
         <TableRow>
           <TableHead>Member</TableHead>
           <TableHead>Role</TableHead>
+          <TableHead>Status</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {members.map((member) => {
           const isPending = pendingUserId === member.user_id
+          const isLinked = Boolean(member.user_id)
+          const subline =
+            member.name && member.email
+              ? member.email
+              : member.telegram_username
           return (
-            <TableRow key={member.user_id}>
+            <TableRow key={member.user_id ?? member.email}>
               <TableCell>
                 <span className="font-medium text-foreground">
                   {memberLabel(member)}
                 </span>
+                {subline ? (
+                  <span className="block text-xs text-muted-foreground">
+                    {subline}
+                  </span>
+                ) : null}
               </TableCell>
               <TableCell>
-                {canManage ? (
+                {canManage && isLinked ? (
                   <Select
                     value={member.role}
                     disabled={isPending}
                     onValueChange={(value) =>
-                      onRoleChange(member.user_id, value as OrgRole)
+                      onRoleChange(member.user_id as string, value as OrgRole)
                     }
                   >
                     <SelectTrigger className="h-9 w-32">
@@ -87,8 +92,13 @@ export function MembersTable({
                   <Badge tone="muted">{member.role}</Badge>
                 )}
               </TableCell>
+              <TableCell>
+                <Badge tone={member.status === "active" ? "sunny" : "muted"}>
+                  {member.status}
+                </Badge>
+              </TableCell>
               <TableCell className="text-right">
-                {canManage ? (
+                {canManage && isLinked ? (
                   <Button
                     variant="ghost"
                     size="sm"

@@ -45,7 +45,7 @@ export function MembersPage() {
   }
 
   function confirmRemove() {
-    if (!toRemove) {
+    if (!toRemove || !toRemove.user_id) {
       return
     }
     removeMember.mutate(toRemove.user_id, {
