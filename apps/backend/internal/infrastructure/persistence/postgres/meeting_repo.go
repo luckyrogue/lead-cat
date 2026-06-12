@@ -3,9 +3,12 @@ package postgres
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
 const meetingCols = `id, organization_id, organizer_user_id, dept, type, host,
@@ -287,6 +290,40 @@ func (s *Store) CancelAllSeriesOccurrences(ctx context.Context, organizationID, 
 		return 0, err
 	}
 	return int(ct.RowsAffected()), nil
+}
+
+// meetingFilter builds the WHERE clause and ordered args for a filtered
+// meetings query. $1 is always organization_id.
+func meetingFilter(organizationID uuid.UUID, f model.MeetingFilter) (string, []any) {
+	args := []any{organizationID}
+	where := "organization_id = $1"
+	add := func(expr string, val any) {
+		args = append(args, val)
+		where += fmt.Sprintf(" AND %s $%d", expr, len(args))
+	}
+	switch f.Status {
+	case "scheduled", "cancelled":
+		add("status =", f.Status)
+	}
+	if f.From != nil {
+		add("starts_at >=", *f.From)
+	}
+	if f.To != nil {
+		add("starts_at <", *f.To)
+	}
+	if f.Dept != "" {
+		add("dept ILIKE", "%"+f.Dept+"%")
+	}
+	if f.Organizer != nil {
+		add("organizer_user_id =", *f.Organizer)
+	}
+	return where, args
+}
+
+// ListMeetingsFiltered returns the organization's meetings matching f, newest first.
+func (s *Store) ListMeetingsFiltered(ctx context.Context, organizationID uuid.UUID, f model.MeetingFilter) ([]Meeting, error) {
+	where, args := meetingFilter(organizationID, f)
+	return s.queryMeetings(ctx, `SELECT `+meetingCols+` FROM meetings WHERE `+where+` ORDER BY starts_at DESC`, args...)
 }
 
 func (s *Store) ListUpcomingMeetings(ctx context.Context, until time.Time) ([]Meeting, error) {

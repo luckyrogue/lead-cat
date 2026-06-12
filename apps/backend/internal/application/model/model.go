@@ -92,6 +92,15 @@ type MeetingWithTZ struct {
 	TZ string
 }
 
+// MeetingFilter narrows a meetings query. Zero value = no filtering.
+type MeetingFilter struct {
+	Status    string     // "scheduled" | "cancelled"; "" or "all" = any
+	From      *time.Time // inclusive lower bound on starts_at
+	To        *time.Time // exclusive upper bound on starts_at
+	Dept      string     // case-insensitive contains match when non-empty
+	Organizer *uuid.UUID // organizer_user_id when non-nil
+}
+
 type BotUser struct {
 	ID              uuid.UUID `json:"id"`
 	TelegramID      int64     `json:"telegram_id"`
