@@ -13,11 +13,7 @@ export default function LogoutPage() {
   useEffect(() => {
     let active = true
     async function run() {
-      try {
-        await logout()
-      } catch {
-        // ignore — clear local state regardless
-      }
+      await logout().catch(() => undefined)
       setActiveOrgId(null)
       getQueryClient().setQueryData(meQueryKey, null)
       getQueryClient().clear()

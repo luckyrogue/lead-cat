@@ -1,4 +1,3 @@
-// Package meeting_notifier sends Telegram DMs when a meeting is created or updated.
 package meeting_notifier
 
 import (
@@ -25,9 +24,6 @@ func New(store *postgres.Store, b *bot.Bot, log *zap.Logger) *Notifier {
 	return &Notifier{store: store, bot: b, log: log}
 }
 
-// HandleCreated DMs the meeting's recipients. Returns an error only when the
-// meeting/workspace/recipients cannot be read (asynq should retry); a single
-// failed send is logged and skipped so a retry does not re-DM everyone else.
 func (n *Notifier) HandleCreated(ctx context.Context, organizationID, meetingID uuid.UUID) error {
 	m, err := n.store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
@@ -69,12 +65,10 @@ func (n *Notifier) HandleCreated(ctx context.Context, organizationID, meetingID 
 	return nil
 }
 
-// HandleParticipantAdded DMs a newly-added participant (if they have a bot account).
 func (n *Notifier) HandleParticipantAdded(ctx context.Context, organizationID, meetingID uuid.UUID, email string) error {
 	return n.notifyParticipant(ctx, organizationID, meetingID, email, true)
 }
 
-// HandleParticipantRemoved DMs a removed participant (if they have a bot account).
 func (n *Notifier) HandleParticipantRemoved(ctx context.Context, organizationID, meetingID uuid.UUID, email string) error {
 	return n.notifyParticipant(ctx, organizationID, meetingID, email, false)
 }
@@ -117,9 +111,6 @@ func (n *Notifier) notifyParticipant(ctx context.Context, organizationID, meetin
 	return nil
 }
 
-// HandleCancelled DMs the meeting's recipients that it was cancelled. The meeting
-// is already status='cancelled' but GetMeeting has no status filter. Best-effort
-// sends; returns an error only on read failures (asynq retries before any send).
 func (n *Notifier) HandleCancelled(ctx context.Context, organizationID, meetingID uuid.UUID) error {
 	m, err := n.store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
@@ -154,9 +145,6 @@ func (n *Notifier) HandleCancelled(ctx context.Context, organizationID, meetingI
 	return nil
 }
 
-// HandleUpdated DMs the meeting's recipients that it changed. Like HandleCreated
-// it returns an error only on read failures (asynq retries before any send);
-// sends are best-effort. No dedup: each edit is its own notification.
 func (n *Notifier) HandleUpdated(ctx context.Context, organizationID, meetingID uuid.UUID) error {
 	m, err := n.store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {

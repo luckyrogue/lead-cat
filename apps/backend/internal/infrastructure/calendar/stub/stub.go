@@ -1,5 +1,3 @@
-// Package stub is a no-network CalendarService used locally and in tests until
-// the real Google Calendar adapter lands. It fabricates event IDs and Meet links.
 package stub
 
 import (

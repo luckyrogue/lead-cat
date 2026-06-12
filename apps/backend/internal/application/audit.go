@@ -10,7 +10,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
-// auditWhitelist maps action -> allowed detail keys.
 var auditWhitelist = map[string]map[string]struct{}{
 	"google_config_updated":   {"subject": {}, "calendar_id": {}, "has_new_sa_json": {}},
 	"google_verified":         {"ok": {}, "calendar_summary": {}, "time_zone": {}, "error_code": {}},
@@ -21,8 +20,6 @@ var auditWhitelist = map[string]map[string]struct{}{
 	"org_member_removed":      {"target_user_id": {}},
 }
 
-// sanitizeAuditDetails filters details by the action's whitelist. Returns the
-// JSON-encoded surviving keys + the list of dropped keys for logging.
 func sanitizeAuditDetails(action string, details map[string]any) (json.RawMessage, []string) {
 	wl := auditWhitelist[action]
 	clean := map[string]any{}
@@ -38,35 +35,28 @@ func sanitizeAuditDetails(action string, details map[string]any) (json.RawMessag
 	return b, dropped
 }
 
-// AuditContext carries the actor identity through the request lifecycle.
 type AuditContext struct {
 	UserID     uuid.UUID
 	TelegramID int64
 	Email      string
-	Kind       string // "bot" (default) or "web"
+	Kind       string
 }
 
 type auditCtxKey struct{}
 
-// WithAuditActor stores the actor in ctx (set by the middleware/handler).
 func WithAuditActor(ctx context.Context, a AuditContext) context.Context {
 	return context.WithValue(ctx, auditCtxKey{}, a)
 }
 
-// WithWebAuditActor builds an audit actor for a web platform user.
 func WithWebAuditActor(ctx context.Context, userID uuid.UUID, email string) context.Context {
 	return WithAuditActor(ctx, AuditContext{UserID: userID, Email: email, Kind: "web"})
 }
 
-// auditActor returns (actor, ok). ok=false when the ctx has no audit actor —
-// in that case the caller must skip the audit write (with a Warn log).
 func auditActor(ctx context.Context) (AuditContext, bool) {
 	v, ok := ctx.Value(auditCtxKey{}).(AuditContext)
 	return v, ok
 }
 
-// Audit records an admin action. Audit-write failures NEVER fail the parent
-// operation — they are logged at Warn.
 func (s *Services) Audit(ctx context.Context, action, targetKind, targetID string, details map[string]any) {
 	actor, ok := auditActor(ctx)
 	if !ok {

@@ -42,7 +42,6 @@ export function Hero() {
         </div>
 
         <div className="relative mx-auto aspect-square w-full max-w-lg">
-          {/* Clean, soft circular backdrop — sits behind the cat, no smudgy blur. */}
           <div
             className="absolute inset-x-6 bottom-6 top-10 rounded-full bg-gradient-to-b from-peach-100 to-cream-200"
             aria-hidden="true"

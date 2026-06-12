@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-// Span is one occurrence's start/end.
 type Span struct {
 	Start time.Time
 	End   time.Time
@@ -13,19 +12,12 @@ type Span struct {
 
 const maxOccurrences = 100
 
-// ErrTooManyOccurrences means the series would exceed the materialization cap.
 var ErrTooManyOccurrences = errors.New("too many occurrences (max 100)")
 
-// ErrRecurrenceWindow means a recurring series has a missing or invalid end date.
 var ErrRecurrenceWindow = errors.New("recurring meeting needs a valid end date (>= start)")
 
-// ErrRecurrenceDays means a Custom recurrence was requested without any selected weekdays.
 var ErrRecurrenceDays = errors.New("custom recurrence needs at least one weekday")
 
-// Occurrences expands a recurring meeting into spans from start to until
-// (inclusive by date). Once returns a single span and ignores until/days.
-// Custom steps daily and emits only when weekday ∈ days (1=Mon..7=Sun).
-// Non-once requires a valid until (date >= start's date); capped at maxOccurrences.
 func Occurrences(start, end time.Time, r Recurrence, days []int, until time.Time) ([]Span, error) {
 	if r == Once {
 		return []Span{{Start: start, End: end}}, nil

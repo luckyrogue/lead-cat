@@ -9,17 +9,14 @@ import (
 
 const miniappTokenType = "miniapp"
 
-// MiniAppClaims is a Telegram Mini App session token.
-// A Mini App user is a bot_users row keyed by telegram_id, not a platform_users UUID.
 type MiniAppClaims struct {
 	TelegramID int64  `json:"tg_id"`
 	Email      string `json:"email"`
 	Role       string `json:"role"`
-	TokenType  string `json:"tok_typ"` // distinct payload key; not the JWT "typ" header
+	TokenType  string `json:"tok_typ"`
 	jwt.RegisteredClaims
 }
 
-// MiniAppToken mints and verifies Mini App session JWTs. Reuses the platform JWT secret.
 type MiniAppToken struct {
 	secret []byte
 	ttl    time.Duration

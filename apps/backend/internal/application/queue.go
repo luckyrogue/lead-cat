@@ -6,8 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// JobQueue enqueues asynchronous notification jobs (meeting + participant
-// lifecycle). Implemented in infrastructure/queue/asynq.
 type JobQueue interface {
 	EnqueueMeetingCreated(ctx context.Context, organizationID, meetingID uuid.UUID) error
 	EnqueueMeetingUpdated(ctx context.Context, organizationID, meetingID uuid.UUID) error

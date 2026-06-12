@@ -34,6 +34,7 @@ export function MeetingsListPage() {
           <button
             key={t}
             type="button"
+            aria-pressed={tab === t}
             onClick={() => setTab(t)}
             className={cn(
               "rounded-full py-1.5 text-sm font-medium capitalize transition-colors",

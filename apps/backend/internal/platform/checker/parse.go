@@ -14,8 +14,6 @@ func almaty() *time.Location {
 	return loc
 }
 
-// parseRange parses "YYYY-MM-DD..YYYY-MM-DD" into inclusive (from,to) dates.
-// End must not precede start.
 func parseRange(s string, loc *time.Location) (from, to time.Time, err error) {
 	parts := strings.SplitN(strings.TrimSpace(s), "..", 2)
 	if len(parts) != 2 {
@@ -37,7 +35,6 @@ var ruWeekday = map[time.Weekday]string{
 	time.Thursday: "Чт", time.Friday: "Пт", time.Saturday: "Сб", time.Sunday: "Вс",
 }
 
-// dayLabel renders "Пн, 02.06" for a free-slot day in loc.
 func dayLabel(day time.Time, loc *time.Location) string {
 	d := day.In(loc)
 	return fmt.Sprintf("%s, %02d.%02d", ruWeekday[d.Weekday()], d.Day(), int(d.Month()))

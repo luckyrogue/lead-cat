@@ -35,6 +35,45 @@ Token type `tok_typ:miniapp`, TTL 24 h.
 
 ---
 
+## Web auth
+
+Cookie-based sessions for the web app (see `docs/AUTH.md`).
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| `GET` | `/api/auth/web/:provider/start` | Start OAuth (Google, Microsoft) |
+| `GET` | `/api/auth/web/:provider/callback` | OAuth callback; sets session cookie |
+| `POST` | `/api/auth/web/magic/request` | Request email magic link |
+| `GET` | `/api/auth/web/magic/verify` | Verify magic link |
+| `POST` | `/api/auth/web/logout` | Revoke session |
+| `GET` | `/api/auth/web/me` | Current user profile |
+
+---
+
+## Organizations (web)
+
+Requires `lc_session` cookie. Org-scoped routes also require org membership (`RequireOrgMember`).
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| `POST` | `/api/orgs` | Create organization |
+| `GET` | `/api/orgs` | List my organizations |
+| `GET` | `/api/orgs/:id/meetings` | List meetings (owner sees all; member sees own) |
+| `POST` | `/api/orgs/:id/meetings` | Create meeting |
+| `GET` | `/api/orgs/:id/meetings/:mid` | Get meeting |
+| `PATCH` | `/api/orgs/:id/meetings/:mid?scope=this\|whole` | Update meeting / series |
+| `DELETE` | `/api/orgs/:id/meetings/:mid?scope=this\|whole` | Cancel meeting / series |
+| `POST` | `/api/orgs/:id/meetings/:mid/participants` | Add participant |
+| `DELETE` | `/api/orgs/:id/meetings/:mid/participants?email=` | Remove participant |
+| `GET` | `/api/orgs/:id/members` | List members |
+| `PATCH` | `/api/orgs/:id/members/:uid/role` | Change role (admin) |
+| `DELETE` | `/api/orgs/:id/members/:uid` | Remove member (admin) |
+| `GET` | `/api/orgs/:id/invites` | List invites (admin) |
+| `POST` | `/api/orgs/:id/invites` | Invite by email (admin) |
+| `DELETE` | `/api/orgs/:id/invites/:iid` | Revoke invite (admin) |
+
+---
+
 ## Mini App — meetings
 
 All routes require `Authorization: Bearer <miniapp_jwt>`.
@@ -65,23 +104,25 @@ All routes require `Authorization: Bearer <miniapp_jwt>` AND `bot_users.role == 
 
 | Method   | Path                                          | Purpose                                        |
 | -------- | --------------------------------------------- | ---------------------------------------------- |
-| `GET`    | `/api/miniapp/admin/workspace`                | Workspace status (auto-create on first call)   |
-| `POST`   | `/api/miniapp/admin/workspace`                | Idempotent ensure-workspace                    |
+| `GET`    | `/api/miniapp/admin/organization`             | Organization status (auto-create on first call) |
+| `POST`   | `/api/miniapp/admin/organization`             | Idempotent ensure default organization         |
+| `GET`    | `/api/miniapp/admin/workspace`                | **Deprecated** alias of `/organization`        |
+| `POST`   | `/api/miniapp/admin/workspace`                | **Deprecated** alias of `/organization`        |
 | `GET`    | `/api/miniapp/admin/integrations`             | Google integration view (no secrets)           |
 | `PATCH`  | `/api/miniapp/admin/integrations`             | Set SA JSON / subject / calendar id / meet / tz |
 | `POST`   | `/api/miniapp/admin/integrations/verify`      | Real Google verify (parse → impersonate → Calendars.Get) |
 | `GET`    | `/api/miniapp/admin/chat/status`              | Chat-link status                               |
 | `POST`   | `/api/miniapp/admin/chat/link`                | Link Telegram chat                             |
-| `GET`    | `/api/miniapp/admin/members`                  | List workspace members                         |
+| `GET`    | `/api/miniapp/admin/members`                  | List organization members                      |
 | `POST`   | `/api/miniapp/admin/members/sync-chat`        | Sync members from linked chat                  |
 | `GET`    | `/api/miniapp/admin/audit`                    | Audit log (filters: action, actor, limit≤200)  |
 
-Error codes: `forbidden`, `unauthorized`, `validation_failed`, `workspace_not_found`, `google_sa_invalid`, `google_subject_invalid`, `google_calendar_not_accessible`, `google_api_disabled`, `google_not_configured`.
+Error codes: `forbidden`, `unauthorized`, `validation_failed`, `organization_not_found`, `google_sa_invalid`, `google_subject_invalid`, `google_calendar_not_accessible`, `google_api_disabled`, `google_not_configured`.
 
-Mini App UI: **Profile → Admin → Настройка workspace** (`/profile/admin/setup`).
+Mini App UI: **Profile → Admin → setup** (`/profile/admin/setup`).
 
 ---
 
 ## Appendix — Retired platform API (410 Gone)
 
-> Platform JWT bootstrap (`/api/auth/email/*`, passkey, OAuth, `/api/workspaces/*`) returns **410 Gone** with `Deprecation: true`. Use Mini App admin routes above and `POST /api/auth/miniapp` for all operator setup.
+> Legacy platform JWT bootstrap (`/api/auth/email/*`, passkey, old OAuth) and `/api/workspaces/*` return **410 Gone** with `Deprecation: true`. Active paths: `/api/auth/web/*`, `/api/orgs/*`, `/api/miniapp/admin/organization`, and `POST /api/auth/miniapp`.

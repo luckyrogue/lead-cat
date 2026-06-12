@@ -5,15 +5,10 @@ import (
 	"time"
 )
 
-// Overlaps reports whether spans [aStart,aEnd) and [bStart,bEnd) intersect.
-// Touching edges (aEnd == bStart) do NOT overlap. §4.7.1
 func Overlaps(aStart, aEnd, bStart, bEnd time.Time) bool {
 	return aStart.Before(bEnd) && bStart.Before(aEnd)
 }
 
-// FreeSlots returns the gaps in [winStart,winEnd) not covered by busy, keeping only
-// gaps with duration >= minDur. busy spans are clipped to the window and merged;
-// input need not be sorted. Result is chronological. §4.8.3
 func FreeSlots(busy []Span, winStart, winEnd time.Time, minDur time.Duration) []Span {
 	clipped := make([]Span, 0, len(busy))
 	for _, b := range busy {

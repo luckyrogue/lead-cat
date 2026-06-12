@@ -13,7 +13,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
-// ownerOrOrganizer reports whether userID is the organization owner or the meeting's organizer.
 func ownerOrOrganizer(w model.Organization, organizerUserID *uuid.UUID, userID uuid.UUID) bool {
 	if w.OwnerUserID != nil && *w.OwnerUserID == userID {
 		return true
@@ -43,7 +42,6 @@ func filterEmployees(all []model.Employee, query string) []model.Employee {
 	return out
 }
 
-// SearchEmployees returns directory entries whose name or email contains query.
 func (s *Services) SearchEmployees(ctx context.Context, organizationID uuid.UUID, query string) ([]model.Employee, error) {
 	all, err := s.Store.ListEmployees(ctx, organizationID)
 	if err != nil {
@@ -52,25 +50,18 @@ func (s *Services) SearchEmployees(ctx context.Context, organizationID uuid.UUID
 	return filterEmployees(all, query), nil
 }
 
-// SearchEmployeesGlobal finds directory entries across all organizations (for the
-// bot schedule view, which has no organization context).
 func (s *Services) SearchEmployeesGlobal(ctx context.Context, query string) ([]model.Employee, error) {
 	return s.Store.SearchEmployeesGlobal(ctx, query)
 }
 
-// EmployeeSchedule returns the scheduled meetings in [from,to) for an email
-// (participant or organizer).
 func (s *Services) EmployeeSchedule(ctx context.Context, email string, from, to time.Time) ([]model.Meeting, error) {
 	return s.Store.ListScheduleForEmail(ctx, email, from, to)
 }
 
-// ListParticipants returns a meeting's participants (for the bot FSM).
 func (s *Services) ListParticipants(ctx context.Context, meetingID uuid.UUID) ([]model.MeetingParticipant, error) {
 	return s.Store.ListParticipants(ctx, meetingID)
 }
 
-// AddParticipant adds a guest by email (organizer or owner only): persists, syncs
-// the Google attendee list, and enqueues a notification.
 func (s *Services) AddParticipant(ctx context.Context, organizationID, userID, meetingID uuid.UUID, email string) error {
 	m, _, err := s.loadForParticipantOp(ctx, organizationID, meetingID, userID)
 	if err != nil {
@@ -103,8 +94,6 @@ func (s *Services) AddParticipant(ctx context.Context, organizationID, userID, m
 	return nil
 }
 
-// RemoveParticipant removes a guest by email (organizer or owner only): persists,
-// syncs the Google attendee list, and enqueues a notification.
 func (s *Services) RemoveParticipant(ctx context.Context, organizationID, userID, meetingID uuid.UUID, email string) error {
 	m, _, err := s.loadForParticipantOp(ctx, organizationID, meetingID, userID)
 	if err != nil {
@@ -128,7 +117,6 @@ func (s *Services) RemoveParticipant(ctx context.Context, organizationID, userID
 	return nil
 }
 
-// loadForParticipantOp loads the meeting + organization and enforces the ACL.
 func (s *Services) loadForParticipantOp(ctx context.Context, organizationID, meetingID, userID uuid.UUID) (model.Meeting, model.Organization, error) {
 	m, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
@@ -147,8 +135,6 @@ func (s *Services) loadForParticipantOp(ctx context.Context, organizationID, mee
 	return m, org, nil
 }
 
-// syncAttendees patches the Google event's guest list to the meeting's current
-// participants (no-op when the meeting has no Google event).
 func (s *Services) syncAttendees(ctx context.Context, organizationID uuid.UUID, googleEventID string, meetingID uuid.UUID) error {
 	if googleEventID == "" {
 		return nil

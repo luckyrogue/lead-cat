@@ -12,21 +12,15 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
 )
 
-// SeriesUpdateInput carries series-wide field overrides (nil = unchanged) plus an
-// optional time-of-day change (Start/End HH:MM applied to each occurrence's own
-// date). Date and recurrence pattern are not changed series-wide.
 type SeriesUpdateInput struct {
 	Dept        *string
 	Type        *string
 	Host        *string
 	Description *string
-	Start       *string // HH:MM
-	End         *string // HH:MM
+	Start       *string
+	End         *string
 }
 
-// applySeriesUpdate applies field overrides + an optional time-of-day to one
-// occurrence, keeping the occurrence's own date and recurrence. Pure; recomputes
-// the name. Returns ErrInvalidInput on bad time.
 func applySeriesUpdate(cur model.Meeting, in SeriesUpdateInput, loc *time.Location) (model.Meeting, error) {
 	dept := orStr(in.Dept, cur.Dept)
 	typ := orStr(in.Type, cur.Type)
@@ -65,11 +59,6 @@ func applySeriesUpdate(cur model.Meeting, in SeriesUpdateInput, loc *time.Locati
 	return out, nil
 }
 
-// Internal: not currently exposed via TMA HTTP (slice B uses UpdateWholeSeries/CancelWholeSeries). Slice E admin scope may revive for "from-forward" semantics.
-// UpdateSeries applies a series-wide edit to the picked occurrence and all later
-// ones (organizer or owner only): validates per occurrence, persists atomically,
-// patches Google best-effort, and enqueues one change notification. Returns the
-// number of occurrences updated.
 func (s *Services) UpdateSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID, in SeriesUpdateInput) (int, error) {
 	picked, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
@@ -110,16 +99,7 @@ func (s *Services) UpdateSeries(ctx context.Context, organizationID, userID, mee
 			s.Log.Warn("series update calendar provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))
 		}
 	} else {
-		for _, m := range rows {
-			if m.GoogleEventID == "" {
-				continue
-			}
-			if err := calSvc.UpdateEvent(ctx, m.GoogleEventID, CalendarEvent{
-				Title: m.Name, Description: m.Description, Start: m.StartsAt, End: m.EndsAt,
-			}); err != nil && s.Log != nil {
-				s.Log.Warn("series update event", zap.String("event_id", m.GoogleEventID), zap.Error(err))
-			}
-		}
+		s.updateCalendarEventsBestEffort(ctx, calSvc, rows, "series update event")
 	}
 	if s.Queue != nil {
 		if err := s.Queue.EnqueueMeetingUpdated(ctx, organizationID, meetingID); err != nil && s.Log != nil {
@@ -132,11 +112,6 @@ func (s *Services) UpdateSeries(ctx context.Context, organizationID, userID, mee
 	return len(rows), nil
 }
 
-// Internal: not currently exposed via TMA HTTP (slice B uses UpdateWholeSeries/CancelWholeSeries). Slice E admin scope may revive for "from-forward" semantics.
-// CancelSeries cancels the picked occurrence and all later scheduled ones of its
-// series (organizer or owner only): cancels in one atomic UPDATE, deletes the
-// Google events best-effort, and enqueues one cancellation notification. Returns
-// the number of occurrences cancelled.
 func (s *Services) CancelSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID) (int, error) {
 	picked, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
@@ -178,9 +153,6 @@ func (s *Services) CancelSeries(ctx context.Context, organizationID, userID, mee
 	return n, nil
 }
 
-// UpdateWholeSeries applies a series-wide edit to EVERY occurrence in the series
-// (including past ones), keyed by series_id. Auth: organizer or organization owner.
-// Returns the count of occurrences updated.
 func (s *Services) UpdateWholeSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID, in SeriesUpdateInput) (int, error) {
 	picked, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
@@ -220,16 +192,7 @@ func (s *Services) UpdateWholeSeries(ctx context.Context, organizationID, userID
 			s.Log.Warn("whole_series_update_calendar_provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))
 		}
 	} else {
-		for _, m := range rows {
-			if m.GoogleEventID == "" {
-				continue
-			}
-			if err := calSvc.UpdateEvent(ctx, m.GoogleEventID, CalendarEvent{
-				Title: m.Name, Description: m.Description, Start: m.StartsAt, End: m.EndsAt,
-			}); err != nil && s.Log != nil {
-				s.Log.Warn("whole_series_update_event", zap.String("event_id", m.GoogleEventID), zap.Error(err))
-			}
-		}
+		s.updateCalendarEventsBestEffort(ctx, calSvc, rows, "whole_series_update_event")
 	}
 	if s.Queue != nil {
 		if err := s.Queue.EnqueueMeetingUpdated(ctx, organizationID, meetingID); err != nil && s.Log != nil {
@@ -242,8 +205,6 @@ func (s *Services) UpdateWholeSeries(ctx context.Context, organizationID, userID
 	return len(rows), nil
 }
 
-// CancelWholeSeries cancels EVERY occurrence in the series (including past ones),
-// keyed by series_id. Auth: organizer or organization owner. Returns the count.
 func (s *Services) CancelWholeSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID) (int, error) {
 	picked, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {

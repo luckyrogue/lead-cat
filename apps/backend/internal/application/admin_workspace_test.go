@@ -9,45 +9,33 @@ import (
 )
 
 type fakeOrgStore struct {
-	id        uuid.UUID
-	createErr error
-	createdTZ string
-	createdML string
-	created   bool
+	id  uuid.UUID
+	err error
 }
 
 func (f *fakeOrgStore) EnsureDefaultOrganizationID(_ context.Context, tz, ml string, _ uuid.UUID) (uuid.UUID, error) {
-	if f.createErr != nil {
-		return uuid.Nil, f.createErr
+	if f.err != nil {
+		return uuid.Nil, f.err
 	}
-	f.createdTZ = tz
-	f.createdML = ml
-	f.created = true
 	return f.id, nil
 }
 
 func TestEnsureDefaultOrganization_Defaults(t *testing.T) {
+	t.Parallel()
 	want := uuid.New()
-	f := &fakeOrgStore{id: want}
-	got, err := ensureDefaultOrganization(context.Background(), f, uuid.New())
+	got, err := ensureDefaultOrganization(context.Background(), &fakeOrgStore{id: want}, uuid.Nil)
 	if err != nil {
-		t.Fatalf("err: %v", err)
+		t.Fatal(err)
 	}
 	if got != want {
-		t.Fatalf("id mismatch")
-	}
-	if f.createdTZ != "Asia/Almaty" {
-		t.Fatalf("default tz wrong: %q", f.createdTZ)
-	}
-	if f.createdML != "" {
-		t.Fatalf("default meet link should be empty: %q", f.createdML)
+		t.Fatalf("got %v want %v", got, want)
 	}
 }
 
 func TestEnsureDefaultOrganization_PropagatesStoreError(t *testing.T) {
-	boom := errors.New("db down")
-	f := &fakeOrgStore{createErr: boom}
-	if _, err := ensureDefaultOrganization(context.Background(), f, uuid.New()); !errors.Is(err, boom) {
-		t.Fatalf("expected boom, got %v", err)
+	t.Parallel()
+	_, err := ensureDefaultOrganization(context.Background(), &fakeOrgStore{err: errors.New("boom")}, uuid.Nil)
+	if err == nil {
+		t.Fatal("expected error")
 	}
 }

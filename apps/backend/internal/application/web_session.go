@@ -10,8 +10,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/platform/authweb"
 )
 
-// shouldSlide reports whether a session past its half-life should have its
-// expiry extended (sliding-window renewal).
 func shouldSlide(created, _ time.Time, now time.Time, ttl time.Duration) bool {
 	return now.Sub(created) > ttl/2
 }
@@ -36,7 +34,6 @@ func newWebSessionService(repo webSessionRepo, ttl time.Duration, clock func() t
 	return &webSessionService{repo: repo, ttl: ttl, clock: clock}
 }
 
-// CreateSession mints a raw session token (returned to set as cookie) and stores only its hash.
 func (s *webSessionService) CreateSession(ctx context.Context, userID uuid.UUID, ua, ip string) (rawToken string, err error) {
 	raw, err := authweb.NewState(nil)
 	if err != nil {
@@ -49,7 +46,6 @@ func (s *webSessionService) CreateSession(ctx context.Context, userID uuid.UUID,
 	return raw, nil
 }
 
-// ResolveSession returns the platform_users id for a valid session cookie, sliding expiry if past half-life.
 func (s *webSessionService) ResolveSession(ctx context.Context, rawToken string) (model.WebSession, bool, error) {
 	now := s.clock()
 	w, ok, err := s.repo.ResolveWebSession(ctx, authweb.HashToken(rawToken), now)
@@ -62,7 +58,6 @@ func (s *webSessionService) ResolveSession(ctx context.Context, rawToken string)
 	return w, true, nil
 }
 
-// RevokeSession invalidates the session associated with the raw token.
 func (s *webSessionService) RevokeSession(ctx context.Context, rawToken string) error {
 	return s.repo.RevokeWebSession(ctx, authweb.HashToken(rawToken), s.clock())
 }

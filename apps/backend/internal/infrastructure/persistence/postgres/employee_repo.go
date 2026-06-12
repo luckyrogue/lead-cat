@@ -25,8 +25,6 @@ func (s *Store) ListEmployees(ctx context.Context, organizationID uuid.UUID) ([]
 	return out, rows.Err()
 }
 
-// SearchEmployeesGlobal finds directory entries across all organizations whose name
-// or email contains query (case-insensitive), capped at 20.
 func (s *Store) SearchEmployeesGlobal(ctx context.Context, query string) ([]Employee, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT id, organization_id, full_name, email, dept, has_telegram
@@ -59,17 +57,12 @@ func (s *Store) CreateEmployee(ctx context.Context, organizationID uuid.UUID, fu
 	return e, err
 }
 
-// EmployeeSeed is one directory row to sync. Email is pre-normalized to
-// lower-case by the caller. Defined here (not in employeedir) so the repo stays
-// free of the platform package and there is no import cycle. §9.4
 type EmployeeSeed struct {
 	FullName string
 	Email    string
 	Dept     string
 }
 
-// ListOrganizationsWithGoogle returns IDs of organizations that have Google
-// service-account credentials configured (google_sa_json_enc IS NOT NULL).
 func (s *Store) ListOrganizationsWithGoogle(ctx context.Context) ([]uuid.UUID, error) {
 	rows, err := s.pool.Query(ctx, `SELECT id FROM organizations WHERE google_sa_json_enc IS NOT NULL ORDER BY id`)
 	if err != nil {
@@ -87,12 +80,6 @@ func (s *Store) ListOrganizationsWithGoogle(ctx context.Context) ([]uuid.UUID, e
 	return out, rows.Err()
 }
 
-// SyncEmployees makes organizationID's employees rows mirror seeds in one
-// transaction: rows whose email is not in seeds are deleted; present rows are
-// upserted (full_name, dept). has_telegram is left untouched on existing rows.
-// Returns per-op counts. Empty seeds is a no-op (caller guards against an empty
-// CSV; this is belt-and-suspenders so a stray empty call never wipes the table).
-// §9.4
 func (s *Store) SyncEmployees(ctx context.Context, organizationID uuid.UUID, seeds []EmployeeSeed) (added, updated, deleted int, err error) {
 	if len(seeds) == 0 {
 		return 0, 0, 0, nil

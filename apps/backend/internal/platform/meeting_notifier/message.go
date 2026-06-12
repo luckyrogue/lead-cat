@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-// buildEventMessage renders an event DM with the given header line. Times are
-// converted to loc; the link line is omitted when meetLink is empty.
 func buildEventMessage(header, name, meetLink string, startsAt, endsAt time.Time, loc *time.Location) string {
 	s := startsAt.In(loc)
 	e := endsAt.In(loc)
@@ -41,7 +39,6 @@ func buildCancelledMessage(name string, startsAt time.Time, loc *time.Location) 
 	return fmt.Sprintf("❌ Встреча отменена\n«%s»\n🗓 %s (%s)", name, s.Format("02.01.2006"), tzLabel(s))
 }
 
-// tzLabel renders the timezone of t as a UTC offset, e.g. "UTC+5" or "UTC+5:30".
 func tzLabel(t time.Time) string {
 	_, off := t.Zone()
 	sign := "+"

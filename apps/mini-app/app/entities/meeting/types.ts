@@ -1,18 +1,18 @@
-export type Meeting = {
-  id: string
-  type: string
-  dept: string
-  host: string
-  date: string
-  start: string
-  end: string
-  rec: string
-  organizer: string
-  participants: string[]
-  desc: string
-  meet_link: string
-  status: string
-}
+import type {
+  MiniAppConflict,
+  MiniAppFreeSlot,
+  MiniAppMeeting,
+  MiniAppMeetingCreateRequest,
+  MiniAppMeetingUpdateRequest,
+  MiniAppOccurrenceConflicts,
+} from "@leadcat/api-client"
+
+export type Meeting = MiniAppMeeting
+export type CreateMeetingInput = MiniAppMeetingCreateRequest
+export type UpdateMeetingInput = MiniAppMeetingUpdateRequest
+export type Conflict = MiniAppConflict
+export type OccurrenceConflicts = MiniAppOccurrenceConflicts
+export type FreeSlot = MiniAppFreeSlot
 
 export type MeetingRecurrence =
   | "once"
@@ -20,52 +20,6 @@ export type MeetingRecurrence =
   | "weekly"
   | "monthly"
   | "custom"
-
-export type CreateMeetingInput = {
-  dept: string
-  type: string
-  host: string
-  date: string
-  start: string
-  end: string
-  recurrence: string
-  recurrence_until?: string
-  recurrence_days?: number[]
-  desc: string
-  participants: string[]
-}
-
-export type UpdateMeetingInput = {
-  dept?: string
-  type?: string
-  host?: string
-  date?: string
-  start?: string
-  end?: string
-  desc?: string
-}
-
-export type Conflict = {
-  email: string
-  name: string
-  title: string
-  start: string
-  end: string
-}
-
-export type OccurrenceConflicts = {
-  date: string
-  start: string
-  end: string
-  conflicts: Conflict[]
-}
-
-export type FreeSlot = {
-  iso: string
-  start: string
-  end: string
-  mins: number
-}
 
 export type MeetingMutationScope = "this" | "whole"
 

@@ -1,7 +1,3 @@
-export type Employee = {
-  id: string
-  name: string
-  email: string
-  dept: string
-  tg: boolean
-}
+import type { MiniAppEmployee } from "@leadcat/api-client"
+
+export type Employee = MiniAppEmployee

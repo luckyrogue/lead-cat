@@ -13,17 +13,12 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
-// ErrLastOwner is returned when an operation would remove the last owner of an
-// organisation (demote or remove).
 var ErrLastOwner = errors.New("cannot remove or demote the last owner")
 
-// OrgMemberView is a lightweight projection of an organisation member used by
-// guard functions to avoid importing the postgres model.
 type OrgMemberView struct {
 	Role string
 }
 
-// rolePrecedence maps role names to numeric precedence. Unknown roles rank 0.
 func rolePrecedence(role string) int {
 	switch role {
 	case "owner":
@@ -36,14 +31,10 @@ func rolePrecedence(role string) int {
 	return 0
 }
 
-// RoleAtLeast returns true when role is at least as privileged as min.
 func RoleAtLeast(role, min string) bool {
 	return rolePrecedence(role) >= rolePrecedence(min)
 }
 
-// canDemoteOrRemove checks whether the member at idx may be removed or demoted
-// without leaving the organisation without an owner. It returns ErrLastOwner
-// when the target is the only owner.
 func canDemoteOrRemove(members []OrgMemberView, idx int) error {
 	if members[idx].Role != "owner" {
 		return nil
@@ -56,8 +47,6 @@ func canDemoteOrRemove(members []OrgMemberView, idx int) error {
 	return ErrLastOwner
 }
 
-// memberViews projects members to OrgMemberView and returns the index of the
-// member whose UserID == target (-1 if absent).
 func memberViews(members []model.Member, target uuid.UUID) ([]OrgMemberView, int) {
 	views := make([]OrgMemberView, len(members))
 	idx := -1
@@ -70,15 +59,6 @@ func memberViews(members []model.Member, target uuid.UUID) ([]OrgMemberView, int
 	return views, idx
 }
 
-// slugify converts a human-readable name into a URL-safe slug:
-//   - Unicode NFD decomposition + strip combining marks (so "Café"→"cafe")
-//   - Lowercase
-//   - Keep only [a-z0-9]; collapse any run of other characters to a single "-"
-//   - Trim leading/trailing "-"
-//
-// Non-foldable scripts (Cyrillic, CJK, etc.) produce no latin output and the
-// result may be an empty string. The caller is responsible for providing a
-// fallback.
 func slugify(name string) string {
 
 	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)

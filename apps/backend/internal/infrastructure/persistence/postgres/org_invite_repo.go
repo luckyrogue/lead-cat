@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// CreateInvite inserts a new pending invitation row and returns it.
 func (s *Store) CreateInvite(
 	ctx context.Context,
 	orgID uuid.UUID,
@@ -31,7 +30,6 @@ func (s *Store) CreateInvite(
 	return inv, err
 }
 
-// ListInvites returns pending (not yet accepted) invitations for an organisation.
 func (s *Store) ListInvites(ctx context.Context, orgID uuid.UUID) ([]OrganizationInvite, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT id, organization_id, email, role, token_hash, expires_at,
@@ -58,7 +56,6 @@ func (s *Store) ListInvites(ctx context.Context, orgID uuid.UUID) ([]Organizatio
 	return out, rows.Err()
 }
 
-// DeleteInvite removes an invitation by (orgID, inviteID).
 func (s *Store) DeleteInvite(ctx context.Context, orgID, inviteID uuid.UUID) error {
 	_, err := s.pool.Exec(ctx, `
 		DELETE FROM organization_invites
@@ -67,9 +64,6 @@ func (s *Store) DeleteInvite(ctx context.Context, orgID, inviteID uuid.UUID) err
 	return err
 }
 
-// AcceptInvitesForEmail accepts all pending invitations whose email matches
-// (case-insensitive), creates corresponding organization_members rows, and
-// returns the number of invitations accepted.
 func (s *Store) AcceptInvitesForEmail(ctx context.Context, email string, userID uuid.UUID) (int, error) {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {

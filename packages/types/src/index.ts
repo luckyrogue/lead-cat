@@ -1,3 +1,5 @@
+export * from "./meeting/weekdays";
+
 export type Surface = "telegram" | "web";
 
 export type OrgRole = "owner" | "admin" | "member";

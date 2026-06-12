@@ -9,7 +9,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
-// MiniAppMeeting is the Mini App list/detail meeting shape.
 type MiniAppMeeting struct {
 	ID           string
 	Type         string
@@ -31,7 +30,6 @@ type meetingStore interface {
 	ListParticipants(ctx context.Context, meetingID uuid.UUID) ([]model.MeetingParticipant, error)
 }
 
-// MeetingDTO maps a meeting row to the TMA UI shape, resolving organizer and participant emails.
 func MeetingDTO(ctx context.Context, store meetingStore, m model.Meeting, loc *time.Location) MiniAppMeeting {
 	s := m.StartsAt.In(loc)
 	e := m.EndsAt.In(loc)

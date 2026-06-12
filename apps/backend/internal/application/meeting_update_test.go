@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/luckyrogue/lead-cat/internal/application/command"
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
@@ -22,7 +23,7 @@ func baseMeeting() model.Meeting {
 
 func TestApplyMeetingUpdate_DeptOnly(t *testing.T) {
 	loc, _ := time.LoadLocation("Asia/Almaty")
-	out, err := applyMeetingUpdate(baseMeeting(), UpdateMeetingInput{Dept: strp("Маркетинг")}, loc)
+	out, err := command.ApplyMeetingUpdate(baseMeeting(), UpdateMeetingInput{Dept: strp("Маркетинг")}, loc)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,7 +40,7 @@ func TestApplyMeetingUpdate_DeptOnly(t *testing.T) {
 
 func TestApplyMeetingUpdate_DateTime(t *testing.T) {
 	loc, _ := time.LoadLocation("Asia/Almaty")
-	out, err := applyMeetingUpdate(baseMeeting(), UpdateMeetingInput{
+	out, err := command.ApplyMeetingUpdate(baseMeeting(), UpdateMeetingInput{
 		Date: strp("2026-06-02"), Start: strp("10:00"), End: strp("11:00"),
 	}, loc)
 	if err != nil {
@@ -56,7 +57,7 @@ func TestApplyMeetingUpdate_DateTime(t *testing.T) {
 
 func TestApplyMeetingUpdate_EndBeforeStart(t *testing.T) {
 	loc, _ := time.LoadLocation("Asia/Almaty")
-	_, err := applyMeetingUpdate(baseMeeting(), UpdateMeetingInput{
+	_, err := command.ApplyMeetingUpdate(baseMeeting(), UpdateMeetingInput{
 		Date: strp("2026-06-02"), Start: strp("11:00"), End: strp("10:00"),
 	}, loc)
 	if !errors.Is(err, ErrInvalidInput) {
@@ -66,7 +67,7 @@ func TestApplyMeetingUpdate_EndBeforeStart(t *testing.T) {
 
 func TestApplyMeetingUpdate_BadRecurrence(t *testing.T) {
 	loc, _ := time.LoadLocation("Asia/Almaty")
-	_, err := applyMeetingUpdate(baseMeeting(), UpdateMeetingInput{Recurrence: strp("hourly")}, loc)
+	_, err := command.ApplyMeetingUpdate(baseMeeting(), UpdateMeetingInput{Recurrence: strp("hourly")}, loc)
 	if !errors.Is(err, ErrInvalidInput) {
 		t.Fatalf("want ErrInvalidInput, got %v", err)
 	}
@@ -74,7 +75,7 @@ func TestApplyMeetingUpdate_BadRecurrence(t *testing.T) {
 
 func TestApplyMeetingUpdate_RecurrenceLabelInName(t *testing.T) {
 	loc, _ := time.LoadLocation("Asia/Almaty")
-	out, err := applyMeetingUpdate(baseMeeting(), UpdateMeetingInput{Recurrence: strp("weekly")}, loc)
+	out, err := command.ApplyMeetingUpdate(baseMeeting(), UpdateMeetingInput{Recurrence: strp("weekly")}, loc)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +90,7 @@ func TestApplyMeetingUpdate_NameUsesLocalDate(t *testing.T) {
 
 	m.StartsAt = time.Date(2026, 6, 1, 1, 0, 0, 0, loc).UTC()
 	m.EndsAt = time.Date(2026, 6, 1, 2, 0, 0, 0, loc).UTC()
-	out, err := applyMeetingUpdate(m, UpdateMeetingInput{Dept: strp("Маркетинг")}, loc)
+	out, err := command.ApplyMeetingUpdate(m, UpdateMeetingInput{Dept: strp("Маркетинг")}, loc)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,7 +102,7 @@ func TestApplyMeetingUpdate_NameUsesLocalDate(t *testing.T) {
 func TestApplyMeetingUpdate_PartialDateTime(t *testing.T) {
 	loc, _ := time.LoadLocation("Asia/Almaty")
 
-	_, err := applyMeetingUpdate(baseMeeting(), UpdateMeetingInput{
+	_, err := command.ApplyMeetingUpdate(baseMeeting(), UpdateMeetingInput{
 		Date: strp("2026-06-02"), Start: strp("10:00"),
 	}, loc)
 	if !errors.Is(err, ErrInvalidInput) {

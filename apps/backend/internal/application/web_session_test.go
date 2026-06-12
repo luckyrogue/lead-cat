@@ -24,9 +24,8 @@ func TestShouldSlideWhenPastHalfLife(t *testing.T) {
 	}
 }
 
-// fakeWebSessionRepo is a minimal in-memory stub that satisfies webSessionRepo.
 type fakeWebSessionRepo struct {
-	sessions map[string]model.WebSession // key = hex(tokenHash)
+	sessions map[string]model.WebSession
 }
 
 func newFakeWebSessionRepo() *fakeWebSessionRepo {

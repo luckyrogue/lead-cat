@@ -19,6 +19,9 @@ importers:
       '@leadcat/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@leadcat/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@leadcat/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -171,6 +174,9 @@ importers:
       '@leadcat/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@leadcat/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@leadcat/ui':
         specifier: workspace:*
         version: link:../../packages/ui

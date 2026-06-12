@@ -5,7 +5,6 @@ import (
 	"testing"
 )
 
-// seqReader is a simple deterministic reader for tests that need varied bytes.
 func seqReader(b []byte) (int, error) {
 	for i := range b {
 		b[i] = byte(i)

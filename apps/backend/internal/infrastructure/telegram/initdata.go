@@ -16,7 +16,7 @@ import (
 type InitDataUser struct {
 	ID       int64  `json:"id"`
 	Username string `json:"username"`
-	AuthDate int64  `json:"-"` // from the top-level auth_date param, not the user JSON
+	AuthDate int64  `json:"-"`
 }
 
 type InitDataValidator struct {
@@ -75,8 +75,6 @@ func (v *InitDataValidator) verify(initData string) error {
 	return nil
 }
 
-// FreshAuthDate reports whether a Telegram auth_date (unix seconds) is within
-// maxAge of now. An absent auth_date (0) is treated as stale.
 func FreshAuthDate(authDate int64, now time.Time, maxAge time.Duration) bool {
 	if authDate <= 0 {
 		return false

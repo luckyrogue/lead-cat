@@ -1,7 +1,3 @@
-# Build context: repository root. Build: docker build -f apps/mini-app/Dockerfile .
-# Mini App is a SPA (ssr: false) served inside the Telegram WebView. nginx
-# serves the static build and proxies /api/* to the backend (same-origin).
-# Leave VITE_API_URL empty so the client calls relative /api paths.
 FROM node:22-alpine AS build
 WORKDIR /repo
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate

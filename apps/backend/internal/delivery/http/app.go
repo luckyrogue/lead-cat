@@ -76,11 +76,6 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	app.Get("/metrics", api.Metrics)
 
 	app.Post("/api/auth/miniapp", api.MiniAppAuth)
-	app.All("/api/auth/*", handlers.PlatformGone)
-	app.All("/api/me", handlers.PlatformGone)
-	app.All("/api/me/*", handlers.PlatformGone)
-	app.All("/api/workspaces", handlers.PlatformGone)
-	app.All("/api/workspaces/*", handlers.PlatformGone)
 
 	webAuth := middleware.NewWebAuth(services)
 	web := app.Group("/api/auth/web")
@@ -90,6 +85,12 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	web.Get("/magic/verify", api.WebMagicVerify)
 	web.Post("/logout", webAuth.Middleware, api.WebLogout)
 	web.Get("/me", webAuth.Middleware, api.WebMe)
+
+	registerRetiredPlatformAuth(app)
+	app.All("/api/me", handlers.PlatformGone)
+	app.All("/api/me/*", handlers.PlatformGone)
+	app.All("/api/workspaces", handlers.PlatformGone)
+	app.All("/api/workspaces/*", handlers.PlatformGone)
 
 	orgs := app.Group("/api/orgs", webAuth.Middleware)
 	orgs.Post("", api.CreateOrg)
@@ -126,8 +127,10 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	miniapp.Delete("/meetings/:id/participants", api.MiniAppRemoveParticipant)
 
 	miniappAdmin := miniapp.Group("/admin", middleware.RequireBotAdmin)
-	miniappAdmin.Get("/workspace", api.MiniAppAdminGetWorkspace)
-	miniappAdmin.Post("/workspace", api.MiniAppAdminCreateWorkspace)
+	miniappAdmin.Get("/organization", api.MiniAppAdminGetWorkspace)
+	miniappAdmin.Post("/organization", api.MiniAppAdminCreateWorkspace)
+	miniappAdmin.Get("/workspace", handlers.DeprecatedAdminWorkspace(api.MiniAppAdminGetWorkspace))
+	miniappAdmin.Post("/workspace", handlers.DeprecatedAdminWorkspace(api.MiniAppAdminCreateWorkspace))
 	miniappAdmin.Get("/integrations", api.MiniAppAdminGetIntegrations)
 	miniappAdmin.Patch("/integrations", api.MiniAppAdminPatchIntegrations)
 	miniappAdmin.Post("/integrations/verify", api.MiniAppAdminVerifyIntegrations)
@@ -151,6 +154,24 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	}
 
 	return app, nil
+}
+
+func registerRetiredPlatformAuth(app *fiber.App) {
+	legacyPrefixes := []string{
+		"/api/auth/email",
+		"/api/auth/phone",
+		"/api/auth/passkey",
+		"/api/auth/oauth",
+		"/api/auth/otp",
+		"/api/auth/login",
+		"/api/auth/register",
+		"/api/auth/refresh",
+	}
+	for _, prefix := range legacyPrefixes {
+		app.All(prefix, handlers.PlatformGone)
+		app.All(prefix+"/*", handlers.PlatformGone)
+	}
+	app.All("/api/auth/*", handlers.PlatformGone)
 }
 
 func dedupeNonEmpty(in []string) []string {

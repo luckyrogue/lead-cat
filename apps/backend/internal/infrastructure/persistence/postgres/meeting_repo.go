@@ -12,8 +12,6 @@ const meetingCols = `id, organization_id, organizer_user_id, dept, type, host,
 	starts_at, ends_at, recurrence, name, description, google_event_id, meet_link, status,
 	series_id, recurrence_until, recurrence_days`
 
-// meetingColsM is meetingCols qualified with the `m` alias for joins.
-// Keep its columns (and the scanMeeting scan order) in sync with meetingCols.
 const meetingColsM = `m.id, m.organization_id, m.organizer_user_id, m.dept, m.type, m.host,
 	m.starts_at, m.ends_at, m.recurrence, m.name, m.description, m.google_event_id, m.meet_link, m.status,
 	m.series_id, m.recurrence_until, m.recurrence_days`
@@ -39,7 +37,6 @@ const insertMeetingSQL = `
 	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
 	RETURNING ` + meetingCols
 
-// meetingInsertArgs returns the args for insertMeetingSQL; order MUST match its $1..$15.
 func meetingInsertArgs(m Meeting) []any {
 	var daysJSON any
 	if len(m.RecurrenceDays) > 0 {
@@ -56,7 +53,6 @@ const updateMeetingSQL = `
 		recurrence=$8, name=$9, description=$10, updated_at=now()
 	WHERE id=$1 AND organization_id=$2 AND status='scheduled'`
 
-// updateMeetingArgs returns the args for updateMeetingSQL; order MUST match its $1..$10.
 func updateMeetingArgs(organizationID, id uuid.UUID, m Meeting) []any {
 	return []any{id, organizationID, m.Dept, m.Type, m.Host, m.StartsAt, m.EndsAt, m.Recurrence, m.Name, m.Description}
 }
@@ -65,8 +61,6 @@ func (s *Store) CreateMeeting(ctx context.Context, m Meeting) (Meeting, error) {
 	return scanMeeting(s.pool.QueryRow(ctx, insertMeetingSQL, meetingInsertArgs(m)...))
 }
 
-// CreateMeetingSeries inserts all meetings + their participants in one
-// transaction (all-or-nothing) and returns the inserted rows with IDs.
 func (s *Store) CreateMeetingSeries(ctx context.Context, ms []Meeting, ps []MeetingParticipant) ([]Meeting, error) {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
@@ -125,7 +119,6 @@ func (s *Store) ListParticipants(ctx context.Context, meetingID uuid.UUID) ([]Me
 	return out, rows.Err()
 }
 
-// RemoveParticipant deletes a participant by email from a meeting.
 func (s *Store) RemoveParticipant(ctx context.Context, meetingID uuid.UUID, email string) error {
 	_, err := s.pool.Exec(ctx, `
 		DELETE FROM meeting_participants WHERE meeting_id = $1 AND email = $2`, meetingID, email)
@@ -161,8 +154,6 @@ func (s *Store) queryMeetings(ctx context.Context, sql string, args ...any) ([]M
 	return out, rows.Err()
 }
 
-// ListSeriesOccurrences returns the scheduled occurrences of a series at or after
-// fromStart, in the workspace, ordered by start.
 func (s *Store) ListSeriesOccurrences(ctx context.Context, organizationID, seriesID uuid.UUID, fromStart time.Time) ([]Meeting, error) {
 	return s.queryMeetings(ctx, `
 		SELECT `+meetingCols+` FROM meetings
@@ -170,9 +161,6 @@ func (s *Store) ListSeriesOccurrences(ctx context.Context, organizationID, serie
 		ORDER BY starts_at`, seriesID, organizationID, fromStart)
 }
 
-// ListSeriesAllOccurrences returns ALL scheduled occurrences of a series in the
-// workspace, regardless of start time, ordered by start. Used for whole-series
-// edit (slice B). Past occurrences are included.
 func (s *Store) ListSeriesAllOccurrences(ctx context.Context, organizationID, seriesID uuid.UUID) ([]Meeting, error) {
 	return s.queryMeetings(ctx, `
 		SELECT `+meetingCols+` FROM meetings
@@ -185,7 +173,6 @@ func (s *Store) GetMeeting(ctx context.Context, organizationID, id uuid.UUID) (M
 	return scanMeeting(row)
 }
 
-// UpdateMeeting overwrites the editable fields of a scheduled meeting.
 func (s *Store) UpdateMeeting(ctx context.Context, organizationID, id uuid.UUID, m Meeting) error {
 	ct, err := s.pool.Exec(ctx, updateMeetingSQL, updateMeetingArgs(organizationID, id, m)...)
 	if err != nil {
@@ -197,8 +184,6 @@ func (s *Store) UpdateMeeting(ctx context.Context, organizationID, id uuid.UUID,
 	return nil
 }
 
-// UpdateMeetingsTx updates all meetings in one transaction (all-or-nothing). Each
-// must still be scheduled in the workspace, else ErrMeetingNotEditable rolls back.
 func (s *Store) UpdateMeetingsTx(ctx context.Context, organizationID uuid.UUID, ms []Meeting) error {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
@@ -217,8 +202,6 @@ func (s *Store) UpdateMeetingsTx(ctx context.Context, organizationID uuid.UUID, 
 	return tx.Commit(ctx)
 }
 
-// ListMeetingsByOrganizerTelegram returns the upcoming scheduled meetings
-// organized by the platform user linked to telegramID, each with its workspace TZ.
 func (s *Store) ListMeetingsByOrganizerTelegram(ctx context.Context, telegramID int64) ([]MeetingWithTZ, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT `+meetingColsM+`, w.tz
@@ -251,8 +234,6 @@ func (s *Store) ListMeetingsByOrganizerTelegram(ctx context.Context, telegramID 
 	return out, rows.Err()
 }
 
-// ListScheduleForEmail returns the scheduled meetings in [from,to) where email is
-// a participant or the organizer (by platform_users.email).
 func (s *Store) ListScheduleForEmail(ctx context.Context, email string, from, to time.Time) ([]Meeting, error) {
 	return s.queryMeetings(ctx, `
 		SELECT DISTINCT `+meetingColsM+`
@@ -264,10 +245,6 @@ func (s *Store) ListScheduleForEmail(ctx context.Context, email string, from, to
 		ORDER BY m.starts_at`, email, from, to)
 }
 
-// ListMeetingsOverlapping returns scheduled meetings overlapping [from,to) where any
-// of emails is a participant or the organizer (by platform_users.email). Global by
-// email (no workspace scope), mirroring ListScheduleForEmail. Participants are NOT
-// hydrated (use ListParticipants for attribution). §4.7/§4.8
 func (s *Store) ListMeetingsOverlapping(ctx context.Context, emails []string, from, to time.Time) ([]Meeting, error) {
 	if len(emails) == 0 {
 		return nil, nil
@@ -290,8 +267,6 @@ func (s *Store) CancelMeeting(ctx context.Context, organizationID, id uuid.UUID)
 	return err
 }
 
-// CancelSeriesOccurrences cancels (status='cancelled') the scheduled occurrences
-// of a series at or after fromStart, in one atomic statement. Returns the count.
 func (s *Store) CancelSeriesOccurrences(ctx context.Context, organizationID, seriesID uuid.UUID, fromStart time.Time) (int, error) {
 	ct, err := s.pool.Exec(ctx, `
 		UPDATE meetings SET status = 'cancelled', updated_at = now()
@@ -303,9 +278,6 @@ func (s *Store) CancelSeriesOccurrences(ctx context.Context, organizationID, ser
 	return int(ct.RowsAffected()), nil
 }
 
-// CancelAllSeriesOccurrences cancels (status='cancelled') ALL scheduled
-// occurrences of a series in the workspace, in one atomic statement.
-// Returns the count.
 func (s *Store) CancelAllSeriesOccurrences(ctx context.Context, organizationID, seriesID uuid.UUID) (int, error) {
 	ct, err := s.pool.Exec(ctx, `
 		UPDATE meetings SET status = 'cancelled', updated_at = now()
@@ -324,14 +296,8 @@ func (s *Store) ListUpcomingMeetings(ctx context.Context, until time.Time) ([]Me
 		ORDER BY starts_at`, until)
 }
 
-// ReminderOffsetCreated is the sentinel offset_minutes value reserved in
-// meeting_reminders for the "meeting created" notification dedup. It never
-// collides with real reminder offsets (10/15/30/60/120/1440).
 const ReminderOffsetCreated = -1
 
-// TryClaimReminder atomically records that (meeting, telegram, offset) is being
-// reminded. Returns true if this call claimed it (caller should send), false if
-// it was already claimed.
 func (s *Store) TryClaimReminder(ctx context.Context, meetingID uuid.UUID, telegramID int64, offset int) (bool, error) {
 	ct, err := s.pool.Exec(ctx, `
 		INSERT INTO meeting_reminders (meeting_id, telegram_id, offset_minutes)

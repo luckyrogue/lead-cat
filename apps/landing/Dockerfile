@@ -1,5 +1,3 @@
-# Build context: repository root. Build: docker build -f apps/landing/Dockerfile .
-# Landing renders server-side (ssr: true), so it runs on a Node server.
 FROM node:22-alpine AS build
 WORKDIR /repo
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate

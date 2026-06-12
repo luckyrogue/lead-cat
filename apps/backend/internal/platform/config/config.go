@@ -144,7 +144,6 @@ func Load() (Config, error) {
 
 const fakeDevBotToken = "000000000:AAFakeDevTokenForLocalOnly"
 
-// RealBotToken is true when BOT_TOKEN is a non-placeholder value (bot polling can run).
 func (c Config) RealBotToken() bool {
 	return c.BotToken != "" && c.BotToken != fakeDevBotToken
 }

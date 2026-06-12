@@ -1,4 +1,3 @@
-# Build context: repository root. Build: docker build -f apps/backend/Dockerfile .
 FROM golang:1.26-alpine AS build
 WORKDIR /src
 COPY apps/backend/go.mod apps/backend/go.sum ./

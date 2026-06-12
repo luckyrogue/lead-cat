@@ -1,23 +1,29 @@
 # Authentication
 
-Lead Cat is a single-purpose Google Meet meetings-management Telegram Mini App. **Telegram-native auth is the only user-facing flow.** Platform auth (email/phone OTP, passkey, OAuth) and `/api/workspaces/*` return **410 Gone** — operator setup uses Mini App admin inside Telegram.
+Lead Cat has **two active user-facing auth surfaces**:
 
-> **Glossary:** **miniapp** — Telegram Mini App API layer (formerly `tma` in code and paths).
+1. **Telegram Mini App** — `POST /api/auth/miniapp` → Mini App JWT → `/api/miniapp/*`
+2. **Web app** — cookie sessions via `/api/auth/web/*` → `/api/orgs/*`
+
+**Retired (410 Gone):** legacy platform bootstrap (`/api/auth/email/*`, passkey, OAuth, `/api/workspaces/*`). Operator setup for the single default org still runs through **Mini App admin** inside Telegram (`/api/miniapp/admin/*`).
+
+> **Glossary:** **miniapp** — Telegram Mini App API layer (formerly `tma` in code and paths). **organization** — tenant/workspace row in `organizations` (TMA interim uses one default org; web supports multi-org).
 
 ---
 
 ## Overview
 
-All Mini App users authenticate through Telegram. There is no login page, no password, and no OAuth consent screen for end users. The backend issues a short-lived **Mini App JWT** that the frontend stores locally and attaches to every `/api/miniapp/*` request.
-
 ```
-Telegram client  →  POST /api/auth/miniapp  →  Mini App JWT
-                                                    ↓
-                        Authorization: Bearer <miniapp_jwt>
-                                                    ↓
-                              /api/miniapp/*  (MiniAppAuth middleware)
-                                                    ↓
-                           c.Locals("bot_user")  →  handler
+Telegram Mini App                    Web browser
+       │                                   │
+       ▼                                   ▼
+POST /api/auth/miniapp            /api/auth/web/* (SSO, magic link)
+       │                                   │
+       ▼                                   ▼
+ Mini App JWT (Bearer)            lc_session cookie + CSRF
+       │                                   │
+       ▼                                   ▼
+ /api/miniapp/*                    /api/orgs/*
 ```
 
 ---
@@ -96,23 +102,50 @@ Admin-only routes are under `/api/miniapp/admin/*`.
 
 ---
 
+## Web auth flow
+
+Active routes under `/api/auth/web/*` (registered **before** the legacy 410 catch-all):
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| `GET` | `/api/auth/web/:provider/start` | OAuth/SSO redirect (Google, Microsoft) |
+| `GET` | `/api/auth/web/:provider/callback` | OAuth callback; sets `lc_session` cookie |
+| `POST` | `/api/auth/web/magic/request` | Email magic-link request |
+| `GET` | `/api/auth/web/magic/verify` | Consume magic link; sets session cookie |
+| `POST` | `/api/auth/web/logout` | Revoke session (requires session) |
+| `GET` | `/api/auth/web/me` | Current `platform_users` profile (requires session) |
+
+Sessions are stored in `web_sessions` (hashed token, TTL, user agent, IP). The browser sends the `lc_session` httpOnly cookie; mutating `/api/orgs/*` requests also require the `X-CSRF-Token` header matching the cookie value.
+
+Web users are rows in `platform_users` with `auth_sub = email:<addr>` (same convention as the TMA organizer bridge), so TMA and web identities **merge by email**.
+
+Org-scoped API: `/api/orgs/*` — see `docs/API.md`.
+
+---
+
 ## Registration
 
-Users are registered by the Telegram bot, not through the Mini App directly.
+**Mini App:** Users register via the Telegram bot, not through HTTP forms.
 
 1. User opens the bot and sends `/start`.
 2. Bot FSM: full name → corporate email → `bot_users` row created (no email OTP).
 3. On the next Mini App open, `POST /api/auth/miniapp` succeeds and issues a Mini App JWT.
 
-There is no self-service registration form in the Mini App. Unregistered users see a "register in the bot" screen (triggered by the `not_registered` error code).
+**Web:** Sign-in via SSO or magic link; org membership via invites (`organization_invites`) or creating a new org.
 
 ---
 
 ## Identity model
 
-**`bot_users`** is the source of truth for Mini App identity: `telegram_id`, `email`, `full_name`, `role`.
+| World | Table | Key | Created by |
+| ----- | ----- | --- | ---------- |
+| **Bot users** | `bot_users` | `telegram_id` + email + role | Telegram bot `/start` FSM |
+| **Platform users** | `platform_users` | UUID + `auth_sub` | Web sign-in (`UpsertWebIdentity`) or TMA bridge (`EnsureMiniAppOrganizer`) |
+| **Web sessions** | `web_sessions` | hashed cookie token | `POST /api/auth/web/*` success |
 
-**`platform_users`** is an internal organizer bridge: `EnsureMiniAppOrganizer` find-or-creates a linked `platform_users` row by email on first meeting write. It is not a login surface.
+**`EnsureMiniAppOrganizer`** (`application/organizer_bridge.go`) — at TMA meeting-write time, find-or-creates `platform_users` by `auth_sub = email:<email>`, links Telegram ID, returns organizer UUID. Idempotent; merges with web accounts sharing the same email.
+
+**TMA tenancy (interim):** meeting writes resolve the **default organization** (`EnsureDefaultOrganization`) with Google configured — not org-picker in JWT yet. Web uses explicit org membership. Convergence is a later phase (see SaaS Phase 0 spec decision #8).
 
 ---
 
@@ -127,9 +160,12 @@ There is no self-service registration form in the Mini App. Unregistered users s
 | `BOT_ADMIN_TELEGRAM_IDS`   | Comma-separated Telegram IDs to bootstrap as `role="admin"`                                   |
 | `AUTH_DEV_MODE`            | Enable dev bypass: raw telegram_id accepted as `init_data` when it lacks `hash=`/`auth_date=` |
 | `VITE_MINIAPP_DEV_TG_ID`   | Frontend: telegram_id sent as `init_data` in browser-only dev mode                            |
+| `WEB_SESSION_TTL`          | Web session lifetime (see `docs/DEPLOY-DOKPLOY.md`)                                           |
+| `WEB_COOKIE_DOMAIN`        | Optional cookie domain for cross-subdomain sessions                                           |
+| OAuth client IDs/secrets     | Google/Microsoft web SSO (see deploy docs)                                                    |
 
 ---
 
 ## Appendix — Retired platform auth (410 Gone)
 
-All routes except `POST /api/auth/miniapp` under `/api/auth/*` return **410 Gone** with `Deprecation: true`. Operator bootstrap uses `/api/miniapp/admin/*` with a Mini App JWT from an admin `bot_user` — see `docs/SETUP.md`.
+Explicit legacy prefixes (`/api/auth/email/*`, passkey, OAuth, etc.) and the catch-all `/api/auth/*` (except routes registered earlier: `miniapp` + `web`) return **410 Gone** with `Deprecation: true`. Use `/api/auth/web/*`, `/api/orgs/*`, or `/api/miniapp/admin/*` for operator setup — see `docs/SETUP.md`.

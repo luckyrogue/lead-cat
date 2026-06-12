@@ -10,7 +10,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
 )
 
-// almatyLoc is the base timezone for free-slot windows (UTC+5). §4.8
 var almatyLoc = func() *time.Location {
 	loc, err := time.LoadLocation("Asia/Almaty")
 	if err != nil {
@@ -20,29 +19,23 @@ var almatyLoc = func() *time.Location {
 }()
 
 const (
-	workStartHour = 9  // 09:00 working-day start (Almaty). §4.8
-	workEndHour   = 18 // 18:00 working-day end (Almaty).
+	workStartHour = 9
+	workEndHour   = 18
 )
 
-// Conflict is one participant's overlapping meeting. §4.7.2
 type Conflict struct {
 	Email       string
 	PersonName  string
 	MeetingName string
-	Start, End  time.Time // UTC
+	Start, End  time.Time
 }
 
-// FreeSlot is a window where all queried participants are free. §4.8.4
 type FreeSlot struct {
-	Day        time.Time // start-of-day in Almaty
-	Start, End time.Time // UTC
+	Day        time.Time
+	Start, End time.Time
 	Mins       int
 }
 
-// MeetingConflicts returns overlaps with [start,end) across emails (participants +
-// organizer of each overlapping meeting), excluding excludeMeetingID (uuid.Nil =
-// none). Attribution is done in Go: per overlapping meeting we load its participants
-// and organizer email and keep those in the queried set. Global by email. §4.7
 func (s *Services) MeetingConflicts(ctx context.Context, emails []string, start, end time.Time, excludeMeetingID uuid.UUID) ([]Conflict, error) {
 	if len(emails) == 0 {
 		return nil, nil
@@ -99,9 +92,6 @@ func (s *Services) MeetingConflicts(ctx context.Context, emails []string, start,
 	return out, nil
 }
 
-// MeetingUpdateConflicts resolves a pending single-meeting edit's effective time,
-// participants and organizer, then checks §4.7 conflicts (excluding the meeting
-// itself). Returns nil when the edit does not change the time (overlap unchanged).
 func (s *Services) MeetingUpdateConflicts(ctx context.Context, organizationID, meetingID uuid.UUID, in UpdateMeetingInput) ([]Conflict, error) {
 	if in.Date == nil || in.Start == nil || in.End == nil {
 
@@ -130,7 +120,6 @@ func (s *Services) MeetingUpdateConflicts(ctx context.Context, organizationID, m
 	return s.MeetingConflicts(ctx, emails, start.UTC(), end.UTC(), meetingID)
 }
 
-// meetingEmails returns a meeting's participant emails plus its organizer email.
 func (s *Services) meetingEmails(ctx context.Context, organizationID, meetingID uuid.UUID) ([]string, error) {
 	m, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
@@ -159,7 +148,6 @@ func (s *Services) meetingEmails(ctx context.Context, organizationID, meetingID 
 	return emails, nil
 }
 
-// personName resolves a display name for an email (best-effort; falls back to email).
 func (s *Services) personName(ctx context.Context, email string) string {
 	matches, err := s.Store.SearchEmployeesGlobal(ctx, email)
 	if err == nil {
@@ -172,9 +160,6 @@ func (s *Services) personName(ctx context.Context, email string) string {
 	return email
 }
 
-// FreeSlots finds windows where ALL emails are free within [from,to) (day-exclusive),
-// Mon–Fri, workStartHour–workEndHour Almaty, gaps >= durMins. Global by email. §4.8
-// Callers should pass start-of-day Almaty boundaries for from/to so day windows align.
 func (s *Services) FreeSlots(ctx context.Context, emails []string, from, to time.Time, durMins int) ([]FreeSlot, error) {
 	if len(emails) == 0 || durMins <= 0 {
 		return nil, nil

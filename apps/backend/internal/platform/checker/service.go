@@ -11,7 +11,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
-// Backend is the application surface the checker FSM needs (satisfied by *application.Services).
 type Backend interface {
 	SearchEmployeesGlobal(ctx context.Context, query string) ([]postgres.Employee, error)
 	FreeSlots(ctx context.Context, emails []string, from, to time.Time, durMins int) ([]application.FreeSlot, error)
@@ -32,13 +31,11 @@ func New(backend Backend, sess sessions) *Service {
 	return &Service{backend: backend, sessions: sess}
 }
 
-// Start handles /checker: prompts for the first participant.
 func (s *Service) Start(ctx context.Context, telegramID int64) Reply {
 	_ = s.sessions.Set(ctx, telegramID, State{Step: stepParticipants})
 	return Reply{Text: "Поиск общего свободного времени.\nВведи имя или email участника:"}
 }
 
-// OnText feeds free text into the active step. bool=false when no active session.
 func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Reply, bool) {
 	st, err := s.sessions.Get(ctx, telegramID)
 	if err != nil || st == nil {
@@ -54,7 +51,6 @@ func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Re
 	return Reply{}, false
 }
 
-// OnCallback handles chk:* taps. bool=false for non-chk data.
 func (s *Service) OnCallback(ctx context.Context, telegramID int64, data string) (Reply, bool) {
 	if !strings.HasPrefix(data, "chk:") {
 		return Reply{}, false

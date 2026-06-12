@@ -15,7 +15,6 @@ type Service struct{ store store }
 
 func New(s store) *Service { return &Service{store: s} }
 
-// Settings renders the current reminder keyboard for a user.
 func (s *Service) Settings(ctx context.Context, telegramID int64) (string, [][]Button, error) {
 	u, err := s.store.GetBotUserByTelegramID(ctx, telegramID)
 	if err != nil {
@@ -25,7 +24,6 @@ func (s *Service) Settings(ctx context.Context, telegramID int64) (string, [][]B
 	return text, kb, nil
 }
 
-// Toggle flips one interval, persists, and returns the refreshed keyboard.
 func (s *Service) Toggle(ctx context.Context, telegramID int64, minutes int) (string, [][]Button, error) {
 	u, err := s.store.GetBotUserByTelegramID(ctx, telegramID)
 	if err != nil {

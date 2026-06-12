@@ -11,7 +11,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
-// Backend is the application surface the FSM needs (satisfied by *application.Services).
 type Backend interface {
 	SearchEmployeesGlobal(ctx context.Context, query string) ([]postgres.Employee, error)
 	EmployeeSchedule(ctx context.Context, email string, from, to time.Time) ([]postgres.Meeting, error)
@@ -32,13 +31,11 @@ func New(backend Backend, sess sessions) *Service {
 	return &Service{backend: backend, sessions: sess}
 }
 
-// Start handles /schedule: prompts for the employee to look up.
 func (s *Service) Start(ctx context.Context, telegramID int64) Reply {
 	_ = s.sessions.Set(ctx, telegramID, State{Step: stepAwait, AwaitingKind: awaitSearch})
 	return Reply{Text: "Чьё расписание показать? Введи email сотрудника или часть имени:"}
 }
 
-// OnCallback handles sched:* taps. The bool is false for non-sched data.
 func (s *Service) OnCallback(ctx context.Context, telegramID int64, data string) (Reply, bool) {
 	switch {
 	case strings.HasPrefix(data, "sched:pick:"):
@@ -53,8 +50,6 @@ func (s *Service) OnCallback(ctx context.Context, telegramID int64, data string)
 	return Reply{}, false
 }
 
-// OnText feeds free text into the active awaiting state. The bool is false when
-// there is no active schedule session.
 func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Reply, bool) {
 	st, err := s.sessions.Get(ctx, telegramID)
 	if err != nil || st == nil || st.Step != stepAwait {

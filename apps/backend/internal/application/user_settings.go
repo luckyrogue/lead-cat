@@ -9,29 +9,21 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/platform/botsettings"
 )
 
-// ErrInvalidReminderMinute is returned when a minute value is not in the
-// botsettings.Intervals whitelist.
 var ErrInvalidReminderMinute = errors.New("invalid_reminder_minute")
 
-// UserSettings is the per-user settings projection exposed to the Mini App.
 type UserSettings struct {
 	ReminderMinutes []int `json:"reminder_minutes"`
 }
 
-// userSettingsStore is the narrow store interface used by GetUserSettings /
-// SetUserReminderMinutes — defined here so unit tests can mock it.
 type userSettingsStore interface {
 	GetBotUserByTelegramID(ctx context.Context, telegramID int64) (model.BotUser, error)
 	SetReminderMinutes(ctx context.Context, telegramID int64, csv string) error
 }
 
-// GetUserSettings returns the authed bot user's settings.
 func (s *Services) GetUserSettings(ctx context.Context, telegramID int64) (UserSettings, error) {
 	return getUserSettings(ctx, s.Store, telegramID)
 }
 
-// SetUserReminderMinutes validates input against the whitelist, dedupes/sorts,
-// and writes canonical CSV.
 func (s *Services) SetUserReminderMinutes(ctx context.Context, telegramID int64, minutes []int) error {
 	return setUserReminderMinutes(ctx, s.Store, telegramID, minutes)
 }

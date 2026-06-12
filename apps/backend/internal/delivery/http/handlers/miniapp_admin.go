@@ -40,7 +40,7 @@ func (a *API) MiniAppAdminGetWorkspace(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
+		return fiber.NewError(fiber.StatusInternalServerError, "organization_not_found")
 	}
 	w, err := a.App.GetOrganization(c.Context(), id)
 	if err != nil {
@@ -71,7 +71,7 @@ func (a *API) MiniAppAdminCreateWorkspace(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
+		return fiber.NewError(fiber.StatusInternalServerError, "organization_not_found")
 	}
 	return c.JSON(fiber.Map{"id": id})
 }
@@ -80,7 +80,7 @@ func (a *API) MiniAppAdminGetIntegrations(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
+		return fiber.NewError(fiber.StatusInternalServerError, "organization_not_found")
 	}
 	view, err := a.App.GetIntegrations(c.Context(), id)
 	if err != nil {
@@ -99,7 +99,7 @@ func (a *API) MiniAppAdminPatchIntegrations(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
+		return fiber.NewError(fiber.StatusInternalServerError, "organization_not_found")
 	}
 	var body struct {
 		GoogleSAJSON     string `json:"google_sa_json"`
@@ -115,7 +115,7 @@ func (a *API) MiniAppAdminPatchIntegrations(c *fiber.Ctx) error {
 		if err := a.App.SetGoogleConfig(c.Context(), id, body.GoogleSAJSON, body.GoogleSubject, body.GoogleCalendarID); err != nil {
 			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 		}
-		a.App.Audit(c.UserContext(), "google_config_updated", "workspace", id.String(), map[string]any{
+		a.App.Audit(c.UserContext(), "google_config_updated", "organization", id.String(), map[string]any{
 			"subject":         body.GoogleSubject,
 			"calendar_id":     body.GoogleCalendarID,
 			"has_new_sa_json": body.GoogleSAJSON != "",
@@ -133,18 +133,18 @@ func (a *API) MiniAppAdminVerifyIntegrations(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
+		return fiber.NewError(fiber.StatusInternalServerError, "organization_not_found")
 	}
 	res, err := a.App.VerifyGoogleIntegration(c.Context(), id)
 	if err != nil {
 		code, status := mapVerifyError(err)
-		a.App.Audit(c.UserContext(), "google_verified", "workspace", id.String(), map[string]any{
+		a.App.Audit(c.UserContext(), "google_verified", "organization", id.String(), map[string]any{
 			"ok":         false,
 			"error_code": code,
 		})
 		return fiber.NewError(status, code)
 	}
-	a.App.Audit(c.UserContext(), "google_verified", "workspace", id.String(), map[string]any{
+	a.App.Audit(c.UserContext(), "google_verified", "organization", id.String(), map[string]any{
 		"ok":               true,
 		"calendar_summary": res.CalendarSummary,
 		"time_zone":        res.TimeZone,
@@ -173,7 +173,7 @@ func (a *API) MiniAppAdminChatStatus(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
+		return fiber.NewError(fiber.StatusInternalServerError, "organization_not_found")
 	}
 	w, err := a.App.GetOrganization(c.Context(), id)
 	if err != nil {
@@ -193,7 +193,7 @@ func (a *API) MiniAppAdminChatLink(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
+		return fiber.NewError(fiber.StatusInternalServerError, "organization_not_found")
 	}
 	var body struct {
 		ChatID    int64  `json:"chat_id"`
@@ -205,7 +205,7 @@ func (a *API) MiniAppAdminChatLink(c *fiber.Ctx) error {
 	if err := a.App.LinkChat(c.Context(), id, body.ChatID); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
-	a.App.Audit(c.UserContext(), "chat_linked", "workspace", id.String(), map[string]any{
+	a.App.Audit(c.UserContext(), "chat_linked", "organization", id.String(), map[string]any{
 		"chat_id":    body.ChatID,
 		"chat_title": body.ChatTitle,
 	})
@@ -216,7 +216,7 @@ func (a *API) MiniAppAdminListMembers(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
+		return fiber.NewError(fiber.StatusInternalServerError, "organization_not_found")
 	}
 	members, err := a.App.ListMembers(c.Context(), id)
 	if err != nil {
@@ -229,13 +229,13 @@ func (a *API) MiniAppAdminMembersSyncChat(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "workspace_not_found")
+		return fiber.NewError(fiber.StatusInternalServerError, "organization_not_found")
 	}
 	n, err := a.App.SyncChatMembers(c.Context(), id)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
-	a.App.Audit(c.UserContext(), "members_synced", "workspace", id.String(), map[string]any{
+	a.App.Audit(c.UserContext(), "members_synced", "organization", id.String(), map[string]any{
 		"added": n,
 	})
 	return c.JSON(fiber.Map{"added": n})

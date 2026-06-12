@@ -23,8 +23,6 @@ func (s *Store) ListOrganizationsForUser(ctx context.Context, userID uuid.UUID) 
 	return scanOrganizations(rows)
 }
 
-// CreateOrganization inserts a new organization and adds ownerUserID as its
-// owner member in a single transaction.
 func (s *Store) CreateOrganization(ctx context.Context, name, slug string, ownerUserID uuid.UUID) (Organization, error) {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
@@ -57,7 +55,6 @@ func (s *Store) CreateOrganization(ctx context.Context, name, slug string, owner
 	return w, nil
 }
 
-// GetOrgMember returns the member row for (orgID, userID). Returns (Member{}, false, nil) if not found.
 func (s *Store) GetOrgMember(ctx context.Context, orgID, userID uuid.UUID) (Member, bool, error) {
 	var m Member
 	err := s.pool.QueryRow(ctx, `
@@ -74,7 +71,6 @@ func (s *Store) GetOrgMember(ctx context.Context, orgID, userID uuid.UUID) (Memb
 	return m, true, nil
 }
 
-// ListOrgMembers returns all members of an organisation ordered by telegram_username.
 func (s *Store) ListOrgMembers(ctx context.Context, orgID uuid.UUID) ([]Member, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT om.id, om.organization_id, om.user_id, om.telegram_username, om.role, om.invited_email,
@@ -98,7 +94,6 @@ func (s *Store) ListOrgMembers(ctx context.Context, orgID uuid.UUID) ([]Member, 
 	return out, rows.Err()
 }
 
-// UpdateMemberRole sets the role for the member identified by (orgID, userID).
 func (s *Store) UpdateMemberRole(ctx context.Context, orgID, userID uuid.UUID, role string) error {
 	_, err := s.pool.Exec(ctx, `
 		UPDATE organization_members SET role = $3
@@ -107,7 +102,6 @@ func (s *Store) UpdateMemberRole(ctx context.Context, orgID, userID uuid.UUID, r
 	return err
 }
 
-// RemoveMember deletes the member identified by (orgID, userID).
 func (s *Store) RemoveMember(ctx context.Context, orgID, userID uuid.UUID) error {
 	_, err := s.pool.Exec(ctx, `
 		DELETE FROM organization_members
@@ -191,16 +185,6 @@ func (s *Store) AddMember(ctx context.Context, organizationID uuid.UUID, usernam
 func (s *Store) DeleteMember(ctx context.Context, memberID uuid.UUID) error {
 	_, err := s.pool.Exec(ctx, `DELETE FROM organization_members WHERE id = $1`, memberID)
 	return err
-}
-
-func (s *Store) IsMemberDeveloper(ctx context.Context, organizationID uuid.UUID, username string) (bool, error) {
-	username = normalizeUsername(username)
-	var n int
-	err := s.pool.QueryRow(ctx, `
-		SELECT COUNT(*) FROM organization_members
-		WHERE organization_id = $1 AND telegram_username = $2 AND role IN ('developer','admin','owner')`,
-		organizationID, username).Scan(&n)
-	return n > 0, err
 }
 
 func (s *Store) UpsertPendingChat(ctx context.Context, userID, chatID int64, title string) error {

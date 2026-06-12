@@ -89,15 +89,13 @@ func (a *API) MiniAppCreateMeeting(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
 	}
-	wsIDs, err := a.App.ListOrganizationsWithGoogle(c.Context())
+	organizationID, err := a.App.ResolveMiniAppOrganization(c.Context())
 	if err != nil {
+		if errors.Is(err, application.ErrGoogleNotConfigured) {
+			return fiber.NewError(fiber.StatusBadRequest, "meetings_not_configured")
+		}
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
-	if len(wsIDs) == 0 {
-		return fiber.NewError(fiber.StatusBadRequest, "meetings_not_configured")
-	}
-
-	organizationID := wsIDs[0]
 	organizerID, err := a.App.EnsureMiniAppOrganizer(c.Context(), bu.Email, bu.TelegramID)
 	if err != nil {
 		if errors.Is(err, application.ErrTelegramLinkedToOtherAccount) {
@@ -415,8 +413,6 @@ func mapMiniAppParticipantError(err error) error {
 	}
 }
 
-// resolveParticipantOp parses the meeting id, resolves the organizer's
-// organization and id, and returns them for a participant add/remove op.
 func (a *API) resolveParticipantOp(c *fiber.Ctx) (orgID, organizerID, meetingID uuid.UUID, err error) {
 	bu, ok := botUser(c)
 	if !ok {

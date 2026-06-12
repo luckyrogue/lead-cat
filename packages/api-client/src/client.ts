@@ -1,11 +1,20 @@
-import axios, { type AxiosInstance } from "axios";
+import axios, { type AxiosInstance } from "axios"
 
-export function createApiClient(baseURL: string): AxiosInstance {
+export type CreateApiClientOptions = {
+  withCredentials?: boolean
+}
+
+export function createApiClient(
+  baseURL: string,
+  options: CreateApiClientOptions = {}
+): AxiosInstance {
   return axios.create({
     baseURL,
-    withCredentials: true,
+    withCredentials: options.withCredentials ?? true,
     headers: {
+      Accept: "application/json",
       "Content-Type": "application/json",
     },
-  });
+    paramsSerializer: { indexes: null },
+  })
 }

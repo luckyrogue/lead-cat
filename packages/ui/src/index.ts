@@ -53,6 +53,9 @@ export {
 } from "./components/ui/dropdown-menu"
 export { Toaster } from "./components/ui/sonner"
 
+export { ParticipantsEditorPanel } from "./components/meetings/participants-editor-panel"
+export type { ParticipantsEditorPanelProps } from "./components/meetings/participants-editor-panel"
+
 export { Paw } from "./components/cat/paw"
 export { CatFace } from "./components/cat/cat-face"
 export { CatHead } from "./components/cat/cat-head"

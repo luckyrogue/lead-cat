@@ -13,19 +13,12 @@ import (
 )
 
 var (
-	// ErrJSONParse — SA JSON does not parse or is missing required fields.
 	ErrJSONParse = errors.New("sa_json_parse")
-	// ErrAPIDisabled — Calendar API is disabled for the GCP project.
 	ErrAPIDisabled = errors.New("calendar_api_disabled")
-	// ErrSubject — Domain-wide delegation failed for the impersonation subject.
 	ErrSubject = errors.New("subject_impersonation")
-	// ErrCalendar — Subject lacks access to the requested calendar id.
 	ErrCalendar = errors.New("calendar_not_accessible")
 )
 
-// Probe parses the SA JSON, impersonates `subject`, and reads metadata for
-// `calendarID`. Returns the *calendar.Calendar on success, or a sentinel-wrapped
-// error matching one of the Err* values. No side effects on Google.
 func Probe(ctx context.Context, saJSON, subject, calendarID string) (*calendar.Calendar, error) {
 	cfg, err := googleoauth.JWTConfigFromJSON([]byte(saJSON), calendar.CalendarScope)
 	if err != nil {
@@ -52,8 +45,6 @@ func Probe(ctx context.Context, saJSON, subject, calendarID string) (*calendar.C
 	return cal, nil
 }
 
-// isJSONParseErr catches private-key parse failures that surface only when the
-// OAuth2 transport tries to sign a JWT (after JWTConfigFromJSON succeeds).
 func isJSONParseErr(err error) bool {
 	msg := err.Error()
 	return strings.Contains(msg, "private key should be a PEM") ||

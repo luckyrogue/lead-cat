@@ -7,7 +7,7 @@ const goodCSV = "full_name,email,department\n" +
 	"\n" +
 	"  Петров Пётр  , p.petrov@company.kz ,  Маркетинг \n" +
 	",noname@company.kz,Без имени\n" +
-	"Без Почты,,Отдел\n" // empty email row is skipped
+	"Без Почты,,Отдел\n"
 
 func TestParse_Good(t *testing.T) {
 	recs, err := Parse([]byte(goodCSV))

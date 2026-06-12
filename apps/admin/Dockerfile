@@ -1,7 +1,3 @@
-# Build context: repository root. Build: docker build -f apps/admin/Dockerfile .
-# Admin is a SPA (ssr: false). nginx serves the static build and proxies
-# /api/* to the backend so cookie auth stays same-origin (SameSite=Lax).
-# Leave VITE_API_URL empty so the client calls relative /api paths.
 FROM node:22-alpine AS build
 WORKDIR /repo
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate

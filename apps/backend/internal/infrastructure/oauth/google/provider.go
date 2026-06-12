@@ -9,16 +9,12 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application"
 )
 
-// Provider implements application.SSOProvider for Google OIDC with PKCE.
 type Provider struct {
 	clientID, clientSecret string
 	verifier               *oidc.IDTokenVerifier
 	endpoint               oauth2.Endpoint
 }
 
-// New initialises the Google OIDC provider via discovery. It performs a live
-// HTTP call to https://accounts.google.com/.well-known/openid-configuration and
-// is intended to be called once at application startup.
 func New(ctx context.Context, clientID, clientSecret string) (*Provider, error) {
 	p, err := oidc.NewProvider(ctx, "https://accounts.google.com")
 	if err != nil {
@@ -32,7 +28,6 @@ func New(ctx context.Context, clientID, clientSecret string) (*Provider, error) 
 	}, nil
 }
 
-// Name satisfies application.SSOProvider.
 func (p *Provider) Name() string { return "google" }
 
 func (p *Provider) oauth(redirectURL string) *oauth2.Config {
@@ -45,14 +40,12 @@ func (p *Provider) oauth(redirectURL string) *oauth2.Config {
 	}
 }
 
-// AuthURL builds the Google authorization URL with PKCE S256 challenge.
 func (p *Provider) AuthURL(state, challenge, redirectURL string) string {
 	return p.oauth(redirectURL).AuthCodeURL(state,
 		oauth2.SetAuthURLParam("code_challenge", challenge),
 		oauth2.SetAuthURLParam("code_challenge_method", "S256"))
 }
 
-// Exchange swaps the authorization code for a verified application.SSOProfile.
 func (p *Provider) Exchange(ctx context.Context, code, verifier, redirectURL string) (application.SSOProfile, error) {
 	tok, err := p.oauth(redirectURL).Exchange(ctx, code, oauth2.SetAuthURLParam("code_verifier", verifier))
 	if err != nil {

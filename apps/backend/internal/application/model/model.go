@@ -87,7 +87,6 @@ type Meeting struct {
 	Participants    []MeetingParticipant `json:"participants"`
 }
 
-// MeetingWithTZ is a meeting plus its workspace timezone (for bot rendering).
 type MeetingWithTZ struct {
 	Meeting
 	TZ string
@@ -102,7 +101,6 @@ type BotUser struct {
 	ReminderMinutes string    `json:"reminder_minutes"`
 }
 
-// AuditEntry is one row in admin_audit_log.
 type AuditEntry struct {
 	ID              uuid.UUID       `json:"id"`
 	ActorUserID     uuid.UUID       `json:"actor_user_id"`
@@ -116,11 +114,10 @@ type AuditEntry struct {
 	CreatedAt       time.Time       `json:"created_at"`
 }
 
-// AuditFilter narrows ListAuditEntries.
 type AuditFilter struct {
-	Action     string // exact match, empty = any
-	ActorEmail string // exact match, empty = any
-	Limit      int    // 1..200; 0 → 50
+	Action     string
+	ActorEmail string
+	Limit      int
 }
 
 type OrganizationInvite struct {

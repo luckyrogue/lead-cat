@@ -8,5 +8,5 @@ const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 export default createConfig({
   rootDir,
   tsconfigPath: path.join(rootDir, "tsconfig.json"),
-  featureModules: ["dashboard"],
+  featureModules: ["dashboard", "meetings", "members", "invites", "auth"],
 })

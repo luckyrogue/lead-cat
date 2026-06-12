@@ -1,8 +1,8 @@
+import type { MiniAppUserSettings } from "@leadcat/api-client"
+
 import { apiFetch } from "~/shared/api/client"
 
-export type UserSettings = {
-  reminder_minutes: number[]
-}
+export type UserSettings = MiniAppUserSettings
 
 export const REMINDER_OPTIONS: { minutes: number; label: string }[] = [
   { minutes: 10, label: "10m" },

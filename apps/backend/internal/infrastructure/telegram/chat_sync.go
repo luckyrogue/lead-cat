@@ -11,8 +11,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
-// SyncChatMembers imports chat administrators into organization_members.
-// Telegram Bot API does not expose full member lists; admins + anyone who posts are tracked.
 func SyncChatMembers(ctx context.Context, b *bot.Bot, store *postgres.Store, organizationID uuid.UUID) (int, error) {
 	org, err := store.GetOrganization(ctx, organizationID)
 	if err != nil {

@@ -11,7 +11,7 @@ import {
   createMeetingSchema,
   type CreateMeetingForm,
 } from "~/features/meeting-create/lib/schema"
-import { WEEKDAYS, toggleDay } from "~/features/meeting-create/lib/weekdays"
+import { WEEKDAYS, toggleDay } from "@leadcat/types"
 import { fetchConflicts } from "~/entities/meeting/api"
 import { useCreateMeeting } from "~/entities/meeting/mutations"
 import type { Employee } from "~/entities/employee/types"

@@ -1,4 +1,3 @@
-// Package reminder_scheduler sends Telegram reminders for upcoming meetings.
 package reminder_scheduler
 
 import (
@@ -7,8 +6,6 @@ import (
 	"time"
 )
 
-// dueOffsets returns the offsets (minutes) whose reminder time has arrived:
-// now is at or past (startsAt - offset) and the meeting has not started yet.
 func dueOffsets(now, startsAt time.Time, offsets []int) []int {
 	var due []int
 	for _, off := range offsets {

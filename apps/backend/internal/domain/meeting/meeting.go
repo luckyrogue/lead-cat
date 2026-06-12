@@ -1,10 +1,7 @@
-// Package meeting holds the meeting domain: types, recurrence rules,
-// validation, and the meeting-name standard. No persistence or transport here.
 package meeting
 
 import "time"
 
-// Recurrence is how often a meeting repeats.
 type Recurrence string
 
 const (
@@ -23,16 +20,13 @@ var recurrenceLabels = map[Recurrence]string{
 	Monthly: "Ежемесячно",
 }
 
-// Valid reports whether r is a known recurrence value.
 func (r Recurrence) Valid() bool {
 	_, ok := recurrenceLabels[r]
 	return ok
 }
 
-// Label is the human-readable Russian label used in the meeting name.
 func (r Recurrence) Label() string { return recurrenceLabels[r] }
 
-// Input is the validated, parsed payload for creating a meeting.
 type Input struct {
 	Dept           string
 	Type           string
@@ -40,6 +34,6 @@ type Input struct {
 	StartsAt       time.Time
 	EndsAt         time.Time
 	Recurrence     Recurrence
-	RecurrenceDays []int // 1=Mon..7=Sun; required when Recurrence == Custom.
+	RecurrenceDays []int
 	Description    string
 }

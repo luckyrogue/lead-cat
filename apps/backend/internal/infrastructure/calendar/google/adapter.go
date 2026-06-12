@@ -1,6 +1,3 @@
-// Package google is the real Google Calendar adapter. It impersonates a
-// workspace's configured subject (domain-wide delegation) and creates events
-// with a Google Meet conference link.
 package google
 
 import (
@@ -18,8 +15,6 @@ type adapter struct {
 	calendarID string
 }
 
-// buildEvent maps a transport-agnostic CalendarEvent to a Google event with a
-// Meet create-request. requestID must be unique per insert.
 func buildEvent(e docalendar.CalendarEvent, requestID string) *calendar.Event {
 	var attendees []*calendar.EventAttendee
 	for _, em := range e.AttendeeEmails {
@@ -65,9 +60,6 @@ func (a *adapter) DeleteEvent(ctx context.Context, eventID string) error {
 	return a.svc.Events.Delete(a.calendarID, eventID).Context(ctx).Do()
 }
 
-// buildPatch maps a CalendarEvent to a partial Google event for Events.Patch.
-// It sets only the fields edited here; omitting Attendees and ConferenceData
-// leaves the guest list and the Meet link untouched.
 func buildPatch(e docalendar.CalendarEvent) *calendar.Event {
 	return &calendar.Event{
 		Summary:     e.Title,
@@ -94,9 +86,6 @@ func attendeeList(emails []string) []*calendar.EventAttendee {
 	return as
 }
 
-// UpdateAttendees replaces the event's guest list with emails. SendUpdates("all")
-// emails invites to newly-added guests and cancellations to removed ones.
-// ForceSendFields ensures an empty list actually clears the attendees.
 func (a *adapter) UpdateAttendees(ctx context.Context, eventID string, emails []string) error {
 	ev := &calendar.Event{Attendees: attendeeList(emails), ForceSendFields: []string{"Attendees"}}
 	_, err := a.svc.Events.Patch(a.calendarID, eventID, ev).SendUpdates("all").Context(ctx).Do()

@@ -10,14 +10,12 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
+	"github.com/luckyrogue/lead-cat/internal/application/command"
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/application/query"
 	"github.com/luckyrogue/lead-cat/internal/platform/authweb"
 )
 
-// ChatSyncer is a function that syncs chat administrators into organization_members.
-// It is injected at startup to avoid an import cycle between application and
-// the telegram infrastructure package.
 type ChatSyncer func(ctx context.Context, organizationID uuid.UUID) (int, error)
 
 type Services struct {
@@ -29,6 +27,7 @@ type Services struct {
 	Log          *zap.Logger
 	Bot          *bot.Bot
 	Queries      *query.Meetings
+	Commands     *command.Meetings
 	syncChat     ChatSyncer
 
 	sso        map[string]SSOProvider
@@ -38,7 +37,6 @@ type Services struct {
 	appBaseURL string
 }
 
-// ConfigureWebAuth constructs the web-auth services. Call once at startup after Store is set.
 func (s *Services) ConfigureWebAuth(sso map[string]SSOProvider, email EmailSender, appBaseURL string, sessionTTL, magicTTL time.Duration) {
 	s.sso = sso
 	s.email = email
@@ -47,10 +45,8 @@ func (s *Services) ConfigureWebAuth(sso map[string]SSOProvider, email EmailSende
 	s.sessions = newWebSessionService(s.Store, sessionTTL, time.Now)
 }
 
-// AppBaseURL returns the configured public base URL (for building redirects/links).
 func (s *Services) AppBaseURL() string { return s.appBaseURL }
 
-// ResolveWebUser resolves a session cookie to the web account (for WebAuth middleware).
 func (s *Services) ResolveWebUser(ctx context.Context, rawToken string) (model.PlatformUser, bool, error) {
 	ws, ok, err := s.sessions.ResolveSession(ctx, rawToken)
 	if err != nil || !ok {
@@ -92,7 +88,6 @@ func (s *Services) ListOrganizationsForUser(ctx context.Context, userID uuid.UUI
 	return s.Store.ListOrganizationsForUser(ctx, userID)
 }
 
-// CreateOrganizationForOwner derives a unique slug from name and creates the org with the user as owner.
 func (s *Services) CreateOrganizationForOwner(ctx context.Context, name string, ownerUserID uuid.UUID) (model.Organization, error) {
 	base := slugify(name)
 	if base == "" {
@@ -109,6 +104,14 @@ func (s *Services) CreateOrganizationForOwner(ctx context.Context, name string, 
 func (s *Services) WireCQRS() {
 	if s.Queries == nil {
 		s.Queries = query.NewMeetings(s)
+	}
+	if s.Commands == nil {
+		s.Commands = &command.Meetings{
+			Store:    s.Store,
+			Calendar: s.Calendar,
+			Queue:    s.Queue,
+			Log:      s.Log,
+		}
 	}
 }
 
@@ -163,15 +166,10 @@ func (s *Services) LinkChat(ctx context.Context, organizationID uuid.UUID, chatI
 	return s.Store.LinkChat(ctx, organizationID, chatID)
 }
 
-// SetChatSyncer injects the ChatSyncer function after bot initialisation.
-// Called from main after bot.New to avoid an import cycle.
 func (s *Services) SetChatSyncer(fn ChatSyncer) {
 	s.syncChat = fn
 }
 
-// SyncChatMembers imports current Telegram chat administrators into the
-// organization_members table. Thin wrapper around the telegram helper so HTTP
-// handlers don't reach into infrastructure.
 func (s *Services) SyncChatMembers(ctx context.Context, organizationID uuid.UUID) (int, error) {
 	if s.syncChat == nil {
 		return 0, fmt.Errorf("bot not configured")
@@ -219,8 +217,6 @@ func (s *Services) PatchIntegrations(ctx context.Context, organizationID uuid.UU
 	return s.Store.UpdateOrganization(ctx, organizationID, meetLink, tz)
 }
 
-// SetGoogleConfig encrypts and stores per-organization Google credentials. An empty
-// saJSON keeps the existing key (so subject/calendar can be updated alone).
 func (s *Services) SetGoogleConfig(ctx context.Context, organizationID uuid.UUID, saJSON, subject, calendarID string) error {
 	var enc []byte
 	if saJSON != "" {
@@ -251,7 +247,6 @@ func (s *Services) ListMembers(ctx context.Context, organizationID uuid.UUID) ([
 	return s.Store.ListMembers(ctx, organizationID)
 }
 
-// InviteToOrg records a pending invite and emails the invitee a sign-in link.
 func (s *Services) InviteToOrg(ctx context.Context, orgID uuid.UUID, email, role string, inviterUserID uuid.UUID) (model.OrganizationInvite, error) {
 	raw, err := authweb.NewState(nil)
 	if err != nil {
@@ -283,7 +278,6 @@ func (s *Services) ListOrgMembers(ctx context.Context, orgID uuid.UUID) ([]model
 	return s.Store.ListOrgMembers(ctx, orgID)
 }
 
-// RemoveOrgMember applies the last-owner guard then removes the member.
 func (s *Services) RemoveOrgMember(ctx context.Context, orgID, targetUserID uuid.UUID) error {
 	members, err := s.Store.ListOrgMembers(ctx, orgID)
 	if err != nil {
@@ -299,7 +293,6 @@ func (s *Services) RemoveOrgMember(ctx context.Context, orgID, targetUserID uuid
 	return s.Store.RemoveMember(ctx, orgID, targetUserID)
 }
 
-// SetOrgMemberRole applies the last-owner guard (when demoting from owner) then updates the role.
 func (s *Services) SetOrgMemberRole(ctx context.Context, orgID, targetUserID uuid.UUID, newRole string) error {
 	members, err := s.Store.ListOrgMembers(ctx, orgID)
 	if err != nil {

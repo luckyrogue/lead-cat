@@ -1,4 +1,3 @@
-// Package meetingedit drives the Telegram bot FSM for editing a meeting's fields.
 package meetingedit
 
 import (
@@ -7,8 +6,6 @@ import (
 	"time"
 )
 
-// parseTimeRange parses "HH:MM–HH:MM" (en dash or hyphen) into start/end, requiring
-// strict HH:MM and end > start.
 func parseTimeRange(text string) (start, end string, err error) {
 	rng := strings.NewReplacer("–", "-", "—", "-").Replace(strings.TrimSpace(text))
 	parts := strings.SplitN(rng, "-", 2)
@@ -31,8 +28,6 @@ func parseTimeRange(text string) (start, end string, err error) {
 	return st.Format("15:04"), en.Format("15:04"), nil
 }
 
-// parseDateTime parses "YYYY-MM-DD HH:MM–HH:MM" (en dash or hyphen) into the
-// override strings. It validates the formats and that end is after start.
 func parseDateTime(text string) (date, start, end string, err error) {
 	fields := strings.Fields(text)
 	if len(fields) != 2 {

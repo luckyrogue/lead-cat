@@ -9,17 +9,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/platform/auth"
 )
 
-func (s *Store) UpsertUser(ctx context.Context, authSub, email string) (User, error) {
-	var u User
-	err := s.pool.QueryRow(ctx, `
-		INSERT INTO platform_users (auth_sub, email)
-		VALUES ($1, $2)
-		ON CONFLICT (auth_sub) DO UPDATE SET email = EXCLUDED.email
-		RETURNING id, auth_sub, email, telegram_id`,
-		authSub, email).Scan(&u.ID, &u.AuthSub, &u.Email, &u.TelegramID)
-	return u, err
-}
-
 func (s *Store) GetUserBySub(ctx context.Context, sub string) (User, error) {
 	var u User
 	err := s.pool.QueryRow(ctx, `
@@ -40,7 +29,6 @@ func (s *Store) GetPlatformUserIDByTelegramID(ctx context.Context, telegramID in
 	return id, true, nil
 }
 
-// GetPlatformUserByID returns the platform user by id. ok is false when no row exists.
 func (s *Store) GetPlatformUserByID(ctx context.Context, id uuid.UUID) (PlatformUser, bool, error) {
 	var u PlatformUser
 	err := s.pool.QueryRow(ctx, `
@@ -74,8 +62,6 @@ func (s *Store) OwnerTelegramID(ctx context.Context, organizationID uuid.UUID) (
 	return *tid, nil
 }
 
-// GetUserTelegramID returns the platform user's linked Telegram id. ok is false
-// when the user exists but has not linked Telegram.
 func (s *Store) GetUserTelegramID(ctx context.Context, userID uuid.UUID) (int64, bool, error) {
 	var tg *int64
 	err := s.pool.QueryRow(ctx, `SELECT telegram_id FROM platform_users WHERE id = $1`, userID).Scan(&tg)
@@ -88,9 +74,6 @@ func (s *Store) GetUserTelegramID(ctx context.Context, userID uuid.UUID) (int64,
 	return *tg, true, nil
 }
 
-// UpsertWebIdentity provisions/refreshes the canonical account for a web sign-in,
-// keyed by auth_sub ("email:<lower>"). Returns the platform_users row.
-// name is accepted for future use (platform_users has no name column yet).
 func (s *Store) UpsertWebIdentity(ctx context.Context, email, _ string, avatarURL, authMethod string) (PlatformUser, error) {
 	sub := auth.SubEmail(email)
 	const q = `

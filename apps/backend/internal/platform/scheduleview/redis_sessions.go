@@ -9,7 +9,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// RedisSessions stores FSM state in Redis with a TTL, keyed by Telegram ID.
 type RedisSessions struct {
 	rdb *redis.Client
 	ttl time.Duration

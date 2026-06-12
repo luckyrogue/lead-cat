@@ -6,8 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// SetGoogleConfig stores the (already-encrypted) service-account JSON plus the
-// impersonation subject and target calendar for a workspace.
 func (s *Store) SetGoogleConfig(ctx context.Context, id uuid.UUID, encJSON []byte, subject, calendarID string) error {
 	_, err := s.pool.Exec(ctx, `
 		UPDATE organizations
@@ -16,7 +14,6 @@ func (s *Store) SetGoogleConfig(ctx context.Context, id uuid.UUID, encJSON []byt
 	return err
 }
 
-// GetGoogleConfig returns the encrypted SA JSON, subject, and calendar id.
 func (s *Store) GetGoogleConfig(ctx context.Context, id uuid.UUID) (encJSON []byte, subject, calendarID string, err error) {
 	err = s.pool.QueryRow(ctx, `
 		SELECT google_sa_json_enc, google_subject, google_calendar_id

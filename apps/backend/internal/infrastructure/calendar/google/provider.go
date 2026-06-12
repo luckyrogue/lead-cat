@@ -16,14 +16,10 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
-// Provider builds a per-organization Google Calendar client from the organization's
-// encrypted service-account credentials. Built adapters are cached, keyed by a
-// hash of the encrypted creds + subject + calendar id, so changing any of them
-// transparently yields a fresh client (no explicit invalidation needed).
 type Provider struct {
 	store  *postgres.Store
 	cipher *crypto.TokenCipher
-	cache  sync.Map // key string -> *adapter
+	cache  sync.Map
 }
 
 func NewProvider(store *postgres.Store, cipher *crypto.TokenCipher) *Provider {

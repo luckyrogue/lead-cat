@@ -1,68 +1,89 @@
 ---
-description: Mini App lite FSD (sadu-aligned)
-globs: "frontend/**"
+description: Mini App + Admin lite FSD
+globs: "apps/mini-app/**,apps/admin/**"
 alwaysApply: false
 ---
 
 # Frontend FSD
 
-Import direction: `app` → `routes` → `components` → `features` → `entities` → `shared`.
+Import direction: `routes` → `components` → `features` → `entities` → `shared`.
 
-Canonical reference: `frontend/README.md` (mirrors sadu/admin/app layout).
+Monorepo layout: `apps/mini-app`, `apps/admin`, `apps/landing`; shared UI in `packages/ui`, API types in `packages/api-client`, cross-app helpers in `packages/types`.
 
-## TMA-only SPA
+## mini-app (TMA SPA)
 
 - Layout: `routes/_tma.tsx` → `components/tma-shell/tma-layout.tsx`
-- Tab routes: `/`, `/meetings`, `/checker`, `/auto`, `/profile`
-- Overlay routes: `/meetings/create`, `/profile/colleague`, `/profile/admin`
-- Detail-as-sheet: `/meetings/$meetingId` reuses `MeetingsListPage`
-- TabBar items from `getVisibleTabBarModules(user)`; FAB unchanged by design
+- Tab routes: `/`, `/meetings`, `/checker`, `/profile`
+- Overlay routes: `/meetings/create`, `/profile/colleague`
+- Detail: `/meetings/$meetingId`
+- Auth: `shared/auth/auth-context.tsx` + `components/tma-shell/auth-gate.tsx`
+- `ssr: false` — static nginx build for Telegram WebView
 
-## Feature slices
+### Feature slices (mini-app)
 
 ```
 features/
-  auth/          — require-auth (route guard only)
   home/pages/
-  meetings/{queries,search-schema,pages/,list-url,meeting-detail*}/
-  # meetings/queries — URL scope filters only; reads/mutations → entities/meeting
-  meeting-create/{components/,lib/,pages/}/
-  checker/{components/,pages/} — useFreeSlots → entities/meeting/scheduling-queries
-  auto/{fixtures.ts,pages}/
-  profile/{components,pages}/
+  meetings/{components/,pages/}
+  meeting-create/{components/,lib/,pages/}
+  checker/{components/,pages/}
+  profile/{components/,pages/}
 entities/
-  employee/      — types, fixtures, api (searchEmployees), queries (useEmployeeSearch)
-  meeting/       — api, queries, write-api, mutations, scheduling-api, scheduling-queries, lib/
-  scenario/      — types
+  employee/   — types, api, queries
+  meeting/    — types, api, queries, mutations
+  settings/   — api, queries
 shared/
-  api/           — client, types, query-client, query-keys, list-params, health, generated/schema.ts
-  auth/          — types, session, tma-api, auth-context, refresh-session, module-policies, …
-  lib/           — cn, list-url-params, use-list-url-state, route-revalidation, toast, format-datetime
-  tma/           — i18n, stored-lang, palette, context, surface-vars, telegram-env
-components/      — tma-shell/*, meetings/{detail-row,meeting-title-preview,meeting-ui/*}, employee-picker, …
-app/             — providers, app-content, router, router-context
+  api/        — client, types, query-client, query-keys
+  auth/       — session, tma-api, auth-context
+  lib/        — format, …
+  tma/        — telegram-env
+components/   — tma-shell/*, meetings/*, states, employee-picker
 ```
 
-Feature X must not import feature Y; share via `shared/`, `entities/`, or `components/`.
+## admin (web dashboard)
+
+- Layout: `routes/_app.tsx` → `components/app-sidebar.tsx`
+- Routes: dashboard, meetings, members, invites; auth via `_auth`, onboarding
+- Cookie session + CSRF (`shared/api/client.ts`)
+
+### Feature slices (admin)
+
+```
+features/
+  dashboard/pages/
+  meetings/{components/,lib/,pages/}
+  members/{components/,pages/}
+  invites/{components/,pages/}
+  auth/components/
+entities/
+  meeting/    — types, api, queries, mutations
+  org/        — types, api, queries
+shared/
+  api/        — client, active-org, query-client
+  auth/       — api, use-me, use-active-org
+  lib/        — toast, cn
+components/   — app-sidebar, list-page-shell, page-loading, route-error-page
+```
+
+Feature X must not import feature Y; share via `shared/`, `entities/`, `components/`, or `packages/*`.
+
+ESLint `featureModules` in `apps/*/config/eslint.config.ts` enforces cross-feature boundaries.
 
 ## File size
 
-Hand-written `.ts`/`.tsx` files **≤300 lines** (exception: generated `routeTree.gen.ts`, `shared/api/generated/*`). Split pages into `components/` subfolders; extract UI repeated 2+ times into `components/`.
+Hand-written `.ts`/`.tsx` files **≤300 lines**. Split pages into `components/` subfolders; extract UI repeated 2+ times.
 
 ## Data loading
 
-- `apiFetch` + `ApiError` in `shared/api/client.ts`; Bearer via `getSession()`
-- 401 single-flight: `shared/auth/refresh-session.ts`
-- `queryOptions` in `entities/*/queries.ts`; mutations in `entities/meeting/mutations.ts`; keys in `shared/api/query-keys.ts`
-- Home loader: `myMeetingsQuery("upcoming")`; list default: `upcoming`; detail: `all`
-- Route `loader` + `shouldReload: shouldReloadExceptSearch` + `loaderDeps: () => ({})`
-- List filters: `shared/lib/use-list-url-state.ts` + `TmaListPageShell`
-- Health gate: `app/app-content.tsx` + `useAppHealth()`; Toaster inside gate
+- `@leadcat/api-client`: `createApiClient`, `apiFetch`, `ApiError`, OpenAPI types (`pnpm openapi:generate`)
+- mini-app: Bearer JWT via `shared/api/client.ts`; 401 reauth in `auth-context`
+- admin: cookie session; CSRF + `X-Org-Id` interceptors
+- `queryOptions` / read hooks in `entities/*/queries.ts`; mutations in `entities/*/mutations.ts`
+- Client-side fetching via TanStack Query `useQuery` / `useMutation`
 
 ## Tooling
 
-- `pnpm openapi:generate` → `shared/api/generated/schema.ts`
-- Route tree: `@tanstack/router-plugin` → `src/routeTree.gen.ts` (do not hand-edit)
-- `pnpm lint` — ESLint + `import/no-restricted-paths` (feature cross-imports, entities/shared boundaries)
-- `pnpm test` — vitest; `*.test.tsx` uses jsdom + Testing Library
-- pnpm only; UI from `@/components/ui/*` and `@/shared/ui/cat/*`
+- `pnpm openapi:generate` → `packages/api-client/src/generated/schema.ts`
+- React Router 7 file-based routes (`app/routes/*`)
+- `pnpm lint` — ESLint + `import/no-restricted-paths` (FSD layers + feature boundaries)
+- pnpm only; UI from `@leadcat/ui`

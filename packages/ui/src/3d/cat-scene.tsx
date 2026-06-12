@@ -41,7 +41,6 @@ function CatStageContent({
         color="#F2603F"
       />
 
-      {/* Soft peach/cream pedestal so the cat visibly sits on something. */}
       <mesh position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <circleGeometry args={[1.5, 48]} />
         <meshStandardMaterial
@@ -56,7 +55,6 @@ function CatStageContent({
         <meshStandardMaterial color="#F6D2B6" roughness={1} metalness={0} />
       </mesh>
 
-      {/* Tiny float so the cat breathes but never drifts off its shadow. */}
       <Float speed={1.2} rotationIntensity={0} floatIntensity={0.05}>
         <CatModelBoundary
           fallback={<LowPolyCat followPointer={followPointer} />}
@@ -67,7 +65,6 @@ function CatStageContent({
         </CatModelBoundary>
       </Float>
 
-      {/* Grounded contact shadow right at the cat's feet. */}
       <ContactShadows
         position={[0, 0.01, 0]}
         opacity={0.38}

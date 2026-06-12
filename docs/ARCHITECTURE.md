@@ -19,12 +19,14 @@ backend/internal/
 ├── domain/          ← pure business entities, no framework deps
 │   └── meeting/     ← Meeting, Recurrence, Span, Occurrences, FreeSlots, Overlaps
 ├── application/     ← orchestration: commands, queries, identity bridge
-│   ├── meeting_service.go   (CreateMeeting, UpdateMeeting, CancelMeeting, ListMeetings, GetMeeting)
+│   ├── command/             (meeting write commands: create, update, cancel)
+│   ├── meeting_service.go   (thin facade → command; list/get meetings)
 │   ├── conflict.go          (MeetingConflicts, FreeSlots)
 │   ├── series_edit.go       (series-level edits)
 │   ├── organizer_bridge.go  (EnsureMiniAppOrganizer)
+│   ├── miniapp_org.go       (ResolveMiniAppOrganization — interim default org)
 │   ├── query/               (Mini App read-model assembly; CQRS read side)
-│   └── services.go          (Services facade; workspace/member helpers)
+│   └── services.go          (Services facade; org/member/web-auth helpers)
 ├── delivery/
 │   └── http/        ← Fiber handlers, middleware; no business logic
 ├── infrastructure/
@@ -50,8 +52,8 @@ backend/internal/
 | Layer            | Responsibility                                                                                                                                                                                                          |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `domain/meeting` | Value types, recurrence maths, overlap/free-slot logic. No I/O.                                                                                                                                                         |
-| `application`    | Orchestrates domain + infrastructure. Commands mutate state (CreateMeeting, UpdateMeeting, CancelMeeting). Queries read state (MeetingConflicts, FreeSlots, EmployeeSchedule). `EnsureMiniAppOrganizer` bridges identities. |
-| `delivery/http`  | Maps HTTP ↔ application calls. Public health + `POST /api/auth/miniapp`; meetings product on `/api/miniapp/*` (+ `/api/miniapp/admin/*` for operators). Retired platform routes return 410.                               |
+| `application`    | Orchestrates domain + infrastructure. **Commands** (`command/`) mutate meetings. **Queries** (`query/`) assemble read models. `EnsureMiniAppOrganizer` / `UpsertWebIdentity` bridge `platform_users`. Web sessions + org CRUD live on `Services`. |
+| `delivery/http`  | Maps HTTP ↔ application. Active: `POST /api/auth/miniapp`, `/api/auth/web/*`, `/api/orgs/*`, `/api/miniapp/*`, `/api/miniapp/admin/*`. Legacy `/api/workspaces/*` and old platform `/api/auth/*` return 410.                               |
 | `infrastructure` | Implements ports used by `application`: Postgres store, Google Calendar adapter, asynq queue client.                                                                                                                    |
 | `platform`       | Cross-cutting runtime concerns: auth token issuers, bot FSMs, notification workers, reminder scheduler, observability.                                                                                                  |
 
@@ -59,16 +61,19 @@ backend/internal/
 
 ## Identity
 
-Two tables cooperate; only one is user-facing auth:
-
 | World              | Table            | Key                                    | Created by                                                     |
 | ------------------ | ---------------- | -------------------------------------- | -------------------------------------------------------------- |
 | **Bot users**      | `bot_users`      | `telegram_id` + corporate email + role | Telegram bot `/start` FSM (`platform/botreg`)                  |
-| **Platform users** | `platform_users` | UUID                                   | Lazily created by `EnsureMiniAppOrganizer` (organizer bridge) |
+| **Platform users** | `platform_users` | UUID + `auth_sub`                      | Web sign-in or `EnsureMiniAppOrganizer` (same `email:<addr>` sub) |
+| **Web sessions**   | `web_sessions`   | hashed cookie token                    | `/api/auth/web/*` success                                      |
 
-**Mini App JWT** (`tok_typ: "miniapp"`, 24 h) — issued by `POST /api/auth/miniapp` after validating Telegram `initData`. Claims carry the `bot_user` identity.
+**Mini App JWT** (`tok_typ: "miniapp"`, 24 h) — `POST /api/auth/miniapp` → `/api/miniapp/*`.
 
-**`EnsureMiniAppOrganizer`** (`application/organizer_bridge.go`) — internal bridge at meeting-write time. Find-or-creates a `platform_users` row keyed by `auth_sub = "email:<email>"`, links the Telegram ID, returns the UUID used as `organizer_user_id`. Idempotent.
+**Web cookie session** — `/api/auth/web/*` → `web_sessions` → `/api/orgs/*` (org membership via `organization_members`).
+
+**`EnsureMiniAppOrganizer`** — TMA meeting-write bridge; merges with web identity by email (`auth_sub`).
+
+**TMA org (interim):** `ResolveMiniAppOrganization` pins writes to the default org with Google configured; web uses per-user org list + `RequireOrgMember`.
 
 ---
 
@@ -91,8 +96,16 @@ Handler (delivery/http)
   ▼
 application.Services  (EnsureMiniAppOrganizer if write, then meeting command/query)
   │
-  ├──▶ infrastructure/persistence/postgres  (meetings, participants, employees, workspaces)
+  ├──▶ infrastructure/persistence/postgres  (meetings, participants, employees, organizations)
   └──▶ infrastructure/calendar              (Google Calendar event create/update/delete)
+```
+
+**Web route group** (`/api/orgs/:id/*`):
+
+```
+Browser  →  WebAuth middleware (lc_session cookie)
+        →  RequireOrgMember
+        →  application.Services.CreateMeeting / …  (same command layer as TMA)
 ```
 
 **Mini App route group** (`/api/miniapp/*`):
@@ -125,4 +138,4 @@ asynq worker process (same binary)
 
 ## Appendix — Retired platform bootstrap
 
-Platform JWT routes (`/api/auth/email/*`, passkey, OAuth) and `/api/workspaces/*` return **410 Gone**. Operator setup runs through Mini App admin (`/api/miniapp/admin/*`) inside Telegram — see `docs/SETUP.md` and `docs/API.md`.
+Legacy platform JWT routes (`/api/auth/email/*`, passkey, old OAuth) and `/api/workspaces/*` return **410 Gone**. Active operator paths: **web** (`/api/auth/web/*` + `/api/orgs/*`) and **TMA admin** (`/api/miniapp/admin/organization`, deprecated alias `/admin/workspace`) — see `docs/SETUP.md` and `docs/API.md`.

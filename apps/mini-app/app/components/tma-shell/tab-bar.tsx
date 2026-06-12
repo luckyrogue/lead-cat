@@ -24,7 +24,10 @@ const TABS: Tab[] = [
 
 export function TabBar() {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md border-t border-border/60 bg-background/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+    <nav
+      aria-label="Main navigation"
+      className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md border-t border-border/60 bg-background/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+    >
       <ul className="flex items-stretch justify-around">
         {TABS.map((tab) => {
           const Icon = tab.icon

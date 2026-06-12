@@ -1,6 +1,3 @@
-// Package botreg drives the Telegram /start registration FSM: name -> email ->
-// create bot_users. It depends on small interfaces so the flow is testable
-// without Redis, Postgres, or Telegram.
 package botreg
 
 import (
@@ -11,9 +8,8 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
-// State is the per-user FSM state (stored in Redis between messages).
 type State struct {
-	Step     string `json:"step"` // awaiting_name | awaiting_email
+	Step     string `json:"step"`
 	FullName string `json:"full_name"`
 	Email    string `json:"email"`
 }
@@ -49,8 +45,6 @@ func New(users userStore, sess sessions, adminIDs []int64) *Service {
 	return &Service{users: users, sessions: sess, admins: admins}
 }
 
-// Start handles /start: returns a welcome for registered users, otherwise opens
-// the registration flow and prompts for the full name.
 func (s *Service) Start(ctx context.Context, telegramID int64) string {
 	if _, err := s.users.GetBotUserByTelegramID(ctx, telegramID); err == nil {
 		return "С возвращением! 🐾 Открой приложение из меню."
@@ -71,8 +65,6 @@ func (s *Service) finishRegistration(ctx context.Context, telegramID int64, st S
 	return "Готово, " + st.FullName + "! 🐾", true
 }
 
-// OnText feeds a free-text message into an active registration session. The
-// bool is false (and reply empty) when there is no active session.
 func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (string, bool) {
 	st, err := s.sessions.Get(ctx, telegramID)
 	if err != nil || st == nil {

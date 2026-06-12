@@ -19,7 +19,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/platform/scheduleview"
 )
 
-// botBackend is the application surface the bot FSMs need (satisfied by *application.Services).
 type botBackend interface {
 	meetingedit.Backend
 	scheduleview.Backend

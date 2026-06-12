@@ -1,3 +1,9 @@
+import type {
+  MiniAppFreeSlotsResponse,
+  MiniAppMeetingsResponse,
+  MiniAppOccurrenceConflicts,
+} from "@leadcat/api-client"
+
 import { apiFetch } from "~/shared/api/client"
 import type { MeetingScope } from "~/shared/api/query-keys"
 import type {
@@ -11,14 +17,14 @@ import type {
 } from "~/entities/meeting/types"
 
 export async function fetchMyMeetings(scope: MeetingScope): Promise<Meeting[]> {
-  const res = await apiFetch<{ meetings: Meeting[] }>("/api/miniapp/meetings", {
+  const res = await apiFetch<MiniAppMeetingsResponse>("/api/miniapp/meetings", {
     params: { scope },
   })
   return res.meetings ?? []
 }
 
 export async function fetchSchedule(email: string, scope: MeetingScope): Promise<Meeting[]> {
-  const res = await apiFetch<{ meetings: Meeting[] }>("/api/miniapp/schedule", {
+  const res = await apiFetch<MiniAppMeetingsResponse>("/api/miniapp/schedule", {
     params: { email, scope },
   })
   return res.meetings ?? []
@@ -80,10 +86,10 @@ type ConflictsInput = {
 }
 
 export async function fetchConflicts(input: ConflictsInput): Promise<OccurrenceConflicts[]> {
-  const res = await apiFetch<{ occurrences: OccurrenceConflicts[] }>("/api/miniapp/conflicts", {
-    method: "POST",
-    body: input,
-  })
+  const res = await apiFetch<{ occurrences: MiniAppOccurrenceConflicts[] }>(
+    "/api/miniapp/conflicts",
+    { method: "POST", body: input }
+  )
   return res.occurrences ?? []
 }
 
@@ -99,7 +105,7 @@ type FreeSlotsInput = {
 }
 
 export async function fetchFreeSlots(input: FreeSlotsInput): Promise<FreeSlot[]> {
-  const res = await apiFetch<{ slots: FreeSlot[] }>("/api/miniapp/free-slots", {
+  const res = await apiFetch<MiniAppFreeSlotsResponse>("/api/miniapp/free-slots", {
     method: "POST",
     body: input,
   })

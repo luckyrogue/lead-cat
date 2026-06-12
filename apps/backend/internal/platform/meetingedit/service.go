@@ -16,7 +16,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
-// Backend is the application surface the FSM needs (satisfied by *application.Services).
 type Backend interface {
 	ListEditableMeetings(ctx context.Context, telegramID int64) ([]postgres.MeetingWithTZ, error)
 	UpdateMeeting(ctx context.Context, organizationID, userID, meetingID uuid.UUID, in application.UpdateMeetingInput) (postgres.Meeting, error)
@@ -45,7 +44,6 @@ func New(backend Backend, sess sessions) *Service {
 	return &Service{backend: backend, sessions: sess}
 }
 
-// Start handles /edit: lists the user's upcoming meetings as a pick keyboard.
 func (s *Service) Start(ctx context.Context, telegramID int64) Reply {
 	ms, err := s.backend.ListEditableMeetings(ctx, telegramID)
 	if err != nil {
@@ -61,8 +59,6 @@ func (s *Service) Start(ctx context.Context, telegramID int64) Reply {
 	return Reply{Text: "Выбери встречу для редактирования:", Keyboard: rows}
 }
 
-// OnCallback handles medit:* inline-button taps. The bool is false when data is
-// not an medit callback.
 func (s *Service) OnCallback(ctx context.Context, telegramID int64, data string) (Reply, bool) {
 	switch {
 	case strings.HasPrefix(data, "medit:pick:"):
@@ -102,8 +98,6 @@ func (s *Service) OnCallback(ctx context.Context, telegramID int64, data string)
 	return Reply{}, false
 }
 
-// OnText feeds a free-text value into an active "awaiting field" session. The
-// bool is false when there is no awaiting session (so other handlers can run).
 func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Reply, bool) {
 	st, err := s.sessions.Get(ctx, telegramID)
 	if err != nil || st == nil || st.Step != stepAwaiting {
@@ -245,7 +239,6 @@ func (s *Service) apply(ctx context.Context, telegramID int64) Reply {
 	return s.doApply(ctx, telegramID, st)
 }
 
-// applyForce skips the §4.7 conflict warning (user chose "Да, применить").
 func (s *Service) applyForce(ctx context.Context, telegramID int64) Reply {
 	st, err := s.sessions.Get(ctx, telegramID)
 	if err != nil || st == nil {
@@ -327,7 +320,6 @@ func (s *Service) backToMenu(ctx context.Context, telegramID int64) Reply {
 	return menuReply(*st, true)
 }
 
-// parts renders the participants sub-menu and records the shown emails by index.
 func (s *Service) parts(ctx context.Context, telegramID int64) Reply {
 	st, err := s.sessions.Get(ctx, telegramID)
 	if err != nil || st == nil {
@@ -376,8 +368,6 @@ func (s *Service) padd(ctx context.Context, telegramID int64) Reply {
 	return Reply{Text: "Введи email участника или часть имени для поиска:"}
 }
 
-// searchParticipant offers directory matches (plus the raw email if valid) as add
-// buttons. Stays in the awaiting step so re-typing re-searches.
 func (s *Service) searchParticipant(ctx context.Context, telegramID int64, st *State, query string) Reply {
 	orgID, _ := uuid.Parse(st.OrganizationID)
 	emps, err := s.backend.SearchEmployees(ctx, orgID, query)
@@ -484,7 +474,6 @@ func (s *Service) premConfirm(ctx context.Context, telegramID int64) Reply {
 	return s.parts(ctx, telegramID)
 }
 
-// indexInto resolves a string index into a slice, guarding bounds.
 func indexInto(list []string, idxStr string) (string, bool) {
 	i, err := strconv.Atoi(idxStr)
 	if err != nil || i < 0 || i >= len(list) {

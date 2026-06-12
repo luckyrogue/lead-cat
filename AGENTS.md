@@ -4,7 +4,7 @@ Single-purpose **Google Meet meetings-management Telegram Mini App**: **frontend
 
 ## Stack
 
-- **Auth:** Telegram Mini App only — JWT via `POST /api/auth/miniapp`; platform OTP/passkey/OAuth retired (410). Operator setup via `/api/miniapp/admin/*` (see `docs/AUTH.md`).
+- **Auth:** TMA JWT via `POST /api/auth/miniapp` + web cookie sessions via `/api/auth/web/*` and `/api/orgs/*`; legacy platform OTP/passkey/OAuth and `/api/workspaces/*` return 410. TMA operator setup via `/api/miniapp/admin/*` (see `docs/AUTH.md`).
 - **Data:** Postgres (SoT), Redis (asynq job queues + scheduler leader lock)
 - **Deploy:** Dokploy — see `docs/DEPLOY-DOKPLOY.md`
 - **Product overview:** `docs/MEETINGS.md`; full spec (ТЗ): `docs/NEW-FEATURES.md`; frontend structure: `frontend/README.md`.

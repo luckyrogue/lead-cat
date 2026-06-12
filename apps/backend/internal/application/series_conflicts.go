@@ -9,22 +9,15 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
 )
 
-// OccurrenceConflicts is the per-occurrence result of a series conflict check.
 type OccurrenceConflicts struct {
 	Span      meeting.Span
 	Conflicts []Conflict
 }
 
-// expandSeriesSpans is the pure expansion helper — a thin wrapper over the
-// domain Occurrences function so tests can hit the math without a Services
-// receiver. Kept here for locality with MeetingSeriesConflicts.
 func expandSeriesSpans(start, end time.Time, r meeting.Recurrence, days []int, until time.Time) ([]meeting.Span, error) {
 	return meeting.Occurrences(start, end, r, days, until)
 }
 
-// MeetingSeriesConflicts expands a hypothetical series and runs the existing
-// per-occurrence conflict check against each. Only occurrences with ≥1 conflict
-// are returned. Spans are in chronological order.
 func (s *Services) MeetingSeriesConflicts(ctx context.Context, emails []string, start, end time.Time, r meeting.Recurrence, days []int, until time.Time) ([]OccurrenceConflicts, error) {
 	spans, err := expandSeriesSpans(start, end, r, days, until)
 	if err != nil {

@@ -10,7 +10,6 @@ import (
 
 const auditCols = `id, actor_user_id, actor_telegram_id, actor_email, actor_kind, action, target_kind, target_id, details, created_at`
 
-// InsertAuditEntry writes a new row. details may be empty/nil; we coerce to '{}'.
 func (s *Store) InsertAuditEntry(ctx context.Context, e AuditEntry) error {
 	if len(e.Details) == 0 {
 		e.Details = json.RawMessage(`{}`)
@@ -26,7 +25,6 @@ func (s *Store) InsertAuditEntry(ctx context.Context, e AuditEntry) error {
 	return err
 }
 
-// ListAuditEntries returns entries by created_at DESC. Filters are AND-combined.
 func (s *Store) ListAuditEntries(ctx context.Context, f AuditFilter) ([]AuditEntry, error) {
 	limit := f.Limit
 	if limit <= 0 {
@@ -68,12 +66,6 @@ func (s *Store) ListAuditEntries(ctx context.Context, f AuditFilter) ([]AuditEnt
 	return out, rows.Err()
 }
 
-// EnsureDefaultOrganizationID returns the single Lead Cat organization id, creating
-// it on first call. Idempotent — safe under concurrency thanks to the slug
-// uniqueness constraint on the organizations table.
-//
-// ownerUserID may be uuid.Nil — in that case the organization is created with
-// owner_user_id = NULL (which is permitted by the FK definition).
 func (s *Store) EnsureDefaultOrganizationID(ctx context.Context, defaultTZ, defaultMeetLink string, ownerUserID uuid.UUID) (uuid.UUID, error) {
 	var id uuid.UUID
 	err := s.pool.QueryRow(ctx, `SELECT id FROM organizations WHERE name = 'Lead Cat' LIMIT 1`).Scan(&id)
@@ -81,7 +73,6 @@ func (s *Store) EnsureDefaultOrganizationID(ctx context.Context, defaultTZ, defa
 		return id, nil
 	}
 
-	// Build owner arg as nil-when-zero so the FK accepts a missing owner.
 	var ownerArg any
 	if ownerUserID != uuid.Nil {
 		ownerArg = ownerUserID
@@ -101,4 +92,19 @@ func (s *Store) EnsureDefaultOrganizationID(ctx context.Context, defaultTZ, defa
 		return uuid.Nil, err
 	}
 	return id, nil
+}
+
+func (s *Store) DefaultOrganizationWithGoogle(ctx context.Context) (uuid.UUID, bool, error) {
+	var id uuid.UUID
+	err := s.pool.QueryRow(ctx, `
+		SELECT id FROM organizations
+		WHERE name = 'Lead Cat' AND google_sa_json_enc IS NOT NULL AND google_subject <> ''
+		LIMIT 1`).Scan(&id)
+	if IsNotFound(err) {
+		return uuid.Nil, false, nil
+	}
+	if err != nil {
+		return uuid.Nil, false, err
+	}
+	return id, true, nil
 }

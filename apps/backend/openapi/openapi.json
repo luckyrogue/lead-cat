@@ -577,13 +577,142 @@
         }
       }
     },
+    "/api/miniapp/admin/organization": {
+      "get": {
+        "operationId": "miniappAdminOrganizationGet",
+        "tags": [
+          "miniapp-admin"
+        ],
+        "summary": "Get organization status",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organization status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MiniAppAdminWorkspaceStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "miniappAdminOrganizationPost",
+        "tags": [
+          "miniapp-admin"
+        ],
+        "summary": "Ensure default organization",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organization id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/miniapp/admin/workspace": {
       "get": {
         "operationId": "miniappAdminWorkspaceGet",
         "tags": [
           "miniapp-admin"
         ],
-        "summary": "Get workspace status",
+        "summary": "Get workspace status (deprecated — use /organization)",
+        "deprecated": true,
         "security": [
           {
             "bearerAuth": []
@@ -637,7 +766,8 @@
         "tags": [
           "miniapp-admin"
         ],
-        "summary": "Create workspace",
+        "summary": "Ensure workspace (deprecated — use /organization)",
+        "deprecated": true,
         "security": [
           {
             "bearerAuth": []

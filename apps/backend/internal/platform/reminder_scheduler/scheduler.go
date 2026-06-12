@@ -15,8 +15,6 @@ import (
 
 const lockKey = "leadcat:reminders:leader"
 
-// defaultOrganizerOffsets is used for the organizer (who has no bot_users
-// reminder settings).
 var defaultOrganizerOffsets = []int{15}
 
 type Scheduler struct {
@@ -77,9 +75,6 @@ func (s *Scheduler) tick(ctx context.Context) {
 	}
 }
 
-// recipients maps telegram_id -> reminder offsets: registered participants use
-// their own settings; the organizer uses the default. Resolution is delegated to
-// the shared meetingrecipients helper.
 func (s *Scheduler) recipients(ctx context.Context, m postgres.Meeting) map[int64][]int {
 	out := map[int64][]int{}
 	recs, err := meetingrecipients.Resolve(ctx, s.store, m)

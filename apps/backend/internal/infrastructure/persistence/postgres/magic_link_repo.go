@@ -8,14 +8,12 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// InsertMagicLink stores a hashed one-time login token.
 func (s *Store) InsertMagicLink(ctx context.Context, email string, tokenHash []byte, expiresAt time.Time) error {
 	const q = `INSERT INTO magic_link_tokens (email, token_hash, purpose, expires_at) VALUES ($1, $2, 'login', $3)`
 	_, err := s.pool.Exec(ctx, q, email, tokenHash, expiresAt)
 	return err
 }
 
-// ConsumeMagicLink atomically marks a valid unconsumed token consumed and returns its email.
 func (s *Store) ConsumeMagicLink(ctx context.Context, tokenHash []byte, now time.Time) (string, bool, error) {
 	const q = `UPDATE magic_link_tokens SET consumed_at = $2
 	  WHERE token_hash = $1 AND consumed_at IS NULL AND expires_at > $2

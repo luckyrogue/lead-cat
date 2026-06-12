@@ -6,13 +6,8 @@ import (
 	"testing"
 )
 
-// minCoverage is the floor enforced for this package (formerly
-// scripts/check-middleware-coverage.sh).
 const minCoverage = 0.50
 
-// TestMain fails the run if statement coverage drops below minCoverage. It only
-// fires under `go test -cover`; a plain `go test` leaves testing.Coverage() at
-// 0, so the gate is skipped.
 func TestMain(m *testing.M) {
 	code := m.Run()
 	if code == 0 {

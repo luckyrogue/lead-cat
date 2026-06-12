@@ -1,8 +1,16 @@
 import { Toaster } from "@leadcat/ui"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { useEffect } from "react"
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router"
+import {
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  type ErrorResponse,
+} from "react-router"
 
+import { RouteErrorPage } from "~/components/route-error-page"
 import { getQueryClient } from "~/shared/api/query-client"
 import { AuthProvider } from "~/shared/auth/auth-context"
 import { initTelegramViewport } from "~/shared/tma/telegram-env"
@@ -45,4 +53,8 @@ export default function App() {
       </AuthProvider>
     </QueryClientProvider>
   )
+}
+
+export function ErrorBoundary({ error }: { error: ErrorResponse | Error }) {
+  return <RouteErrorPage error={error} />
 }

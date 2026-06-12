@@ -17,7 +17,7 @@ import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 
 import type { MeetingRecurrence, MeetingScope } from "~/entities/meeting/types"
-import { WEEKDAYS, toggleDay } from "~/features/meetings/lib/weekdays"
+import { WEEKDAYS, toggleDay } from "@leadcat/types"
 
 const RECURRENCES: MeetingRecurrence[] = [
   "once",

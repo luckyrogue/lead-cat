@@ -1,5 +1,3 @@
-// Package employeedir loads the corporate employee directory from an embedded
-// CSV and syncs it into Google-configured workspaces. §1.2 / §9.4
 package employeedir
 
 import (
@@ -9,7 +7,6 @@ import (
 	"strings"
 )
 
-// Record is one parsed directory entry. Email is normalized to lower-case.
 type Record struct {
 	FullName string
 	Email    string
@@ -18,10 +15,6 @@ type Record struct {
 
 var wantHeader = []string{"full_name", "email", "department"}
 
-// Parse reads employees.csv bytes into records. The header row must be exactly
-// full_name,email,department (case- and whitespace-insensitive). Blank lines and
-// rows with an empty email are skipped; remaining fields are trimmed and the
-// email is lower-cased. §9.4
 func Parse(data []byte) ([]Record, error) {
 	r := csv.NewReader(bytes.NewReader(data))
 	r.FieldsPerRecord = -1

@@ -2,7 +2,6 @@ package meeting
 
 import "fmt"
 
-// Validate checks required fields, time ordering, and recurrence.
 func (in Input) Validate() error {
 	if in.Dept == "" {
 		return fmt.Errorf("dept required")

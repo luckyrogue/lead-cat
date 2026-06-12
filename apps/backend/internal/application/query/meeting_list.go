@@ -7,7 +7,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
-// Meetings groups read-side meeting operations (CQRS entry points).
 type Meetings struct {
 	App meetingListApp
 }
