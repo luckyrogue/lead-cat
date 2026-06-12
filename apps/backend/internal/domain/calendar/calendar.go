@@ -37,5 +37,26 @@ type Provider interface {
 	For(ctx context.Context, organizationID uuid.UUID) (Service, error)
 }
 
+// ProbeResult is the calendar metadata returned by a successful credential probe.
+type ProbeResult struct {
+	Summary  string
+	TimeZone string
+}
+
+// Prober verifies stored service-account credentials against the calendar API.
+// Implemented in infrastructure/calendar/*; failures are returned as the probe
+// sentinels below.
+type Prober interface {
+	Probe(ctx context.Context, saJSON, subject, calendarID string) (ProbeResult, error)
+}
+
 // ErrNotConfigured is returned when an organization has no Google credentials.
 var ErrNotConfigured = errors.New("google not configured")
+
+// Credential-probe failure sentinels (delivery maps them to handler codes).
+var (
+	ErrProbeSAInvalid   = errors.New("google_sa_invalid")
+	ErrProbeAPIDisabled = errors.New("google_api_disabled")
+	ErrProbeSubject     = errors.New("google_subject_invalid")
+	ErrProbeCalendar    = errors.New("google_calendar_not_accessible")
+)

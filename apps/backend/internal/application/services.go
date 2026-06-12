@@ -12,8 +12,6 @@ import (
 
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/application/query"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/crypto"
-	asynqqueue "github.com/luckyrogue/lead-cat/internal/infrastructure/queue/asynq"
 	"github.com/luckyrogue/lead-cat/internal/platform/authweb"
 )
 
@@ -23,14 +21,15 @@ import (
 type ChatSyncer func(ctx context.Context, organizationID uuid.UUID) (int, error)
 
 type Services struct {
-	Store    Repository
-	Cipher   *crypto.TokenCipher
-	Queue    *asynqqueue.Client
-	Calendar CalendarProvider
-	Log      *zap.Logger
-	Bot      *bot.Bot
-	Queries  *query.Meetings
-	syncChat ChatSyncer
+	Store        Repository
+	Cipher       Cipher
+	Queue        JobQueue
+	Calendar     CalendarProvider
+	GoogleProber GoogleProber
+	Log          *zap.Logger
+	Bot          *bot.Bot
+	Queries      *query.Meetings
+	syncChat     ChatSyncer
 
 	sso        map[string]SSOProvider
 	email      EmailSender

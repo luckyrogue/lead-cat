@@ -31,3 +31,19 @@ var ErrInvalidInput = errors.New("invalid input")
 type CalendarProvider interface {
 	For(ctx context.Context, organizationID uuid.UUID) (CalendarService, error)
 }
+
+// GoogleProber verifies stored Google credentials. Implemented in
+// infrastructure/calendar/google.
+type GoogleProber = docalendar.Prober
+
+// GoogleProbeResult is the calendar metadata from a successful probe.
+type GoogleProbeResult = docalendar.ProbeResult
+
+// Google credential-probe sentinels (aliased from domain/calendar) — the HTTP
+// layer maps these to public error codes.
+var (
+	ErrGoogleSAInvalid             = docalendar.ErrProbeSAInvalid
+	ErrGoogleAPIDisabled           = docalendar.ErrProbeAPIDisabled
+	ErrGoogleSubjectInvalid        = docalendar.ErrProbeSubject
+	ErrGoogleCalendarNotAccessible = docalendar.ErrProbeCalendar
+)

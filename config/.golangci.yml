@@ -37,14 +37,14 @@ linters:
               desc: "domain must not depend on delivery layer (clean-arch: deps point inward)"
             - pkg: "github.com/luckyrogue/lead-cat/internal/platform"
               desc: "domain must not depend on platform layer (clean-arch: deps point inward)"
-        application-no-infra-persistence:
+        application-no-infra:
           files:
             - "**/internal/application/**"
           deny:
             - pkg: "github.com/jackc/pgx"
               desc: "application must not import the postgres driver — depend on the Repository port (clean-arch: deps point inward)"
-            - pkg: "github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
-              desc: "application must not import the postgres repository — depend on the Repository port and application/model (clean-arch: deps point inward)"
+            - pkg: "github.com/luckyrogue/lead-cat/internal/infrastructure"
+              desc: "application must not import infrastructure — depend on the ports it implements (Repository, Cipher, JobQueue, CalendarProvider, GoogleProber) (clean-arch: deps point inward)"
             - pkg: "github.com/luckyrogue/lead-cat/internal/delivery"
               desc: "application must not depend on the delivery layer (clean-arch: deps point inward)"
         delivery-no-direct-db:

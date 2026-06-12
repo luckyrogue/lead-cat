@@ -83,7 +83,7 @@ func main() {
 	} else {
 		calProvider = calendargoogle.NewProvider(store, cipher)
 	}
-	services := &application.Services{Store: store, Cipher: cipher, Queue: queueClient, Calendar: calProvider, Log: logger}
+	services := &application.Services{Store: store, Cipher: cipher, Queue: queueClient, Calendar: calProvider, GoogleProber: calendargoogle.NewProber(), Log: logger}
 	services.WireCQRS()
 
 	sso := map[string]application.SSOProvider{}
