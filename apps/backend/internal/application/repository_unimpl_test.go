@@ -117,6 +117,9 @@ func (unimplementedRepo) ListMeetings(context.Context, uuid.UUID) ([]model.Meeti
 func (unimplementedRepo) ListMeetingsByOrganizer(context.Context, uuid.UUID, uuid.UUID) ([]model.Meeting, error) {
 	return nil, errUnimplemented
 }
+func (unimplementedRepo) ListMeetingsFiltered(context.Context, uuid.UUID, model.MeetingFilter) ([]model.Meeting, error) {
+	return nil, errUnimplemented
+}
 func (unimplementedRepo) ListMeetingsByOrganizerTelegram(context.Context, int64) ([]model.MeetingWithTZ, error) {
 	return nil, errUnimplemented
 }

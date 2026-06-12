@@ -18,15 +18,21 @@ func (s *Services) ListEmployees(ctx context.Context, organizationID uuid.UUID) 
 }
 
 func (s *Services) ListMeetings(ctx context.Context, organizationID, userID uuid.UUID) ([]model.Meeting, error) {
+	return s.ListMeetingsFiltered(ctx, organizationID, userID, model.MeetingFilter{})
+}
+
+// ListMeetingsFiltered lists an organization's meetings matching f. Organization
+// owners see all meetings; non-owners are restricted to the ones they organize
+// (the requested organizer filter is overridden for them).
+func (s *Services) ListMeetingsFiltered(ctx context.Context, organizationID, userID uuid.UUID, f model.MeetingFilter) ([]model.Meeting, error) {
 	w, err := s.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
 		return nil, err
 	}
-
-	if w.OwnerUserID != nil && *w.OwnerUserID == userID {
-		return s.Store.ListMeetings(ctx, organizationID)
+	if w.OwnerUserID == nil || *w.OwnerUserID != userID {
+		f.Organizer = &userID
 	}
-	return s.Store.ListMeetingsByOrganizer(ctx, organizationID, userID)
+	return s.Store.ListMeetingsFiltered(ctx, organizationID, f)
 }
 
 func (s *Services) GetMeeting(ctx context.Context, organizationID, id uuid.UUID) (model.Meeting, error) {

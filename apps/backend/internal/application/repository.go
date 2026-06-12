@@ -56,6 +56,7 @@ type Repository interface {
 	CancelMeeting(ctx context.Context, organizationID, id uuid.UUID) error
 	ListMeetings(ctx context.Context, organizationID uuid.UUID) ([]model.Meeting, error)
 	ListMeetingsByOrganizer(ctx context.Context, organizationID, organizerID uuid.UUID) ([]model.Meeting, error)
+	ListMeetingsFiltered(ctx context.Context, organizationID uuid.UUID, f model.MeetingFilter) ([]model.Meeting, error)
 	ListMeetingsByOrganizerTelegram(ctx context.Context, telegramID int64) ([]model.MeetingWithTZ, error)
 	ListMeetingsOverlapping(ctx context.Context, emails []string, from, to time.Time) ([]model.Meeting, error)
 	ListScheduleForEmail(ctx context.Context, email string, from, to time.Time) ([]model.Meeting, error)
