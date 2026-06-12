@@ -2,6 +2,9 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
+	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -89,6 +92,43 @@ func (a *API) WebRemoveParticipant(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"meeting": m})
 }
 
+// parseMeetingFilter turns raw query values into a model.MeetingFilter.
+// status "" or "all" means no status filter; from/to are YYYY-MM-DD (to is an
+// inclusive day, stored as the exclusive next-day bound); organizer is a UUID.
+func parseMeetingFilter(status, from, to, dept, organizer string) (model.MeetingFilter, error) {
+	f := model.MeetingFilter{Dept: strings.TrimSpace(dept)}
+	switch status {
+	case "", "all":
+	case "scheduled", "cancelled":
+		f.Status = status
+	default:
+		return f, fmt.Errorf("invalid status")
+	}
+	if from != "" {
+		t, err := time.Parse("2006-01-02", from)
+		if err != nil {
+			return f, fmt.Errorf("invalid from")
+		}
+		f.From = &t
+	}
+	if to != "" {
+		t, err := time.Parse("2006-01-02", to)
+		if err != nil {
+			return f, fmt.Errorf("invalid to")
+		}
+		end := t.AddDate(0, 0, 1)
+		f.To = &end
+	}
+	if organizer != "" {
+		id, err := uuid.Parse(organizer)
+		if err != nil {
+			return f, fmt.Errorf("invalid organizer")
+		}
+		f.Organizer = &id
+	}
+	return f, nil
+}
+
 func (a *API) WebListMeetings(c *fiber.Ctx) error {
 	user, ok := webUser(c)
 	if !ok {
@@ -98,7 +138,11 @@ func (a *API) WebListMeetings(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid_org_id")
 	}
-	ms, err := a.App.ListMeetings(c.UserContext(), orgID, user.ID)
+	filter, err := parseMeetingFilter(c.Query("status"), c.Query("from"), c.Query("to"), c.Query("dept"), c.Query("organizer"))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	ms, err := a.App.ListMeetingsFiltered(c.UserContext(), orgID, user.ID, filter)
 	if err != nil {
 		a.Log.Error("web_meetings_list_failed", zap.String("org_id", orgID.String()), zap.Error(err))
 		return fiber.NewError(fiber.StatusInternalServerError, "list_failed")
