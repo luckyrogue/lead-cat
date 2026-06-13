@@ -2,13 +2,34 @@ import { api } from "~/shared/api/client"
 import type {
   CreateMeetingInput,
   Meeting,
+  MeetingListFilter,
   MeetingScope,
   UpdateMeetingInput,
 } from "~/entities/meeting/types"
 
-export async function listMeetings(orgId: string): Promise<Meeting[]> {
+export async function listMeetings(
+  orgId: string,
+  filter: MeetingListFilter = {}
+): Promise<Meeting[]> {
+  const params: Record<string, string> = {}
+  if (filter.status && filter.status !== "all") {
+    params.status = filter.status
+  }
+  if (filter.from) {
+    params.from = filter.from
+  }
+  if (filter.to) {
+    params.to = filter.to
+  }
+  if (filter.dept) {
+    params.dept = filter.dept
+  }
+  if (filter.organizer) {
+    params.organizer = filter.organizer
+  }
   const { data } = await api.get<{ meetings: Meeting[] }>(
-    `/api/orgs/${orgId}/meetings`
+    `/api/orgs/${orgId}/meetings`,
+    { params }
   )
   return data.meetings ?? []
 }

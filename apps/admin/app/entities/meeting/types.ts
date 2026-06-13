@@ -22,3 +22,13 @@ export type MeetingScope = "this" | "whole"
 export function isSeries(meeting: Meeting): boolean {
   return meeting.recurrence !== "once" || Boolean(meeting.series_id)
 }
+
+export type MeetingStatusFilter = "scheduled" | "cancelled" | "all"
+
+export type MeetingListFilter = {
+  status?: MeetingStatusFilter
+  from?: string
+  to?: string
+  dept?: string
+  organizer?: string
+}
