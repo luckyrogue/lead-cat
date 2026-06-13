@@ -2385,7 +2385,13 @@ export interface operations {
     };
     orgMeetingsList: {
         parameters: {
-            query?: never;
+            query?: {
+                status?: "scheduled" | "cancelled" | "all";
+                from?: string;
+                to?: string;
+                dept?: string;
+                organizer?: string;
+            };
             header?: never;
             path: {
                 id: string;
