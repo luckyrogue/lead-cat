@@ -9,10 +9,19 @@ import {
   useUpdateMeeting,
 } from "~/entities/meeting/mutations"
 import { useMeetings } from "~/entities/meeting/queries"
-import type { Meeting, MeetingScope } from "~/entities/meeting/types"
+import type {
+  Meeting,
+  MeetingListFilter,
+  MeetingScope,
+} from "~/entities/meeting/types"
+import { useMembers } from "~/entities/org/queries"
 import { MeetingCreateDialog } from "~/features/meetings/components/meeting-create-dialog"
 import { MeetingDeleteDialog } from "~/features/meetings/components/meeting-delete-dialog"
 import { MeetingEditDialog } from "~/features/meetings/components/meeting-edit-dialog"
+import {
+  MeetingsFilterBar,
+  type OrganizerOption,
+} from "~/features/meetings/components/meetings-filter-bar"
 import { MeetingsTable } from "~/features/meetings/components/meetings-table"
 import type { MeetingFormValues } from "~/features/meetings/components/meeting-form"
 import {
@@ -22,15 +31,32 @@ import {
 } from "~/features/meetings/pages/meetings-page-helpers"
 import { useActiveOrg } from "~/shared/auth/use-active-org"
 import { useMe } from "~/shared/auth/use-me"
+import { useDebouncedValue } from "~/shared/lib/use-debounced-value"
 import { toastError, toastSuccess } from "~/shared/lib/toast"
 
 export function MeetingsPage() {
   const { data: me } = useMe()
   const { activeOrgId } = useActiveOrg(me?.organizations ?? [])
-  const meetings = useMeetings(activeOrgId)
   const createMeeting = useCreateMeeting(activeOrgId ?? "")
   const updateMeeting = useUpdateMeeting(activeOrgId ?? "")
   const deleteMeeting = useDeleteMeeting(activeOrgId ?? "")
+
+  const [filter, setFilter] = useState<MeetingListFilter>({})
+  const [deptInput, setDeptInput] = useState("")
+  const debouncedDept = useDebouncedValue(deptInput, 300)
+  const effectiveFilter: MeetingListFilter = {
+    ...filter,
+    dept: debouncedDept || undefined,
+  }
+  const members = useMembers(activeOrgId)
+  const organizers: OrganizerOption[] = (members.data ?? [])
+    .filter((member) => member.user_id)
+    .map((member) => ({
+      id: member.user_id as string,
+      label: member.name || member.email,
+    }))
+
+  const meetings = useMeetings(activeOrgId, effectiveFilter)
 
   const [createOpen, setCreateOpen] = useState(false)
   const [toEdit, setToEdit] = useState<Meeting | null>(null)
@@ -109,6 +135,15 @@ export function MeetingsPage() {
           </div>
         }
       >
+        <MeetingsFilterBar
+          filter={filter}
+          dept={deptInput}
+          organizers={organizers}
+          onFilterChange={(patch) =>
+            setFilter((current) => ({ ...current, ...patch }))
+          }
+          onDeptChange={setDeptInput}
+        />
         <MeetingsTable
           meetings={meetings.data ?? []}
           pendingId={
