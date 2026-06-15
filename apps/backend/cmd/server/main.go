@@ -135,7 +135,10 @@ func main() {
 			logger.Fatal("telegram getMe", zap.Error(err))
 		}
 		botUsername = me.Username
-		tgHandler = telegram.NewMultiHandler(store, tg, rdb, cfg.BotAdminTelegramIDs, services, logger)
+		tgHandler = telegram.NewMultiHandler(store, tg, rdb, cfg.BotAdminTelegramIDs, cfg.WebappURL, services, logger)
+		if _, cerr := tg.SetMyCommands(ctx, &bot.SetMyCommandsParams{Commands: telegram.PublicCommands()}); cerr != nil {
+			logger.Warn("set_my_commands", zap.Error(cerr))
+		}
 	} else if cfg.AuthDevMode {
 		logger.Warn("AUTH_DEV_MODE: telegram polling disabled (set BOT_TOKEN for /start and bot commands)")
 	} else {

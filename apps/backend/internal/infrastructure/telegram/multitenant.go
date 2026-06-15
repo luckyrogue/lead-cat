@@ -33,14 +33,20 @@ type MultiHandler struct {
 	schedule  *scheduleview.Service
 	checker   *checker.Service
 	log       *zap.Logger
+	webappURL string
+	admins    map[int64]bool
 }
 
-func NewMultiHandler(store *postgres.Store, b *bot.Bot, rdb *redis.Client, adminIDs []int64, backend botBackend, log *zap.Logger) *MultiHandler {
+func NewMultiHandler(store *postgres.Store, b *bot.Bot, rdb *redis.Client, adminIDs []int64, webappURL string, backend botBackend, log *zap.Logger) *MultiHandler {
 	registrar := botreg.New(store, botreg.NewRedisSessions(rdb), adminIDs)
 	settings := botsettings.New(store)
 	editor := meetingedit.New(backend, meetingedit.NewRedisSessions(rdb))
 	schedule := scheduleview.New(backend, scheduleview.NewRedisSessions(rdb))
 	chk := checker.New(backend, checker.NewRedisSessions(rdb))
+	admins := make(map[int64]bool, len(adminIDs))
+	for _, id := range adminIDs {
+		admins[id] = true
+	}
 	return &MultiHandler{
 		store:     store,
 		registrar: registrar,
@@ -49,6 +55,8 @@ func NewMultiHandler(store *postgres.Store, b *bot.Bot, rdb *redis.Client, admin
 		schedule:  schedule,
 		checker:   chk,
 		log:       log,
+		webappURL: webappURL,
+		admins:    admins,
 	}
 }
 
@@ -129,6 +137,38 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 				return
 			}
 			h.sendCheckerReply(ctx, b, chatID, 0, h.checker.Start(ctx, from.ID))
+		}
+	case "/menu":
+		if isPrivate {
+			_, _ = b.SendMessage(ctx, &bot.SendMessageParams{
+				ChatID:      chatID,
+				Text:        "Открой Lead Cat 🐾",
+				ReplyMarkup: webAppMarkup("Открыть приложение", h.webappURL),
+			})
+		}
+	case "/new":
+		if isPrivate {
+			_, _ = b.SendMessage(ctx, &bot.SendMessageParams{
+				ChatID:      chatID,
+				Text:        "Запланируй встречу 🐾",
+				ReplyMarkup: webAppMarkup("Новая встреча", joinURL(h.webappURL, "meetings/create")),
+			})
+		}
+	case "/help":
+		if isPrivate {
+			h.reply(ctx, b, update.Message, helpText())
+		}
+	case "/admin":
+		if isPrivate {
+			if h.admins[from.ID] {
+				_, _ = b.SendMessage(ctx, &bot.SendMessageParams{
+					ChatID:      chatID,
+					Text:        "Ты администратор 🐾 Настройки — в приложении.",
+					ReplyMarkup: webAppMarkup("Открыть приложение", h.webappURL),
+				})
+			} else {
+				h.reply(ctx, b, update.Message, "Ты не администратор 🐾")
+			}
 		}
 	}
 }
