@@ -12,19 +12,21 @@ import (
 )
 
 type miniappMeetingDTO struct {
-	ID           string   `json:"id"`
-	Type         string   `json:"type"`
-	Dept         string   `json:"dept"`
-	Host         string   `json:"host"`
-	Date         string   `json:"date"`
-	Start        string   `json:"start"`
-	End          string   `json:"end"`
-	Rec          string   `json:"rec"`
-	Organizer    string   `json:"organizer"`
-	Participants []string `json:"participants"`
-	Desc         string   `json:"desc"`
-	MeetLink     string   `json:"meet_link"`
-	Status       string   `json:"status"`
+	ID              string   `json:"id"`
+	Type            string   `json:"type"`
+	Dept            string   `json:"dept"`
+	Host            string   `json:"host"`
+	Date            string   `json:"date"`
+	Start           string   `json:"start"`
+	End             string   `json:"end"`
+	Rec             string   `json:"rec"`
+	SeriesID        string   `json:"series_id"`
+	RecurrenceUntil string   `json:"recurrence_until"`
+	Organizer       string   `json:"organizer"`
+	Participants    []string `json:"participants"`
+	Desc            string   `json:"desc"`
+	MeetLink        string   `json:"meet_link"`
+	Status          string   `json:"status"`
 }
 
 type miniappEmployeeDTO struct {
@@ -66,6 +68,7 @@ func miniappMeetingFromQuery(d query.MiniAppMeeting) miniappMeetingDTO {
 	return miniappMeetingDTO{
 		ID: d.ID, Type: d.Type, Dept: d.Dept, Host: d.Host,
 		Date: d.Date, Start: d.Start, End: d.End, Rec: d.Rec,
+		SeriesID: d.SeriesID, RecurrenceUntil: d.RecurrenceUntil,
 		Organizer: d.Organizer, Participants: d.Participants, Desc: d.Desc,
 		MeetLink: d.MeetLink, Status: d.Status,
 	}
