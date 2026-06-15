@@ -36,6 +36,39 @@ type webParticipantRequest struct {
 	Email string `json:"email"`
 }
 
+type seriesEndRequest struct {
+	Until string `json:"until"`
+}
+
+func (a *API) WebChangeSeriesEnd(c *fiber.Ctx) error {
+	user, ok := webUser(c)
+	if !ok {
+		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
+	}
+	orgID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid_org_id")
+	}
+	meetingID, err := uuid.Parse(c.Params("mid"))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid_meeting_id")
+	}
+	var req seriesEndRequest
+	if err := c.BodyParser(&req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid_body")
+	}
+	added, removed, err := a.App.ChangeSeriesEnd(c.UserContext(), orgID, user.ID, meetingID, req.Until)
+	if err != nil {
+		return mapMeetingWriteError(err)
+	}
+	m, err := a.App.GetMeeting(c.UserContext(), orgID, meetingID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	a.Log.Info("web_series_end_changed", zap.String("org_id", orgID.String()), zap.String("meeting_id", meetingID.String()), zap.Int("added", added), zap.Int("removed", removed))
+	return c.JSON(fiber.Map{"meeting": m, "added": added, "removed": removed})
+}
+
 func (a *API) WebAddParticipant(c *fiber.Ctx) error {
 	user, ok := webUser(c)
 	if !ok {

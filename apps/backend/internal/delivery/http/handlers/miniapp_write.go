@@ -458,6 +458,52 @@ func (a *API) MiniAppAddParticipant(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m)})
 }
 
+func (a *API) MiniAppChangeSeriesEnd(c *fiber.Ctx) error {
+	bu, ok := botUser(c)
+	if !ok {
+		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
+	}
+	meetingID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid meeting id")
+	}
+	var req struct {
+		Until string `json:"until"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
+	}
+	organizationID, found, err := a.editableOrganization(c, bu.TelegramID, meetingID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	if !found {
+		return fiber.NewError(fiber.StatusNotFound, "not_found")
+	}
+	organizerID, err := a.App.EnsureMiniAppOrganizer(c.Context(), bu.Email, bu.TelegramID)
+	if err != nil {
+		if errors.Is(err, application.ErrTelegramLinkedToOtherAccount) {
+			return fiber.NewError(fiber.StatusConflict, "telegram_linked_to_other_account")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	if _, _, err := a.App.ChangeSeriesEnd(c.Context(), organizationID, organizerID, meetingID, req.Until); err != nil {
+		switch {
+		case errors.Is(err, application.ErrForbidden):
+			return fiber.NewError(fiber.StatusForbidden, "forbidden")
+		case errors.Is(err, application.ErrInvalidInput):
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, "internal")
+		}
+	}
+	m, err := a.App.GetMeeting(c.Context(), organizationID, meetingID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m)})
+}
+
 func (a *API) MiniAppRemoveParticipant(c *fiber.Ctx) error {
 	orgID, organizerID, meetingID, err := a.resolveParticipantOp(c)
 	if err != nil {

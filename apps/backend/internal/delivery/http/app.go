@@ -103,6 +103,7 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	scoped.Delete("/meetings/:mid", api.WebDeleteMeeting)
 	scoped.Post("/meetings/:mid/participants", api.WebAddParticipant)
 	scoped.Delete("/meetings/:mid/participants", api.WebRemoveParticipant)
+	scoped.Patch("/meetings/:mid/series-end", api.WebChangeSeriesEnd)
 	scoped.Get("/members", api.ListOrgMembers)
 	scoped.Patch("/members/:uid/role", middleware.RequireOrgRole("admin"), api.UpdateMemberRole)
 	scoped.Delete("/members/:uid", middleware.RequireOrgRole("admin"), api.RemoveMember)
@@ -125,6 +126,7 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	miniapp.Delete("/meetings/:id", api.MiniAppDeleteMeeting)
 	miniapp.Post("/meetings/:id/participants", api.MiniAppAddParticipant)
 	miniapp.Delete("/meetings/:id/participants", api.MiniAppRemoveParticipant)
+	miniapp.Patch("/meetings/:id/series-end", api.MiniAppChangeSeriesEnd)
 
 	miniappAdmin := miniapp.Group("/admin", middleware.RequireBotAdmin)
 	miniappAdmin.Get("/organization", api.MiniAppAdminGetWorkspace)
