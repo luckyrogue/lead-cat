@@ -77,6 +77,14 @@ export async function removeParticipant(id: string, email: string): Promise<Meet
   return res.meeting
 }
 
+export async function changeSeriesEnd(id: string, until: string): Promise<Meeting> {
+  const res = await apiFetch<{ meeting: Meeting }>(
+    `/api/miniapp/meetings/${id}/series-end`,
+    { method: "PATCH", body: { until } }
+  )
+  return res.meeting
+}
+
 type ConflictsInput = {
   participants: string[]
   date: string

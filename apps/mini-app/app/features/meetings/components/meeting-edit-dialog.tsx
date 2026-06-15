@@ -11,7 +11,10 @@ import {
 } from "@leadcat/ui"
 import { useEffect, useState } from "react"
 
-import { useUpdateMeeting } from "~/entities/meeting/mutations"
+import {
+  useChangeSeriesEnd,
+  useUpdateMeeting,
+} from "~/entities/meeting/mutations"
 import {
   isSeriesMeeting,
   type Meeting,
@@ -28,12 +31,16 @@ type Props = {
 
 export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
   const update = useUpdateMeeting()
+  const changeEnd = useChangeSeriesEnd()
   const [type, setType] = useState(meeting.type)
   const [date, setDate] = useState(meeting.date)
   const [start, setStart] = useState(meeting.start)
   const [end, setEnd] = useState(meeting.end)
   const [desc, setDesc] = useState(meeting.desc)
   const [scope, setScope] = useState<MeetingMutationScope>("this")
+  const [seriesUntil, setSeriesUntil] = useState(
+    (meeting.recurrence_until ?? "").slice(0, 10)
+  )
 
   const series = isSeriesMeeting(meeting)
   const lockDate = series && scope === "whole"
@@ -46,6 +53,7 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
       setEnd(meeting.end)
       setDesc(meeting.desc)
       setScope("this")
+      setSeriesUntil((meeting.recurrence_until ?? "").slice(0, 10))
     }
   }, [open, meeting])
 
@@ -80,6 +88,33 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
         </DialogHeader>
         <div className="flex flex-col gap-3">
           {series ? <ScopeToggle value={scope} onChange={setScope} /> : null}
+          {series ? (
+            <div className="flex flex-col gap-1.5">
+              <Field label="Series ends">
+                <Input
+                  type="date"
+                  value={seriesUntil}
+                  onChange={(e) => setSeriesUntil(e.target.value)}
+                />
+              </Field>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={changeEnd.isPending || !seriesUntil}
+                onClick={() =>
+                  changeEnd.mutate(
+                    { id: meeting.id, until: seriesUntil },
+                    {
+                      onSuccess: () => toast.success("Series end updated"),
+                      onError: () => toast.error("Couldn't update series end"),
+                    }
+                  )
+                }
+              >
+                Update end date
+              </Button>
+            </div>
+          ) : null}
           <Field label="Title">
             <Input value={type} onChange={(e) => setType(e.target.value)} />
           </Field>
