@@ -144,6 +144,9 @@ func (unimplementedRepo) CancelSeriesOccurrences(context.Context, uuid.UUID, uui
 func (unimplementedRepo) CancelAllSeriesOccurrences(context.Context, uuid.UUID, uuid.UUID) (int, error) {
 	return 0, errUnimplemented
 }
+func (unimplementedRepo) SetSeriesRecurrenceUntil(context.Context, uuid.UUID, uuid.UUID, time.Time) error {
+	return errUnimplemented
+}
 func (unimplementedRepo) AddParticipants(context.Context, uuid.UUID, []model.MeetingParticipant) error {
 	return errUnimplemented
 }

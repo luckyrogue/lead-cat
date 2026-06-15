@@ -292,6 +292,15 @@ func (s *Store) CancelAllSeriesOccurrences(ctx context.Context, organizationID, 
 	return int(ct.RowsAffected()), nil
 }
 
+// SetSeriesRecurrenceUntil updates recurrence_until on all scheduled occurrences of a series.
+func (s *Store) SetSeriesRecurrenceUntil(ctx context.Context, organizationID, seriesID uuid.UUID, until time.Time) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE meetings SET recurrence_until = $3, updated_at = now()
+		WHERE series_id = $1 AND organization_id = $2 AND status = 'scheduled'`,
+		seriesID, organizationID, until)
+	return err
+}
+
 // meetingFilter builds the WHERE clause and ordered args for a filtered
 // meetings query. $1 is always organization_id.
 func meetingFilter(organizationID uuid.UUID, f model.MeetingFilter) (string, []any) {

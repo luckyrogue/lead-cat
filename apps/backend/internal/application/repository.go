@@ -66,6 +66,7 @@ type Repository interface {
 	ListSeriesAllOccurrences(ctx context.Context, organizationID, seriesID uuid.UUID) ([]model.Meeting, error)
 	CancelSeriesOccurrences(ctx context.Context, organizationID, seriesID uuid.UUID, fromStart time.Time) (int, error)
 	CancelAllSeriesOccurrences(ctx context.Context, organizationID, seriesID uuid.UUID) (int, error)
+	SetSeriesRecurrenceUntil(ctx context.Context, organizationID, seriesID uuid.UUID, until time.Time) error
 
 	AddParticipants(ctx context.Context, meetingID uuid.UUID, ps []model.MeetingParticipant) error
 	RemoveParticipant(ctx context.Context, meetingID uuid.UUID, email string) error
