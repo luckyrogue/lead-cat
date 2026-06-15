@@ -577,6 +577,68 @@
         }
       }
     },
+    "/api/miniapp/meetings/{id}/series-end": {
+      "patch": {
+        "operationId": "miniappMeetingSeriesEnd",
+        "tags": ["miniapp"],
+        "summary": "Change a recurring series end date (mini-app)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["until"],
+                "properties": { "until": { "type": "string", "format": "date" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Series updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["meeting", "added", "removed"],
+                  "properties": {
+                    "meeting": { "$ref": "#/components/schemas/MiniAppMeeting" },
+                    "added": { "type": "integer" },
+                    "removed": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "404": {
+            "description": "Not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      }
+    },
     "/api/miniapp/admin/organization": {
       "get": {
         "operationId": "miniappAdminOrganizationGet",
@@ -2151,6 +2213,74 @@
         }
       }
     },
+    "/api/orgs/{id}/meetings/{mid}/series-end": {
+      "patch": {
+        "operationId": "orgMeetingSeriesEnd",
+        "tags": ["meetings"],
+        "summary": "Change a recurring series end date",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "mid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["until"],
+                "properties": { "until": { "type": "string", "format": "date" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Series updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["meeting", "added", "removed"],
+                  "properties": {
+                    "meeting": { "$ref": "#/components/schemas/Meeting" },
+                    "added": { "type": "integer" },
+                    "removed": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "404": {
+            "description": "Not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      }
+    },
     "/api/orgs/{id}/members": {
       "get": {
         "operationId": "orgMembersList",
@@ -2578,7 +2708,9 @@
           "participants",
           "desc",
           "meet_link",
-          "status"
+          "status",
+          "series_id",
+          "recurrence_until"
         ],
         "properties": {
           "id": {
@@ -2624,6 +2756,12 @@
             "type": "string"
           },
           "status": {
+            "type": "string"
+          },
+          "series_id": {
+            "type": "string"
+          },
+          "recurrence_until": {
             "type": "string"
           }
         }
