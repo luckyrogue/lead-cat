@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import {
   addParticipant,
+  changeSeriesEnd,
   createMeeting,
   deleteMeeting,
   removeParticipant,
@@ -71,6 +72,17 @@ export function useDeleteMeeting(orgId: string) {
   return useMutation({
     mutationFn: (input: { meetingId: string; scope: MeetingScope }) =>
       deleteMeeting(orgId, input.meetingId, input.scope),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: meetingKeys.list(orgId) })
+    },
+  })
+}
+
+export function useChangeSeriesEnd(orgId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: { meetingId: string; until: string }) =>
+      changeSeriesEnd(orgId, input.meetingId, input.until),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: meetingKeys.list(orgId) })
     },

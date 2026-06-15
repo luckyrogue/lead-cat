@@ -102,3 +102,15 @@ export async function deleteMeeting(
     params: { scope },
   })
 }
+
+export async function changeSeriesEnd(
+  orgId: string,
+  meetingId: string,
+  until: string
+): Promise<Meeting> {
+  const { data } = await api.patch<{ meeting: Meeting }>(
+    `/api/orgs/${orgId}/meetings/${meetingId}/series-end`,
+    { until }
+  )
+  return data.meeting
+}
