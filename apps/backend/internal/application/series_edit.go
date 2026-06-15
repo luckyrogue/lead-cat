@@ -244,3 +244,131 @@ func (s *Services) CancelWholeSeries(ctx context.Context, organizationID, userID
 	s.enqueueCancelled(ctx, organizationID, meetingID)
 	return n, nil
 }
+
+// ChangeSeriesEnd moves a series' recurrence_until. Extending appends new
+// occurrences (with Google events) after the latest existing one; trimming
+// cancels and deletes occurrences after the new end. Returns counts added/removed.
+func (s *Services) ChangeSeriesEnd(ctx context.Context, organizationID, userID, meetingID uuid.UUID, untilStr string) (int, int, error) {
+	picked, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
+	if err != nil {
+		return 0, 0, err
+	}
+	w, err := s.Store.GetOrganization(ctx, organizationID)
+	if err != nil {
+		return 0, 0, err
+	}
+	if !ownerOrOrganizer(w, picked.OrganizerUserID, userID) {
+		return 0, 0, ErrForbidden
+	}
+	if picked.SeriesID == nil {
+		return 0, 0, fmt.Errorf("%w: not a series", ErrInvalidInput)
+	}
+	loc, err := time.LoadLocation(orDefault(w.TZ, "Asia/Almaty"))
+	if err != nil {
+		return 0, 0, fmt.Errorf("bad timezone: %w", err)
+	}
+	newUntil, err := time.ParseInLocation("2006-01-02", untilStr, loc)
+	if err != nil {
+		return 0, 0, fmt.Errorf("%w: bad until date", ErrInvalidInput)
+	}
+	occs, err := s.Store.ListSeriesAllOccurrences(ctx, organizationID, *picked.SeriesID)
+	if err != nil {
+		return 0, 0, err
+	}
+	if len(occs) == 0 {
+		return 0, 0, nil
+	}
+	anchor := occs[0]
+	rec := meeting.Recurrence(anchor.Recurrence)
+	if rec == meeting.Once {
+		return 0, 0, fmt.Errorf("%w: not a recurring series", ErrInvalidInput)
+	}
+	anchorStart := anchor.StartsAt.In(loc)
+	anchorEnd := anchor.EndsAt.In(loc)
+	candidate, err := meeting.Occurrences(anchorStart, anchorEnd, rec, anchor.RecurrenceDays, newUntil)
+	if err != nil {
+		return 0, 0, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+	}
+	plan := planSeriesReshape(occs, candidate, newUntil, loc)
+
+	added := 0
+	if len(plan.Create) > 0 {
+		calSvc, ferr := s.Calendar.For(ctx, organizationID)
+		if ferr != nil {
+			return 0, 0, ferr
+		}
+		parts, perr := s.Store.ListParticipants(ctx, anchor.ID)
+		if perr != nil {
+			return 0, 0, perr
+		}
+		var emails []string
+		for _, p := range parts {
+			if p.Email != "" {
+				emails = append(emails, p.Email)
+			}
+		}
+		var createdIDs []string
+		rows := make([]model.Meeting, 0, len(plan.Create))
+		for _, sp := range plan.Create {
+			name := meeting.GenerateName(anchor.Dept, anchor.Type, anchor.Host, sp.Start, rec)
+			res, cerr := calSvc.CreateEvent(ctx, CalendarEvent{
+				Title: name, Description: anchor.Description, Start: sp.Start, End: sp.End, AttendeeEmails: emails,
+			})
+			if cerr != nil {
+				s.deleteEventsBestEffort(ctx, calSvc, createdIDs)
+				return 0, 0, fmt.Errorf("calendar: %w", cerr)
+			}
+			createdIDs = append(createdIDs, res.EventID)
+			until := newUntil
+			rows = append(rows, model.Meeting{
+				OrganizationID: organizationID, OrganizerUserID: anchor.OrganizerUserID,
+				Dept: anchor.Dept, Type: anchor.Type, Host: anchor.Host,
+				StartsAt: sp.Start.UTC(), EndsAt: sp.End.UTC(),
+				Recurrence: string(rec), RecurrenceDays: anchor.RecurrenceDays,
+				Name: name, Description: anchor.Description,
+				GoogleEventID: res.EventID, MeetLink: res.MeetLink,
+				SeriesID: picked.SeriesID, RecurrenceUntil: &until,
+			})
+		}
+		if _, serr := s.Store.CreateMeetingSeries(ctx, rows, parts); serr != nil {
+			s.deleteEventsBestEffort(ctx, calSvc, createdIDs)
+			return 0, 0, serr
+		}
+		added = len(rows)
+	}
+
+	removed := 0
+	if len(plan.CancelIDs) > 0 {
+		cancelSet := make(map[uuid.UUID]bool, len(plan.CancelIDs))
+		for _, id := range plan.CancelIDs {
+			cancelSet[id] = true
+		}
+		cutoff := time.Date(newUntil.Year(), newUntil.Month(), newUntil.Day(), 0, 0, 0, 0, loc).AddDate(0, 0, 1)
+		if calSvc, ferr := s.Calendar.For(ctx, organizationID); ferr == nil {
+			var ids []string
+			for _, o := range occs {
+				if cancelSet[o.ID] && o.GoogleEventID != "" {
+					ids = append(ids, o.GoogleEventID)
+				}
+			}
+			s.deleteEventsBestEffort(ctx, calSvc, ids)
+		}
+		n, cerr := s.Store.CancelSeriesOccurrences(ctx, organizationID, *picked.SeriesID, cutoff)
+		if cerr != nil {
+			return added, 0, cerr
+		}
+		removed = n
+	}
+
+	if err := s.Store.SetSeriesRecurrenceUntil(ctx, organizationID, *picked.SeriesID, newUntil); err != nil {
+		return added, removed, err
+	}
+	if s.Queue != nil {
+		if err := s.Queue.EnqueueMeetingUpdated(ctx, organizationID, meetingID); err != nil && s.Log != nil {
+			s.Log.Warn("enqueue_series_end_changed",
+				zap.String("organization_id", organizationID.String()),
+				zap.String("meeting_id", meetingID.String()), zap.Error(err))
+		}
+	}
+	return added, removed, nil
+}
