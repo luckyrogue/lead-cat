@@ -11,6 +11,7 @@ import { PageHeader } from "~/components/page-header"
 import { useInvites, useMembers } from "~/entities/org/queries"
 import { useActiveOrg } from "~/shared/auth/use-active-org"
 import { useMe } from "~/shared/auth/use-me"
+import { useT } from "~/shared/i18n/context"
 
 function StatCard({
   title,
@@ -44,38 +45,45 @@ export function DashboardPage() {
   const { activeOrg, activeOrgId } = useActiveOrg(me?.organizations ?? [])
   const members = useMembers(activeOrgId)
   const invites = useInvites(activeOrgId)
+  const t = useT()
 
   const firstName = me?.user.email.split("@")[0] ?? "there"
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Lead Cat Admin"
-        title={`Welcome, ${firstName}`}
+        eyebrow={t("dashboard.eyebrow")}
+        title={t("dashboard.welcome", { name: firstName })}
         description={
           activeOrg
-            ? `A calm snapshot of ${activeOrg.name}.`
-            : "A calm snapshot of your workspace."
+            ? t("dashboard.descriptionOrg", { org: activeOrg.name })
+            : t("dashboard.descriptionDefault")
         }
       />
 
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
-          title="Organization"
+          title={t("dashboard.statOrganization")}
           value={activeOrg?.name ?? "—"}
-          hint={activeOrg ? `Slug: ${activeOrg.slug}` : "No organization yet"}
+          hint={
+            activeOrg
+              ? t("dashboard.statOrganizationHintSlug", {
+                  slug: activeOrg.slug,
+                })
+              : t("dashboard.statOrganizationHintNone")
+          }
           icon={Building2}
         />
         <StatCard
-          title="Members"
+          title={t("dashboard.statMembers")}
           value={members.isPending ? "…" : (members.data?.length ?? 0)}
-          hint="People with access to this organization"
+          hint={t("dashboard.statMembersHint")}
           icon={Users}
         />
         <StatCard
-          title="Pending invites"
+          title={t("dashboard.statInvites")}
           value={invites.isPending ? "…" : (invites.data?.length ?? 0)}
-          hint="Invitations awaiting acceptance"
+          hint={t("dashboard.statInvitesHint")}
           icon={Mailbox}
         />
       </div>

@@ -17,6 +17,7 @@ import { Link } from "react-router"
 import { cn } from "~/shared/lib/cn"
 import type { Me } from "~/shared/auth/types"
 import { useActiveOrg } from "~/shared/auth/use-active-org"
+import { useT } from "~/shared/i18n/context"
 
 function initials(email: string) {
   const name = email.split("@")[0] ?? ""
@@ -40,6 +41,7 @@ type SidebarUserCardProps = {
 export function SidebarUserCard({ me }: SidebarUserCardProps) {
   const { activeOrg, activeOrgId, selectOrg } = useActiveOrg(me.organizations)
   const { user, organizations } = me
+  const t = useT()
 
   return (
     <div className="shrink-0 space-y-3 border-t border-border/70 p-3">
@@ -51,10 +53,10 @@ export function SidebarUserCard({ me }: SidebarUserCardProps) {
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-medium text-foreground">
-                {activeOrg?.name ?? "Select organization"}
+                {activeOrg?.name ?? t("sidebar.selectOrganization")}
               </span>
               <span className="block text-xs text-muted-foreground">
-                Organization
+                {t("sidebar.organizationLabel")}
               </span>
             </span>
             <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
@@ -64,7 +66,9 @@ export function SidebarUserCard({ me }: SidebarUserCardProps) {
             className="w-[15rem]"
             sideOffset={8}
           >
-            <DropdownMenuLabel>Organizations</DropdownMenuLabel>
+            <DropdownMenuLabel>
+              {t("sidebar.organizationsMenuLabel")}
+            </DropdownMenuLabel>
             {organizations.map((org) => (
               <DropdownMenuItem key={org.id} onSelect={() => selectOrg(org.id)}>
                 <Building2 className="text-muted-foreground" />
@@ -96,7 +100,7 @@ export function SidebarUserCard({ me }: SidebarUserCardProps) {
         </div>
         <Link
           to="/logout"
-          aria-label="Log out"
+          aria-label={t("sidebar.logoutLabel")}
           className="rounded-[calc(var(--radius)*0.7)] p-2 text-muted-foreground transition-colors hover:bg-accent/70 hover:text-foreground"
         >
           <LogOut className="size-4" />

@@ -5,19 +5,27 @@ import {
   Settings,
   Users,
   Video,
+  type LucideIcon,
 } from "@leadcat/ui"
 import { Link, useLocation } from "react-router"
 
 import { SidebarUserCard } from "~/components/sidebar-user-card"
 import { cn } from "~/shared/lib/cn"
 import type { Me } from "~/shared/auth/types"
+import { useT } from "~/shared/i18n/context"
 
-const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/members", label: "Members", icon: Users },
-  { href: "/invites", label: "Invites", icon: Mailbox },
-  { href: "/meetings", label: "Meetings", icon: Video },
-  { href: "/settings", label: "Settings", icon: Settings },
+type NavItem = {
+  href: string
+  labelKey: string
+  icon: LucideIcon
+}
+
+const navItems: NavItem[] = [
+  { href: "/", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { href: "/members", labelKey: "nav.members", icon: Users },
+  { href: "/invites", labelKey: "nav.invites", icon: Mailbox },
+  { href: "/meetings", labelKey: "nav.meetings", icon: Video },
+  { href: "/settings", labelKey: "nav.settings", icon: Settings },
 ]
 
 type AppSidebarProps = {
@@ -26,6 +34,7 @@ type AppSidebarProps = {
 
 export function AppSidebar({ me }: AppSidebarProps) {
   const location = useLocation()
+  const t = useT()
 
   return (
     <aside className="surface-card flex flex-col overflow-hidden rounded-[calc(var(--radius)*1.6)] xl:h-full xl:min-h-0">
@@ -68,7 +77,7 @@ export function AppSidebar({ me }: AppSidebarProps) {
               >
                 <Icon className="size-4" />
               </span>
-              <span className="text-sm font-medium">{item.label}</span>
+              <span className="text-sm font-medium">{t(item.labelKey)}</span>
             </Link>
           )
         })}

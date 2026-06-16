@@ -4,6 +4,7 @@ import { Card, CardContent } from "@leadcat/ui"
 
 import { PageHeader } from "~/components/page-header"
 import { PageLoading } from "~/components/page-loading"
+import { useT } from "~/shared/i18n/context"
 
 type ListPageShellProps = {
   title: string
@@ -30,6 +31,8 @@ export function ListPageShell({
   emptyState,
   children,
 }: ListPageShellProps) {
+  const t = useT()
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -47,7 +50,9 @@ export function ListPageShell({
               className="rounded-[calc(var(--radius)*1.15)] border border-destructive/20 bg-destructive/5 px-4 py-5 text-sm text-destructive"
               role="alert"
             >
-              {error instanceof Error ? error.message : "Failed to load."}
+              {error instanceof Error
+                ? error.message
+                : t("common.failedToLoad")}
             </p>
           ) : isEmpty ? (
             emptyState
