@@ -21,9 +21,6 @@ func (s *Services) ListMeetings(ctx context.Context, organizationID, userID uuid
 	return s.ListMeetingsFiltered(ctx, organizationID, userID, model.MeetingFilter{})
 }
 
-// ListMeetingsFiltered lists an organization's meetings matching f. Organization
-// owners see all meetings; non-owners are restricted to the ones they organize
-// (the requested organizer filter is overridden for them).
 func (s *Services) ListMeetingsFiltered(ctx context.Context, organizationID, userID uuid.UUID, f model.MeetingFilter) ([]model.Meeting, error) {
 	w, err := s.Store.GetOrganization(ctx, organizationID)
 	if err != nil {

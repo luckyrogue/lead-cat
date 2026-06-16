@@ -4,3 +4,4 @@
 @import "@leadcat/config/theme.css";
 
 @source "../../../packages/ui/src/**/*.{ts,tsx}";
+@source "../../../packages/brand/src/**/*.{ts,tsx}";

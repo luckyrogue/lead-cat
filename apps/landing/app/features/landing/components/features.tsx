@@ -10,42 +10,27 @@ import {
 } from "@leadcat/ui"
 
 import { gsap, useSceneMotion } from "~/features/landing/lib/motion"
+import { useT } from "~/shared/i18n/context"
+import { useLandingDict } from "~/shared/i18n/use-landing-dict"
 
-type Feature = {
-  icon: LucideIcon
-  title: string
-  body: string
-  tint: string
-}
+const featureIcons: LucideIcon[] = [
+  CalendarDays,
+  Bell,
+  Heart,
+  Star,
+]
 
-const features: Feature[] = [
-  {
-    icon: CalendarDays,
-    title: "One calm calendar view",
-    body: "Lead Cat merges every calendar into one tidy availability map - Google, work, personal. See open paws at a glance.",
-    tint: "from-peach-100 to-cream-200",
-  },
-  {
-    icon: Bell,
-    title: "Reminders that don't nag",
-    body: "Gentle, smart nudges right when they matter. Your team shows up on time without a single grumpy meow.",
-    tint: "from-sunny-100 to-cream-200",
-  },
-  {
-    icon: Heart,
-    title: "Team scheduling, sorted",
-    body: "Pick a group, and Lead Cat pounces on the slot that works for everyone. Round-robin and pooled hosts included.",
-    tint: "from-coral-100 to-peach-100",
-  },
-  {
-    icon: Star,
-    title: "Lives where you work",
-    body: "Native Google Calendar sync and a cozy Telegram Mini App. Book, reschedule and confirm without leaving chat.",
-    tint: "from-kitty-100 to-cream-200",
-  },
+const featureTints = [
+  "from-peach-100 to-cream-200",
+  "from-sunny-100 to-cream-200",
+  "from-coral-100 to-peach-100",
+  "from-kitty-100 to-cream-200",
 ]
 
 export function Features() {
+  const t = useT()
+  const dict = useLandingDict()
+
   const scope = useSceneMotion<HTMLElement>((root) => {
     const q = gsap.utils.selector(root)
 
@@ -79,14 +64,13 @@ export function Features() {
             data-features-head
             className="text-3xl font-bold text-kitty-800 sm:text-4xl"
           >
-            Everything you need to herd the cats
+            {t("features.title")}
           </h2>
           <p
             data-features-head
             className="mx-auto mt-3 max-w-xl text-kitty-600"
           >
-            Powerful scheduling under the hood, wrapped in something genuinely
-            delightful to use.
+            {t("features.subtitle")}
           </p>
         </div>
 
@@ -94,28 +78,33 @@ export function Features() {
           data-features-grid
           className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
         >
-          {features.map(({ icon: Icon, title, body, tint }) => (
-            <Card
-              key={title}
-              data-feature-card
-              className="group h-full transition-transform duration-300 [transition-timing-function:var(--ease-spring)] hover:-translate-y-2 hover:rotate-1"
-            >
-              <div className="px-5">
-                <div
-                  className={`mb-5 inline-grid size-16 place-items-center rounded-2xl bg-gradient-to-br ${tint} text-coral-500 transition-transform duration-300 [transition-timing-function:var(--ease-spring)] group-hover:scale-110 group-hover:-rotate-6`}
-                >
-                  <Icon className="size-8" />
+          {dict.features.items.map((feature, index) => {
+            const Icon = featureIcons[index] ?? CalendarDays
+            const tint = featureTints[index] ?? featureTints[0]
+
+            return (
+              <Card
+                key={feature.title}
+                data-feature-card
+                className="group h-full transition-transform duration-300 [transition-timing-function:var(--ease-spring)] hover:-translate-y-2 hover:rotate-1"
+              >
+                <div className="px-5">
+                  <div
+                    className={`mb-5 inline-grid size-16 place-items-center rounded-2xl bg-gradient-to-br ${tint} text-coral-500 transition-transform duration-300 [transition-timing-function:var(--ease-spring)] group-hover:scale-110 group-hover:-rotate-6`}
+                  >
+                    <Icon className="size-8" />
+                  </div>
+                  <h3 className="flex items-center gap-2 text-lg font-bold text-kitty-800">
+                    <Paw className="size-4 text-coral-400" />
+                    {feature.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-kitty-600">
+                    {feature.body}
+                  </p>
                 </div>
-                <h3 className="flex items-center gap-2 text-lg font-bold text-kitty-800">
-                  <Paw className="size-4 text-coral-400" />
-                  {title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-kitty-600">
-                  {body}
-                </p>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            )
+          })}
         </div>
       </div>
     </section>

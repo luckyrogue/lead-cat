@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Lead Cat">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF8EF" />
+      <stop offset="55%" stop-color="#FFE8D4" />
+      <stop offset="100%" stop-color="#FFD6A8" />
+    </linearGradient>
+    <radialGradient id="glow" cx="78%" cy="42%" r="42%">
+      <stop offset="0%" stop-color="#F2603F" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#F2603F" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <circle cx="920" cy="250" r="260" fill="url(#glow)" />
+  <circle cx="180" cy="520" r="180" fill="#F2603F" opacity="0.08" />
+  <rect x="96" y="168" width="128" height="128" rx="36" fill="#F2603F" />
+  <g fill="#FFFFFF" transform="translate(112 180) scale(1.5)">
+    <ellipse cx="32" cy="44" rx="15" ry="13" />
+    <ellipse cx="14" cy="30" rx="6.5" ry="8" />
+    <ellipse cx="50" cy="30" rx="6.5" ry="8" />
+    <ellipse cx="24" cy="18" rx="6" ry="7.5" />
+    <ellipse cx="40" cy="18" rx="6" ry="7.5" />
+  </g>
+  <text
+    x="96"
+    y="360"
+    fill="#3D2B1F"
+    font-family="Inter, ui-sans-serif, system-ui, sans-serif"
+    font-size="72"
+    font-weight="800"
+    letter-spacing="-0.03em"
+  >
+    Lead Cat
+  </text>
+  <text
+    x="96"
+    y="430"
+    fill="#6B4F3F"
+    font-family="Inter, ui-sans-serif, system-ui, sans-serif"
+    font-size="34"
+    font-weight="500"
+  >
+    Meetings your team will actually love
+  </text>
+  <text
+    x="96"
+    y="500"
+    fill="#9A7A66"
+    font-family="Inter, ui-sans-serif, system-ui, sans-serif"
+    font-size="24"
+    font-weight="500"
+  >
+    Google Calendar sync &amp; Telegram Mini App
+  </text>
+</svg>

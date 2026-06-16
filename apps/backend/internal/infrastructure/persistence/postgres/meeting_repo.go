@@ -171,9 +171,6 @@ func (s *Store) ListSeriesAllOccurrences(ctx context.Context, organizationID, se
 		ORDER BY starts_at`, seriesID, organizationID)
 }
 
-// ListSeriesOccurrenceStarts returns the start instants of every occurrence in a
-// series regardless of status (scheduled or cancelled). Used to avoid recreating
-// a slot that already has a row when a trimmed series is later extended back.
 func (s *Store) ListSeriesOccurrenceStarts(ctx context.Context, organizationID, seriesID uuid.UUID) ([]time.Time, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT starts_at FROM meetings
@@ -314,7 +311,6 @@ func (s *Store) CancelAllSeriesOccurrences(ctx context.Context, organizationID, 
 	return int(ct.RowsAffected()), nil
 }
 
-// SetSeriesRecurrenceUntil updates recurrence_until on all scheduled occurrences of a series.
 func (s *Store) SetSeriesRecurrenceUntil(ctx context.Context, organizationID, seriesID uuid.UUID, until time.Time) error {
 	_, err := s.pool.Exec(ctx, `
 		UPDATE meetings SET recurrence_until = $3, updated_at = now()
@@ -323,8 +319,6 @@ func (s *Store) SetSeriesRecurrenceUntil(ctx context.Context, organizationID, se
 	return err
 }
 
-// meetingFilter builds the WHERE clause and ordered args for a filtered
-// meetings query. $1 is always organization_id.
 func meetingFilter(organizationID uuid.UUID, f model.MeetingFilter) (string, []any) {
 	args := []any{organizationID}
 	where := "organization_id = $1"
@@ -351,7 +345,6 @@ func meetingFilter(organizationID uuid.UUID, f model.MeetingFilter) (string, []a
 	return where, args
 }
 
-// ListMeetingsFiltered returns the organization's meetings matching f, newest first.
 func (s *Store) ListMeetingsFiltered(ctx context.Context, organizationID uuid.UUID, f model.MeetingFilter) ([]Meeting, error) {
 	where, args := meetingFilter(organizationID, f)
 	return s.queryMeetings(ctx, `SELECT `+meetingCols+` FROM meetings WHERE `+where+` ORDER BY starts_at DESC`, args...)

@@ -9,10 +9,11 @@ ENV VITE_BOT_USERNAME=${VITE_BOT_USERNAME}
 ENV VITE_TMA_DEV_TG_ID=${VITE_TMA_DEV_TG_ID}
 COPY . .
 RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @leadcat/brand generate && pnpm --filter @leadcat/brand sync
 RUN pnpm --filter mini-app build
 
 FROM nginx:alpine AS runtime
 ENV API_UPSTREAM=http://backend:8080
-COPY apps/mini-app/nginx.conf /etc/nginx/templates/default.conf.template
+COPY deploy/nginx/spa.conf /etc/nginx/templates/default.conf.template
 COPY --from=build /repo/apps/mini-app/build/client /usr/share/nginx/html
 EXPOSE 80

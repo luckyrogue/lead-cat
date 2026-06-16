@@ -1,0 +1,29 @@
+{
+  "name": "Lead Cat",
+  "short_name": "Lead Cat",
+  "description": "Meetings your team will actually love. Google Calendar sync and Telegram Mini App.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "theme_color": "#F2603F",
+  "background_color": "#FFF8EF",
+  "display": "standalone",
+  "lang": "ru"
+}

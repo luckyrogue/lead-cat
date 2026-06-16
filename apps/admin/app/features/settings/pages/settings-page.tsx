@@ -16,8 +16,6 @@ import { useMeSettings, useUpdateMeSettings } from "~/entities/me/queries"
 import { useT } from "~/shared/i18n/context"
 import { toastError, toastSuccess } from "~/shared/lib/toast"
 
-// Radix Select forbids an empty-string value, so the "default" option rides a
-// sentinel that maps back to "" at the data boundary.
 const DEFAULT = "__default__"
 
 const TIMEZONE_OPTIONS = [

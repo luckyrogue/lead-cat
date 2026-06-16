@@ -1,9 +1,16 @@
-import { Button, Paw } from "@leadcat/ui"
+import { Badge, Button } from "@leadcat/ui"
+import { LeadCatLogo } from "@leadcat/brand"
+import { Link } from "react-router"
 
+import { LanguageSwitcher } from "~/shared/i18n/language-switcher"
+import { useLocale, useT } from "~/shared/i18n/context"
+import { localePath } from "~/shared/i18n/locale-path"
 import { gsap, useSceneMotion } from "~/features/landing/lib/motion"
 
 export function Nav() {
-  // Sticky always (layout); the condense-on-scroll is motion-gated.
+  const t = useT()
+  const locale = useLocale()
+
   const scope = useSceneMotion<HTMLElement>((header) => {
     gsap.to(header, {
       paddingTop: "0.6rem",
@@ -27,34 +34,31 @@ export function Nav() {
       ref={scope}
       className="sticky top-0 z-30 border-b border-transparent py-6"
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6">
-        <a
-          href="/"
-          className="flex items-center gap-2 font-bold text-kitty-800"
-        >
-          <span className="grid size-9 place-items-center rounded-2xl bg-coral-400 text-white">
-            <Paw className="size-5" />
-          </span>
-          Lead Cat
-        </a>
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6">
+        <Link to={localePath(locale)} className="inline-flex">
+          <LeadCatLogo />
+        </Link>
         <nav className="hidden items-center gap-8 text-sm font-semibold text-kitty-600 md:flex">
           <a
             className="transition-colors hover:text-coral-500"
             href="#features"
           >
-            Features
+            {t("nav.features")}
           </a>
           <a className="transition-colors hover:text-coral-500" href="#how">
-            How it works
+            {t("nav.howItWorks")}
           </a>
           <a
             className="transition-colors hover:text-coral-500"
             href="#showcase"
           >
-            Mini App
+            {t("nav.miniApp")}
           </a>
         </nav>
-        <Button size="sm">Get started</Button>
+        <div className="flex items-center gap-3">
+          <LanguageSwitcher />
+          <Button size="sm">{t("nav.getStarted")}</Button>
+        </div>
       </div>
     </header>
   )

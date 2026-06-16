@@ -1,4 +1,5 @@
 import {
+  DatePicker,
   Input,
   Label,
   Select,
@@ -9,7 +10,7 @@ import {
 } from "@leadcat/ui"
 
 import type { MeetingListFilter } from "~/entities/meeting/types"
-import { useT } from "~/shared/i18n/context"
+import { useT, useLocale } from "~/shared/i18n/context"
 
 export type OrganizerOption = { id: string; label: string }
 
@@ -29,9 +30,10 @@ export function MeetingsFilterBar({
   onDeptChange,
 }: MeetingsFilterBarProps) {
   const t = useT()
+  const locale = useLocale()
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       <Field label={t("meetings.filter.labelStatus")}>
         <Select
           value={filter.status ?? "all"}
@@ -85,22 +87,22 @@ export function MeetingsFilterBar({
       </Field>
 
       <Field label={t("meetings.filter.labelFrom")}>
-        <Input
-          type="date"
+        <DatePicker
           value={filter.from ?? ""}
-          onChange={(event) =>
-            onFilterChange({ from: event.target.value || undefined })
-          }
+          onChange={(value) => onFilterChange({ from: value || undefined })}
+          allowClear
+          localeCode={locale}
+          placeholder={t("meetings.filter.labelFrom")}
         />
       </Field>
 
       <Field label={t("meetings.filter.labelTo")}>
-        <Input
-          type="date"
+        <DatePicker
           value={filter.to ?? ""}
-          onChange={(event) =>
-            onFilterChange({ to: event.target.value || undefined })
-          }
+          onChange={(value) => onFilterChange({ to: value || undefined })}
+          allowClear
+          localeCode={locale}
+          placeholder={t("meetings.filter.labelTo")}
         />
       </Field>
 
@@ -123,7 +125,7 @@ function Field({
   children: React.ReactNode
 }) {
   return (
-    <div className="space-y-1.5">
+    <div className="min-w-0 space-y-2">
       <Label className="text-xs text-muted-foreground">{label}</Label>
       {children}
     </div>

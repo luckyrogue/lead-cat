@@ -91,8 +91,17 @@ The backend no longer serves the frontend; leave `STATIC_DIR` unset.
 | Dockerfile | `apps/landing/Dockerfile` (context `.`) |
 | Port       | `3000` (`PORT` env, default 3000)       |
 | Runtime    | Node SSR via `react-router-serve`       |
+| Build arg  | `VITE_SITE_URL` — public site URL for canonical, Open Graph, sitemap |
 
-No env required. Point its domain (e.g. `https://your-domain.example.com`) at port 3000.
+```env
+VITE_SITE_URL=https://your-domain.example.com
+```
+
+Set at **build time** (canonical URLs, `og:image`, `robots.txt`, `sitemap.xml`). Routes:
+`/` (ru), `/en`, `/kk`. Shared brand assets live in `packages/brand/public` and are
+synced into `apps/landing/public` before build (`make brand-sync`).
+
+Point the marketing domain at port 3000.
 
 ## 5. admin
 
@@ -146,6 +155,28 @@ To update: edit the CSV, rebuild the `backend` image, redeploy.
 
 Redeploy the previous image tag per service in Dokploy. Migrations are forward-only —
 test on staging before promoting.
+
+## GitHub Actions (build → GHCR → Dokploy)
+
+On push to `main` or tag `v*.*.*`:
+
+1. **build** — Go vet + build + frontend `pnpm build` (also on PRs).
+2. **docker** — per service: build image, push to `ghcr.io/<owner>/lead-cat-<service>`, trigger Dokploy webhook.
+
+Images are tagged with commit SHA on `main`, or the git tag on releases (`:latest` is updated too).
+
+### Repository secrets
+
+Create one Dokploy **Deploy Webhook** per application and add GitHub secrets:
+
+| Secret | Service |
+| ------ | ------- |
+| `DOKPLOY_WEBHOOK_BACKEND` | `backend` |
+| `DOKPLOY_WEBHOOK_LANDING` | `landing` |
+| `DOKPLOY_WEBHOOK_ADMIN` | `admin` |
+| `DOKPLOY_WEBHOOK_MINI_APP` | `mini-app` |
+
+If a secret is missing, that service is skipped (image is still pushed). In Dokploy, point each app at the matching GHCR image, e.g. `ghcr.io/<owner>/lead-cat-backend`.
 
 ## Dev-only variables
 

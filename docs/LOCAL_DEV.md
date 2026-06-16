@@ -109,8 +109,7 @@ MICROSOFT_OAUTH_CLIENT_SECRET=
 ## Checks
 
 ```bash
-make test
+make lint
 make typecheck
-make smoke      # server must be on :8080
-make coverage   # CI gate
+make build
 ```

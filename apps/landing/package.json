@@ -3,6 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "pnpm --filter @leadcat/brand sync",
+    "prebuild": "pnpm --filter @leadcat/brand sync",
     "build": "react-router build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
@@ -12,6 +14,7 @@
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
+    "@leadcat/brand": "workspace:*",
     "@leadcat/ui": "workspace:*",
     "@react-router/node": "7.17.0",
     "@react-router/serve": "7.17.0",

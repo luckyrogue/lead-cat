@@ -125,9 +125,6 @@ func (a *API) WebRemoveParticipant(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"meeting": m})
 }
 
-// parseMeetingFilter turns raw query values into a model.MeetingFilter.
-// status "" or "all" means no status filter; from/to are YYYY-MM-DD (to is an
-// inclusive day, stored as the exclusive next-day bound); organizer is a UUID.
 func parseMeetingFilter(status, from, to, dept, organizer string) (model.MeetingFilter, error) {
 	f := model.MeetingFilter{Dept: strings.TrimSpace(dept)}
 	switch status {

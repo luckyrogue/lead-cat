@@ -10,7 +10,6 @@ func almatyLoc() *time.Location {
 	return loc
 }
 
-// resolveLoc loads tz, falling back to Asia/Almaty when tz is empty or invalid.
 func resolveLoc(tz string) *time.Location {
 	if tz != "" {
 		if loc, err := time.LoadLocation(tz); err == nil {

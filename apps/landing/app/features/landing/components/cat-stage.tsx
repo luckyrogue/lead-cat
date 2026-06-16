@@ -23,7 +23,7 @@ export function CatStage() {
     <ClientOnly fallback={<SceneFallback />}>
       {() => (
         <Suspense fallback={<SceneFallback />}>
-          <CatScene followPointer />
+          <CatScene autoRotate followPointer />
         </Suspense>
       )}
     </ClientOnly>

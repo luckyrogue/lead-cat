@@ -148,6 +148,10 @@ export const en = {
       editAriaLabel: "Edit meeting",
       cancelAriaLabel: "Cancel meeting",
     },
+    status: {
+      scheduled: "Scheduled",
+      cancelled: "Cancelled",
+    },
     filter: {
       labelStatus: "Status",
       labelOrganizer: "Organizer",

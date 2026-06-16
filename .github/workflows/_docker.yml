@@ -6,34 +6,23 @@ on:
       push:
         type: boolean
         required: true
-    outputs:
-      tag:
-        description: "Тег образов для Dokploy webhook"
-        value: ${{ jobs.meta.outputs.tag }}
+    secrets:
+      DOKPLOY_WEBHOOK_BACKEND:
+        required: false
+      DOKPLOY_WEBHOOK_LANDING:
+        required: false
+      DOKPLOY_WEBHOOK_ADMIN:
+        required: false
+      DOKPLOY_WEBHOOK_MINI_APP:
+        required: false
 
 permissions:
   contents: read
   packages: write
 
 jobs:
-  meta:
-    name: docker / tag
-    runs-on: ubuntu-latest
-    outputs:
-      tag: ${{ steps.meta.outputs.tag }}
-    steps:
-      - id: meta
-        run: |
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            TAG="${GITHUB_REF_NAME}"
-          else
-            TAG="${GITHUB_SHA}"
-          fi
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-
-  build:
-    name: docker / ${{ matrix.service }}
-    needs: meta
+  release:
+    name: ${{ matrix.service }} / build
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -42,7 +31,17 @@ jobs:
         service: [backend, landing, admin, mini-app]
     steps:
       - uses: actions/checkout@v6
-        with: { persist-credentials: false }
+        with:
+          persist-credentials: false
+
+      - name: Image tag
+        id: meta
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          fi
 
       - uses: docker/setup-buildx-action@v4
 
@@ -53,14 +52,14 @@ jobs:
           echo "image=ghcr.io/${OWNER_LC}/lead-cat-${{ matrix.service }}" >> "$GITHUB_OUTPUT"
 
       - name: Login to GHCR
-        if: ${{ inputs.push }}
+        if: inputs.push
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      - name: Build
+      - name: Build and push
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -68,7 +67,38 @@ jobs:
           push: ${{ inputs.push }}
           load: ${{ !inputs.push }}
           tags: |
-            ${{ steps.img.outputs.image }}:${{ needs.meta.outputs.tag }}
+            ${{ steps.img.outputs.image }}:${{ steps.meta.outputs.tag }}
             ${{ steps.img.outputs.image }}:latest
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+      - name: Trigger Dokploy deploy
+        if: inputs.push
+        env:
+          SERVICE: ${{ matrix.service }}
+          IMAGE: ${{ steps.img.outputs.image }}:${{ steps.meta.outputs.tag }}
+          WEBHOOK_BACKEND: ${{ secrets.DOKPLOY_WEBHOOK_BACKEND }}
+          WEBHOOK_LANDING: ${{ secrets.DOKPLOY_WEBHOOK_LANDING }}
+          WEBHOOK_ADMIN: ${{ secrets.DOKPLOY_WEBHOOK_ADMIN }}
+          WEBHOOK_MINI_APP: ${{ secrets.DOKPLOY_WEBHOOK_MINI_APP }}
+        run: |
+          case "$SERVICE" in
+            backend) WEBHOOK="$WEBHOOK_BACKEND" ;;
+            landing) WEBHOOK="$WEBHOOK_LANDING" ;;
+            admin) WEBHOOK="$WEBHOOK_ADMIN" ;;
+            mini-app) WEBHOOK="$WEBHOOK_MINI_APP" ;;
+            *)
+              echo "::error::Unknown service: $SERVICE"
+              exit 1
+              ;;
+          esac
+
+          if [ -z "$WEBHOOK" ]; then
+            echo "::warning::DOKPLOY webhook for $SERVICE is not configured, skipping deploy"
+            exit 0
+          fi
+
+          echo "Deploying $IMAGE via Dokploy"
+          curl -fsSL -X POST "$WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d "{\"image\":\"${IMAGE}\"}"

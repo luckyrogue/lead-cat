@@ -11,7 +11,7 @@ const badgeVariants = cva(
       tone: {
         sunny:
           "border-sunny-300/60 bg-sunny-200/70 text-kitty-800 shadow-[0_8px_20px_-14px_oklch(0.85_0.15_88_/_0.7)]",
-        coral: "border-coral-300/50 bg-coral-100/70 text-coral-500",
+        coral: "border-coral-300/70 bg-coral-100 text-kitty-800",
         muted: "border-border/70 bg-muted/70 text-muted-foreground",
       },
     },

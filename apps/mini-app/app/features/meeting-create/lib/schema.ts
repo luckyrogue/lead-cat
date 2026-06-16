@@ -1,6 +1,5 @@
 import { z } from "zod"
 
-// Messages are i18n keys (resolved at render via t()) — schema is module-scope, no hook here.
 export const createMeetingSchema = z
   .object({
     type: z.string().trim().min(1, "create.errors.titleRequired"),

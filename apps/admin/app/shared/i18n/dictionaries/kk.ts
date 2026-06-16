@@ -149,6 +149,10 @@ export const kk: typeof en = {
       editAriaLabel: "Кездесуді өңдеу",
       cancelAriaLabel: "Кездесуді бас тарту",
     },
+    status: {
+      scheduled: "Жоспарланған",
+      cancelled: "Бас тартылған",
+    },
     filter: {
       labelStatus: "Күй",
       labelOrganizer: "Ұйымдастырушы",

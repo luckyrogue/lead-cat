@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 64" role="img" aria-label="Lead Cat">
+  <rect x="0" y="0" width="64" height="64" rx="18" fill="#F2603F" />
+  <g fill="#FFFFFF" transform="translate(8 6) scale(0.75)">
+    <ellipse cx="32" cy="44" rx="15" ry="13" />
+    <ellipse cx="14" cy="30" rx="6.5" ry="8" />
+    <ellipse cx="50" cy="30" rx="6.5" ry="8" />
+    <ellipse cx="24" cy="18" rx="6" ry="7.5" />
+    <ellipse cx="40" cy="18" rx="6" ry="7.5" />
+  </g>
+  <text
+    x="80"
+    y="42"
+    fill="#3D2B1F"
+    font-family="Inter, ui-sans-serif, system-ui, sans-serif"
+    font-size="28"
+    font-weight="700"
+    letter-spacing="-0.02em"
+  >
+    Lead Cat
+  </text>
+</svg>

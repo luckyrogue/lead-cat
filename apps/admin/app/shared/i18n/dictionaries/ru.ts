@@ -151,6 +151,10 @@ export const ru: typeof en = {
       editAriaLabel: "Редактировать встречу",
       cancelAriaLabel: "Отменить встречу",
     },
+    status: {
+      scheduled: "Запланировано",
+      cancelled: "Отменено",
+    },
     filter: {
       labelStatus: "Статус",
       labelOrganizer: "Организатор",

@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import {
   Button,
   CalendarPlus,
+  DatePicker,
   Input,
   Label,
   Loader2,
@@ -11,6 +12,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  TimePicker,
 } from "@leadcat/ui"
 import { useState } from "react"
 import { Controller, useForm } from "react-hook-form"
@@ -18,7 +20,7 @@ import { z } from "zod"
 
 import type { MeetingRecurrence, MeetingScope } from "~/entities/meeting/types"
 import { WEEKDAYS, toggleDay } from "@leadcat/types"
-import { useT } from "~/shared/i18n/context"
+import { useT, useLocale } from "~/shared/i18n/context"
 
 const RECURRENCES: MeetingRecurrence[] = [
   "once",
@@ -28,7 +30,6 @@ const RECURRENCES: MeetingRecurrence[] = [
   "custom",
 ]
 
-// Zod schema is at module scope — messages are i18n keys resolved at render via t().
 const schema = z
   .object({
     dept: z.string().min(1, "meetings.form.errors.deptRequired"),
@@ -90,6 +91,7 @@ export function MeetingForm({
   onSubmit,
 }: MeetingFormProps) {
   const t = useT()
+  const locale = useLocale()
   const {
     control,
     register,
@@ -172,19 +174,51 @@ export function MeetingForm({
           hint={lockDate ? t("meetings.form.hintDateLocked") : undefined}
           error={te(errors.date?.message)}
         >
-          <Input type="date" disabled={lockDate} {...register("date")} />
+          <Controller
+            control={control}
+            name="date"
+            render={({ field }) => (
+              <DatePicker
+                value={field.value}
+                onChange={field.onChange}
+                disabled={lockDate}
+                localeCode={locale}
+                placeholder={t("meetings.form.labelDate")}
+              />
+            )}
+          />
         </Field>
         <Field
           label={t("meetings.form.labelStart")}
           error={te(errors.start?.message)}
         >
-          <Input type="time" {...register("start")} />
+          <Controller
+            control={control}
+            name="start"
+            render={({ field }) => (
+              <TimePicker
+                value={field.value}
+                onChange={field.onChange}
+                placeholder={t("meetings.form.labelStart")}
+              />
+            )}
+          />
         </Field>
         <Field
           label={t("meetings.form.labelEnd")}
           error={te(errors.end?.message)}
         >
-          <Input type="time" {...register("end")} />
+          <Controller
+            control={control}
+            name="end"
+            render={({ field }) => (
+              <TimePicker
+                value={field.value}
+                onChange={field.onChange}
+                placeholder={t("meetings.form.labelEnd")}
+              />
+            )}
+          />
         </Field>
       </div>
 
@@ -216,7 +250,18 @@ export function MeetingForm({
                 label={t("meetings.form.labelRepeatUntil")}
                 error={te(errors.recurrence_until?.message)}
               >
-                <Input type="date" {...register("recurrence_until")} />
+                <Controller
+                  control={control}
+                  name="recurrence_until"
+                  render={({ field }) => (
+                    <DatePicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      localeCode={locale}
+                      placeholder={t("meetings.form.labelRepeatUntil")}
+                    />
+                  )}
+                />
               </Field>
             ) : null}
           </div>

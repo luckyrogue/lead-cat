@@ -10,13 +10,11 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application"
 )
 
-// Planner implements application.Planner using the Anthropic Messages API.
 type Planner struct {
 	client sdk.Client
 	model  sdk.Model
 }
 
-// New builds a Planner. apiKey may be empty to fall back to ANTHROPIC_API_KEY.
 func New(apiKey string) *Planner {
 	var opts []option.RequestOption
 	if apiKey != "" {
@@ -72,8 +70,8 @@ func toSDKMessages(history []application.AgentMessage) []sdk.MessageParam {
 		switch m.Role {
 		case "assistant":
 			var blocks []sdk.ContentBlockParamUnion
-			// Thinking block must come first; the API rejects an assistant turn that
-			// has a tool_use block without its preceding thinking block.
+			
+			
 			if m.ThinkingSignature != "" {
 				blocks = append(blocks, sdk.NewThinkingBlock(m.ThinkingSignature, m.Thinking))
 			}
@@ -90,7 +88,7 @@ func toSDKMessages(history []application.AgentMessage) []sdk.MessageParam {
 				})
 			}
 			out = append(out, sdk.NewAssistantMessage(blocks...))
-		default: // "user"
+		default: 
 			if len(m.ToolResults) > 0 {
 				blocks := make([]sdk.ContentBlockParamUnion, 0, len(m.ToolResults))
 				for _, tr := range m.ToolResults {

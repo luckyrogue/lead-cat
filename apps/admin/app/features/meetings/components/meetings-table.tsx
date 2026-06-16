@@ -15,9 +15,14 @@ import {
 } from "@leadcat/ui"
 
 import type { Meeting } from "~/entities/meeting/types"
-import { formatDateTime, formatTimeRange } from "~/features/meetings/lib/format"
+import { MeetingIdentity } from "~/features/meetings/components/meeting-identity"
+import {
+  formatMeetingDate,
+  formatTimeRange,
+  meetingTitle,
+} from "~/features/meetings/lib/format"
 import { groupBySeries } from "~/features/meetings/lib/group-series"
-import { useT } from "~/shared/i18n/context"
+import { useLocale, useT } from "~/shared/i18n/context"
 
 type MeetingsTableProps = {
   meetings: Meeting[]
@@ -34,6 +39,13 @@ type OccurrenceRowProps = {
   onDelete: (meeting: Meeting) => void
   indented?: boolean
   timeZone?: string
+  locale: string
+}
+
+function meetingStatusLabel(status: string, t: ReturnType<typeof useT>): string {
+  const key = `meetings.status.${status}`
+  const label = t(key)
+  return label === key ? status : label
 }
 
 function OccurrenceRow({
@@ -43,53 +55,40 @@ function OccurrenceRow({
   onDelete,
   indented = false,
   timeZone,
+  locale,
 }: OccurrenceRowProps) {
   const t = useT()
   const isPending = pendingId === meeting.id
   const isCancelled = meeting.status === "cancelled"
+  const formatOpts = { timeZone, locale }
+
   return (
-    <TableRow key={meeting.id}>
-      <TableCell>
-        {indented ? (
-          <span className="pl-6">
-            <span className="font-medium text-foreground">
-              {meeting.name || meeting.type || t("meetings.table.untitled")}
-            </span>
-            {meeting.dept ? (
-              <span className="block text-xs text-muted-foreground">
-                {meeting.dept}
-              </span>
-            ) : null}
-          </span>
-        ) : (
-          <>
-            <span className="font-medium text-foreground">
-              {meeting.name || meeting.type || t("meetings.table.untitled")}
-            </span>
-            {meeting.dept ? (
-              <span className="block text-xs text-muted-foreground">
-                {meeting.dept}
-              </span>
-            ) : null}
-          </>
-        )}
+    <TableRow>
+      <TableCell className="min-w-[12rem]">
+        <MeetingIdentity
+          meeting={meeting}
+          title={meetingTitle(meeting, t("meetings.table.untitled"))}
+          indented={indented}
+        />
       </TableCell>
-      <TableCell>
-        <span className="text-foreground">
-          {formatDateTime(meeting.starts_at, timeZone)}
-        </span>
-        <span className="block text-xs text-muted-foreground">
-          {formatTimeRange(meeting, timeZone)}
-        </span>
+      <TableCell className="min-w-[9rem] whitespace-nowrap">
+        <p className="font-medium text-foreground">
+          {formatMeetingDate(meeting.starts_at, formatOpts)}
+        </p>
+        <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
+          {formatTimeRange(meeting, formatOpts)}
+        </p>
       </TableCell>
-      <TableCell className="text-muted-foreground">
+      <TableCell className="min-w-[7rem] text-foreground">
         {t(`meetings.recurrence.${meeting.recurrence}`)}
       </TableCell>
-      <TableCell>
-        <Badge tone={isCancelled ? "muted" : "sunny"}>{meeting.status}</Badge>
+      <TableCell className="min-w-[8rem]">
+        <Badge tone={isCancelled ? "muted" : "coral"}>
+          {meetingStatusLabel(meeting.status, t)}
+        </Badge>
       </TableCell>
       <TableCell className="text-right">
-        <div className="flex justify-end gap-1">
+        <div className="flex justify-end gap-2">
           <Button
             variant="ghost"
             size="sm"
@@ -122,8 +121,10 @@ export function MeetingsTable({
   timeZone,
 }: MeetingsTableProps) {
   const t = useT()
+  const locale = useLocale()
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const groups = groupBySeries(meetings)
+  const formatOpts = { timeZone, locale }
 
   function toggleSeries(sid: string) {
     setExpanded((prev) => {
@@ -141,11 +142,19 @@ export function MeetingsTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>{t("meetings.table.colMeeting")}</TableHead>
-          <TableHead>{t("meetings.table.colWhen")}</TableHead>
-          <TableHead>{t("meetings.table.colRepeats")}</TableHead>
-          <TableHead>{t("meetings.table.colStatus")}</TableHead>
-          <TableHead className="text-right">
+          <TableHead className="min-w-[12rem]">
+            {t("meetings.table.colMeeting")}
+          </TableHead>
+          <TableHead className="min-w-[9rem]">
+            {t("meetings.table.colWhen")}
+          </TableHead>
+          <TableHead className="min-w-[7rem]">
+            {t("meetings.table.colRepeats")}
+          </TableHead>
+          <TableHead className="min-w-[8rem]">
+            {t("meetings.table.colStatus")}
+          </TableHead>
+          <TableHead className="min-w-[6rem] text-right">
             {t("meetings.table.colActions")}
           </TableHead>
         </TableRow>
@@ -161,6 +170,7 @@ export function MeetingsTable({
                 onEdit={onEdit}
                 onDelete={onDelete}
                 timeZone={timeZone}
+                locale={locale}
               />
             )
           }
@@ -176,40 +186,34 @@ export function MeetingsTable({
           return [
             <TableRow
               key={`series-${seriesId}`}
-              className="cursor-pointer hover:bg-muted/50"
+              className="cursor-pointer"
               onClick={() => toggleSeries(seriesId)}
             >
-              <TableCell>
-                <span className="flex items-center gap-2">
+              <TableCell className="min-w-[12rem]">
+                <div className="flex items-start gap-2">
                   {isExpanded ? (
-                    <ChevronDown className="size-4 text-muted-foreground" />
+                    <ChevronDown className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
                   ) : (
-                    <ChevronRight className="size-4 text-muted-foreground" />
+                    <ChevronRight className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
                   )}
-                  <span>
-                    <span className="font-medium text-foreground">
-                      {first.name || first.type || t("meetings.table.untitled")}
-                    </span>
-                    {first.dept ? (
-                      <span className="block text-xs text-muted-foreground">
-                        {first.dept}
-                      </span>
-                    ) : null}
-                  </span>
-                </span>
+                  <MeetingIdentity
+                    meeting={first}
+                    title={meetingTitle(first, t("meetings.table.untitled"))}
+                  />
+                </div>
               </TableCell>
-              <TableCell>
-                <span className="text-foreground">
-                  {formatDateTime(earliest.starts_at, timeZone)}
-                </span>
-                <span className="block text-xs text-muted-foreground">
-                  {formatTimeRange(earliest, timeZone)}
-                </span>
+              <TableCell className="min-w-[9rem] whitespace-nowrap">
+                <p className="font-medium text-foreground">
+                  {formatMeetingDate(earliest.starts_at, formatOpts)}
+                </p>
+                <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
+                  {formatTimeRange(earliest, formatOpts)}
+                </p>
               </TableCell>
-              <TableCell className="text-muted-foreground">
+              <TableCell className="min-w-[7rem] text-foreground">
                 {t(`meetings.recurrence.${first.recurrence}`)}
               </TableCell>
-              <TableCell>
+              <TableCell className="min-w-[8rem]">
                 <span className="text-sm text-muted-foreground">
                   {t(
                     count === 1
@@ -231,6 +235,7 @@ export function MeetingsTable({
                     onDelete={onDelete}
                     indented
                     timeZone={timeZone}
+                    locale={locale}
                   />
                 ))
               : []),

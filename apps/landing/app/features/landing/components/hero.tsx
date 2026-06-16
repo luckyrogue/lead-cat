@@ -7,12 +7,14 @@ import {
   prefersCoarsePointer,
   useSceneMotion,
 } from "~/features/landing/lib/motion"
+import { useT } from "~/shared/i18n/context"
 
 export function Hero() {
+  const t = useT()
+
   const scope = useSceneMotion<HTMLElement>((root) => {
     const q = gsap.utils.selector(root)
 
-    // Above the fold → playful entrance plays immediately on mount.
     const intro = gsap.timeline({
       defaults: { ease: "back.out(1.6)", duration: 0.8 },
     })
@@ -35,7 +37,14 @@ export function Hero() {
         0.15
       )
 
-    // The whole motif layer drifts up as the hero scrolls away.
+    gsap.to(q("[data-hero-stage]"), {
+      y: 10,
+      duration: 3.2,
+      ease: "sine.inOut",
+      yoyo: true,
+      repeat: -1,
+    })
+
     gsap.to(q("[data-hero-motifs]"), {
       yPercent: -18,
       ease: "none",
@@ -47,7 +56,6 @@ export function Hero() {
       },
     })
 
-    // Pointer parallax on the individual paws — desktop only.
     if (prefersCoarsePointer()) {
       return
     }
@@ -73,7 +81,7 @@ export function Hero() {
   return (
     <section
       ref={scope}
-      className="relative overflow-hidden px-6 pt-8 pb-12 md:pt-16"
+      className="relative overflow-x-clip px-6 pt-8 pb-16 md:pt-16 md:pb-20"
     >
       <FloatingMotifs />
       <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-4">
@@ -81,16 +89,16 @@ export function Hero() {
           <div data-hero-badge className="inline-block">
             <Badge tone="sunny" className="mb-5">
               <Paw className="size-3.5" />
-              Scheduling, but cuddly
+              {t("hero.badge")}
             </Badge>
           </div>
           <h1 className="text-4xl leading-tight font-bold text-kitty-800 sm:text-5xl lg:text-6xl">
             <span data-hero-line className="block">
-              Meetings your team will
+              {t("hero.titleLine1")}
             </span>
             <span data-hero-line className="block">
               <span className="relative whitespace-nowrap text-coral-500">
-                actually love
+                {t("hero.titleHighlight")}
                 <span
                   className="absolute -bottom-2 left-0 h-3 w-full rounded-full bg-sunny-300/70"
                   aria-hidden="true"
@@ -103,17 +111,15 @@ export function Hero() {
             data-hero-copy
             className="mx-auto mt-6 max-w-md text-lg text-kitty-600 md:mx-0"
           >
-            Lead Cat sniffs out the purrfect time across everyone&apos;s
-            calendars - no more back-and-forth, no more double-booking. Just
-            happy little meetings.
+            {t("hero.copy")}
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4 md:justify-start">
             <span data-hero-cta className="inline-block">
-              <Button size="lg">Get started - it&apos;s free</Button>
+              <Button size="lg">{t("hero.ctaPrimary")}</Button>
             </span>
             <span data-hero-cta className="inline-block">
-              <Button variant="secondary" size="lg">
-                See how it works
+              <Button variant="secondary" size="lg" asChild>
+                <a href="#how">{t("hero.ctaSecondary")}</a>
               </Button>
             </span>
           </div>
@@ -121,20 +127,15 @@ export function Hero() {
             data-hero-copy
             className="mt-5 text-sm font-semibold text-kitty-400"
           >
-            Works with Google Calendar &amp; Telegram. No credit card, no claws
-            out.
+            {t("hero.footnote")}
           </p>
         </div>
 
         <div
           data-hero-stage
-          className="relative mx-auto aspect-square w-full max-w-lg"
+          className="relative mx-auto w-full max-w-xl overflow-visible md:max-w-lg"
         >
-          <div
-            className="absolute inset-x-6 top-10 bottom-6 rounded-full bg-gradient-to-b from-peach-100 to-cream-200"
-            aria-hidden="true"
-          />
-          <div className="relative h-full w-full">
+          <div className="relative h-[18rem] w-full sm:h-[22rem] md:h-[26rem]">
             <CatStage />
           </div>
         </div>

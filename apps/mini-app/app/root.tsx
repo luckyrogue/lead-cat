@@ -1,3 +1,4 @@
+import { brandHeadLinks, brandMetaTags } from "@leadcat/brand"
 import { Toaster } from "@leadcat/ui"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { useEffect } from "react"
@@ -16,6 +17,17 @@ import { AuthProvider } from "~/shared/auth/auth-context"
 import { initTelegramViewport } from "~/shared/tma/telegram-env"
 
 import "./app.css"
+
+export function links() {
+  return brandHeadLinks()
+}
+
+export function meta() {
+  return brandMetaTags({
+    title: "Lead Cat",
+    description: "Schedule meetings in Telegram with Google Calendar sync.",
+  })
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (

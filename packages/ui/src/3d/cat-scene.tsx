@@ -55,7 +55,7 @@ function CatStageContent({
         <meshStandardMaterial color="#F6D2B6" roughness={1} metalness={0} />
       </mesh>
 
-      <Float speed={1.2} rotationIntensity={0} floatIntensity={0.05}>
+      <Float speed={1.8} rotationIntensity={0.08} floatIntensity={0.14}>
         <CatModelBoundary
           fallback={<LowPolyCat followPointer={followPointer} />}
         >
@@ -79,9 +79,9 @@ function CatStageContent({
         enablePan={false}
         autoRotate={autoRotate}
         autoRotateSpeed={0.6}
-        target={[0, 0.95, 0]}
-        minPolarAngle={Math.PI / 2.6}
-        maxPolarAngle={Math.PI / 1.95}
+        target={[0, 0.9, 0]}
+        minPolarAngle={Math.PI / 2.8}
+        maxPolarAngle={Math.PI / 2.05}
       />
     </>
   )
@@ -98,7 +98,7 @@ export function CatScene({
       <Canvas
         shadows
         dpr={[1, 2]}
-        camera={{ position: [0, 1.2, 3.7], fov: 40 }}
+        camera={{ position: [0, 1.05, 4.6], fov: 42 }}
         gl={{ antialias: true, alpha: true, preserveDrawingBuffer: true }}
       >
         <Suspense fallback={<LowPolyCat followPointer={followPointer} />}>

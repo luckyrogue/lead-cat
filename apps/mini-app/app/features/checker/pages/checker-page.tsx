@@ -1,4 +1,4 @@
-import { Button, Input, Label, toast } from "@leadcat/ui"
+import { Button, DatePicker, Input, Label, toast } from "@leadcat/ui"
 import { useState } from "react"
 
 import { EmployeePicker } from "~/components/employee-picker"
@@ -9,10 +9,11 @@ import { fetchFreeSlots } from "~/entities/meeting/api"
 import type { Employee } from "~/entities/employee/types"
 import type { FreeSlot } from "~/entities/meeting/types"
 import { addDaysIso, todayIso } from "~/shared/lib/format"
-import { useT } from "~/shared/i18n/context"
+import { useT, useLocale } from "~/shared/i18n/context"
 
 export function CheckerPage() {
   const t = useT()
+  const locale = useLocale()
   const [participants, setParticipants] = useState<Employee[]>([])
   const [from, setFrom] = useState(todayIso())
   const [to, setTo] = useState(addDaysIso(todayIso(), 6))
@@ -57,17 +58,19 @@ export function CheckerPage() {
 
       <div className="grid grid-cols-2 gap-3">
         <Field label={t("checker.fieldFrom")}>
-          <Input
-            type="date"
+          <DatePicker
             value={from}
-            onChange={(e) => setFrom(e.target.value)}
+            onChange={setFrom}
+            localeCode={locale}
+            placeholder={t("checker.fieldFrom")}
           />
         </Field>
         <Field label={t("checker.fieldTo")}>
-          <Input
-            type="date"
+          <DatePicker
             value={to}
-            onChange={(e) => setTo(e.target.value)}
+            onChange={setTo}
+            localeCode={locale}
+            placeholder={t("checker.fieldTo")}
           />
         </Field>
       </div>

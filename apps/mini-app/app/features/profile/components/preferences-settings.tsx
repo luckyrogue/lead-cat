@@ -16,8 +16,6 @@ import { LANGUAGE_OPTIONS, TIMEZONE_OPTIONS } from "~/entities/settings/api"
 import { settingsQuery, useUpdatePrefs } from "~/entities/settings/queries"
 import { useT } from "~/shared/i18n/context"
 
-// Radix Select forbids an empty-string value, so the "default" option rides a
-// sentinel that maps back to "" at the data boundary.
 const DEFAULT = "__default__"
 
 export function PreferencesSettings() {

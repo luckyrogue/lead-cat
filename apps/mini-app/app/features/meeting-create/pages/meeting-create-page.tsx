@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import {
   Button,
   ChevronLeft,
+  DatePicker,
   Input,
   Label,
   Select,
@@ -9,6 +10,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  TimePicker,
   toast,
 } from "@leadcat/ui"
 import { useState } from "react"
@@ -27,13 +29,14 @@ import { fetchConflicts } from "~/entities/meeting/api"
 import { useCreateMeeting } from "~/entities/meeting/mutations"
 import type { Employee } from "~/entities/employee/types"
 import type { OccurrenceConflicts } from "~/entities/meeting/types"
-import { useT } from "~/shared/i18n/context"
+import { useT, useLocale } from "~/shared/i18n/context"
 import { addMinutesToTime, todayIso } from "~/shared/lib/format"
 
 const RECURRENCES = ["once", "daily", "weekly", "monthly", "custom"] as const
 
 export function MeetingCreatePage() {
   const t = useT()
+  const locale = useLocale()
   const navigate = useNavigate()
   const create = useCreateMeeting()
   const [participants, setParticipants] = useState<Employee[]>([])
@@ -143,17 +146,48 @@ export function MeetingCreatePage() {
           />
         </Field>
         <Field label={t("create.fieldDate")} error={te(errors.date?.message)}>
-          <Input type="date" {...register("date")} />
+          <Controller
+            control={control}
+            name="date"
+            render={({ field }) => (
+              <DatePicker
+                value={field.value}
+                onChange={field.onChange}
+                localeCode={locale}
+                placeholder={t("create.fieldDate")}
+              />
+            )}
+          />
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field
             label={t("create.fieldStart")}
             error={te(errors.start?.message)}
           >
-            <Input type="time" {...register("start")} />
+            <Controller
+              control={control}
+              name="start"
+              render={({ field }) => (
+                <TimePicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder={t("create.fieldStart")}
+                />
+              )}
+            />
           </Field>
           <Field label={t("create.fieldEnd")} error={te(errors.end?.message)}>
-            <Input type="time" {...register("end")} />
+            <Controller
+              control={control}
+              name="end"
+              render={({ field }) => (
+                <TimePicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder={t("create.fieldEnd")}
+                />
+              )}
+            />
           </Field>
         </div>
 
@@ -186,7 +220,18 @@ export function MeetingCreatePage() {
               label={t("create.fieldRepeatUntil")}
               error={te(errors.recurrence_until?.message)}
             >
-              <Input type="date" {...register("recurrence_until")} />
+              <Controller
+                control={control}
+                name="recurrence_until"
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value}
+                    onChange={field.onChange}
+                    localeCode={locale}
+                    placeholder={t("create.fieldRepeatUntil")}
+                  />
+                )}
+              />
             </Field>
           ) : null}
         </div>

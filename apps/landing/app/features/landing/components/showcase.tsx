@@ -1,24 +1,22 @@
 import { Badge, CalendarDays, CatFace, Check, Clock, Paw } from "@leadcat/ui"
 
 import { gsap, useSceneMotion } from "~/features/landing/lib/motion"
+import { useT } from "~/shared/i18n/context"
+import { useLandingDict } from "~/shared/i18n/use-landing-dict"
 
-const meetings = [
-  { time: "10:00", title: "Design sync", tint: "bg-peach-100 text-coral-500" },
-  { time: "13:30", title: "1:1 with Mia", tint: "bg-sunny-100 text-sunny-400" },
-  { time: "16:00", title: "Sprint demo", tint: "bg-coral-100 text-coral-500" },
-]
-
-const perks = [
-  "Book, reschedule and confirm without leaving chat",
-  "Tap a slot - invites and reminders send themselves",
-  "Your calendar, your colleagues, one cozy place",
+const meetingTints = [
+  "bg-peach-100 text-coral-500",
+  "bg-sunny-100 text-sunny-400",
+  "bg-coral-100 text-coral-500",
 ]
 
 export function Showcase() {
+  const t = useT()
+  const dict = useLandingDict()
+
   const scope = useSceneMotion<HTMLElement>((root) => {
     const q = gsap.utils.selector(root)
 
-    // Copy slides in from the left as the section enters.
     gsap.from(q("[data-show-copy]"), {
       x: -40,
       autoAlpha: 0,
@@ -28,7 +26,6 @@ export function Showcase() {
       scrollTrigger: { trigger: root, start: "top 70%" },
     })
 
-    // The device unfurls top-to-bottom like a little curtain, with a soft tilt.
     gsap.fromTo(
       q("[data-show-device]"),
       {
@@ -48,7 +45,6 @@ export function Showcase() {
       }
     )
 
-    // Rows pop in just behind the reveal.
     gsap.from(q("[data-show-row]"), {
       y: 16,
       autoAlpha: 0,
@@ -70,24 +66,23 @@ export function Showcase() {
           <div data-show-copy className="inline-block">
             <Badge tone="sunny" className="mb-5">
               <Paw className="size-3.5" />
-              Right inside Telegram
+              {t("showcase.badge")}
             </Badge>
           </div>
           <h2
             data-show-copy
             className="text-3xl font-bold text-kitty-800 sm:text-4xl"
           >
-            Your whole schedule, one cozy tap away
+            {t("showcase.title")}
           </h2>
           <p
             data-show-copy
             className="mx-auto mt-4 max-w-md text-kitty-600 md:mx-0"
           >
-            No new app to learn. Lead Cat lives in the Mini App your team
-            already opens every day.
+            {t("showcase.copy")}
           </p>
           <ul className="mt-7 flex flex-col gap-3 text-left">
-            {perks.map((perk) => (
+            {dict.showcase.perks.map((perk) => (
               <li
                 key={perk}
                 data-show-copy
@@ -102,7 +97,6 @@ export function Showcase() {
           </ul>
         </div>
 
-        {/* Soft glow behind the device. */}
         <div className="relative mx-auto w-full max-w-xs">
           <div
             className="absolute -inset-6 rounded-[3rem] bg-gradient-to-br from-peach-200/60 to-sunny-200/50 blur-2xl"
@@ -115,23 +109,23 @@ export function Showcase() {
             <div className="mb-5 flex items-center justify-between">
               <div className="flex items-center gap-2 font-bold text-kitty-800">
                 <CatFace className="size-7" />
-                Today
+                {t("showcase.today")}
               </div>
               <span className="flex items-center gap-1 text-xs font-semibold text-kitty-400">
                 <CalendarDays className="size-4" />
-                Tue, 16
+                {t("showcase.dateLabel")}
               </span>
             </div>
 
             <div className="flex flex-col gap-3">
-              {meetings.map((meeting) => (
+              {dict.showcase.meetings.map((meeting, index) => (
                 <div
                   key={meeting.title}
                   data-show-row
                   className="flex items-center gap-3 rounded-2xl bg-cream-50 p-3"
                 >
                   <span
-                    className={`grid size-10 shrink-0 place-items-center rounded-xl text-xs font-bold ${meeting.tint}`}
+                    className={`grid size-10 shrink-0 place-items-center rounded-xl text-xs font-bold ${meetingTints[index] ?? meetingTints[0]}`}
                   >
                     <Clock className="size-4" />
                   </span>
@@ -149,7 +143,7 @@ export function Showcase() {
             </div>
 
             <div className="mt-5 grid place-items-center rounded-2xl bg-gradient-to-br from-coral-400 to-peach-400 py-3 text-sm font-bold text-white shadow-[var(--shadow-soft)]">
-              Booked in 3 taps
+              {t("showcase.bookedIn")}
             </div>
           </div>
         </div>

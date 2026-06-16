@@ -22,28 +22,18 @@ jobs:
   docker:
     name: docker
     needs: build
-    if: success()
+    if: |
+      success() &&
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     uses: ./.github/workflows/_docker.yml
     with:
-      push: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) }}
+      push: true
+    secrets:
+      DOKPLOY_WEBHOOK_BACKEND: ${{ secrets.DOKPLOY_WEBHOOK_BACKEND }}
+      DOKPLOY_WEBHOOK_LANDING: ${{ secrets.DOKPLOY_WEBHOOK_LANDING }}
+      DOKPLOY_WEBHOOK_ADMIN: ${{ secrets.DOKPLOY_WEBHOOK_ADMIN }}
+      DOKPLOY_WEBHOOK_MINI_APP: ${{ secrets.DOKPLOY_WEBHOOK_MINI_APP }}
     permissions:
       contents: read
       packages: write
-
-  smoke:
-    name: smoke
-    needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    uses: ./.github/workflows/_smoke.yml
-
-  deploy:
-    name: deploy
-    needs: docker
-    if: |
-      github.event_name == 'push' &&
-      (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
-    uses: ./.github/workflows/_deploy.yml
-    with:
-      image_tag: ${{ needs.docker.outputs.tag }}
-    secrets:
-      DOKPLOY_WEBHOOK: ${{ secrets.DOKPLOY_WEBHOOK }}

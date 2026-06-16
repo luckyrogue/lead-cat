@@ -51,6 +51,15 @@ export {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "./components/ui/dropdown-menu"
+export {
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+  PopoverTrigger,
+} from "./components/ui/popover"
+export { Calendar, CalendarDayButton } from "./components/ui/calendar"
+export { DatePicker, pickerTriggerClassName } from "./components/ui/date-picker"
+export { TimePicker } from "./components/ui/time-picker"
 export { Toaster } from "./components/ui/sonner"
 
 export { ParticipantsEditorPanel } from "./components/meetings/participants-editor-panel"

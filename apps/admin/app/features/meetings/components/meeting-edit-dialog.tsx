@@ -2,12 +2,12 @@ import { useState } from "react"
 
 import {
   Button,
+  DatePicker,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  Input,
   Label,
   Separator,
 } from "@leadcat/ui"
@@ -25,7 +25,7 @@ import {
 } from "~/features/meetings/components/meeting-form"
 import { ParticipantsEditor } from "~/features/meetings/components/participants-editor"
 import { toastError, toastSuccess } from "~/shared/lib/toast"
-import { useT } from "~/shared/i18n/context"
+import { useT, useLocale } from "~/shared/i18n/context"
 
 type Props = {
   meeting: Meeting | null
@@ -44,6 +44,7 @@ function SeriesEndEditor({
   orgId: string
 }) {
   const t = useT()
+  const locale = useLocale()
   const [until, setUntil] = useState(
     (meeting.recurrence_until ?? "").slice(0, 10)
   )
@@ -58,12 +59,13 @@ function SeriesEndEditor({
         <Label htmlFor="series-end-date" className="sr-only">
           {t("meetings.dialog.seriesEndDate")}
         </Label>
-        <Input
+        <DatePicker
           id="series-end-date"
-          type="date"
           value={until}
-          onChange={(e) => setUntil(e.target.value)}
+          onChange={setUntil}
+          localeCode={locale}
           className="w-44"
+          placeholder={t("meetings.dialog.seriesEndDate")}
         />
         <Button
           type="button"

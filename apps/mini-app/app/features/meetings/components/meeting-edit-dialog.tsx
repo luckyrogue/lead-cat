@@ -1,5 +1,6 @@
 import {
   Button,
+  DatePicker,
   Dialog,
   DialogContent,
   DialogFooter,
@@ -7,6 +8,7 @@ import {
   DialogTitle,
   Input,
   Label,
+  TimePicker,
   toast,
 } from "@leadcat/ui"
 import { useEffect, useState } from "react"
@@ -22,7 +24,7 @@ import {
 } from "~/entities/meeting/types"
 import { ParticipantsEditor } from "~/features/meetings/components/participants-editor"
 import { ScopeToggle } from "~/features/meetings/components/scope-toggle"
-import { useT } from "~/shared/i18n/context"
+import { useT, useLocale } from "~/shared/i18n/context"
 
 type Props = {
   open: boolean
@@ -32,6 +34,7 @@ type Props = {
 
 export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
   const t = useT()
+  const locale = useLocale()
   const update = useUpdateMeeting()
   const changeEnd = useChangeSeriesEnd()
   const [type, setType] = useState(meeting.type)
@@ -93,10 +96,11 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
           {series ? (
             <div className="flex flex-col gap-1.5">
               <Field label={t("meetings.edit.seriesEnds")}>
-                <Input
-                  type="date"
+                <DatePicker
                   value={seriesUntil}
-                  onChange={(e) => setSeriesUntil(e.target.value)}
+                  onChange={setSeriesUntil}
+                  localeCode={locale}
+                  placeholder={t("meetings.edit.seriesEnds")}
                 />
               </Field>
               <Button
@@ -129,26 +133,27 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
                 : t("meetings.edit.fieldDate")
             }
           >
-            <Input
-              type="date"
+            <DatePicker
               value={date}
               disabled={lockDate}
-              onChange={(e) => setDate(e.target.value)}
+              onChange={setDate}
+              localeCode={locale}
+              placeholder={t("meetings.edit.fieldDate")}
             />
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label={t("meetings.edit.fieldStart")}>
-              <Input
-                type="time"
+              <TimePicker
                 value={start}
-                onChange={(e) => setStart(e.target.value)}
+                onChange={setStart}
+                placeholder={t("meetings.edit.fieldStart")}
               />
             </Field>
             <Field label={t("meetings.edit.fieldEnd")}>
-              <Input
-                type="time"
+              <TimePicker
                 value={end}
-                onChange={(e) => setEnd(e.target.value)}
+                onChange={setEnd}
+                placeholder={t("meetings.edit.fieldEnd")}
               />
             </Field>
           </div>

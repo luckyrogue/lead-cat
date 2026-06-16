@@ -30,10 +30,8 @@ Or step by step: `make help`
 
 ## Repo layout
 
-- `backend/` — Go monolith (`cmd/server`, `cmd/migrate`, `internal/`, `migrations/`, `test/smoke/` E2E)
-- `frontend/` — React Mini App
+- `apps/backend/` — Go monolith (`cmd/server`, `cmd/migrate`, `internal/`, `migrations/`)
+- `apps/mini-app/`, `apps/admin/`, `apps/landing/` — React frontends
 - `deploy/` — `Dockerfile`, `docker-compose.yml` (local Postgres + Redis), `.env.example`
 - `config/` — shared tooling configs (Prettier, tsconfig base, EditorConfig, golangci-lint)
-- JS tooling (Prettier, shadcn CLI): `frontend/package.json` + `pnpm` only — `make fmt` runs `pnpm run format` there
-
-Smoke (`make smoke`) and coverage gate (`make coverage`) are Go tests, not scripts.
+- `packages/` — shared UI, brand, config

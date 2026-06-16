@@ -245,9 +245,6 @@ func (s *Services) CancelWholeSeries(ctx context.Context, organizationID, userID
 	return n, nil
 }
 
-// ChangeSeriesEnd moves a series' recurrence_until. Extending appends new
-// occurrences (with Google events) after the latest existing one; trimming
-// cancels and deletes occurrences after the new end. Returns counts added/removed.
 func (s *Services) ChangeSeriesEnd(ctx context.Context, organizationID, userID, meetingID uuid.UUID, untilStr string) (int, int, error) {
 	picked, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {

@@ -57,7 +57,7 @@ export function ListPageShell({
           ) : isEmpty ? (
             emptyState
           ) : (
-            children
+            <div className="flex flex-col gap-5">{children}</div>
           )}
         </CardContent>
       </Card>

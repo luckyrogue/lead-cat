@@ -1,8 +1,5 @@
 import { Paw } from "@leadcat/ui"
 
-// `parallax` scales how far each paw drifts with the pointer; the wrapper span
-// carries the GSAP transform while the inner Paw keeps the CSS float loop, so
-// the two never fight over `transform`.
 const motifs = [
   {
     className: "left-[6%] top-[18%] size-10 text-coral-200",

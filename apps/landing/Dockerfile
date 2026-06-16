@@ -1,8 +1,11 @@
 FROM node:22-alpine AS build
 WORKDIR /repo
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
+ARG VITE_SITE_URL=https://lead-cat.space
+ENV VITE_SITE_URL=${VITE_SITE_URL}
 COPY . .
 RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @leadcat/brand generate && pnpm --filter @leadcat/brand sync
 RUN pnpm --filter landing build
 
 FROM node:22-alpine AS runtime

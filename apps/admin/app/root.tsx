@@ -1,3 +1,4 @@
+import { brandHeadLinks, brandMetaTags } from "@leadcat/brand"
 import { Toaster } from "@leadcat/ui"
 import { QueryClientProvider } from "@tanstack/react-query"
 import {
@@ -14,13 +15,23 @@ import { getQueryClient } from "~/shared/api/query-client"
 
 import "./app.css"
 
+export function links() {
+  return brandHeadLinks()
+}
+
+export function meta() {
+  return brandMetaTags({
+    title: "Lead Cat Admin",
+    description: "Admin dashboard for Lead Cat meeting scheduling.",
+  })
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Lead Cat Admin</title>
         <Meta />
         <Links />
       </head>

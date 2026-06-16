@@ -1,8 +1,9 @@
 import { Button, CatFace, Paw } from "@leadcat/ui"
+import { LeadCatLogo, SITE_NAME } from "@leadcat/brand"
 
 import { gsap, useSceneMotion } from "~/features/landing/lib/motion"
-
-const headingWords = ["Ready", "to", "make", "meetings", "purr?"]
+import { useT } from "~/shared/i18n/context"
+import { useLandingDict } from "~/shared/i18n/use-landing-dict"
 
 const driftingPaws = [
   { className: "left-[12%] bottom-[8%] size-8 text-coral-200", delay: "0s" },
@@ -18,10 +19,12 @@ const driftingPaws = [
 ]
 
 export function Footer() {
+  const t = useT()
+  const dict = useLandingDict()
+
   const scope = useSceneMotion<HTMLElement>((root) => {
     const q = gsap.utils.selector(root)
 
-    // Heading lights up word by word as it enters.
     gsap.from(q("[data-footer-word]"), {
       autoAlpha: 0.18,
       y: 12,
@@ -39,7 +42,6 @@ export function Footer() {
       scrollTrigger: { trigger: root, start: "top 70%" },
     })
 
-    // Decorative paws drift upward through the footer.
     gsap.to(q("[data-footer-paw]"), {
       yPercent: -40,
       ease: "none",
@@ -74,31 +76,25 @@ export function Footer() {
           <CatFace className="animate-wiggle size-24" />
         </div>
         <h2 className="text-3xl font-bold text-kitty-800 sm:text-4xl">
-          {headingWords.map((word, index) => (
+          {dict.footer.headingWords.map((word, index) => (
             <span key={index} data-footer-word className="inline-block">
               {word}
-              {index < headingWords.length - 1 ? " " : ""}
+              {index < dict.footer.headingWords.length - 1 ? "\u00a0" : ""}
             </span>
           ))}
         </h2>
-        <p className="mx-auto mt-3 max-w-md text-kitty-600">
-          Join the teams that traded scheduling chaos for a happy little cat.
-        </p>
+        <p className="mx-auto mt-3 max-w-md text-kitty-600">{t("footer.copy")}</p>
         <div data-footer-cta className="mt-7 flex justify-center">
           <Button size="lg">
-            Adopt Lead Cat
+            {t("footer.cta")}
             <Paw className="size-5" />
           </Button>
         </div>
 
         <div className="mt-14 flex flex-col items-center gap-3 text-sm text-kitty-400">
-          <div className="flex items-center gap-2 font-bold text-kitty-600">
-            <Paw className="size-5 text-coral-400" />
-            Lead Cat
-          </div>
+          <LeadCatLogo className="text-kitty-600" />
           <p>
-            &copy; {new Date().getFullYear()} Lead Cat. Made with whiskers and
-            warmth.
+            &copy; {new Date().getFullYear()} {SITE_NAME}. {t("footer.copyright")}
           </p>
         </div>
       </div>

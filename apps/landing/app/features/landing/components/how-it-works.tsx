@@ -1,34 +1,13 @@
 import { Badge } from "@leadcat/ui"
 
 import { gsap, useSceneMotion } from "~/features/landing/lib/motion"
-
-const steps = [
-  {
-    n: "1",
-    title: "Connect your calendars",
-    body: "Link Google in two taps. Lead Cat learns when you're free.",
-  },
-  {
-    n: "2",
-    title: "Share your kitty link",
-    body: "Drop one link in chat. Guests pick a slot that just works.",
-  },
-  {
-    n: "3",
-    title: "Show up and relax",
-    body: "Auto-invites, reminders and reschedules. You do nothing.",
-  },
-]
-
-// `to`/`suffix` drive the count-up; the JSX renders the final value so SSR and
-// reduced-motion users always see the real number.
-const stats = [
-  { to: 3, suffix: " sec", label: "to book a meeting" },
-  { to: 0, suffix: "", label: "double-bookings" },
-  { to: 100, suffix: "%", label: "more purring" },
-]
+import { useT } from "~/shared/i18n/context"
+import { useLandingDict } from "~/shared/i18n/use-landing-dict"
 
 export function HowItWorks() {
+  const t = useT()
+  const dict = useLandingDict()
+
   const scope = useSceneMotion<HTMLElement>((root) => {
     const q = gsap.utils.selector(root)
 
@@ -49,7 +28,6 @@ export function HowItWorks() {
       scrollTrigger: { trigger: root, start: "top 65%" },
     })
 
-    // Count each stat up from zero when the stat row scrolls into view.
     const counters = q("[data-countup]") as unknown as HTMLElement[]
     counters.forEach((el) => {
       const to = Number(el.dataset.to ?? 0)
@@ -74,26 +52,26 @@ export function HowItWorks() {
         <div className="mb-10 text-center">
           <div data-how-head className="inline-block">
             <Badge className="border-white/40 bg-white/20 text-white">
-              How it works
+              {t("howItWorks.badge")}
             </Badge>
           </div>
           <h2
             data-how-head
             className="mt-4 text-3xl font-bold text-white sm:text-4xl"
           >
-            Three little steps, zero headaches
+            {t("howItWorks.title")}
           </h2>
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
-          {steps.map((step) => (
+          {dict.howItWorks.steps.map((step, index) => (
             <div
-              key={step.n}
+              key={step.title}
               data-how-step
               className="rounded-[calc(var(--radius)*1.6)] bg-white/90 p-6 text-center backdrop-blur"
             >
               <div className="mx-auto mb-4 grid size-12 place-items-center rounded-full bg-sunny-400 text-xl font-bold text-kitty-800 shadow-[0_10px_24px_-12px_oklch(0.85_0.15_88_/_0.8)]">
-                {step.n}
+                {index + 1}
               </div>
               <h3 className="text-lg font-bold text-kitty-800">{step.title}</h3>
               <p className="mt-2 text-sm text-kitty-600">{step.body}</p>
@@ -105,7 +83,7 @@ export function HowItWorks() {
           data-how-stats
           className="mt-10 grid grid-cols-3 gap-4 border-t border-white/30 pt-8 text-center text-white"
         >
-          {stats.map((stat) => (
+          {dict.howItWorks.stats.map((stat) => (
             <div key={stat.label}>
               <div className="text-3xl font-bold sm:text-4xl">
                 <span data-countup data-to={stat.to} data-suffix={stat.suffix}>

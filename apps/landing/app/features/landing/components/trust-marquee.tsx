@@ -1,26 +1,18 @@
 import { Paw } from "@leadcat/ui"
 
 import { gsap, useSceneMotion } from "~/features/landing/lib/motion"
-
-const items = [
-  "Google Calendar sync",
-  "Telegram Mini App",
-  "Zero double-bookings",
-  "Round-robin hosts",
-  "Gentle reminders",
-  "3-second booking",
-  "Pooled availability",
-  "Reschedules itself",
-]
+import { useT } from "~/shared/i18n/context"
+import { useLandingDict } from "~/shared/i18n/use-landing-dict"
 
 export function TrustMarquee() {
+  const t = useT()
+  const dict = useLandingDict()
+
   const scope = useSceneMotion<HTMLElement>((root) => {
     const track = root.querySelector<HTMLElement>("[data-marquee-track]")
     if (!track) {
       return
     }
-    // Two identical halves sit side by side; sliding one full half and looping
-    // reads as an endless ribbon.
     gsap.to(track, {
       xPercent: -50,
       ease: "none",
@@ -32,10 +24,9 @@ export function TrustMarquee() {
   return (
     <section
       ref={scope}
-      aria-label="What Lead Cat does"
+      aria-label={t("trustMarquee.ariaLabel")}
       className="relative overflow-hidden border-y border-border/60 bg-cream-50/60 py-5"
     >
-      {/* Soft edge fades so the ribbon melts into the page. */}
       <div
         className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-cream-50 to-transparent"
         aria-hidden="true"
@@ -51,7 +42,7 @@ export function TrustMarquee() {
             className="flex shrink-0 items-center gap-8 pr-8"
             aria-hidden={half === 1}
           >
-            {items.map((item) => (
+            {dict.trustMarquee.items.map((item) => (
               <li
                 key={item}
                 className="flex items-center gap-3 text-sm font-semibold whitespace-nowrap text-kitty-600"

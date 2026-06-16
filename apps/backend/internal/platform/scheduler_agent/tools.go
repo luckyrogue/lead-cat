@@ -14,8 +14,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
-// almatyLoc is the default working timezone for parsing/formatting tool times in
-// Phase 1 (per-user tz arrives with the booking phase).
 var almatyLoc = func() *time.Location {
 	loc, err := time.LoadLocation("Asia/Almaty")
 	if err != nil {
@@ -24,15 +22,12 @@ var almatyLoc = func() *time.Location {
 	return loc
 }()
 
-// Backend is the read-only slice of application.Services the agent needs.
-// *application.Services satisfies this.
 type Backend interface {
 	SearchEmployeesGlobal(ctx context.Context, query string) ([]model.Employee, error)
 	FreeSlots(ctx context.Context, emails []string, from, to time.Time, durMins int) ([]application.FreeSlot, error)
 	MeetingConflicts(ctx context.Context, emails []string, start, end time.Time, exclude uuid.UUID) ([]application.Conflict, error)
 }
 
-// ToolSpecs returns the read-only tool surface as provider-neutral specs.
 func ToolSpecs() []application.AgentTool {
 	return []application.AgentTool{
 		{
@@ -76,9 +71,6 @@ func ToolSpecs() []application.AgentTool {
 	}
 }
 
-// Dispatch runs one tool call and returns text for the model. A returned error
-// means the call could not be executed (bad args / unknown tool); the caller
-// surfaces it back to the model as an error tool result.
 func Dispatch(ctx context.Context, be Backend, name string, args json.RawMessage) (string, error) {
 	switch name {
 	case "search_people":
@@ -138,7 +130,7 @@ func dispatchFreeSlots(ctx context.Context, be Backend, args json.RawMessage) (s
 	if err != nil {
 		return "", fmt.Errorf("bad 'to' date (want YYYY-MM-DD): %w", err)
 	}
-	// `to` is inclusive; FreeSlots scans [from, to) so push the end out one day.
+	
 	slots, err := be.FreeSlots(ctx, in.Emails, from, to.AddDate(0, 0, 1), in.DurationMins)
 	if err != nil {
 		return "", err

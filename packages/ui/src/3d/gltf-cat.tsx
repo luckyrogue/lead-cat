@@ -65,12 +65,28 @@ export function GltfCat({ src, followPointer = true }: GltfCatProps) {
       return
     }
 
-    root.current.position.y = Math.sin(t * 1.4) * 0.03
-    const targetY = followPointer ? state.pointer.x * 0.4 : 0
+    const breathe = 1 + Math.sin(t * 1.4) * 0.018
+    root.current.scale.setScalar(breathe)
+    root.current.position.y = Math.sin(t * 1.4) * 0.05
+
+    const targetY = followPointer ? state.pointer.x * 0.45 : 0
+    const targetX = followPointer ? state.pointer.y * 0.14 : 0
+    const targetZ = followPointer ? state.pointer.x * 0.06 : 0
+
     root.current.rotation.y = MathUtils.lerp(
       root.current.rotation.y,
       targetY - 0.25,
-      0.05,
+      0.06,
+    )
+    root.current.rotation.x = MathUtils.lerp(
+      root.current.rotation.x,
+      targetX,
+      0.06,
+    )
+    root.current.rotation.z = MathUtils.lerp(
+      root.current.rotation.z,
+      targetZ,
+      0.06,
     )
   })
 

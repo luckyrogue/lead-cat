@@ -1,12 +1,12 @@
 import {
   LayoutDashboard,
   Mailbox,
-  Paw,
   Settings,
   Users,
   Video,
   type LucideIcon,
 } from "@leadcat/ui"
+import { LeadCatLogo } from "@leadcat/brand"
 import { Link, useLocation } from "react-router"
 
 import { SidebarUserCard } from "~/components/sidebar-user-card"
@@ -39,14 +39,8 @@ export function AppSidebar({ me }: AppSidebarProps) {
   return (
     <aside className="surface-card flex flex-col overflow-hidden rounded-[calc(var(--radius)*1.6)] xl:h-full xl:min-h-0">
       <div className="shrink-0 border-b border-border/70 px-5 py-5">
-        <Link
-          to="/"
-          className="flex items-center gap-2 font-bold text-kitty-800"
-        >
-          <span className="grid size-9 place-items-center rounded-2xl bg-coral-400 text-white">
-            <Paw className="size-5" />
-          </span>
-          Lead Cat
+        <Link to="/" className="inline-flex">
+          <LeadCatLogo />
         </Link>
       </div>
 

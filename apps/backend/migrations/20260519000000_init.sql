@@ -1,4 +1,4 @@
--- +goose Up
+
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE platform_users (
@@ -94,7 +94,6 @@ CREATE TABLE scenario_run_steps (
 CREATE INDEX scenario_runs_scenario_id_idx ON scenario_runs (scenario_id, started_at DESC);
 CREATE INDEX scenarios_workspace_id_idx ON scenarios (workspace_id);
 
--- +goose Down
 DROP TABLE IF EXISTS scenario_run_steps;
 DROP TABLE IF EXISTS scenario_runs;
 DROP TABLE IF EXISTS scenarios;

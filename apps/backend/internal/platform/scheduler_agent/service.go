@@ -25,8 +25,6 @@ func New(planner application.Planner, backend Backend, sess sessions) *Service {
 	return &Service{planner: planner, backend: backend, sessions: sess, tools: ToolSpecs()}
 }
 
-// OnText handles a free-text message. It always returns handled=true (the agent
-// is the catch-all), so wire it LAST in the dispatcher fallback chain.
 func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Reply, bool) {
 	st, err := s.sessions.Get(ctx, telegramID)
 	if err != nil || st == nil {
@@ -67,7 +65,6 @@ func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Re
 	return Reply{Text: "Это оказалось сложновато 🐾 Попробуй переформулировать или уточнить участников и даты."}, true
 }
 
-// Start resets the conversation and greets.
 func (s *Service) Start(ctx context.Context, telegramID int64) Reply {
 	_ = s.sessions.Del(ctx, telegramID)
 	return Reply{Text: "Спроси меня про расписание — например: «когда у Миа и Алекса есть общий час на следующей неделе?» 🐾"}
