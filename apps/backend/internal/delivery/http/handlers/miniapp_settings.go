@@ -32,16 +32,40 @@ func (a *API) MiniAppPatchSettings(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
 	}
 	var body struct {
-		ReminderMinutes *[]int `json:"reminder_minutes"`
+		ReminderMinutes *[]int  `json:"reminder_minutes"`
+		Timezone        *string `json:"timezone"`
+		Language        *string `json:"language"`
 	}
-	if err := c.BodyParser(&body); err != nil || body.ReminderMinutes == nil {
+	if err := c.BodyParser(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "validation_failed")
 	}
-	if err := a.App.SetUserReminderMinutes(c.Context(), bu.TelegramID, *body.ReminderMinutes); err != nil {
-		if errors.Is(err, application.ErrInvalidReminderMinute) {
-			return fiber.NewError(fiber.StatusBadRequest, "validation_failed")
+	if body.ReminderMinutes != nil {
+		if err := a.App.SetUserReminderMinutes(c.Context(), bu.TelegramID, *body.ReminderMinutes); err != nil {
+			if errors.Is(err, application.ErrInvalidReminderMinute) {
+				return fiber.NewError(fiber.StatusBadRequest, "validation_failed")
+			}
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 		}
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	if body.Timezone != nil || body.Language != nil {
+		cur, err := a.App.GetUserSettings(c.Context(), bu.TelegramID)
+		if err != nil {
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+		tz := cur.Timezone
+		if body.Timezone != nil {
+			tz = *body.Timezone
+		}
+		lang := cur.Language
+		if body.Language != nil {
+			lang = *body.Language
+		}
+		if err := a.App.SetUserPrefs(c.Context(), bu.TelegramID, tz, lang); err != nil {
+			if errors.Is(err, application.ErrInvalidInput) {
+				return fiber.NewError(fiber.StatusBadRequest, "validation_failed")
+			}
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
 	}
 	return c.SendStatus(fiber.StatusNoContent)
 }

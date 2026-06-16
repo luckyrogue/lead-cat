@@ -85,6 +85,8 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	web.Get("/magic/verify", api.WebMagicVerify)
 	web.Post("/logout", webAuth.Middleware, api.WebLogout)
 	web.Get("/me", webAuth.Middleware, api.WebMe)
+	web.Get("/me/settings", webAuth.Middleware, api.WebGetMeSettings)
+	web.Patch("/me/settings", webAuth.Middleware, api.WebPatchMeSettings)
 
 	registerRetiredPlatformAuth(app)
 	app.All("/api/me", handlers.PlatformGone)

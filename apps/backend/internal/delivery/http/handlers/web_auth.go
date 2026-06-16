@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"crypto/subtle"
+	"errors"
 	"net/mail"
 	"strings"
 	"time"
@@ -229,9 +230,49 @@ func (a *API) WebMe(c *fiber.Ctx) error {
 			"email":       user.Email,
 			"avatar_url":  user.AvatarURL,
 			"auth_method": user.AuthMethod,
+			"timezone":    user.Timezone,
+			"language":    user.Language,
 		},
 		"organizations": out,
 	})
+}
+
+func (a *API) WebGetMeSettings(c *fiber.Ctx) error {
+	user := c.Locals("web_user").(model.PlatformUser)
+	s, err := a.App.GetWebUserSettings(c.UserContext(), user.ID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	return c.JSON(s)
+}
+
+func (a *API) WebPatchMeSettings(c *fiber.Ctx) error {
+	user := c.Locals("web_user").(model.PlatformUser)
+	cur, err := a.App.GetWebUserSettings(c.UserContext(), user.ID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	var body struct {
+		Timezone *string `json:"timezone"`
+		Language *string `json:"language"`
+	}
+	if err := c.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid_body")
+	}
+	tz, lang := cur.Timezone, cur.Language
+	if body.Timezone != nil {
+		tz = *body.Timezone
+	}
+	if body.Language != nil {
+		lang = *body.Language
+	}
+	if err := a.App.SetWebUserPrefs(c.UserContext(), user.ID, tz, lang); err != nil {
+		if errors.Is(err, application.ErrInvalidInput) {
+			return fiber.NewError(fiber.StatusBadRequest, "validation_failed")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	return c.SendStatus(fiber.StatusNoContent)
 }
 
 func (a *API) postLoginDest(ctx context.Context, userID uuid.UUID) string {
