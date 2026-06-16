@@ -11,6 +11,7 @@ import {
 import { Link } from "react-router"
 
 import { PageHeader } from "~/components/page-header"
+import { PreferencesSettings } from "~/features/profile/components/preferences-settings"
 import { ReminderSettings } from "~/features/profile/components/reminder-settings"
 import { useAuth } from "~/shared/auth/auth-context"
 
@@ -50,6 +51,8 @@ export function ProfilePage() {
       </Card>
 
       <ReminderSettings />
+
+      <PreferencesSettings />
 
       <Link to="/profile/colleague">
         <Card className="transition-colors active:bg-muted/50">
