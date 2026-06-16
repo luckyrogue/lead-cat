@@ -247,4 +247,46 @@ export const ru: typeof en = {
       removeFailed: "Не удалось удалить участника.",
     },
   },
+  locale: {
+    label: "Язык",
+    en: "English",
+    ru: "Русский",
+    kk: "Қазақша",
+  },
+  auth: {
+    subtitle: "Панель администратора",
+    loading: "Загрузка…",
+    login: {
+      title: "С возвращением",
+      description:
+        "Войдите, чтобы управлять организациями и встречами.",
+      continueGoogle: "Войти через Google",
+      continueMicrosoft: "Войти через Microsoft",
+      divider: "или",
+      emailLabel: "Email",
+      emailPlaceholder: "you@company.com",
+      submit: "Отправить ссылку для входа",
+      inboxTitle: "Проверьте почту",
+      inboxDescription: "Мы отправили ссылку для входа на {email}.",
+      useDifferentEmail: "Использовать другой email",
+      magicLinkFailed: "Не удалось отправить ссылку для входа.",
+      invalidLinkTitle: "Не удалось войти",
+      invalidLinkMessage: "Ссылка для входа недействительна или истекла.",
+      errors: {
+        emailInvalid: "Введите корректный email",
+      },
+    },
+    onboarding: {
+      title: "Создайте организацию",
+      description:
+        "Настройте рабочее пространство для управления участниками, приглашениями и встречами.",
+      nameLabel: "Название организации",
+      namePlaceholder: "Acme Inc.",
+      submit: "Создать организацию",
+      createFailed: "Не удалось создать организацию.",
+      errors: {
+        nameMin: "Укажите название организации",
+      },
+    },
+  },
 }

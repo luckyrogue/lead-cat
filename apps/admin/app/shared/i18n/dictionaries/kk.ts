@@ -244,4 +244,46 @@ export const kk: typeof en = {
       removeFailed: "Қатысушыны жою мүмкін болмады.",
     },
   },
+  locale: {
+    label: "Тіл",
+    en: "English",
+    ru: "Русский",
+    kk: "Қазақша",
+  },
+  auth: {
+    subtitle: "Әкімші панелі",
+    loading: "Жүктелуде…",
+    login: {
+      title: "Қайта қош келдіңіз",
+      description:
+        "Ұйымдар мен кездесулерді басқару үшін жүйеге кіріңіз.",
+      continueGoogle: "Google арқылы кіру",
+      continueMicrosoft: "Microsoft арқылы кіру",
+      divider: "немесе",
+      emailLabel: "Email",
+      emailPlaceholder: "you@company.com",
+      submit: "Кіру сілтемесін жіберу",
+      inboxTitle: "Поштаны тексеріңіз",
+      inboxDescription: "Кіру сілтемесін {email} мекенжайына жібердік.",
+      useDifferentEmail: "Басқа email пайдалану",
+      magicLinkFailed: "Кіру сілтемесін жіберу мүмкін болмады.",
+      invalidLinkTitle: "Кіру сәтсіз аяқталды",
+      invalidLinkMessage: "Кіру сілтемесі жарамсыз немесе мерзімі өткен.",
+      errors: {
+        emailInvalid: "Дұрыс email енгізіңіз",
+      },
+    },
+    onboarding: {
+      title: "Ұйымды жасаңыз",
+      description:
+        "Мүшелерді, шақыруларды және кездесулерді басқару үшін жұмыс кеңістігін баптаңыз.",
+      nameLabel: "Ұйым атауы",
+      namePlaceholder: "Acme Inc.",
+      submit: "Ұйымды жасау",
+      createFailed: "Ұйымды жасау мүмкін болмады.",
+      errors: {
+        nameMin: "Ұйым атауын көрсетіңіз",
+      },
+    },
+  },
 }

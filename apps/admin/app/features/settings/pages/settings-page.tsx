@@ -13,7 +13,8 @@ import {
 } from "@leadcat/ui"
 
 import { useMeSettings, useUpdateMeSettings } from "~/entities/me/queries"
-import { useT } from "~/shared/i18n/context"
+import { resolveLocale, useT } from "~/shared/i18n/context"
+import { writeLocalePreference } from "~/shared/i18n/locale-preference"
 import { toastError, toastSuccess } from "~/shared/lib/toast"
 
 const DEFAULT = "__default__"
@@ -59,7 +60,12 @@ export function SettingsPage() {
     updateSettings.mutate(
       { language: value },
       {
-        onSuccess: () => toastSuccess(t("settings.toast.languageSaved")),
+        onSuccess: () => {
+          if (value) {
+            writeLocalePreference(resolveLocale(value))
+          }
+          toastSuccess(t("settings.toast.languageSaved"))
+        },
         onError: (error) =>
           toastError(error, t("settings.toast.languageFailed")),
       }

@@ -12,18 +12,13 @@ import {
   Loader2,
   Mail,
 } from "@leadcat/ui"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { requestMagicLink, ssoStartUrl } from "~/shared/auth/api"
+import { useT } from "~/shared/i18n/context"
 import { toastError } from "~/shared/lib/toast"
-
-const schema = z.object({
-  email: z.string().email("Enter a valid email address"),
-})
-
-type FormValues = z.infer<typeof schema>
 
 function GoogleMark() {
   return (
@@ -48,22 +43,30 @@ function MicrosoftMark() {
 }
 
 export function LoginForm() {
+  const t = useT()
   const [sentTo, setSentTo] = useState<string | null>(null)
+  const schema = useMemo(
+    () =>
+      z.object({
+        email: z.string().email(t("auth.login.errors.emailInvalid")),
+      }),
+    [t]
+  )
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
+  } = useForm({
     resolver: zodResolver(schema),
     defaultValues: { email: "" },
   })
 
-  async function onSubmit(values: FormValues) {
+  async function onSubmit(values: z.infer<typeof schema>) {
     try {
       await requestMagicLink(values.email)
       setSentTo(values.email)
     } catch (error) {
-      toastError(error, "Could not send the magic link.")
+      toastError(error, t("auth.login.magicLinkFailed"))
     }
   }
 
@@ -76,11 +79,10 @@ export function LoginForm() {
           </span>
           <div className="space-y-1">
             <p className="text-base font-semibold text-foreground">
-              Check your inbox
+              {t("auth.login.inboxTitle")}
             </p>
             <p className="text-sm text-muted-foreground">
-              We sent a sign-in link to{" "}
-              <span className="font-medium text-foreground">{sentTo}</span>.
+              {t("auth.login.inboxDescription", { email: sentTo })}
             </p>
           </div>
           <Button
@@ -88,7 +90,7 @@ export function LoginForm() {
             className="mt-1"
             onClick={() => setSentTo(null)}
           >
-            Use a different email
+            {t("auth.login.useDifferentEmail")}
           </Button>
         </CardContent>
       </Card>
@@ -98,10 +100,8 @@ export function LoginForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Welcome back</CardTitle>
-        <CardDescription>
-          Sign in to manage your organizations and meetings.
-        </CardDescription>
+        <CardTitle>{t("auth.login.title")}</CardTitle>
+        <CardDescription>{t("auth.login.description")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="grid gap-2.5">
@@ -113,7 +113,7 @@ export function LoginForm() {
             }}
           >
             <GoogleMark />
-            Continue with Google
+            {t("auth.login.continueGoogle")}
           </Button>
           <Button
             variant="outline"
@@ -123,26 +123,26 @@ export function LoginForm() {
             }}
           >
             <MicrosoftMark />
-            Continue with Microsoft
+            {t("auth.login.continueMicrosoft")}
           </Button>
         </div>
 
         <div className="flex items-center gap-3">
           <span className="h-px flex-1 bg-border/70" />
           <span className="text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
-            or
+            {t("auth.login.divider")}
           </span>
           <span className="h-px flex-1 bg-border/70" />
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("auth.login.emailLabel")}</Label>
             <Input
               id="email"
               type="email"
               autoComplete="email"
-              placeholder="you@company.com"
+              placeholder={t("auth.login.emailPlaceholder")}
               {...register("email")}
             />
             {errors.email ? (
@@ -157,7 +157,7 @@ export function LoginForm() {
             ) : (
               <Mail className="size-4" />
             )}
-            Send magic link
+            {t("auth.login.submit")}
           </Button>
         </form>
       </CardContent>

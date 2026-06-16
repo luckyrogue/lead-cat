@@ -38,5 +38,8 @@ export function useLocale(): Locale {
 }
 
 export function resolveLocale(language: string | undefined | null): Locale {
-  return language === "en" || language === "kk" ? language : DEFAULT_LOCALE
+  if (language === "en" || language === "kk" || language === "ru") {
+    return language
+  }
+  return DEFAULT_LOCALE
 }
