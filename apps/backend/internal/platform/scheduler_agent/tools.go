@@ -68,6 +68,23 @@ func ToolSpecs() []application.AgentTool {
 				"required": []string{"emails", "start", "end"},
 			},
 		},
+		{
+			Name:        "propose_meeting",
+			Description: "Propose a one-off meeting for the user to confirm. Call this ONLY after you have the title (type), date, start and end times, and at least one participant email, and have checked conflicts. This does NOT book — it shows the user a confirm button; they decide.",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"type":   map[string]any{"type": "string", "description": "Meeting title/type, e.g. 'Design sync'."},
+					"dept":   map[string]any{"type": "string", "description": "Optional department/team label."},
+					"date":   map[string]any{"type": "string", "description": "Date, YYYY-MM-DD."},
+					"start":  map[string]any{"type": "string", "description": "Start time, HH:MM (Almaty)."},
+					"end":    map[string]any{"type": "string", "description": "End time, HH:MM (Almaty)."},
+					"emails": map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Participant emails (resolved via search_people)."},
+					"desc":   map[string]any{"type": "string", "description": "Optional description."},
+				},
+				"required": []string{"type", "date", "start", "end", "emails"},
+			},
+		},
 	}
 }
 
