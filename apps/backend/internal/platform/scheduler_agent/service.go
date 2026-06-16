@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
 )
@@ -22,6 +24,7 @@ type Service struct {
 	booker   Booker
 	sessions sessions
 	tools    []application.AgentTool
+	bookMu   sync.Mutex
 }
 
 func New(planner application.Planner, backend Backend, sess sessions) *Service {
@@ -56,42 +59,19 @@ func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Re
 			ThinkingSignature: turn.ThinkingSignature,
 			ToolCalls:         turn.ToolCalls,
 		})
-		// Scan for propose_meeting BEFORE dispatching any tools.
-		proposeBadArgs := false
+		// Build one tool_result user message covering every tool_use in the turn.
+		var pending *PendingBooking
+		results := make([]application.AgentToolResult, 0, len(turn.ToolCalls))
 		for _, call := range turn.ToolCalls {
 			if call.Name == "propose_meeting" {
 				pb, perr := parsePending(call.Input)
 				if perr != nil {
-					// Bad args: inject an error tool result and let the loop re-plan.
-					st.History = append(st.History, application.AgentMessage{
-						Role: "user",
-						ToolResults: []application.AgentToolResult{
-							{ID: call.ID, Content: perr.Error(), IsError: true},
-						},
-					})
-					proposeBadArgs = true
-					break
+					results = append(results, application.AgentToolResult{ID: call.ID, Content: perr.Error(), IsError: true})
+					continue
 				}
-				// Valid propose: store Pending, save session, return confirm card.
-				st.Pending = &pb
-				_ = s.sessions.Set(ctx, telegramID, *st)
-				return Reply{
-					Text: describeBooking(pb),
-					Keyboard: [][]Button{{
-						{Text: "Подтвердить ✅", Data: "agent:book:yes"},
-						{Text: "Отмена", Data: "agent:book:no"},
-					}},
-				}, true
-			}
-		}
-		if proposeBadArgs {
-			// Error tool result already appended; let the loop continue to re-plan.
-			continue
-		}
-		// Normal dispatch fan-out — skip any propose_meeting calls.
-		results := make([]application.AgentToolResult, 0, len(turn.ToolCalls))
-		for _, call := range turn.ToolCalls {
-			if call.Name == "propose_meeting" {
+				pb2 := pb
+				pending = &pb2
+				results = append(results, application.AgentToolResult{ID: call.ID, Content: "Предложение показано пользователю, ждём подтверждения."})
 				continue
 			}
 			out, derr := Dispatch(ctx, s.backend, call.Name, call.Input)
@@ -102,6 +82,18 @@ func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Re
 			results = append(results, application.AgentToolResult{ID: call.ID, Content: out})
 		}
 		st.History = append(st.History, application.AgentMessage{Role: "user", ToolResults: results})
+		if pending != nil {
+			st.Pending = pending
+			_ = s.sessions.Set(ctx, telegramID, *st)
+			return Reply{
+				Text: describeBooking(*pending),
+				Keyboard: [][]Button{{
+					{Text: "Подтвердить ✅", Data: "agent:book:yes"},
+					{Text: "Отмена", Data: "agent:book:no"},
+				}},
+			}, true
+		}
+		// no proposal: continue the loop to re-plan with the tool results
 	}
 
 	_ = s.sessions.Set(ctx, telegramID, *st)
@@ -129,6 +121,15 @@ func parsePending(args []byte) (PendingBooking, error) {
 	if in.Type == "" || in.Date == "" || in.Start == "" || in.End == "" || len(in.Emails) == 0 {
 		return PendingBooking{}, fmt.Errorf("proposal missing required fields (type, date, start, end, emails)")
 	}
+	if _, err := time.ParseInLocation("2006-01-02", in.Date, time.UTC); err != nil {
+		return PendingBooking{}, fmt.Errorf("bad date (want YYYY-MM-DD)")
+	}
+	if _, err := time.ParseInLocation("15:04", in.Start, time.UTC); err != nil {
+		return PendingBooking{}, fmt.Errorf("bad start time (want HH:MM)")
+	}
+	if _, err := time.ParseInLocation("15:04", in.End, time.UTC); err != nil {
+		return PendingBooking{}, fmt.Errorf("bad end time (want HH:MM)")
+	}
 	return PendingBooking{Dept: in.Dept, Type: in.Type, Date: in.Date, Start: in.Start, End: in.End, Emails: in.Emails, Desc: in.Desc}, nil
 }
 
@@ -137,28 +138,31 @@ func parsePending(args []byte) (PendingBooking, error) {
 func (s *Service) OnCallback(ctx context.Context, telegramID int64, data string) (Reply, bool) {
 	switch data {
 	case "agent:book:yes":
+		s.bookMu.Lock()
 		st, err := s.sessions.Get(ctx, telegramID)
 		if err != nil || st == nil || st.Pending == nil {
-			return Reply{Text: "Предложение устарело 🐾 Попроси заново."}, true
+			s.bookMu.Unlock()
+			return Reply{Text: "Предложение устарело 🐾 Попроси заново.", Edit: true}, true
 		}
 		pb := *st.Pending
 		st.Pending = nil
 		_ = s.sessions.Set(ctx, telegramID, *st)
+		s.bookMu.Unlock()
 		if s.booker == nil {
-			return Reply{Text: "Бронирование сейчас недоступно."}, true
+			return Reply{Text: "Бронирование сейчас недоступно.", Edit: true}, true
 		}
 		msg, berr := s.booker.Book(ctx, telegramID, pb)
 		if berr != nil {
-			return Reply{Text: berr.Error()}, true
+			return Reply{Text: berr.Error(), Edit: true}, true
 		}
-		return Reply{Text: msg}, true
+		return Reply{Text: msg, Edit: true}, true
 	case "agent:book:no":
 		st, err := s.sessions.Get(ctx, telegramID)
 		if err == nil && st != nil {
 			st.Pending = nil
 			_ = s.sessions.Set(ctx, telegramID, *st)
 		}
-		return Reply{Text: "Хорошо, не бронирую 🐾"}, true
+		return Reply{Text: "Хорошо, не бронирую 🐾", Edit: true}, true
 	default:
 		return Reply{}, false
 	}

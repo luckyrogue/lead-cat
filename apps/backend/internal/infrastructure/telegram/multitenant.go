@@ -96,7 +96,7 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 			
 			if _, err := h.store.GetBotUserByTelegramID(ctx, from.ID); err == nil {
 				reply, _ := h.agent.OnText(ctx, from.ID, text)
-				h.sendAgentReply(ctx, b, chatID, reply)
+				h.sendAgentReply(ctx, b, chatID, 0, reply)
 			}
 		}
 		return
@@ -210,7 +210,7 @@ func (h *MultiHandler) handleCallback(ctx context.Context, b *bot.Bot, cq *model
 	}
 	if strings.HasPrefix(cq.Data, "agent:") {
 		if reply, handled := h.agent.OnCallback(ctx, cq.From.ID, cq.Data); handled && cq.Message.Message != nil {
-			h.sendAgentReply(ctx, b, cq.Message.Message.Chat.ID, reply)
+			h.sendAgentReply(ctx, b, cq.Message.Message.Chat.ID, cq.Message.Message.ID, reply)
 		}
 	}
 	_, _ = b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{CallbackQueryID: cq.ID})
@@ -291,13 +291,19 @@ func (h *MultiHandler) sendCheckerReply(ctx context.Context, b *bot.Bot, chatID 
 	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: chatID, Text: reply.Text, ReplyMarkup: markup})
 }
 
-func (h *MultiHandler) sendAgentReply(ctx context.Context, b *bot.Bot, chatID int64, reply scheduler_agent.Reply) {
+func (h *MultiHandler) sendAgentReply(ctx context.Context, b *bot.Bot, chatID int64, msgID int, reply scheduler_agent.Reply) {
 	if reply.Text == "" {
 		return
 	}
 	var markup models.ReplyMarkup
 	if len(reply.Keyboard) > 0 {
 		markup = toAgentMarkup(reply.Keyboard)
+	}
+	if reply.Edit && msgID != 0 {
+		_, _ = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+			ChatID: chatID, MessageID: msgID, Text: reply.Text,
+		})
+		return
 	}
 	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: chatID, Text: reply.Text, ReplyMarkup: markup})
 }

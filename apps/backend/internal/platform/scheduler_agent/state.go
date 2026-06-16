@@ -27,4 +27,5 @@ type Button struct {
 type Reply struct {
 	Text     string
 	Keyboard [][]Button
+	Edit     bool
 }
