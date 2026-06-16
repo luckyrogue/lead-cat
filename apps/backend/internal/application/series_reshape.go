@@ -17,11 +17,14 @@ type SeriesReshape struct {
 }
 
 // planSeriesReshape decides the delta for moving a series' end to newUntil.
-// occs are the current scheduled occurrences (any order); candidate is the full
-// on-cadence span list regenerated up to newUntil. Extend appends only spans
-// after the latest existing occurrence (never resurrecting skipped gaps); trim
-// cancels scheduled occurrences that start after the newUntil day.
-func planSeriesReshape(occs []model.Meeting, candidate []meeting.Span, newUntil time.Time, loc *time.Location) SeriesReshape {
+// occs are the current scheduled occurrences (any order); existingStarts are the
+// start instants of every occurrence regardless of status (scheduled or
+// cancelled); candidate is the full on-cadence span list regenerated up to
+// newUntil. Extend appends only spans after the latest scheduled occurrence and
+// never for a slot that already has a row — so a trimmed series extended back
+// over a cancelled tail neither resurrects nor duplicates it. Trim cancels
+// scheduled occurrences that start after the newUntil day.
+func planSeriesReshape(occs []model.Meeting, existingStarts []time.Time, candidate []meeting.Span, newUntil time.Time, loc *time.Location) SeriesReshape {
 	var latest time.Time
 	for _, o := range occs {
 		if o.StartsAt.After(latest) {
@@ -32,9 +35,13 @@ func planSeriesReshape(occs []model.Meeting, candidate []meeting.Span, newUntil 
 
 	var out SeriesReshape
 	for _, sp := range candidate {
-		if sp.Start.After(latest) {
-			out.Create = append(out.Create, sp)
+		if !sp.Start.After(latest) {
+			continue
 		}
+		if startExists(existingStarts, sp.Start) {
+			continue // a row (possibly cancelled) already holds this slot
+		}
+		out.Create = append(out.Create, sp)
 	}
 	for _, o := range occs {
 		if !o.StartsAt.Before(cutoff) {
@@ -42,4 +49,13 @@ func planSeriesReshape(occs []model.Meeting, candidate []meeting.Span, newUntil 
 		}
 	}
 	return out
+}
+
+func startExists(starts []time.Time, t time.Time) bool {
+	for _, s := range starts {
+		if s.Equal(t) {
+			return true
+		}
+	}
+	return false
 }

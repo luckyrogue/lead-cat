@@ -15,6 +15,7 @@ type reshapeRepo struct {
 	org      model.Organization
 	picked   model.Meeting
 	occs     []model.Meeting
+	starts   []time.Time
 	created  []model.Meeting
 	setUntil time.Time
 	setCalls int
@@ -28,6 +29,9 @@ func (r *reshapeRepo) GetOrganization(context.Context, uuid.UUID) (model.Organiz
 }
 func (r *reshapeRepo) ListSeriesAllOccurrences(context.Context, uuid.UUID, uuid.UUID) ([]model.Meeting, error) {
 	return r.occs, nil
+}
+func (r *reshapeRepo) ListSeriesOccurrenceStarts(context.Context, uuid.UUID, uuid.UUID) ([]time.Time, error) {
+	return r.starts, nil
 }
 func (r *reshapeRepo) ListParticipants(context.Context, uuid.UUID) ([]model.MeetingParticipant, error) {
 	return nil, nil
@@ -93,5 +97,36 @@ func TestChangeSeriesEnd_Extend(t *testing.T) {
 	}
 	if repo.setCalls == 0 {
 		t.Fatal("expected SetSeriesRecurrenceUntil to be called")
+	}
+}
+
+func TestChangeSeriesEnd_ExtendOverCancelledTailCreatesNothing(t *testing.T) {
+	owner := uuid.New()
+	seriesID := uuid.New()
+	start := time.Date(2026, 6, 1, 9, 0, 0, 0, time.UTC)
+	d2 := start.AddDate(0, 0, 1)
+	d3 := start.AddDate(0, 0, 2)
+	until := start
+	anchor := model.Meeting{
+		ID: uuid.New(), OrganizerUserID: &owner, SeriesID: &seriesID,
+		Dept: "Eng", Type: "Sync", Host: "h", Recurrence: "daily",
+		StartsAt: start, EndsAt: start.Add(time.Hour), RecurrenceUntil: &until,
+	}
+	// Series was trimmed to d1: d2,d3 are cancelled but their rows still exist.
+	repo := &reshapeRepo{
+		org:    model.Organization{OwnerUserID: &owner, TZ: "UTC"},
+		picked: anchor, occs: []model.Meeting{anchor},
+		starts: []time.Time{start, d2, d3},
+	}
+	s := &Services{Store: repo, Calendar: reshapeCalProvider{}}
+	added, removed, err := s.ChangeSeriesEnd(context.Background(), uuid.New(), owner, anchor.ID, "2026-06-03")
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if added != 0 || removed != 0 {
+		t.Fatalf("added=%d removed=%d, want 0/0 (no duplicate rows for cancelled tail)", added, removed)
+	}
+	if len(repo.created) != 0 {
+		t.Fatalf("created %d rows, want 0", len(repo.created))
 	}
 }

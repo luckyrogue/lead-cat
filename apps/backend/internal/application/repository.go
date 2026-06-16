@@ -66,6 +66,7 @@ type Repository interface {
 	CreateMeetingSeries(ctx context.Context, ms []model.Meeting, ps []model.MeetingParticipant) ([]model.Meeting, error)
 	ListSeriesOccurrences(ctx context.Context, organizationID, seriesID uuid.UUID, fromStart time.Time) ([]model.Meeting, error)
 	ListSeriesAllOccurrences(ctx context.Context, organizationID, seriesID uuid.UUID) ([]model.Meeting, error)
+	ListSeriesOccurrenceStarts(ctx context.Context, organizationID, seriesID uuid.UUID) ([]time.Time, error)
 	CancelSeriesOccurrences(ctx context.Context, organizationID, seriesID uuid.UUID, fromStart time.Time) (int, error)
 	CancelAllSeriesOccurrences(ctx context.Context, organizationID, seriesID uuid.UUID) (int, error)
 	SetSeriesRecurrenceUntil(ctx context.Context, organizationID, seriesID uuid.UUID, until time.Time) error

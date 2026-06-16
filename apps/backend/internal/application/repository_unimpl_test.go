@@ -144,6 +144,9 @@ func (unimplementedRepo) ListSeriesOccurrences(context.Context, uuid.UUID, uuid.
 func (unimplementedRepo) ListSeriesAllOccurrences(context.Context, uuid.UUID, uuid.UUID) ([]model.Meeting, error) {
 	return nil, errUnimplemented
 }
+func (unimplementedRepo) ListSeriesOccurrenceStarts(context.Context, uuid.UUID, uuid.UUID) ([]time.Time, error) {
+	return nil, errUnimplemented
+}
 func (unimplementedRepo) CancelSeriesOccurrences(context.Context, uuid.UUID, uuid.UUID, time.Time) (int, error) {
 	return 0, errUnimplemented
 }

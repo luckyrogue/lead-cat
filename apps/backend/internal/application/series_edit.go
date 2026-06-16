@@ -289,7 +289,11 @@ func (s *Services) ChangeSeriesEnd(ctx context.Context, organizationID, userID, 
 	if err != nil {
 		return 0, 0, fmt.Errorf("%w: %v", ErrInvalidInput, err)
 	}
-	plan := planSeriesReshape(occs, candidate, newUntil, loc)
+	existingStarts, err := s.Store.ListSeriesOccurrenceStarts(ctx, organizationID, *picked.SeriesID)
+	if err != nil {
+		return 0, 0, err
+	}
+	plan := planSeriesReshape(occs, existingStarts, candidate, newUntil, loc)
 
 	added := 0
 	if len(plan.Create) > 0 {

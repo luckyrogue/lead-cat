@@ -171,6 +171,28 @@ func (s *Store) ListSeriesAllOccurrences(ctx context.Context, organizationID, se
 		ORDER BY starts_at`, seriesID, organizationID)
 }
 
+// ListSeriesOccurrenceStarts returns the start instants of every occurrence in a
+// series regardless of status (scheduled or cancelled). Used to avoid recreating
+// a slot that already has a row when a trimmed series is later extended back.
+func (s *Store) ListSeriesOccurrenceStarts(ctx context.Context, organizationID, seriesID uuid.UUID) ([]time.Time, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT starts_at FROM meetings
+		WHERE series_id = $1 AND organization_id = $2`, seriesID, organizationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []time.Time
+	for rows.Next() {
+		var t time.Time
+		if err := rows.Scan(&t); err != nil {
+			return nil, err
+		}
+		out = append(out, t)
+	}
+	return out, rows.Err()
+}
+
 func (s *Store) GetMeeting(ctx context.Context, organizationID, id uuid.UUID) (Meeting, error) {
 	row := s.pool.QueryRow(ctx, `SELECT `+meetingCols+` FROM meetings WHERE id = $1 AND organization_id = $2`, id, organizationID)
 	return scanMeeting(row)
