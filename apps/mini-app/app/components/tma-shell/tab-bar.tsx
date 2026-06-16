@@ -8,28 +8,32 @@ import {
 } from "@leadcat/ui"
 import { NavLink } from "react-router"
 
+import { useT } from "~/shared/i18n/context"
+
 type Tab = {
   to: string
-  label: string
+  labelKey: string
   icon: LucideIcon
   end?: boolean
 }
 
-const TABS: Tab[] = [
-  { to: "/", label: "Home", icon: Home, end: true },
-  { to: "/meetings", label: "Meetings", icon: CalendarClock },
-  { to: "/checker", label: "Checker", icon: ListChecks },
-  { to: "/profile", label: "Profile", icon: User },
+const TAB_DEFS: Tab[] = [
+  { to: "/", labelKey: "nav.home", icon: Home, end: true },
+  { to: "/meetings", labelKey: "nav.meetings", icon: CalendarClock },
+  { to: "/checker", labelKey: "nav.checker", icon: ListChecks },
+  { to: "/profile", labelKey: "nav.profile", icon: User },
 ]
 
 export function TabBar() {
+  const t = useT()
+
   return (
     <nav
       aria-label="Main navigation"
       className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md border-t border-border/60 bg-background/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
       <ul className="flex items-stretch justify-around">
-        {TABS.map((tab) => {
+        {TAB_DEFS.map((tab) => {
           const Icon = tab.icon
           return (
             <li key={tab.to} className="flex-1">
@@ -53,7 +57,7 @@ export function TabBar() {
                     >
                       <Icon className="size-5" />
                     </span>
-                    <span>{tab.label}</span>
+                    <span>{t(tab.labelKey)}</span>
                   </>
                 )}
               </NavLink>
