@@ -4,12 +4,22 @@ import (
 	"context"
 	"fmt"
 	"net/smtp"
+	"strings"
 )
 
 type Sender struct{ host, port, user, pass, from string }
 
 func New(host, port, user, pass, from string) *Sender {
 	return &Sender{host: host, port: port, user: user, pass: pass, from: from}
+}
+
+func envelopeFrom(from string) string {
+	start := strings.LastIndex(from, "<")
+	end := strings.LastIndex(from, ">")
+	if start >= 0 && end > start {
+		return strings.TrimSpace(from[start+1 : end])
+	}
+	return strings.TrimSpace(from)
 }
 
 func (s *Sender) Send(_ context.Context, to, subject, htmlBody string) error {
@@ -20,5 +30,5 @@ func (s *Sender) Send(_ context.Context, to, subject, htmlBody string) error {
 	if s.user != "" {
 		auth = smtp.PlainAuth("", s.user, s.pass, s.host)
 	}
-	return smtp.SendMail(addr, auth, s.from, []string{to}, []byte(msg))
+	return smtp.SendMail(addr, auth, envelopeFrom(s.from), []string{to}, []byte(msg))
 }
