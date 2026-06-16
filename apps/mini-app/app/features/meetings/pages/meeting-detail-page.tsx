@@ -19,11 +19,13 @@ import { MeetingEditDialog } from "~/features/meetings/components/meeting-edit-d
 import { myMeetingsQuery } from "~/entities/meeting/queries"
 import type { Meeting } from "~/entities/meeting/types"
 import { useAuth } from "~/shared/auth/auth-context"
+import { useT } from "~/shared/i18n/context"
 import { formatDateLong, formatTimeRange } from "~/shared/lib/format"
 
 export function MeetingDetailPage() {
   const { meetingId = "" } = useParams()
   const navigate = useNavigate()
+  const t = useT()
   const { user } = useAuth()
   const meetings = useQuery(myMeetingsQuery("all"))
   const [editing, setEditing] = useState(false)
@@ -40,18 +42,18 @@ export function MeetingDetailPage() {
         className="-ml-1 flex w-fit items-center gap-1 text-sm font-medium text-muted-foreground"
       >
         <ChevronLeft className="size-4" />
-        Back
+        {t("common.back")}
       </button>
 
       {meetings.isLoading ? (
         <LoadingState />
       ) : meetings.isError ? (
         <ErrorState
-          title="Couldn't load meeting"
+          title={t("meetings.detail.errorLoad")}
           onRetry={() => meetings.refetch()}
         />
       ) : !meeting ? (
-        <EmptyState title="Meeting not found" />
+        <EmptyState title={t("meetings.detail.notFound")} />
       ) : (
         <MeetingDetail
           meeting={meeting}
@@ -87,7 +89,8 @@ type DetailProps = {
 }
 
 function MeetingDetail({ meeting, canManage, onEdit, onDelete }: DetailProps) {
-  const title = meeting.type || meeting.dept || "Meeting"
+  const t = useT()
+  const title = meeting.type || meeting.dept || t("meetings.fallbackTitle")
   return (
     <div className="flex flex-col gap-4">
       <div>
@@ -119,7 +122,7 @@ function MeetingDetail({ meeting, canManage, onEdit, onDelete }: DetailProps) {
             className="flex items-center gap-2 text-sm font-medium text-primary"
           >
             <Link2 className="size-4" />
-            Join Google Meet
+            {t("meetings.detail.joinMeet")}
           </a>
         ) : null}
       </div>
@@ -134,7 +137,9 @@ function MeetingDetail({ meeting, canManage, onEdit, onDelete }: DetailProps) {
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
             <Users className="size-4" />
-            Participants ({meeting.participants.length})
+            {t("meetings.detail.participants", {
+              count: meeting.participants.length,
+            })}
           </div>
           <ul className="flex flex-col gap-1">
             {meeting.participants.map((email) => (
@@ -150,11 +155,11 @@ function MeetingDetail({ meeting, canManage, onEdit, onDelete }: DetailProps) {
         <div className="mt-2 flex gap-2">
           <Button variant="outline" className="flex-1" onClick={onEdit}>
             <Pencil className="size-4" />
-            Edit
+            {t("meetings.detail.editBtn")}
           </Button>
           <Button variant="destructive" className="flex-1" onClick={onDelete}>
             <Trash2 className="size-4" />
-            Cancel
+            {t("meetings.detail.cancelBtn")}
           </Button>
         </div>
       ) : null}

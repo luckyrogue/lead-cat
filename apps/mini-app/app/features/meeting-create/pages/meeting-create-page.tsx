@@ -16,9 +16,11 @@ import { fetchConflicts } from "~/entities/meeting/api"
 import { useCreateMeeting } from "~/entities/meeting/mutations"
 import type { Employee } from "~/entities/employee/types"
 import type { OccurrenceConflicts } from "~/entities/meeting/types"
+import { useT } from "~/shared/i18n/context"
 import { addMinutesToTime, todayIso } from "~/shared/lib/format"
 
 export function MeetingCreatePage() {
+  const t = useT()
   const navigate = useNavigate()
   const create = useCreateMeeting()
   const [participants, setParticipants] = useState<Employee[]>([])
@@ -54,7 +56,7 @@ export function MeetingCreatePage() {
   async function onCheckConflicts() {
     const v = getValues()
     if (participants.length === 0 || !v.date || !v.start || !v.end) {
-      toast.error("Add participants and a time first")
+      toast.error(t("create.toastNeedParticipants"))
       return
     }
     setChecking(true)
@@ -68,7 +70,7 @@ export function MeetingCreatePage() {
       })
       setConflicts(result)
     } catch {
-      toast.error("Couldn't check conflicts")
+      toast.error(t("create.toastConflictError"))
     } finally {
       setChecking(false)
     }
@@ -93,10 +95,10 @@ export function MeetingCreatePage() {
       },
       {
         onSuccess: () => {
-          toast.success("Meeting created")
+          toast.success(t("create.toastSuccess"))
           void navigate("/meetings")
         },
-        onError: () => toast.error("Couldn't create meeting"),
+        onError: () => toast.error(t("create.toastError")),
       }
     )
   }
@@ -109,45 +111,54 @@ export function MeetingCreatePage() {
         className="-ml-1 flex w-fit items-center gap-1 text-sm font-medium text-muted-foreground"
       >
         <ChevronLeft className="size-4" />
-        Back
+        {t("common.back")}
       </button>
-      <PageHeader title="New meeting" />
+      <PageHeader title={t("create.pageTitle")} />
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-        <Field label="Title" error={errors.type?.message}>
-          <Input placeholder="Weekly sync" {...register("type")} />
+        <Field label={t("create.fieldTitle")} error={errors.type?.message}>
+          <Input
+            placeholder={t("create.titlePlaceholder")}
+            {...register("type")}
+          />
         </Field>
-        <Field label="Department" error={errors.dept?.message}>
-          <Input placeholder="Optional" {...register("dept")} />
+        <Field label={t("create.fieldDept")} error={errors.dept?.message}>
+          <Input
+            placeholder={t("create.deptPlaceholder")}
+            {...register("dept")}
+          />
         </Field>
-        <Field label="Date" error={errors.date?.message}>
+        <Field label={t("create.fieldDate")} error={errors.date?.message}>
           <Input type="date" {...register("date")} />
         </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Start" error={errors.start?.message}>
+          <Field label={t("create.fieldStart")} error={errors.start?.message}>
             <Input type="time" {...register("start")} />
           </Field>
-          <Field label="End" error={errors.end?.message}>
+          <Field label={t("create.fieldEnd")} error={errors.end?.message}>
             <Input type="time" {...register("end")} />
           </Field>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Repeats" error={errors.recurrence?.message}>
+          <Field
+            label={t("create.fieldRepeats")}
+            error={errors.recurrence?.message}
+          >
             <select
               className="h-10 rounded-[var(--radius)] border border-border bg-background px-3 text-sm"
               {...register("recurrence")}
             >
-              <option value="once">One-time</option>
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-              <option value="custom">Custom days</option>
+              <option value="once">{t("create.recurrence.once")}</option>
+              <option value="daily">{t("create.recurrence.daily")}</option>
+              <option value="weekly">{t("create.recurrence.weekly")}</option>
+              <option value="monthly">{t("create.recurrence.monthly")}</option>
+              <option value="custom">{t("create.recurrence.custom")}</option>
             </select>
           </Field>
           {recurrence !== "once" ? (
             <Field
-              label="Repeat until"
+              label={t("create.fieldRepeatUntil")}
               error={errors.recurrence_until?.message}
             >
               <Input type="date" {...register("recurrence_until")} />
@@ -156,7 +167,10 @@ export function MeetingCreatePage() {
         </div>
 
         {recurrence === "custom" ? (
-          <Field label="On days" error={errors.recurrence_days?.message}>
+          <Field
+            label={t("create.fieldOnDays")}
+            error={errors.recurrence_days?.message}
+          >
             <Controller
               control={control}
               name="recurrence_days"
@@ -189,12 +203,18 @@ export function MeetingCreatePage() {
         ) : null}
 
         <div className="flex flex-col gap-1.5">
-          <Label>Participants</Label>
+          <Label>{t("create.fieldParticipants")}</Label>
           <EmployeePicker selected={participants} onChange={setParticipants} />
         </div>
 
-        <Field label="Description" error={errors.desc?.message}>
-          <Input placeholder="Optional" {...register("desc")} />
+        <Field
+          label={t("create.fieldDescription")}
+          error={errors.desc?.message}
+        >
+          <Input
+            placeholder={t("create.descPlaceholder")}
+            {...register("desc")}
+          />
         </Field>
 
         <Button
@@ -203,12 +223,12 @@ export function MeetingCreatePage() {
           onClick={onCheckConflicts}
           disabled={checking}
         >
-          Check conflicts
+          {t("create.checkConflictsBtn")}
         </Button>
         <ConflictPreview loading={checking} occurrences={conflicts} />
 
         <Button type="submit" size="lg" disabled={create.isPending}>
-          Create meeting
+          {t("create.createBtn")}
         </Button>
       </form>
     </div>

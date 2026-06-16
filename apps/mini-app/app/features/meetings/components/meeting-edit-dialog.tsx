@@ -22,6 +22,7 @@ import {
 } from "~/entities/meeting/types"
 import { ParticipantsEditor } from "~/features/meetings/components/participants-editor"
 import { ScopeToggle } from "~/features/meetings/components/scope-toggle"
+import { useT } from "~/shared/i18n/context"
 
 type Props = {
   open: boolean
@@ -30,6 +31,7 @@ type Props = {
 }
 
 export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
+  const t = useT()
   const update = useUpdateMeeting()
   const changeEnd = useChangeSeriesEnd()
   const [type, setType] = useState(meeting.type)
@@ -72,10 +74,10 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
       },
       {
         onSuccess: () => {
-          toast.success("Meeting updated")
+          toast.success(t("meetings.edit.toastSuccess"))
           onOpenChange(false)
         },
-        onError: () => toast.error("Couldn't update meeting"),
+        onError: () => toast.error(t("meetings.edit.toastError")),
       }
     )
   }
@@ -84,13 +86,13 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Edit meeting</DialogTitle>
+          <DialogTitle>{t("meetings.edit.title")}</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-3">
           {series ? <ScopeToggle value={scope} onChange={setScope} /> : null}
           {series ? (
             <div className="flex flex-col gap-1.5">
-              <Field label="Series ends">
+              <Field label={t("meetings.edit.seriesEnds")}>
                 <Input
                   type="date"
                   value={seriesUntil}
@@ -105,20 +107,28 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
                   changeEnd.mutate(
                     { id: meeting.id, until: seriesUntil },
                     {
-                      onSuccess: () => toast.success("Series end updated"),
-                      onError: () => toast.error("Couldn't update series end"),
+                      onSuccess: () =>
+                        toast.success(t("meetings.edit.toastEndSuccess")),
+                      onError: () =>
+                        toast.error(t("meetings.edit.toastEndError")),
                     }
                   )
                 }
               >
-                Update end date
+                {t("meetings.edit.updateEndDateBtn")}
               </Button>
             </div>
           ) : null}
-          <Field label="Title">
+          <Field label={t("meetings.edit.fieldTitle")}>
             <Input value={type} onChange={(e) => setType(e.target.value)} />
           </Field>
-          <Field label={lockDate ? "Date (locked for series)" : "Date"}>
+          <Field
+            label={
+              lockDate
+                ? t("meetings.edit.fieldDateLocked")
+                : t("meetings.edit.fieldDate")
+            }
+          >
             <Input
               type="date"
               value={date}
@@ -127,14 +137,14 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
             />
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Start">
+            <Field label={t("meetings.edit.fieldStart")}>
               <Input
                 type="time"
                 value={start}
                 onChange={(e) => setStart(e.target.value)}
               />
             </Field>
-            <Field label="End">
+            <Field label={t("meetings.edit.fieldEnd")}>
               <Input
                 type="time"
                 value={end}
@@ -142,7 +152,7 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
               />
             </Field>
           </div>
-          <Field label="Description">
+          <Field label={t("meetings.edit.fieldDescription")}>
             <Input value={desc} onChange={(e) => setDesc(e.target.value)} />
           </Field>
           <ParticipantsEditor
@@ -153,10 +163,10 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button onClick={onSave} disabled={update.isPending}>
-            Save
+            {t("common.save")}
           </Button>
         </DialogFooter>
       </DialogContent>

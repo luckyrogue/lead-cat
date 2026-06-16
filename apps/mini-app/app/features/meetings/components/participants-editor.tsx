@@ -5,6 +5,7 @@ import {
   useAddParticipant,
   useRemoveParticipant,
 } from "~/entities/meeting/mutations"
+import { useT } from "~/shared/i18n/context"
 
 type Props = {
   meetingId: string
@@ -13,6 +14,7 @@ type Props = {
 }
 
 export function ParticipantsEditor({ meetingId, participants, series }: Props) {
+  const t = useT()
   const add = useAddParticipant()
   const remove = useRemoveParticipant()
   const [email, setEmail] = useState("")
@@ -26,7 +28,7 @@ export function ParticipantsEditor({ meetingId, participants, series }: Props) {
       { id: meetingId, email: value },
       {
         onSuccess: () => setEmail(""),
-        onError: () => toast.error("Couldn't add participant"),
+        onError: () => toast.error(t("meetings.edit.participantAddError")),
       }
     )
   }
@@ -34,7 +36,7 @@ export function ParticipantsEditor({ meetingId, participants, series }: Props) {
   function handleRemove(target: string) {
     remove.mutate(
       { id: meetingId, email: target },
-      { onError: () => toast.error("Couldn't remove participant") }
+      { onError: () => toast.error(t("meetings.edit.participantRemoveError")) }
     )
   }
 

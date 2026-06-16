@@ -9,11 +9,13 @@ import { EmptyState, ErrorState, LoadingState } from "~/components/states"
 import type { Meeting } from "~/entities/meeting/types"
 import { myMeetingsQuery } from "~/entities/meeting/queries"
 import { groupBySeries } from "~/features/meetings/lib/group-series"
+import { useT } from "~/shared/i18n/context"
 import { formatDate } from "~/shared/lib/format"
 
 type Tab = "upcoming" | "past"
 
 function MeetingsList({ meetings }: { meetings: Meeting[] }) {
+  const t = useT()
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const groups = groupBySeries(meetings)
 
@@ -38,7 +40,7 @@ function MeetingsList({ meetings }: { meetings: Meeting[] }) {
 
         const { seriesId, meetings: occurrences } = group
         const first = occurrences[0]
-        const title = first.type || first.dept || "Meeting"
+        const title = first.type || first.dept || t("meetings.fallbackTitle")
         const isOpen = expanded.has(seriesId)
 
         return (
@@ -78,39 +80,48 @@ function MeetingsList({ meetings }: { meetings: Meeting[] }) {
 }
 
 export function MeetingsListPage() {
+  const t = useT()
   const [tab, setTab] = useState<Tab>("upcoming")
   const meetings = useQuery(myMeetingsQuery(tab))
   const list = meetings.data ?? []
 
+  const tabs: { value: Tab; label: string }[] = [
+    { value: "upcoming", label: t("meetings.tabUpcoming") },
+    { value: "past", label: t("meetings.tabPast") },
+  ]
+
+  const emptyTitle =
+    tab === "upcoming" ? t("meetings.emptyUpcoming") : t("meetings.emptyPast")
+
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
-        title="Meetings"
+        title={t("meetings.title")}
         action={
           <Button asChild size="sm">
             <Link to="/meetings/create">
               <Plus className="size-4" />
-              New
+              {t("meetings.newBtn")}
             </Link>
           </Button>
         }
       />
 
       <div className="grid grid-cols-2 gap-1 rounded-full bg-muted/70 p-1">
-        {(["upcoming", "past"] as const).map((t) => (
+        {tabs.map(({ value, label }) => (
           <button
-            key={t}
+            key={value}
             type="button"
-            aria-pressed={tab === t}
-            onClick={() => setTab(t)}
+            aria-pressed={tab === value}
+            onClick={() => setTab(value)}
             className={cn(
               "rounded-full py-1.5 text-sm font-medium capitalize transition-colors",
-              tab === t
+              tab === value
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground"
             )}
           >
-            {t}
+            {label}
           </button>
         ))}
       </div>
@@ -119,11 +130,11 @@ export function MeetingsListPage() {
         <LoadingState />
       ) : meetings.isError ? (
         <ErrorState
-          title="Couldn't load meetings"
+          title={t("meetings.errorLoad")}
           onRetry={() => meetings.refetch()}
         />
       ) : list.length === 0 ? (
-        <EmptyState title={`No ${tab} meetings`} />
+        <EmptyState title={emptyTitle} />
       ) : (
         <MeetingsList meetings={list} />
       )}

@@ -18,6 +18,7 @@ import {
   type MeetingMutationScope,
 } from "~/entities/meeting/types"
 import { ScopeToggle } from "~/features/meetings/components/scope-toggle"
+import { useT } from "~/shared/i18n/context"
 
 type Props = {
   open: boolean
@@ -26,6 +27,7 @@ type Props = {
 }
 
 export function MeetingCancelDialog({ open, onOpenChange, meeting }: Props) {
+  const t = useT()
   const navigate = useNavigate()
   const del = useDeleteMeeting()
   const [scope, setScope] = useState<MeetingMutationScope>("this")
@@ -42,11 +44,11 @@ export function MeetingCancelDialog({ open, onOpenChange, meeting }: Props) {
       { id: meeting.id, scope },
       {
         onSuccess: () => {
-          toast.success("Meeting cancelled")
+          toast.success(t("meetings.cancel.toastSuccess"))
           onOpenChange(false)
           void navigate("/meetings")
         },
-        onError: () => toast.error("Couldn't cancel meeting"),
+        onError: () => toast.error(t("meetings.cancel.toastError")),
       }
     )
   }
@@ -55,10 +57,9 @@ export function MeetingCancelDialog({ open, onOpenChange, meeting }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Cancel meeting?</DialogTitle>
+          <DialogTitle>{t("meetings.cancel.title")}</DialogTitle>
           <DialogDescription>
-            This removes the meeting from connected calendars and can't be
-            undone.
+            {t("meetings.cancel.description")}
           </DialogDescription>
         </DialogHeader>
         {series ? (
@@ -68,14 +69,14 @@ export function MeetingCancelDialog({ open, onOpenChange, meeting }: Props) {
         ) : null}
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Keep
+            {t("meetings.cancel.keepBtn")}
           </Button>
           <Button
             variant="destructive"
             onClick={onConfirm}
             disabled={del.isPending}
           >
-            Cancel meeting
+            {t("meetings.cancel.confirmBtn")}
           </Button>
         </DialogFooter>
       </DialogContent>

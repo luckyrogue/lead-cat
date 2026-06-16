@@ -4,6 +4,7 @@ import { useState } from "react"
 
 import { employeeSearchQuery } from "~/entities/employee/queries"
 import type { Employee } from "~/entities/employee/types"
+import { useT } from "~/shared/i18n/context"
 
 type EmployeePickerProps = {
   selected: Employee[]
@@ -11,12 +12,15 @@ type EmployeePickerProps = {
 }
 
 export function EmployeePicker({ selected, onChange }: EmployeePickerProps) {
+  const t = useT()
   const [query, setQuery] = useState("")
   const trimmed = query.trim()
   const search = useQuery(employeeSearchQuery(trimmed))
 
   const selectedEmails = new Set(selected.map((e) => e.email))
-  const results = (search.data ?? []).filter((e) => !selectedEmails.has(e.email))
+  const results = (search.data ?? []).filter(
+    (e) => !selectedEmails.has(e.email)
+  )
 
   function add(emp: Employee) {
     onChange([...selected, emp])
@@ -38,7 +42,9 @@ export function EmployeePicker({ selected, onChange }: EmployeePickerProps) {
                 type="button"
                 onClick={() => remove(emp.email)}
                 className="rounded-full p-0.5 hover:bg-foreground/10"
-                aria-label={`Remove ${emp.name || emp.email}`}
+                aria-label={t("create.employees.removeAriaLabel", {
+                  name: emp.name || emp.email,
+                })}
               >
                 <X className="size-3" />
               </button>
@@ -48,22 +54,24 @@ export function EmployeePicker({ selected, onChange }: EmployeePickerProps) {
       ) : null}
 
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search employees…"
+          placeholder={t("create.employees.searchPlaceholder")}
           className="pl-9"
         />
         {search.isFetching ? (
-          <Loader2 className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+          <Loader2 className="absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
         ) : null}
       </div>
 
       {trimmed.length > 0 ? (
         <div className="overflow-hidden rounded-[calc(var(--radius)*0.7)] border border-border/70">
           {results.length === 0 && !search.isFetching ? (
-            <p className="px-3 py-2.5 text-sm text-muted-foreground">No matches</p>
+            <p className="px-3 py-2.5 text-sm text-muted-foreground">
+              {t("create.employees.noMatches")}
+            </p>
           ) : (
             <ul className="divide-y divide-border/60">
               {results.map((emp) => (
