@@ -6,7 +6,11 @@ import {
   DialogTitle,
 } from "@leadcat/ui"
 
-import { MeetingForm, type MeetingFormValues } from "~/features/meetings/components/meeting-form"
+import {
+  MeetingForm,
+  type MeetingFormValues,
+} from "~/features/meetings/components/meeting-form"
+import { useT } from "~/shared/i18n/context"
 
 type Props = {
   open: boolean
@@ -15,14 +19,20 @@ type Props = {
   onSubmit: (values: MeetingFormValues) => void
 }
 
-export function MeetingCreateDialog({ open, onOpenChange, pending, onSubmit }: Props) {
+export function MeetingCreateDialog({
+  open,
+  onOpenChange,
+  pending,
+  onSubmit,
+}: Props) {
+  const t = useT()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>New meeting</DialogTitle>
+          <DialogTitle>{t("meetings.dialog.createTitle")}</DialogTitle>
           <DialogDescription>
-            Schedule a Google Meet session and invite participants.
+            {t("meetings.dialog.createDescription")}
           </DialogDescription>
         </DialogHeader>
         <MeetingForm mode="create" pending={pending} onSubmit={onSubmit} />

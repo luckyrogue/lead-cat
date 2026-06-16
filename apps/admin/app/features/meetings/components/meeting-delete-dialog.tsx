@@ -15,7 +15,12 @@ import {
   SelectValue,
 } from "@leadcat/ui"
 
-import { isSeries, type Meeting, type MeetingScope } from "~/entities/meeting/types"
+import {
+  isSeries,
+  type Meeting,
+  type MeetingScope,
+} from "~/entities/meeting/types"
+import { useT } from "~/shared/i18n/context"
 
 type Props = {
   meeting: Meeting | null
@@ -34,36 +39,45 @@ export function MeetingDeleteDialog({
   onOpenChange,
   onConfirm,
 }: Props) {
+  const t = useT()
   return (
     <Dialog open={meeting !== null} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Cancel meeting?</DialogTitle>
+          <DialogTitle>{t("meetings.dialog.deleteTitle")}</DialogTitle>
           <DialogDescription>
-            This cancels the meeting and removes it from connected calendars. This cannot be
-            undone.
+            {t("meetings.dialog.deleteDescription")}
           </DialogDescription>
         </DialogHeader>
         {meeting && isSeries(meeting) ? (
           <div className="space-y-2">
-            <Label>Apply to</Label>
-            <Select value={scope} onValueChange={(value) => onScopeChange(value as MeetingScope)}>
+            <Label>{t("meetings.dialog.deleteApplyTo")}</Label>
+            <Select
+              value={scope}
+              onValueChange={(value) => onScopeChange(value as MeetingScope)}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="this">This meeting only</SelectItem>
-                <SelectItem value="whole">The whole series</SelectItem>
+                <SelectItem value="this">
+                  {t("meetings.dialog.deleteScopeThis")}
+                </SelectItem>
+                <SelectItem value="whole">
+                  {t("meetings.dialog.deleteScopeWhole")}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
         ) : null}
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Keep meeting</Button>
+            <Button variant="outline">
+              {t("meetings.dialog.keepMeeting")}
+            </Button>
           </DialogClose>
           <Button variant="destructive" disabled={pending} onClick={onConfirm}>
-            Cancel meeting
+            {t("meetings.dialog.cancelMeeting")}
           </Button>
         </DialogFooter>
       </DialogContent>

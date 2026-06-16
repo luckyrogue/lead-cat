@@ -9,6 +9,7 @@ import {
 } from "@leadcat/ui"
 
 import type { MeetingListFilter } from "~/entities/meeting/types"
+import { useT } from "~/shared/i18n/context"
 
 export type OrganizerOption = { id: string; label: string }
 
@@ -27,9 +28,11 @@ export function MeetingsFilterBar({
   onFilterChange,
   onDeptChange,
 }: MeetingsFilterBarProps) {
+  const t = useT()
+
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-      <Field label="Status">
+      <Field label={t("meetings.filter.labelStatus")}>
         <Select
           value={filter.status ?? "all"}
           onValueChange={(value) =>
@@ -45,14 +48,20 @@ export function MeetingsFilterBar({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="scheduled">Scheduled</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
+            <SelectItem value="all">
+              {t("meetings.filter.statusAll")}
+            </SelectItem>
+            <SelectItem value="scheduled">
+              {t("meetings.filter.statusScheduled")}
+            </SelectItem>
+            <SelectItem value="cancelled">
+              {t("meetings.filter.statusCancelled")}
+            </SelectItem>
           </SelectContent>
         </Select>
       </Field>
 
-      <Field label="Organizer">
+      <Field label={t("meetings.filter.labelOrganizer")}>
         <Select
           value={filter.organizer ?? "all"}
           onValueChange={(value) =>
@@ -63,7 +72,9 @@ export function MeetingsFilterBar({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Anyone</SelectItem>
+            <SelectItem value="all">
+              {t("meetings.filter.organizerAnyone")}
+            </SelectItem>
             {organizers.map((organizer) => (
               <SelectItem key={organizer.id} value={organizer.id}>
                 {organizer.label}
@@ -73,7 +84,7 @@ export function MeetingsFilterBar({
         </Select>
       </Field>
 
-      <Field label="From">
+      <Field label={t("meetings.filter.labelFrom")}>
         <Input
           type="date"
           value={filter.from ?? ""}
@@ -83,7 +94,7 @@ export function MeetingsFilterBar({
         />
       </Field>
 
-      <Field label="To">
+      <Field label={t("meetings.filter.labelTo")}>
         <Input
           type="date"
           value={filter.to ?? ""}
@@ -93,9 +104,9 @@ export function MeetingsFilterBar({
         />
       </Field>
 
-      <Field label="Department">
+      <Field label={t("meetings.filter.labelDepartment")}>
         <Input
-          placeholder="Filter by department"
+          placeholder={t("meetings.filter.deptPlaceholder")}
           value={dept}
           onChange={(event) => onDeptChange(event.target.value)}
         />

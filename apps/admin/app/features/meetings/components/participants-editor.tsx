@@ -7,6 +7,7 @@ import {
 } from "~/entities/meeting/mutations"
 import { useMeeting } from "~/entities/meeting/queries"
 import { toastError } from "~/shared/lib/toast"
+import { useT } from "~/shared/i18n/context"
 
 type Props = {
   orgId: string
@@ -15,6 +16,7 @@ type Props = {
 }
 
 export function ParticipantsEditor({ orgId, meetingId, series }: Props) {
+  const t = useT()
   const meeting = useMeeting(orgId, meetingId)
   const add = useAddParticipant(orgId)
   const remove = useRemoveParticipant(orgId)
@@ -31,7 +33,8 @@ export function ParticipantsEditor({ orgId, meetingId, series }: Props) {
       { meetingId, email: value },
       {
         onSuccess: () => setEmail(""),
-        onError: (error) => toastError(error, "Could not add the participant."),
+        onError: (error) =>
+          toastError(error, t("meetings.participants.addFailed")),
       }
     )
   }
@@ -41,7 +44,7 @@ export function ParticipantsEditor({ orgId, meetingId, series }: Props) {
       { meetingId, email: target },
       {
         onError: (error) =>
-          toastError(error, "Could not remove the participant."),
+          toastError(error, t("meetings.participants.removeFailed")),
       }
     )
   }
@@ -58,8 +61,8 @@ export function ParticipantsEditor({ orgId, meetingId, series }: Props) {
       removePending={remove.isPending}
       loading={meeting.isPending}
       series={series}
-      addButtonLabel="Add"
-      seriesHint="Participant changes apply to this occurrence only."
+      addButtonLabel={t("meetings.participants.addButton")}
+      seriesHint={t("meetings.participants.seriesHint")}
     />
   )
 }

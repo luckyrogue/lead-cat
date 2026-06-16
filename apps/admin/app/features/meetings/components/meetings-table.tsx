@@ -15,12 +15,9 @@ import {
 } from "@leadcat/ui"
 
 import type { Meeting } from "~/entities/meeting/types"
-import {
-  formatDateTime,
-  formatTimeRange,
-  recurrenceLabel,
-} from "~/features/meetings/lib/format"
+import { formatDateTime, formatTimeRange } from "~/features/meetings/lib/format"
 import { groupBySeries } from "~/features/meetings/lib/group-series"
+import { useT } from "~/shared/i18n/context"
 
 type MeetingsTableProps = {
   meetings: Meeting[]
@@ -47,6 +44,7 @@ function OccurrenceRow({
   indented = false,
   timeZone,
 }: OccurrenceRowProps) {
+  const t = useT()
   const isPending = pendingId === meeting.id
   const isCancelled = meeting.status === "cancelled"
   return (
@@ -55,7 +53,7 @@ function OccurrenceRow({
         {indented ? (
           <span className="pl-6">
             <span className="font-medium text-foreground">
-              {meeting.name || meeting.type || "Untitled"}
+              {meeting.name || meeting.type || t("meetings.table.untitled")}
             </span>
             {meeting.dept ? (
               <span className="block text-xs text-muted-foreground">
@@ -66,7 +64,7 @@ function OccurrenceRow({
         ) : (
           <>
             <span className="font-medium text-foreground">
-              {meeting.name || meeting.type || "Untitled"}
+              {meeting.name || meeting.type || t("meetings.table.untitled")}
             </span>
             {meeting.dept ? (
               <span className="block text-xs text-muted-foreground">
@@ -85,7 +83,7 @@ function OccurrenceRow({
         </span>
       </TableCell>
       <TableCell className="text-muted-foreground">
-        {recurrenceLabel(meeting.recurrence)}
+        {t(`meetings.recurrence.${meeting.recurrence}`)}
       </TableCell>
       <TableCell>
         <Badge tone={isCancelled ? "muted" : "sunny"}>{meeting.status}</Badge>
@@ -97,7 +95,7 @@ function OccurrenceRow({
             size="sm"
             disabled={isPending || isCancelled}
             onClick={() => onEdit(meeting)}
-            aria-label="Edit meeting"
+            aria-label={t("meetings.table.editAriaLabel")}
           >
             <Pencil className="size-4" />
           </Button>
@@ -106,7 +104,7 @@ function OccurrenceRow({
             size="sm"
             disabled={isPending || isCancelled}
             onClick={() => onDelete(meeting)}
-            aria-label="Cancel meeting"
+            aria-label={t("meetings.table.cancelAriaLabel")}
           >
             <Trash2 className="size-4" />
           </Button>
@@ -123,6 +121,7 @@ export function MeetingsTable({
   onDelete,
   timeZone,
 }: MeetingsTableProps) {
+  const t = useT()
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const groups = groupBySeries(meetings)
 
@@ -142,11 +141,13 @@ export function MeetingsTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Meeting</TableHead>
-          <TableHead>When</TableHead>
-          <TableHead>Repeats</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
+          <TableHead>{t("meetings.table.colMeeting")}</TableHead>
+          <TableHead>{t("meetings.table.colWhen")}</TableHead>
+          <TableHead>{t("meetings.table.colRepeats")}</TableHead>
+          <TableHead>{t("meetings.table.colStatus")}</TableHead>
+          <TableHead className="text-right">
+            {t("meetings.table.colActions")}
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -170,6 +171,7 @@ export function MeetingsTable({
           const earliest = occurrences.reduce((a, b) =>
             a.starts_at < b.starts_at ? a : b
           )
+          const count = occurrences.length
 
           return [
             <TableRow
@@ -186,7 +188,7 @@ export function MeetingsTable({
                   )}
                   <span>
                     <span className="font-medium text-foreground">
-                      {first.name || first.type || "Untitled"}
+                      {first.name || first.type || t("meetings.table.untitled")}
                     </span>
                     {first.dept ? (
                       <span className="block text-xs text-muted-foreground">
@@ -205,12 +207,16 @@ export function MeetingsTable({
                 </span>
               </TableCell>
               <TableCell className="text-muted-foreground">
-                {recurrenceLabel(first.recurrence)}
+                {t(`meetings.recurrence.${first.recurrence}`)}
               </TableCell>
               <TableCell>
                 <span className="text-sm text-muted-foreground">
-                  {occurrences.length} occurrence
-                  {occurrences.length !== 1 ? "s" : ""}
+                  {t(
+                    count === 1
+                      ? "meetings.table.occurrences"
+                      : "meetings.table.occurrencesPlural",
+                    { count }
+                  )}
                 </span>
               </TableCell>
               <TableCell />

@@ -18,6 +18,7 @@ import { z } from "zod"
 
 import type { MeetingRecurrence, MeetingScope } from "~/entities/meeting/types"
 import { WEEKDAYS, toggleDay } from "@leadcat/types"
+import { useT } from "~/shared/i18n/context"
 
 const RECURRENCES: MeetingRecurrence[] = [
   "once",
@@ -27,14 +28,7 @@ const RECURRENCES: MeetingRecurrence[] = [
   "custom",
 ]
 
-const RECURRENCE_LABELS: Record<MeetingRecurrence, string> = {
-  once: "One-time",
-  daily: "Daily",
-  weekly: "Weekly",
-  monthly: "Monthly",
-  custom: "Custom days",
-}
-
+// Zod schema is at module scope — validation messages stay in English (cannot use hook here)
 const schema = z
   .object({
     dept: z.string().min(1, "Department is required"),
@@ -95,6 +89,7 @@ export function MeetingForm({
   defaults,
   onSubmit,
 }: MeetingFormProps) {
+  const t = useT()
   const {
     control,
     register,
@@ -119,7 +114,7 @@ export function MeetingForm({
       id="meeting-form"
     >
       {showScope ? (
-        <Field label="Apply to">
+        <Field label={t("meetings.form.labelApplyTo")}>
           <Select
             value={scope}
             onValueChange={(value) => setScope(value as MeetingScope)}
@@ -128,38 +123,63 @@ export function MeetingForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="this">This meeting only</SelectItem>
-              <SelectItem value="whole">The whole series</SelectItem>
+              <SelectItem value="this">
+                {t("meetings.form.scopeThis")}
+              </SelectItem>
+              <SelectItem value="whole">
+                {t("meetings.form.scopeWhole")}
+              </SelectItem>
             </SelectContent>
           </Select>
         </Field>
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Department" error={errors.dept?.message}>
-          <Input placeholder="Engineering" {...register("dept")} />
+        <Field
+          label={t("meetings.form.labelDepartment")}
+          error={errors.dept?.message}
+        >
+          <Input
+            placeholder={t("meetings.form.placeholderDepartment")}
+            {...register("dept")}
+          />
         </Field>
-        <Field label="Type" error={errors.type?.message}>
-          <Input placeholder="Standup" {...register("type")} />
+        <Field
+          label={t("meetings.form.labelType")}
+          error={errors.type?.message}
+        >
+          <Input
+            placeholder={t("meetings.form.placeholderType")}
+            {...register("type")}
+          />
         </Field>
       </div>
 
-      <Field label="Host" hint="Optional — defaults to you">
-        <Input placeholder="Host name" {...register("host")} />
+      <Field
+        label={t("meetings.form.labelHost")}
+        hint={t("meetings.form.hintHost")}
+      >
+        <Input
+          placeholder={t("meetings.form.placeholderHost")}
+          {...register("host")}
+        />
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Field
-          label="Date"
-          hint={lockDate ? "Locked for series edits" : undefined}
+          label={t("meetings.form.labelDate")}
+          hint={lockDate ? t("meetings.form.hintDateLocked") : undefined}
           error={errors.date?.message}
         >
           <Input type="date" disabled={lockDate} {...register("date")} />
         </Field>
-        <Field label="Start" error={errors.start?.message}>
+        <Field
+          label={t("meetings.form.labelStart")}
+          error={errors.start?.message}
+        >
           <Input type="time" {...register("start")} />
         </Field>
-        <Field label="End" error={errors.end?.message}>
+        <Field label={t("meetings.form.labelEnd")} error={errors.end?.message}>
           <Input type="time" {...register("end")} />
         </Field>
       </div>
@@ -167,7 +187,7 @@ export function MeetingForm({
       {!isEdit ? (
         <>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Repeats">
+            <Field label={t("meetings.form.labelRepeats")}>
               <Controller
                 control={control}
                 name="recurrence"
@@ -179,7 +199,7 @@ export function MeetingForm({
                     <SelectContent>
                       {RECURRENCES.map((r) => (
                         <SelectItem key={r} value={r}>
-                          {RECURRENCE_LABELS[r]}
+                          {t(`meetings.recurrence.${r}`)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -189,7 +209,7 @@ export function MeetingForm({
             </Field>
             {recurrence !== "once" ? (
               <Field
-                label="Repeat until"
+                label={t("meetings.form.labelRepeatUntil")}
                 error={errors.recurrence_until?.message}
               >
                 <Input type="date" {...register("recurrence_until")} />
@@ -197,7 +217,10 @@ export function MeetingForm({
             ) : null}
           </div>
           {recurrence === "custom" ? (
-            <Field label="On days" error={errors.recurrence_days?.message}>
+            <Field
+              label={t("meetings.form.labelOnDays")}
+              error={errors.recurrence_days?.message}
+            >
               <Controller
                 control={control}
                 name="recurrence_days"
@@ -233,19 +256,25 @@ export function MeetingForm({
 
       {!isEdit ? (
         <Field
-          label="Participants"
-          hint="Comma-separated emails"
+          label={t("meetings.form.labelParticipants")}
+          hint={t("meetings.form.hintParticipants")}
           error={errors.participants?.message}
         >
           <Input
-            placeholder="alice@company.com, bob@company.com"
+            placeholder={t("meetings.form.placeholderParticipants")}
             {...register("participants")}
           />
         </Field>
       ) : null}
 
-      <Field label="Description" hint="Optional">
-        <Input placeholder="Agenda or notes" {...register("desc")} />
+      <Field
+        label={t("meetings.form.labelDescription")}
+        hint={t("meetings.form.hintDescription")}
+      >
+        <Input
+          placeholder={t("meetings.form.placeholderDescription")}
+          {...register("desc")}
+        />
       </Field>
 
       <div className="flex justify-end">
@@ -257,7 +286,9 @@ export function MeetingForm({
           ) : (
             <CalendarPlus className="size-4" />
           )}
-          {isEdit ? "Save changes" : "Create meeting"}
+          {isEdit
+            ? t("meetings.form.submitSave")
+            : t("meetings.form.submitCreate")}
         </Button>
       </div>
     </form>

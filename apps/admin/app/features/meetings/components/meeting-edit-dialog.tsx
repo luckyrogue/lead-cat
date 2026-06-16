@@ -25,6 +25,7 @@ import {
 } from "~/features/meetings/components/meeting-form"
 import { ParticipantsEditor } from "~/features/meetings/components/participants-editor"
 import { toastError, toastSuccess } from "~/shared/lib/toast"
+import { useT } from "~/shared/i18n/context"
 
 type Props = {
   meeting: Meeting | null
@@ -42,6 +43,7 @@ function SeriesEndEditor({
   meeting: Meeting
   orgId: string
 }) {
+  const t = useT()
   const [until, setUntil] = useState(
     (meeting.recurrence_until ?? "").slice(0, 10)
   )
@@ -49,10 +51,12 @@ function SeriesEndEditor({
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-medium">Series end date</p>
+      <p className="text-sm font-medium">
+        {t("meetings.dialog.seriesEndDate")}
+      </p>
       <div className="flex items-center gap-2">
         <Label htmlFor="series-end-date" className="sr-only">
-          Series end date
+          {t("meetings.dialog.seriesEndDate")}
         </Label>
         <Input
           id="series-end-date"
@@ -69,14 +73,15 @@ function SeriesEndEditor({
             mutate(
               { meetingId: meeting.id, until },
               {
-                onSuccess: () => toastSuccess("Series end date updated."),
+                onSuccess: () =>
+                  toastSuccess(t("meetings.dialog.seriesEndSuccess")),
                 onError: (error) =>
-                  toastError(error, "Could not update the series end date."),
+                  toastError(error, t("meetings.dialog.seriesEndFailed")),
               }
             )
           }
         >
-          Update end date
+          {t("meetings.dialog.updateEndDate")}
         </Button>
       </div>
     </div>
@@ -91,13 +96,14 @@ export function MeetingEditDialog({
   onOpenChange,
   onSubmit,
 }: Props) {
+  const t = useT()
   return (
     <Dialog open={meeting !== null} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Edit meeting</DialogTitle>
+          <DialogTitle>{t("meetings.dialog.editTitle")}</DialogTitle>
           <DialogDescription>
-            Update the details of this meeting occurrence.
+            {t("meetings.dialog.editDescription")}
           </DialogDescription>
         </DialogHeader>
         {meeting && defaults ? (

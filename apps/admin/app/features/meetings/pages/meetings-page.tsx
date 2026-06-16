@@ -33,8 +33,10 @@ import { useActiveOrg } from "~/shared/auth/use-active-org"
 import { useMe } from "~/shared/auth/use-me"
 import { useDebouncedValue } from "~/shared/lib/use-debounced-value"
 import { toastError, toastSuccess } from "~/shared/lib/toast"
+import { useT } from "~/shared/i18n/context"
 
 export function MeetingsPage() {
+  const t = useT()
   const { data: me } = useMe()
   const { activeOrgId } = useActiveOrg(me?.organizations ?? [])
   const createMeeting = useCreateMeeting(activeOrgId ?? "")
@@ -71,10 +73,10 @@ export function MeetingsPage() {
   function handleCreate(values: MeetingFormValues) {
     createMeeting.mutate(toCreateInput(values), {
       onSuccess: () => {
-        toastSuccess("Meeting created.")
+        toastSuccess(t("meetings.toast.created"))
         setCreateOpen(false)
       },
-      onError: (error) => toastError(error, "Could not create the meeting."),
+      onError: (error) => toastError(error, t("meetings.toast.createFailed")),
     })
   }
 
@@ -86,10 +88,10 @@ export function MeetingsPage() {
       { meetingId: toEdit.id, values: toUpdateInput(values, scope), scope },
       {
         onSuccess: () => {
-          toastSuccess("Meeting updated.")
+          toastSuccess(t("meetings.toast.updated"))
           setToEdit(null)
         },
-        onError: (error) => toastError(error, "Could not update the meeting."),
+        onError: (error) => toastError(error, t("meetings.toast.updateFailed")),
       }
     )
   }
@@ -102,11 +104,11 @@ export function MeetingsPage() {
       { meetingId: toDelete.id, scope: deleteScope },
       {
         onSuccess: () => {
-          toastSuccess("Meeting cancelled.")
+          toastSuccess(t("meetings.toast.cancelled"))
           setToDelete(null)
         },
         onError: (error) => {
-          toastError(error, "Could not cancel the meeting.")
+          toastError(error, t("meetings.toast.cancelFailed"))
           setToDelete(null)
         },
       }
@@ -116,22 +118,22 @@ export function MeetingsPage() {
   return (
     <>
       <ListPageShell
-        eyebrow="Organization"
-        title="Meetings"
-        description="Schedule and manage Google Meet sessions for your team."
+        eyebrow={t("meetings.eyebrow")}
+        title={t("meetings.title")}
+        description={t("meetings.description")}
         actions={
           <Button onClick={() => setCreateOpen(true)}>
             <CalendarPlus className="size-4" />
-            New meeting
+            {t("meetings.newMeeting")}
           </Button>
         }
         isLoading={meetings.isPending}
-        loadingMessage="Loading meetings…"
+        loadingMessage={t("meetings.loadingMeetings")}
         error={meetings.error}
         isEmpty={(meetings.data?.length ?? 0) === 0}
         emptyState={
           <div className="rounded-[calc(var(--radius)*1.15)] border border-dashed border-border/80 bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
-            No meetings yet. Schedule one with the New meeting button.
+            {t("meetings.emptyState")}
           </div>
         }
       >
