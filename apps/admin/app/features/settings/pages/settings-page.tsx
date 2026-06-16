@@ -5,11 +5,20 @@ import {
   CardHeader,
   CardTitle,
   Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@leadcat/ui"
 
 import { useMeSettings, useUpdateMeSettings } from "~/entities/me/queries"
 import { useT } from "~/shared/i18n/context"
 import { toastError, toastSuccess } from "~/shared/lib/toast"
+
+// Radix Select forbids an empty-string value, so the "default" option rides a
+// sentinel that maps back to "" at the data boundary.
+const DEFAULT = "__default__"
 
 const TIMEZONE_OPTIONS = [
   { value: "", translatable: true },
@@ -37,9 +46,9 @@ export function SettingsPage() {
   const { data: settings, isPending } = useMeSettings()
   const updateSettings = useUpdateMeSettings()
 
-  function handleTimezoneChange(e: React.ChangeEvent<HTMLSelectElement>) {
+  function handleTimezoneChange(value: string) {
     updateSettings.mutate(
-      { timezone: e.target.value },
+      { timezone: value },
       {
         onSuccess: () => toastSuccess(t("settings.toast.timezoneSaved")),
         onError: (error) =>
@@ -48,9 +57,9 @@ export function SettingsPage() {
     )
   }
 
-  function handleLanguageChange(e: React.ChangeEvent<HTMLSelectElement>) {
+  function handleLanguageChange(value: string) {
     updateSettings.mutate(
-      { language: e.target.value },
+      { language: value },
       {
         onSuccess: () => toastSuccess(t("settings.toast.languageSaved")),
         onError: (error) =>
@@ -80,42 +89,58 @@ export function SettingsPage() {
             <Label htmlFor="timezone-select">
               {t("settings.timezoneLabel")}
             </Label>
-            <select
-              id="timezone-select"
-              value={isPending ? "" : (settings?.timezone ?? "")}
+            <Select
+              value={settings?.timezone || DEFAULT}
               disabled={isPending || updateSettings.isPending}
-              onChange={handleTimezoneChange}
-              className="flex h-9 w-full max-w-xs rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              onValueChange={(v) =>
+                handleTimezoneChange(v === DEFAULT ? "" : v)
+              }
             >
-              {TIMEZONE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {"translatable" in opt
-                    ? t("settings.timezoneBrowserDefault")
-                    : opt.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="timezone-select" className="max-w-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TIMEZONE_OPTIONS.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value === "" ? DEFAULT : opt.value}
+                  >
+                    {"translatable" in opt
+                      ? t("settings.timezoneBrowserDefault")
+                      : opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="language-select">
               {t("settings.languageLabel")}
             </Label>
-            <select
-              id="language-select"
-              value={isPending ? "" : (settings?.language ?? "")}
+            <Select
+              value={settings?.language || DEFAULT}
               disabled={isPending || updateSettings.isPending}
-              onChange={handleLanguageChange}
-              className="flex h-9 w-full max-w-xs rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              onValueChange={(v) =>
+                handleLanguageChange(v === DEFAULT ? "" : v)
+              }
             >
-              {LANGUAGE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {"translatable" in opt
-                    ? t("settings.languageDefault")
-                    : opt.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="language-select" className="max-w-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LANGUAGE_OPTIONS.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value === "" ? DEFAULT : opt.value}
+                  >
+                    {"translatable" in opt
+                      ? t("settings.languageDefault")
+                      : opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>

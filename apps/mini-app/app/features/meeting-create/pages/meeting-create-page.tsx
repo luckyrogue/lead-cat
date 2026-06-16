@@ -1,5 +1,16 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Button, ChevronLeft, Input, Label, toast } from "@leadcat/ui"
+import {
+  Button,
+  ChevronLeft,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  toast,
+} from "@leadcat/ui"
 import { useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { useNavigate } from "react-router"
@@ -18,6 +29,8 @@ import type { Employee } from "~/entities/employee/types"
 import type { OccurrenceConflicts } from "~/entities/meeting/types"
 import { useT } from "~/shared/i18n/context"
 import { addMinutesToTime, todayIso } from "~/shared/lib/format"
+
+const RECURRENCES = ["once", "daily", "weekly", "monthly", "custom"] as const
 
 export function MeetingCreatePage() {
   const t = useT()
@@ -149,16 +162,24 @@ export function MeetingCreatePage() {
             label={t("create.fieldRepeats")}
             error={te(errors.recurrence?.message)}
           >
-            <select
-              className="h-10 rounded-[var(--radius)] border border-border bg-background px-3 text-sm"
-              {...register("recurrence")}
-            >
-              <option value="once">{t("create.recurrence.once")}</option>
-              <option value="daily">{t("create.recurrence.daily")}</option>
-              <option value="weekly">{t("create.recurrence.weekly")}</option>
-              <option value="monthly">{t("create.recurrence.monthly")}</option>
-              <option value="custom">{t("create.recurrence.custom")}</option>
-            </select>
+            <Controller
+              control={control}
+              name="recurrence"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RECURRENCES.map((r) => (
+                      <SelectItem key={r} value={r}>
+                        {t(`create.recurrence.${r}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </Field>
           {recurrence !== "once" ? (
             <Field

@@ -1,4 +1,13 @@
-import { Card, CardContent, toast } from "@leadcat/ui"
+import {
+  Card,
+  CardContent,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  toast,
+} from "@leadcat/ui"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 
@@ -6,6 +15,10 @@ import { ErrorState, LoadingState } from "~/components/states"
 import { LANGUAGE_OPTIONS, TIMEZONE_OPTIONS } from "~/entities/settings/api"
 import { settingsQuery, useUpdatePrefs } from "~/entities/settings/queries"
 import { useT } from "~/shared/i18n/context"
+
+// Radix Select forbids an empty-string value, so the "default" option rides a
+// sentinel that maps back to "" at the data boundary.
+const DEFAULT = "__default__"
 
 export function PreferencesSettings() {
   const t = useT()
@@ -71,39 +84,53 @@ export function PreferencesSettings() {
           <label className="text-xs text-muted-foreground">
             {t("profile.preferences.timezoneLabel")}
           </label>
-          <select
-            className="h-10 rounded-[var(--radius)] border border-border bg-background px-3 text-sm"
-            value={timezone}
+          <Select
+            value={timezone === "" ? DEFAULT : timezone}
             disabled={update.isPending}
-            onChange={(e) => handleTimezoneChange(e.target.value)}
+            onValueChange={(v) => handleTimezoneChange(v === DEFAULT ? "" : v)}
           >
-            {TIMEZONE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.value === ""
-                  ? t("profile.preferences.tzDefault")
-                  : opt.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TIMEZONE_OPTIONS.map((opt) => (
+                <SelectItem
+                  key={opt.value}
+                  value={opt.value === "" ? DEFAULT : opt.value}
+                >
+                  {opt.value === ""
+                    ? t("profile.preferences.tzDefault")
+                    : opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex flex-col gap-2">
           <label className="text-xs text-muted-foreground">
             {t("profile.preferences.languageLabel")}
           </label>
-          <select
-            className="h-10 rounded-[var(--radius)] border border-border bg-background px-3 text-sm"
-            value={language}
+          <Select
+            value={language === "" ? DEFAULT : language}
             disabled={update.isPending}
-            onChange={(e) => handleLanguageChange(e.target.value)}
+            onValueChange={(v) => handleLanguageChange(v === DEFAULT ? "" : v)}
           >
-            {LANGUAGE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.value === ""
-                  ? t("profile.preferences.langDefault")
-                  : opt.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {LANGUAGE_OPTIONS.map((opt) => (
+                <SelectItem
+                  key={opt.value}
+                  value={opt.value === "" ? DEFAULT : opt.value}
+                >
+                  {opt.value === ""
+                    ? t("profile.preferences.langDefault")
+                    : opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </CardContent>
     </Card>
