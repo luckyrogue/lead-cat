@@ -11,11 +11,13 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
+	"github.com/luckyrogue/lead-cat/internal/application"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 	"github.com/luckyrogue/lead-cat/internal/platform/botreg"
 	"github.com/luckyrogue/lead-cat/internal/platform/botsettings"
 	"github.com/luckyrogue/lead-cat/internal/platform/checker"
 	"github.com/luckyrogue/lead-cat/internal/platform/meetingedit"
+	"github.com/luckyrogue/lead-cat/internal/platform/scheduler_agent"
 	"github.com/luckyrogue/lead-cat/internal/platform/scheduleview"
 )
 
@@ -23,6 +25,7 @@ type botBackend interface {
 	meetingedit.Backend
 	scheduleview.Backend
 	checker.Backend
+	scheduler_agent.Backend
 }
 
 type MultiHandler struct {
@@ -32,17 +35,19 @@ type MultiHandler struct {
 	editor    *meetingedit.Service
 	schedule  *scheduleview.Service
 	checker   *checker.Service
+	agent     *scheduler_agent.Service
 	log       *zap.Logger
 	webappURL string
 	admins    map[int64]bool
 }
 
-func NewMultiHandler(store *postgres.Store, b *bot.Bot, rdb *redis.Client, adminIDs []int64, webappURL string, backend botBackend, log *zap.Logger) *MultiHandler {
+func NewMultiHandler(store *postgres.Store, b *bot.Bot, rdb *redis.Client, adminIDs []int64, webappURL string, backend botBackend, planner application.Planner, log *zap.Logger) *MultiHandler {
 	registrar := botreg.New(store, botreg.NewRedisSessions(rdb), adminIDs)
 	settings := botsettings.New(store)
 	editor := meetingedit.New(backend, meetingedit.NewRedisSessions(rdb))
 	schedule := scheduleview.New(backend, scheduleview.NewRedisSessions(rdb))
 	chk := checker.New(backend, checker.NewRedisSessions(rdb))
+	agent := scheduler_agent.New(planner, backend, scheduler_agent.NewRedisSessions(rdb))
 	admins := make(map[int64]bool, len(adminIDs))
 	for _, id := range adminIDs {
 		admins[id] = true
@@ -54,6 +59,7 @@ func NewMultiHandler(store *postgres.Store, b *bot.Bot, rdb *redis.Client, admin
 		editor:    editor,
 		schedule:  schedule,
 		checker:   chk,
+		agent:     agent,
 		log:       log,
 		webappURL: webappURL,
 		admins:    admins,
@@ -91,6 +97,12 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 			}
 			if reply, handled := h.checker.OnText(ctx, from.ID, text); handled {
 				h.sendCheckerReply(ctx, b, chatID, 0, reply)
+				return
+			}
+			// Final fallback: only for registered users, hand free text to the agent.
+			if _, err := h.store.GetBotUserByTelegramID(ctx, from.ID); err == nil {
+				reply, _ := h.agent.OnText(ctx, from.ID, text)
+				h.sendAgentReply(ctx, b, chatID, reply)
 			}
 		}
 		return
@@ -278,6 +290,29 @@ func (h *MultiHandler) sendCheckerReply(ctx context.Context, b *bot.Bot, chatID 
 		return
 	}
 	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: chatID, Text: reply.Text, ReplyMarkup: markup})
+}
+
+func (h *MultiHandler) sendAgentReply(ctx context.Context, b *bot.Bot, chatID int64, reply scheduler_agent.Reply) {
+	if reply.Text == "" {
+		return
+	}
+	var markup models.ReplyMarkup
+	if len(reply.Keyboard) > 0 {
+		markup = toAgentMarkup(reply.Keyboard)
+	}
+	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: chatID, Text: reply.Text, ReplyMarkup: markup})
+}
+
+func toAgentMarkup(rows [][]scheduler_agent.Button) models.InlineKeyboardMarkup {
+	var kb [][]models.InlineKeyboardButton
+	for _, row := range rows {
+		var r []models.InlineKeyboardButton
+		for _, btn := range row {
+			r = append(r, models.InlineKeyboardButton{Text: btn.Text, CallbackData: btn.Data})
+		}
+		kb = append(kb, r)
+	}
+	return models.InlineKeyboardMarkup{InlineKeyboard: kb}
 }
 
 func toCheckerMarkup(rows [][]checker.Button) models.InlineKeyboardMarkup {

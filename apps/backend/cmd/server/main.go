@@ -20,6 +20,7 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application"
 	deliveryhttp "github.com/luckyrogue/lead-cat/internal/delivery/http"
 	calendargoogle "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/google"
+	llmanthropic "github.com/luckyrogue/lead-cat/internal/infrastructure/llm/anthropic"
 	calendarstub "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/stub"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/crypto"
 	smtpemail "github.com/luckyrogue/lead-cat/internal/infrastructure/email/smtp"
@@ -135,7 +136,8 @@ func main() {
 			logger.Fatal("telegram getMe", zap.Error(err))
 		}
 		botUsername = me.Username
-		tgHandler = telegram.NewMultiHandler(store, tg, rdb, cfg.BotAdminTelegramIDs, cfg.WebappURL, services, logger)
+		planner := llmanthropic.New(os.Getenv("ANTHROPIC_API_KEY"))
+		tgHandler = telegram.NewMultiHandler(store, tg, rdb, cfg.BotAdminTelegramIDs, cfg.WebappURL, services, planner, logger)
 		if _, cerr := tg.SetMyCommands(ctx, &bot.SetMyCommandsParams{Commands: telegram.PublicCommands()}); cerr != nil {
 			logger.Warn("set_my_commands", zap.Error(cerr))
 		}
