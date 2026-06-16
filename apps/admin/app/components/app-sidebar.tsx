@@ -1,4 +1,11 @@
-import { LayoutDashboard, Mailbox, Paw, Users, Video } from "@leadcat/ui"
+import {
+  LayoutDashboard,
+  Mailbox,
+  Paw,
+  Settings,
+  Users,
+  Video,
+} from "@leadcat/ui"
 import { Link, useLocation } from "react-router"
 
 import { SidebarUserCard } from "~/components/sidebar-user-card"
@@ -10,6 +17,7 @@ const navItems = [
   { href: "/members", label: "Members", icon: Users },
   { href: "/invites", label: "Invites", icon: Mailbox },
   { href: "/meetings", label: "Meetings", icon: Video },
+  { href: "/settings", label: "Settings", icon: Settings },
 ]
 
 type AppSidebarProps = {

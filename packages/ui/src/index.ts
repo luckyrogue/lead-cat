@@ -91,6 +91,7 @@ export {
   Plus,
   Search,
   Send,
+  Settings,
   Shield,
   Sparkles,
   Star,

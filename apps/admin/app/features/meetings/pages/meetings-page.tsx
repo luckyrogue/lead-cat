@@ -155,6 +155,7 @@ export function MeetingsPage() {
           }
           onEdit={setToEdit}
           onDelete={openDelete}
+          timeZone={me?.user?.timezone || undefined}
         />
       </ListPageShell>
 

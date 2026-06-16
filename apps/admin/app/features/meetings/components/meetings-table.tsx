@@ -27,6 +27,7 @@ type MeetingsTableProps = {
   pendingId: string | null
   onEdit: (meeting: Meeting) => void
   onDelete: (meeting: Meeting) => void
+  timeZone?: string
 }
 
 type OccurrenceRowProps = {
@@ -35,6 +36,7 @@ type OccurrenceRowProps = {
   onEdit: (meeting: Meeting) => void
   onDelete: (meeting: Meeting) => void
   indented?: boolean
+  timeZone?: string
 }
 
 function OccurrenceRow({
@@ -43,6 +45,7 @@ function OccurrenceRow({
   onEdit,
   onDelete,
   indented = false,
+  timeZone,
 }: OccurrenceRowProps) {
   const isPending = pendingId === meeting.id
   const isCancelled = meeting.status === "cancelled"
@@ -75,10 +78,10 @@ function OccurrenceRow({
       </TableCell>
       <TableCell>
         <span className="text-foreground">
-          {formatDateTime(meeting.starts_at)}
+          {formatDateTime(meeting.starts_at, timeZone)}
         </span>
         <span className="block text-xs text-muted-foreground">
-          {formatTimeRange(meeting)}
+          {formatTimeRange(meeting, timeZone)}
         </span>
       </TableCell>
       <TableCell className="text-muted-foreground">
@@ -118,6 +121,7 @@ export function MeetingsTable({
   pendingId,
   onEdit,
   onDelete,
+  timeZone,
 }: MeetingsTableProps) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const groups = groupBySeries(meetings)
@@ -155,6 +159,7 @@ export function MeetingsTable({
                 pendingId={pendingId}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                timeZone={timeZone}
               />
             )
           }
@@ -193,7 +198,10 @@ export function MeetingsTable({
               </TableCell>
               <TableCell>
                 <span className="text-foreground">
-                  {formatDateTime(earliest.starts_at)}
+                  {formatDateTime(earliest.starts_at, timeZone)}
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  {formatTimeRange(earliest, timeZone)}
                 </span>
               </TableCell>
               <TableCell className="text-muted-foreground">
@@ -216,6 +224,7 @@ export function MeetingsTable({
                     onEdit={onEdit}
                     onDelete={onDelete}
                     indented
+                    timeZone={timeZone}
                   />
                 ))
               : []),

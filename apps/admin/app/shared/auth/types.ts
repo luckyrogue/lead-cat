@@ -3,6 +3,8 @@ export type WebUser = {
   email: string
   avatar_url: string
   auth_method: string
+  timezone?: string
+  language?: string
 }
 
 export type MeOrganization = {
