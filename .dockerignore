@@ -17,4 +17,6 @@ agent-transcripts
 .agents
 .claude
 deploy
+!deploy/nginx
+!deploy/nginx/spa.conf
 docs
