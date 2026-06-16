@@ -46,6 +46,8 @@ type Config struct {
 	SMTPUsername string
 	SMTPPassword string
 	SMTPFrom     string
+
+	ReminderEmailEnabled bool
 }
 
 func Load() (Config, error) {
@@ -85,6 +87,7 @@ func Load() (Config, error) {
 	}
 	cfg.AutoMigrate = strings.EqualFold(os.Getenv("AUTO_MIGRATE"), "true")
 	cfg.CalendarStub = strings.EqualFold(os.Getenv("CALENDAR_STUB"), "true")
+	cfg.ReminderEmailEnabled = strings.EqualFold(os.Getenv("REMINDER_EMAIL_ENABLED"), "true")
 	for _, p := range strings.Split(os.Getenv("BOT_ADMIN_TELEGRAM_IDS"), ",") {
 		p = strings.TrimSpace(p)
 		if p == "" {

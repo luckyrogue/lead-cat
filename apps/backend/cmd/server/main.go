@@ -20,10 +20,10 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application"
 	deliveryhttp "github.com/luckyrogue/lead-cat/internal/delivery/http"
 	calendargoogle "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/google"
-	llmanthropic "github.com/luckyrogue/lead-cat/internal/infrastructure/llm/anthropic"
 	calendarstub "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/stub"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/crypto"
 	smtpemail "github.com/luckyrogue/lead-cat/internal/infrastructure/email/smtp"
+	llmanthropic "github.com/luckyrogue/lead-cat/internal/infrastructure/llm/anthropic"
 	google "github.com/luckyrogue/lead-cat/internal/infrastructure/oauth/google"
 	microsoft "github.com/luckyrogue/lead-cat/internal/infrastructure/oauth/microsoft"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
@@ -209,7 +209,7 @@ func main() {
 		}
 	}()
 
-	remSched := reminder_scheduler.New(store, tg, rdb, logger)
+	remSched := reminder_scheduler.New(store, tg, rdb, sender, cfg.ReminderEmailEnabled, cfg.WebappURL, logger)
 	go remSched.Run(ctx)
 
 	app, err := deliveryhttp.NewApp(cfg, store, cipher, rdb, tg, logger, services)

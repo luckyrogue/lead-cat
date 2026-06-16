@@ -12,6 +12,7 @@ import (
 type Store interface {
 	ListParticipants(ctx context.Context, meetingID uuid.UUID) ([]postgres.MeetingParticipant, error)
 	GetBotUserByEmail(ctx context.Context, email string) (postgres.BotUser, error)
+	GetBotUserByTelegramID(ctx context.Context, telegramID int64) (postgres.BotUser, error)
 	GetUserTelegramID(ctx context.Context, userID uuid.UUID) (int64, bool, error)
 }
 
@@ -19,6 +20,11 @@ type Recipient struct {
 	TelegramID      int64
 	ReminderMinutes string
 	IsOrganizer     bool
+	// Contact details for email delivery (empty when the user has no email).
+	FullName string
+	Email    string
+	Language string
+	Timezone string
 }
 
 func Resolve(ctx context.Context, store Store, m postgres.Meeting) ([]Recipient, error) {
@@ -41,14 +47,25 @@ func Resolve(ctx context.Context, store Store, m postgres.Meeting) ([]Recipient,
 			continue
 		}
 		seen[u.TelegramID] = true
-		out = append(out, Recipient{TelegramID: u.TelegramID, ReminderMinutes: u.ReminderMinutes})
+		out = append(out, Recipient{
+			TelegramID:      u.TelegramID,
+			ReminderMinutes: u.ReminderMinutes,
+			FullName:        u.FullName,
+			Email:           u.Email,
+			Language:        u.Language,
+			Timezone:        u.Timezone,
+		})
 	}
 
 	if m.OrganizerUserID != nil {
 		if tg, linked, err := store.GetUserTelegramID(ctx, *m.OrganizerUserID); err == nil && linked {
 			if !seen[tg] {
 				seen[tg] = true
-				out = append(out, Recipient{TelegramID: tg, IsOrganizer: true})
+				r := Recipient{TelegramID: tg, IsOrganizer: true}
+				if bu, err := store.GetBotUserByTelegramID(ctx, tg); err == nil {
+					r.FullName, r.Email, r.Language, r.Timezone = bu.FullName, bu.Email, bu.Language, bu.Timezone
+				}
+				out = append(out, r)
 			}
 		}
 	}

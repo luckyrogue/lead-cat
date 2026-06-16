@@ -2,6 +2,7 @@ package reminder_scheduler
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/go-telegram/bot"
@@ -17,15 +18,31 @@ const lockKey = "leadcat:reminders:leader"
 
 var defaultOrganizerOffsets = []int{15}
 
-type Scheduler struct {
-	store *postgres.Store
-	bot   *bot.Bot
-	rdb   *redis.Client
-	log   *zap.Logger
+// EmailSender delivers an HTML email. *smtp.Sender satisfies it.
+type EmailSender interface {
+	Send(ctx context.Context, to, subject, htmlBody string) error
 }
 
-func New(store *postgres.Store, b *bot.Bot, rdb *redis.Client, log *zap.Logger) *Scheduler {
-	return &Scheduler{store: store, bot: b, rdb: rdb, log: log}
+type Scheduler struct {
+	store          *postgres.Store
+	bot            *bot.Bot
+	rdb            *redis.Client
+	email          EmailSender
+	emailEnabled   bool
+	unsubscribeURL string
+	log            *zap.Logger
+}
+
+func New(store *postgres.Store, b *bot.Bot, rdb *redis.Client, email EmailSender, emailEnabled bool, unsubscribeURL string, log *zap.Logger) *Scheduler {
+	return &Scheduler{
+		store:          store,
+		bot:            b,
+		rdb:            rdb,
+		email:          email,
+		emailEnabled:   emailEnabled,
+		unsubscribeURL: unsubscribeURL,
+		log:            log,
+	}
 }
 
 func (s *Scheduler) Run(ctx context.Context) {
@@ -53,41 +70,108 @@ func (s *Scheduler) tick(ctx context.Context) {
 		return
 	}
 	for _, m := range meetings {
-		recipients := s.recipients(ctx, m)
-		for tg, offsets := range recipients {
-			for _, off := range dueOffsets(now, m.StartsAt, offsets) {
-				claimed, err := s.store.TryClaimReminder(ctx, m.ID, tg, off)
+		for _, t := range s.recipients(ctx, m) {
+			for _, off := range dueOffsets(now, m.StartsAt, t.Offsets) {
+				claimed, err := s.store.TryClaimReminder(ctx, m.ID, t.TelegramID, off)
 				if err != nil || !claimed {
 					continue
 				}
 
 				if _, err := s.bot.SendMessage(ctx, &bot.SendMessageParams{
-					ChatID: tg,
+					ChatID: t.TelegramID,
 					Text:   message(m.Name, m.MeetLink, off),
 				}); err != nil {
 					s.log.Warn("send reminder",
-						zap.Int64("telegram_id", tg),
+						zap.Int64("telegram_id", t.TelegramID),
 						zap.String("meeting_id", m.ID.String()),
 						zap.Error(err))
+				}
+
+				if s.emailEnabled && t.Email != "" {
+					s.sendReminderEmail(ctx, m, t)
 				}
 			}
 		}
 	}
 }
 
-func (s *Scheduler) recipients(ctx context.Context, m postgres.Meeting) map[int64][]int {
-	out := map[int64][]int{}
+type reminderTarget struct {
+	TelegramID int64
+	Offsets    []int
+	FullName   string
+	Email      string
+	Language   string
+	Timezone   string
+}
+
+func (s *Scheduler) recipients(ctx context.Context, m postgres.Meeting) []reminderTarget {
 	recs, err := meetingrecipients.Resolve(ctx, s.store, m)
 	if err != nil {
 		s.log.Warn("resolve recipients", zap.String("meeting_id", m.ID.String()), zap.Error(err))
-		return out
+		return nil
 	}
+	out := make([]reminderTarget, 0, len(recs))
 	for _, r := range recs {
+		offsets := botsettings.Parse(r.ReminderMinutes)
 		if r.IsOrganizer {
-			out[r.TelegramID] = defaultOrganizerOffsets
-		} else {
-			out[r.TelegramID] = botsettings.Parse(r.ReminderMinutes)
+			offsets = defaultOrganizerOffsets
 		}
+		out = append(out, reminderTarget{
+			TelegramID: r.TelegramID,
+			Offsets:    offsets,
+			FullName:   r.FullName,
+			Email:      r.Email,
+			Language:   r.Language,
+			Timezone:   r.Timezone,
+		})
 	}
 	return out
+}
+
+// sendReminderEmail renders and sends the HTML reminder in the recipient's
+// timezone and language. Best-effort: failures are logged, not retried (the
+// reminder claim already covers this recipient+offset).
+func (s *Scheduler) sendReminderEmail(ctx context.Context, m postgres.Meeting, t reminderTarget) {
+	loc, err := time.LoadLocation(t.Timezone)
+	if t.Timezone == "" || err != nil {
+		if loc, err = time.LoadLocation("Asia/Almaty"); err != nil {
+			loc = time.FixedZone("Almaty", 5*3600)
+		}
+	}
+	start, end := m.StartsAt.In(loc), m.EndsAt.In(loc)
+	timeStr := start.Format("15:04") + "–" + end.Format("15:04")
+
+	htmlBody, rerr := renderReminderEmail(reminderEmailData{
+		Lang:           t.Language,
+		Name:           t.FullName,
+		Title:          m.Name,
+		Date:           start.Format("02.01.2006"),
+		Time:           timeStr,
+		Tz:             tzLabel(start),
+		MeetLink:       m.MeetLink,
+		UnsubscribeURL: s.unsubscribeURL,
+	})
+	if rerr != nil {
+		s.log.Warn("render reminder email", zap.String("meeting_id", m.ID.String()), zap.Error(rerr))
+		return
+	}
+	if err := s.email.Send(ctx, t.Email, reminderEmailSubject(t.Language, m.Name, timeStr), htmlBody); err != nil {
+		s.log.Warn("send reminder email",
+			zap.String("email", t.Email),
+			zap.String("meeting_id", m.ID.String()),
+			zap.Error(err))
+	}
+}
+
+func tzLabel(t time.Time) string {
+	_, off := t.Zone()
+	sign := "+"
+	if off < 0 {
+		sign, off = "-", -off
+	}
+	h, mn := off/3600, (off%3600)/60
+	if mn == 0 {
+		return fmt.Sprintf("UTC%s%d", sign, h)
+	}
+	return fmt.Sprintf("UTC%s%d:%02d", sign, h, mn)
 }
