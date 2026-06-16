@@ -102,7 +102,7 @@ export function SettingsPage() {
               <SelectContent>
                 {TIMEZONE_OPTIONS.map((opt) => (
                   <SelectItem
-                    key={opt.value}
+                    key={opt.value || "default"}
                     value={opt.value === "" ? DEFAULT : opt.value}
                   >
                     {"translatable" in opt
@@ -131,7 +131,7 @@ export function SettingsPage() {
               <SelectContent>
                 {LANGUAGE_OPTIONS.map((opt) => (
                   <SelectItem
-                    key={opt.value}
+                    key={opt.value || "default"}
                     value={opt.value === "" ? DEFAULT : opt.value}
                   >
                     {"translatable" in opt

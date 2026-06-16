@@ -95,7 +95,7 @@ export function PreferencesSettings() {
             <SelectContent>
               {TIMEZONE_OPTIONS.map((opt) => (
                 <SelectItem
-                  key={opt.value}
+                  key={opt.value || "default"}
                   value={opt.value === "" ? DEFAULT : opt.value}
                 >
                   {opt.value === ""
@@ -121,7 +121,7 @@ export function PreferencesSettings() {
             <SelectContent>
               {LANGUAGE_OPTIONS.map((opt) => (
                 <SelectItem
-                  key={opt.value}
+                  key={opt.value || "default"}
                   value={opt.value === "" ? DEFAULT : opt.value}
                 >
                   {opt.value === ""

@@ -86,6 +86,7 @@ func TestChangeSeriesEnd_Extend(t *testing.T) {
 	repo := &reshapeRepo{
 		org:    model.Organization{OwnerUserID: &owner, TZ: "UTC"},
 		picked: anchor, occs: []model.Meeting{anchor},
+		starts: []time.Time{start},
 	}
 	s := &Services{Store: repo, Calendar: reshapeCalProvider{}}
 	added, removed, err := s.ChangeSeriesEnd(context.Background(), uuid.New(), owner, anchor.ID, "2026-06-03")
