@@ -1,4 +1,4 @@
-
+-- +goose Up
 ALTER TABLE platform_users ADD COLUMN IF NOT EXISTS phone TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS platform_users_phone_unique ON platform_users (phone) WHERE phone IS NOT NULL AND phone <> '';
 
@@ -14,6 +14,7 @@ CREATE TABLE auth_passkeys (
 
 CREATE INDEX auth_passkeys_user_id_idx ON auth_passkeys (user_id);
 
+-- +goose Down
 DROP TABLE IF EXISTS auth_passkeys;
 DROP INDEX IF EXISTS platform_users_phone_unique;
 ALTER TABLE platform_users DROP COLUMN IF EXISTS phone;

@@ -1,4 +1,4 @@
-
+-- +goose Up
 CREATE TABLE bot_users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     telegram_id BIGINT NOT NULL UNIQUE,
@@ -8,4 +8,5 @@ CREATE TABLE bot_users (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- +goose Down
 DROP TABLE IF EXISTS bot_users;

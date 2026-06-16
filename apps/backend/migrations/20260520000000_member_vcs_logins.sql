@@ -1,4 +1,4 @@
-
+-- +goose Up
 ALTER TABLE developer_vcs_map
     ADD COLUMN IF NOT EXISTS github_login TEXT NOT NULL DEFAULT '',
     ADD COLUMN IF NOT EXISTS gitlab_login TEXT NOT NULL DEFAULT '';
@@ -9,6 +9,7 @@ WHERE github_login = '' AND vcs_login <> '';
 
 ALTER TABLE developer_vcs_map DROP COLUMN IF EXISTS vcs_login;
 
+-- +goose Down
 ALTER TABLE developer_vcs_map ADD COLUMN IF NOT EXISTS vcs_login TEXT NOT NULL DEFAULT '';
 
 UPDATE developer_vcs_map

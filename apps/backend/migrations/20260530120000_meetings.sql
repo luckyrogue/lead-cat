@@ -1,4 +1,4 @@
-
+-- +goose Up
 CREATE TABLE employees (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
@@ -41,6 +41,7 @@ CREATE TABLE meeting_participants (
 
 CREATE INDEX meeting_participants_meeting_idx ON meeting_participants (meeting_id);
 
+-- +goose Down
 DROP TABLE IF EXISTS meeting_participants;
 DROP TABLE IF EXISTS meetings;
 DROP TABLE IF EXISTS employees;

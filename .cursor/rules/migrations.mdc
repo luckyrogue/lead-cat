@@ -8,3 +8,4 @@ alwaysApply: false
 
 - Tool: pressly/goose v3 via `backend/cmd/migrate`
 - No silent auto-migrate in prod unless `AUTO_MIGRATE=true`
+- Every `apps/backend/migrations/*.sql` file must keep goose section markers: `-- +goose Up`, `-- +goose Down` (and `StatementBegin`/`StatementEnd` when used). Never strip them as "comments".

@@ -1,4 +1,4 @@
-
+-- +goose Up
 DROP TABLE IF EXISTS scenario_run_steps;
 DROP TABLE IF EXISTS scenario_runs;
 DROP TABLE IF EXISTS scenarios;
@@ -9,6 +9,7 @@ ALTER TABLE workspaces
   DROP COLUMN IF EXISTS vcs_namespace,
   DROP COLUMN IF EXISTS vcs_base_url;
 
+-- +goose Down
 ALTER TABLE workspaces
   ADD COLUMN IF NOT EXISTS vcs_provider TEXT NOT NULL DEFAULT 'github',
   ADD COLUMN IF NOT EXISTS vcs_token_enc BYTEA,

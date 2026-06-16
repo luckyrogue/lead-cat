@@ -1,4 +1,4 @@
-
+-- +goose Up
 CREATE TABLE meeting_reminders (
     meeting_id UUID NOT NULL REFERENCES meetings(id) ON DELETE CASCADE,
     telegram_id BIGINT NOT NULL,
@@ -7,4 +7,5 @@ CREATE TABLE meeting_reminders (
     PRIMARY KEY (meeting_id, telegram_id, offset_minutes)
 );
 
+-- +goose Down
 DROP TABLE IF EXISTS meeting_reminders;

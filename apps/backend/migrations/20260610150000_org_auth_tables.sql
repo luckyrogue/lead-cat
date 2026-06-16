@@ -1,4 +1,4 @@
-
+-- +goose Up
 ALTER TABLE organization_members ADD COLUMN invited_email TEXT;
 ALTER TABLE organization_members ALTER COLUMN role SET DEFAULT 'member';
 UPDATE organization_members SET role = 'member' WHERE role NOT IN ('owner','admin');
@@ -40,6 +40,7 @@ CREATE TABLE web_sessions (
 );
 CREATE INDEX web_sessions_user_idx ON web_sessions (user_id);
 
+-- +goose Down
 DROP TABLE IF EXISTS web_sessions;
 DROP TABLE IF EXISTS magic_link_tokens;
 DROP TABLE IF EXISTS organization_invites;
