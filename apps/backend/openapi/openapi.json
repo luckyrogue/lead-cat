@@ -1731,6 +1731,45 @@
         }
       }
     },
+    "/api/auth/web/me/settings": {
+      "get": {
+        "operationId": "webMeSettingsGet",
+        "tags": ["web-auth"],
+        "summary": "Get current user timezone and language settings",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "User settings",
+            "content": { "application/json": { "schema": { "type": "object", "required": ["timezone", "language"], "properties": { "timezone": { "type": "string" }, "language": { "type": "string" } } } } }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "webMeSettingsPatch",
+        "tags": ["web-auth"],
+        "summary": "Update user timezone and/or language settings",
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "properties": { "timezone": { "type": "string" }, "language": { "type": "string" } } } } }
+        },
+        "responses": {
+          "204": { "description": "Saved" },
+          "400": {
+            "description": "validation_failed",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+          }
+        }
+      }
+    },
     "/api/orgs": {
       "get": {
         "operationId": "orgsList",
@@ -3320,12 +3359,14 @@
       },
       "MiniAppUserSettings": {
         "type": "object",
-        "required": ["reminder_minutes"],
+        "required": ["reminder_minutes", "timezone", "language"],
         "properties": {
           "reminder_minutes": {
             "type": "array",
             "items": { "type": "integer", "format": "int32" }
-          }
+          },
+          "timezone": { "type": "string" },
+          "language": { "type": "string" }
         }
       },
       "MiniAppUserSettingsPatch": {
@@ -3339,17 +3380,21 @@
               "format": "int32",
               "enum": [10, 15, 30, 60, 120, 1440]
             }
-          }
+          },
+          "timezone": { "type": "string" },
+          "language": { "type": "string" }
         }
       },
       "WebUser": {
         "type": "object",
-        "required": ["id", "email", "name"],
+        "required": ["id", "email", "name", "timezone", "language"],
         "properties": {
           "id": { "type": "string", "format": "uuid" },
           "email": { "type": "string", "format": "email" },
           "name": { "type": "string" },
-          "provider": { "type": "string", "description": "google | microsoft | magic_link" }
+          "provider": { "type": "string", "description": "google | microsoft | magic_link" },
+          "timezone": { "type": "string" },
+          "language": { "type": "string" }
         }
       },
       "Org": {

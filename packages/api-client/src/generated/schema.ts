@@ -458,6 +458,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/web/me/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get current user timezone and language settings */
+        get: operations["webMeSettingsGet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update user timezone and/or language settings */
+        patch: operations["webMeSettingsPatch"];
+        trace?: never;
+    };
     "/api/orgs": {
         parameters: {
             query?: never;
@@ -851,9 +869,13 @@ export interface components {
         };
         MiniAppUserSettings: {
             reminder_minutes: number[];
+            timezone: string;
+            language: string;
         };
         MiniAppUserSettingsPatch: {
             reminder_minutes: (10 | 15 | 30 | 60 | 120 | 1440)[];
+            timezone?: string;
+            language?: string;
         };
         WebUser: {
             /** Format: uuid */
@@ -863,6 +885,8 @@ export interface components {
             name: string;
             /** @description google | microsoft | magic_link */
             provider?: string;
+            timezone: string;
+            language: string;
         };
         Org: {
             /** Format: uuid */
@@ -2393,6 +2417,81 @@ export interface operations {
                 };
             };
             /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    webMeSettingsGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description User settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        timezone: string;
+                        language: string;
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    webMeSettingsPatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    timezone?: string;
+                    language?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Saved */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description validation_failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
