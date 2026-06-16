@@ -9,8 +9,10 @@ import { fetchFreeSlots } from "~/entities/meeting/api"
 import type { Employee } from "~/entities/employee/types"
 import type { FreeSlot } from "~/entities/meeting/types"
 import { addDaysIso, todayIso } from "~/shared/lib/format"
+import { useT } from "~/shared/i18n/context"
 
 export function CheckerPage() {
+  const t = useT()
   const [participants, setParticipants] = useState<Employee[]>([])
   const [from, setFrom] = useState(todayIso())
   const [to, setTo] = useState(addDaysIso(todayIso(), 6))
@@ -20,11 +22,11 @@ export function CheckerPage() {
 
   async function onCheck() {
     if (participants.length === 0) {
-      toast.error("Add at least one participant")
+      toast.error(t("checker.toastNeedParticipants"))
       return
     }
     if (to < from || duration <= 0) {
-      toast.error("Check the date range and duration")
+      toast.error(t("checker.toastInvalidRange"))
       return
     }
     setLoading(true)
@@ -38,7 +40,7 @@ export function CheckerPage() {
       })
       setSlots(result)
     } catch {
-      toast.error("Couldn't find free slots")
+      toast.error(t("checker.toastError"))
     } finally {
       setLoading(false)
     }
@@ -46,23 +48,31 @@ export function CheckerPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Slot checker" subtitle="Find common free time" />
+      <PageHeader title={t("checker.title")} subtitle={t("checker.subtitle")} />
 
       <div className="flex flex-col gap-1.5">
-        <Label>Participants</Label>
+        <Label>{t("checker.participants")}</Label>
         <EmployeePicker selected={participants} onChange={setParticipants} />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field label="From">
-          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+        <Field label={t("checker.fieldFrom")}>
+          <Input
+            type="date"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+          />
         </Field>
-        <Field label="To">
-          <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+        <Field label={t("checker.fieldTo")}>
+          <Input
+            type="date"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+          />
         </Field>
       </div>
 
-      <Field label="Duration (minutes)">
+      <Field label={t("checker.fieldDuration")}>
         <Input
           type="number"
           min={5}
@@ -73,13 +83,16 @@ export function CheckerPage() {
       </Field>
 
       <Button onClick={onCheck} disabled={loading}>
-        Find free slots
+        {t("checker.findBtn")}
       </Button>
 
       {loading ? (
-        <LoadingState label="Searching…" />
+        <LoadingState label={t("checker.searching")} />
       ) : slots === undefined ? null : slots.length === 0 ? (
-        <EmptyState title="No common free slots" hint="Try a wider range or shorter duration." />
+        <EmptyState
+          title={t("checker.emptyTitle")}
+          hint={t("checker.emptyHint")}
+        />
       ) : (
         <FreeSlotList slots={slots} />
       )}
@@ -87,7 +100,13 @@ export function CheckerPage() {
   )
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string
+  children: React.ReactNode
+}) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label>{label}</Label>

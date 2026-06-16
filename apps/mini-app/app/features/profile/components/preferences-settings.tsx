@@ -5,8 +5,10 @@ import { useEffect, useState } from "react"
 import { ErrorState, LoadingState } from "~/components/states"
 import { LANGUAGE_OPTIONS, TIMEZONE_OPTIONS } from "~/entities/settings/api"
 import { settingsQuery, useUpdatePrefs } from "~/entities/settings/queries"
+import { useT } from "~/shared/i18n/context"
 
 export function PreferencesSettings() {
+  const t = useT()
   const settings = useQuery(settingsQuery())
   const update = useUpdatePrefs()
   const [timezone, setTimezone] = useState("")
@@ -26,7 +28,7 @@ export function PreferencesSettings() {
       { timezone: value },
       {
         onError: () => {
-          toast.error("Couldn't save preferences")
+          toast.error(t("profile.preferences.toastError"))
           setTimezone(prev)
         },
       }
@@ -40,7 +42,7 @@ export function PreferencesSettings() {
       { language: value },
       {
         onError: () => {
-          toast.error("Couldn't save preferences")
+          toast.error(t("profile.preferences.toastError"))
           setLanguage(prev)
         },
       }
@@ -53,7 +55,7 @@ export function PreferencesSettings() {
   if (settings.isError) {
     return (
       <ErrorState
-        title="Couldn't load settings"
+        title={t("profile.preferences.toastLoadError")}
         onRetry={() => settings.refetch()}
       />
     )
@@ -63,10 +65,12 @@ export function PreferencesSettings() {
     <Card>
       <CardContent className="flex flex-col gap-3">
         <p className="text-sm font-semibold text-foreground">
-          Timezone &amp; language
+          {t("profile.preferences.title")}
         </p>
         <div className="flex flex-col gap-2">
-          <label className="text-xs text-muted-foreground">Timezone</label>
+          <label className="text-xs text-muted-foreground">
+            {t("profile.preferences.timezoneLabel")}
+          </label>
           <select
             className="h-10 rounded-[var(--radius)] border border-border bg-background px-3 text-sm"
             value={timezone}
@@ -75,13 +79,17 @@ export function PreferencesSettings() {
           >
             {TIMEZONE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
-                {opt.label}
+                {opt.value === ""
+                  ? t("profile.preferences.tzDefault")
+                  : opt.label}
               </option>
             ))}
           </select>
         </div>
         <div className="flex flex-col gap-2">
-          <label className="text-xs text-muted-foreground">Language</label>
+          <label className="text-xs text-muted-foreground">
+            {t("profile.preferences.languageLabel")}
+          </label>
           <select
             className="h-10 rounded-[var(--radius)] border border-border bg-background px-3 text-sm"
             value={language}
@@ -90,7 +98,9 @@ export function PreferencesSettings() {
           >
             {LANGUAGE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
-                {opt.label}
+                {opt.value === ""
+                  ? t("profile.preferences.langDefault")
+                  : opt.label}
               </option>
             ))}
           </select>

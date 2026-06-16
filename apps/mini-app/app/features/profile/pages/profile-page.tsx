@@ -14,8 +14,10 @@ import { PageHeader } from "~/components/page-header"
 import { PreferencesSettings } from "~/features/profile/components/preferences-settings"
 import { ReminderSettings } from "~/features/profile/components/reminder-settings"
 import { useAuth } from "~/shared/auth/auth-context"
+import { useT } from "~/shared/i18n/context"
 
 export function ProfilePage() {
+  const t = useT()
   const { user } = useAuth()
   const initials = (user?.name ?? "?")
     .split(" ")
@@ -27,7 +29,7 @@ export function ProfilePage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader title="Profile" />
+      <PageHeader title={t("profile.title")} />
 
       <Card>
         <CardContent className="flex items-center gap-3">
@@ -35,7 +37,9 @@ export function ProfilePage() {
             <AvatarFallback>{initials || "?"}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <p className="truncate font-semibold text-foreground">{user?.name || "—"}</p>
+            <p className="truncate font-semibold text-foreground">
+              {user?.name || "—"}
+            </p>
             <p className="flex items-center gap-1.5 truncate text-sm text-muted-foreground">
               <Mail className="size-3.5" />
               {user?.email || "—"}
@@ -59,7 +63,7 @@ export function ProfilePage() {
           <CardContent className="flex items-center justify-between gap-3">
             <span className="flex items-center gap-2 font-medium text-foreground">
               <Users className="size-4 text-muted-foreground" />
-              Colleague schedule
+              {t("profile.colleagueSchedule")}
             </span>
             <ArrowRight className="size-4 text-muted-foreground" />
           </CardContent>

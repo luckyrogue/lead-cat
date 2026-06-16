@@ -4,9 +4,14 @@ import { useEffect, useState } from "react"
 
 import { ErrorState, LoadingState } from "~/components/states"
 import { REMINDER_OPTIONS } from "~/entities/settings/api"
-import { settingsQuery, useUpdateReminderMinutes } from "~/entities/settings/queries"
+import {
+  settingsQuery,
+  useUpdateReminderMinutes,
+} from "~/entities/settings/queries"
+import { useT } from "~/shared/i18n/context"
 
 export function ReminderSettings() {
+  const t = useT()
   const settings = useQuery(settingsQuery())
   const update = useUpdateReminderMinutes()
   const [selected, setSelected] = useState<number[]>([])
@@ -24,7 +29,7 @@ export function ReminderSettings() {
     setSelected(next)
     update.mutate(next, {
       onError: () => {
-        toast.error("Couldn't save reminders")
+        toast.error(t("profile.reminder.toastError"))
         setSelected(settings.data?.reminder_minutes ?? [])
       },
     })
@@ -34,13 +39,20 @@ export function ReminderSettings() {
     return <LoadingState />
   }
   if (settings.isError) {
-    return <ErrorState title="Couldn't load settings" onRetry={() => settings.refetch()} />
+    return (
+      <ErrorState
+        title={t("profile.reminder.toastLoadError")}
+        onRetry={() => settings.refetch()}
+      />
+    )
   }
 
   return (
     <Card>
       <CardContent className="flex flex-col gap-3">
-        <p className="text-sm font-semibold text-foreground">Reminders before a meeting</p>
+        <p className="text-sm font-semibold text-foreground">
+          {t("profile.reminder.title")}
+        </p>
         <div className="flex flex-wrap gap-2">
           {REMINDER_OPTIONS.map((option) => {
             const active = selected.includes(option.minutes)

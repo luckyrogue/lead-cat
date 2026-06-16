@@ -9,8 +9,10 @@ import { PageHeader } from "~/components/page-header"
 import { EmptyState, ErrorState, LoadingState } from "~/components/states"
 import { scheduleQuery } from "~/entities/meeting/queries"
 import type { Employee } from "~/entities/employee/types"
+import { useT } from "~/shared/i18n/context"
 
 export function ColleagueSchedulePage() {
+  const t = useT()
   const navigate = useNavigate()
   const [selected, setSelected] = useState<Employee[]>([])
   const email = selected[0]?.email ?? ""
@@ -25,9 +27,12 @@ export function ColleagueSchedulePage() {
         className="-ml-1 flex w-fit items-center gap-1 text-sm font-medium text-muted-foreground"
       >
         <ChevronLeft className="size-4" />
-        Back
+        {t("colleague.back")}
       </button>
-      <PageHeader title="Colleague schedule" subtitle="Upcoming meetings" />
+      <PageHeader
+        title={t("colleague.title")}
+        subtitle={t("colleague.subtitle")}
+      />
 
       <EmployeePicker
         selected={selected}
@@ -35,13 +40,19 @@ export function ColleagueSchedulePage() {
       />
 
       {!email ? (
-        <EmptyState title="Pick a colleague" hint="Search to see their upcoming meetings." />
+        <EmptyState
+          title={t("colleague.emptyPickTitle")}
+          hint={t("colleague.emptyPickHint")}
+        />
       ) : schedule.isLoading ? (
         <LoadingState />
       ) : schedule.isError ? (
-        <ErrorState title="Couldn't load schedule" onRetry={() => schedule.refetch()} />
+        <ErrorState
+          title={t("colleague.errorLoad")}
+          onRetry={() => schedule.refetch()}
+        />
       ) : list.length === 0 ? (
-        <EmptyState title="No upcoming meetings" />
+        <EmptyState title={t("colleague.emptyTitle")} />
       ) : (
         <div className="flex flex-col gap-3">
           {list.map((m) => (
