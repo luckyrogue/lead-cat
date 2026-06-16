@@ -26,6 +26,7 @@ type CreateInput struct {
 	RecurrenceDays  []int
 	Description     string
 	Participants    []model.MeetingParticipant
+	Timezone        string
 }
 
 type UpdateInput struct {
@@ -37,6 +38,7 @@ type UpdateInput struct {
 	End         *string
 	Recurrence  *string
 	Description *string
+	Timezone    string
 }
 
 type Meetings struct {
@@ -51,7 +53,11 @@ func (c *Meetings) CreateMeeting(ctx context.Context, organizationID, organizerI
 	if err != nil {
 		return model.Meeting{}, err
 	}
-	loc, err := time.LoadLocation(orDefault(w.TZ, "Asia/Almaty"))
+	tz := w.TZ
+	if in.Timezone != "" {
+		tz = in.Timezone
+	}
+	loc, err := time.LoadLocation(orDefault(tz, "Asia/Almaty"))
 	if err != nil {
 		return model.Meeting{}, fmt.Errorf("bad timezone: %w", err)
 	}
@@ -169,7 +175,11 @@ func (c *Meetings) UpdateMeeting(ctx context.Context, organizationID, userID, me
 	if !ownerOrOrganizer(w, cur.OrganizerUserID, userID) {
 		return model.Meeting{}, ErrForbidden
 	}
-	loc, err := time.LoadLocation(orDefault(w.TZ, "Asia/Almaty"))
+	tz := w.TZ
+	if in.Timezone != "" {
+		tz = in.Timezone
+	}
+	loc, err := time.LoadLocation(orDefault(tz, "Asia/Almaty"))
 	if err != nil {
 		return model.Meeting{}, fmt.Errorf("bad timezone: %w", err)
 	}

@@ -13,7 +13,7 @@ func TestToCreateMeetingInput(t *testing.T) {
 		Dept: "Eng", Type: "weekly", Host: "", Date: "2026-06-10",
 		Start: "10:00", End: "10:30", Recurrence: "once", Desc: "sync",
 		Participants: []string{"a@x.io", "", "  ", "b@x.io"},
-	}, "Real Name")
+	}, "Real Name", "")
 	if in.Host != "Real Name" {
 		t.Fatalf("host fallback: %q", in.Host)
 	}
@@ -24,7 +24,7 @@ func TestToCreateMeetingInput(t *testing.T) {
 		t.Fatalf("passthrough: %+v", in)
 	}
 
-	if got := toCreateMeetingInput(miniappCreateRequest{Host: "Custom"}, "Real").Host; got != "Custom" {
+	if got := toCreateMeetingInput(miniappCreateRequest{Host: "Custom"}, "Real", "").Host; got != "Custom" {
 		t.Fatalf("host kept: %q", got)
 	}
 }

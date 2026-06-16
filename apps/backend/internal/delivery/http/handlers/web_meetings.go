@@ -215,7 +215,7 @@ func (a *API) WebCreateMeeting(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid_body")
 	}
-	m, err := a.App.CreateMeeting(c.UserContext(), orgID, user.ID, toCreateMeetingInput(req, user.Email))
+	m, err := a.App.CreateMeeting(c.UserContext(), orgID, user.ID, toCreateMeetingInput(req, user.Email, user.Timezone))
 	if err != nil {
 		return mapMeetingWriteError(err)
 	}
@@ -253,6 +253,7 @@ func (a *API) WebUpdateMeeting(c *fiber.Ctx) error {
 		m, err := a.App.UpdateMeeting(c.UserContext(), orgID, user.ID, meetingID, application.UpdateMeetingInput{
 			Dept: req.Dept, Type: req.Type, Host: req.Host,
 			Date: req.Date, Start: req.Start, End: req.End, Description: req.Desc,
+			Timezone: user.Timezone,
 		})
 		if err != nil {
 			return mapMeetingWriteError(err)

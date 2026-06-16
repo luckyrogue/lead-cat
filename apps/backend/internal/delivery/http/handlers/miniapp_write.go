@@ -49,7 +49,7 @@ type miniappCreateRequest struct {
 	RecurrenceDays  *[]int   `json:"recurrence_days,omitempty"`
 }
 
-func toCreateMeetingInput(req miniappCreateRequest, hostFallback string) application.CreateMeetingInput {
+func toCreateMeetingInput(req miniappCreateRequest, hostFallback string, userTimezone string) application.CreateMeetingInput {
 	host := strings.TrimSpace(req.Host)
 	if host == "" {
 		host = hostFallback
@@ -65,6 +65,7 @@ func toCreateMeetingInput(req miniappCreateRequest, hostFallback string) applica
 		Date: req.Date, Start: req.Start, End: req.End,
 		Recurrence: req.Recurrence, Description: req.Desc,
 		Participants: parts,
+		Timezone:     userTimezone,
 	}
 	if req.RecurrenceUntil != nil {
 		in.RecurrenceUntil = *req.RecurrenceUntil
@@ -103,7 +104,7 @@ func (a *API) MiniAppCreateMeeting(c *fiber.Ctx) error {
 		}
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
-	m, err := a.App.CreateMeeting(c.Context(), organizationID, organizerID, toCreateMeetingInput(req, bu.FullName))
+	m, err := a.App.CreateMeeting(c.Context(), organizationID, organizerID, toCreateMeetingInput(req, bu.FullName, bu.Timezone))
 	if err != nil {
 		if errors.Is(err, application.ErrInvalidInput) || errors.Is(err, application.ErrGoogleNotConfigured) {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
@@ -292,6 +293,7 @@ func (a *API) MiniAppUpdateMeeting(c *fiber.Ctx) error {
 		m, err := a.App.UpdateMeeting(c.Context(), organizationID, organizerID, meetingID, application.UpdateMeetingInput{
 			Dept: req.Dept, Type: req.Type, Host: req.Host,
 			Date: req.Date, Start: req.Start, End: req.End, Description: req.Desc,
+			Timezone: bu.Timezone,
 		})
 		if err != nil {
 			switch {
