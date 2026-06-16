@@ -19,7 +19,7 @@ import { MeetingEditDialog } from "~/features/meetings/components/meeting-edit-d
 import { myMeetingsQuery } from "~/entities/meeting/queries"
 import type { Meeting } from "~/entities/meeting/types"
 import { useAuth } from "~/shared/auth/auth-context"
-import { useT } from "~/shared/i18n/context"
+import { useLocale, useT } from "~/shared/i18n/context"
 import { formatDateLong, formatTimeRange } from "~/shared/lib/format"
 
 export function MeetingDetailPage() {
@@ -90,6 +90,7 @@ type DetailProps = {
 
 function MeetingDetail({ meeting, canManage, onEdit, onDelete }: DetailProps) {
   const t = useT()
+  const locale = useLocale()
   const title = meeting.type || meeting.dept || t("meetings.fallbackTitle")
   return (
     <div className="flex flex-col gap-4">
@@ -105,7 +106,7 @@ function MeetingDetail({ meeting, canManage, onEdit, onDelete }: DetailProps) {
       <div className="flex flex-col gap-3 rounded-[var(--radius)] border border-border/60 bg-card p-4">
         <Row
           icon={<CalendarClock className="size-4" />}
-          text={formatDateLong(meeting.date)}
+          text={formatDateLong(meeting.date, locale)}
         />
         <Row
           icon={<Clock className="size-4" />}

@@ -28,15 +28,15 @@ const RECURRENCES: MeetingRecurrence[] = [
   "custom",
 ]
 
-// Zod schema is at module scope — validation messages stay in English (cannot use hook here)
+// Zod schema is at module scope — messages are i18n keys resolved at render via t().
 const schema = z
   .object({
-    dept: z.string().min(1, "Department is required"),
-    type: z.string().min(1, "Type is required"),
+    dept: z.string().min(1, "meetings.form.errors.deptRequired"),
+    type: z.string().min(1, "meetings.form.errors.typeRequired"),
     host: z.string(),
-    date: z.string().min(1, "Date is required"),
-    start: z.string().min(1, "Start time is required"),
-    end: z.string().min(1, "End time is required"),
+    date: z.string().min(1, "meetings.form.errors.dateRequired"),
+    start: z.string().min(1, "meetings.form.errors.startRequired"),
+    end: z.string().min(1, "meetings.form.errors.endRequired"),
     recurrence: z.enum(["once", "daily", "weekly", "monthly", "custom"]),
     recurrence_until: z.string(),
     recurrence_days: z.array(z.number().int().min(1).max(7)),
@@ -45,15 +45,15 @@ const schema = z
   })
   .refine((v) => v.end > v.start, {
     path: ["end"],
-    message: "End must be after start",
+    message: "meetings.form.errors.endAfterStart",
   })
   .refine((v) => v.recurrence === "once" || v.recurrence_until.length > 0, {
     path: ["recurrence_until"],
-    message: "Pick an end date for a repeating meeting",
+    message: "meetings.form.errors.repeatUntilRequired",
   })
   .refine((v) => v.recurrence !== "custom" || v.recurrence_days.length > 0, {
     path: ["recurrence_days"],
-    message: "Pick at least one weekday",
+    message: "meetings.form.errors.weekdayRequired",
   })
 
 export type MeetingFormValues = z.infer<typeof schema>
@@ -101,6 +101,7 @@ export function MeetingForm({
     defaultValues: { ...EMPTY, ...defaults },
   })
 
+  const te = (message?: string) => (message ? t(message) : undefined)
   const recurrence = watch("recurrence")
   const isEdit = mode === "edit"
   const showScope = isEdit && series
@@ -137,7 +138,7 @@ export function MeetingForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
           label={t("meetings.form.labelDepartment")}
-          error={errors.dept?.message}
+          error={te(errors.dept?.message)}
         >
           <Input
             placeholder={t("meetings.form.placeholderDepartment")}
@@ -146,7 +147,7 @@ export function MeetingForm({
         </Field>
         <Field
           label={t("meetings.form.labelType")}
-          error={errors.type?.message}
+          error={te(errors.type?.message)}
         >
           <Input
             placeholder={t("meetings.form.placeholderType")}
@@ -169,17 +170,20 @@ export function MeetingForm({
         <Field
           label={t("meetings.form.labelDate")}
           hint={lockDate ? t("meetings.form.hintDateLocked") : undefined}
-          error={errors.date?.message}
+          error={te(errors.date?.message)}
         >
           <Input type="date" disabled={lockDate} {...register("date")} />
         </Field>
         <Field
           label={t("meetings.form.labelStart")}
-          error={errors.start?.message}
+          error={te(errors.start?.message)}
         >
           <Input type="time" {...register("start")} />
         </Field>
-        <Field label={t("meetings.form.labelEnd")} error={errors.end?.message}>
+        <Field
+          label={t("meetings.form.labelEnd")}
+          error={te(errors.end?.message)}
+        >
           <Input type="time" {...register("end")} />
         </Field>
       </div>
@@ -210,7 +214,7 @@ export function MeetingForm({
             {recurrence !== "once" ? (
               <Field
                 label={t("meetings.form.labelRepeatUntil")}
-                error={errors.recurrence_until?.message}
+                error={te(errors.recurrence_until?.message)}
               >
                 <Input type="date" {...register("recurrence_until")} />
               </Field>
@@ -219,7 +223,7 @@ export function MeetingForm({
           {recurrence === "custom" ? (
             <Field
               label={t("meetings.form.labelOnDays")}
-              error={errors.recurrence_days?.message}
+              error={te(errors.recurrence_days?.message)}
             >
               <Controller
                 control={control}
@@ -242,7 +246,7 @@ export function MeetingForm({
                               : "rounded-[calc(var(--radius)*0.75)] border border-border bg-background px-3 py-1.5 text-sm text-foreground transition hover:bg-muted"
                           }
                         >
-                          {day.label}
+                          {t(`meetings.form.weekdays.${day.value}`)}
                         </button>
                       )
                     })}

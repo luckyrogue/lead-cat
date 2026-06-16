@@ -1,20 +1,34 @@
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+import { DEFAULT_LOCALE, type Locale } from "~/shared/i18n/types"
 
-export function formatDate(iso: string): string {
+export function formatDate(
+  iso: string,
+  locale: Locale = DEFAULT_LOCALE
+): string {
   const d = parseDate(iso)
   if (!d) {
     return iso
   }
-  return `${WEEKDAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]}`
+  return new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }).format(d)
 }
 
-export function formatDateLong(iso: string): string {
+export function formatDateLong(
+  iso: string,
+  locale: Locale = DEFAULT_LOCALE
+): string {
   const d = parseDate(iso)
   if (!d) {
     return iso
   }
-  return `${WEEKDAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`
+  return new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(d)
 }
 
 export function formatTimeRange(start: string, end: string): string {

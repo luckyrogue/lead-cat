@@ -189,6 +189,26 @@ export const ru: typeof en = {
       placeholderDescription: "Повестка или заметки",
       submitCreate: "Создать встречу",
       submitSave: "Сохранить изменения",
+      weekdays: {
+        "1": "Пн",
+        "2": "Вт",
+        "3": "Ср",
+        "4": "Чт",
+        "5": "Пт",
+        "6": "Сб",
+        "7": "Вс",
+      },
+      errors: {
+        deptRequired: "Укажите отдел",
+        typeRequired: "Укажите тип",
+        dateRequired: "Укажите дату",
+        startRequired: "Укажите время начала",
+        endRequired: "Укажите время окончания",
+        endAfterStart: "Окончание должно быть позже начала",
+        repeatUntilRequired:
+          "Выберите дату окончания для повторяющейся встречи",
+        weekdayRequired: "Выберите хотя бы один день недели",
+      },
     },
     recurrence: {
       once: "Единоразово",

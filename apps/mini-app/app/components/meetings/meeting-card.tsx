@@ -2,11 +2,12 @@ import { Card, CardContent, Clock, Users } from "@leadcat/ui"
 import { Link } from "react-router"
 
 import type { Meeting } from "~/entities/meeting/types"
-import { useT } from "~/shared/i18n/context"
+import { useLocale, useT } from "~/shared/i18n/context"
 import { formatDate, formatTimeRange } from "~/shared/lib/format"
 
 export function MeetingCard({ meeting }: { meeting: Meeting }) {
   const t = useT()
+  const locale = useLocale()
   const title = meeting.type || meeting.dept || t("meetings.fallbackTitle")
   const participantCount = meeting.participants.length
 
@@ -26,7 +27,7 @@ export function MeetingCard({ meeting }: { meeting: Meeting }) {
           </div>
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <Clock className="size-3.5" />
-            <span>{formatDate(meeting.date)}</span>
+            <span>{formatDate(meeting.date, locale)}</span>
             <span>·</span>
             <span>{formatTimeRange(meeting.start, meeting.end)}</span>
           </div>

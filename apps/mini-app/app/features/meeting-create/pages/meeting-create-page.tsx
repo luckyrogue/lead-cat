@@ -52,6 +52,7 @@ export function MeetingCreatePage() {
   })
 
   const recurrence = watch("recurrence")
+  const te = (message?: string) => (message ? t(message) : undefined)
 
   async function onCheckConflicts() {
     const v = getValues()
@@ -116,26 +117,29 @@ export function MeetingCreatePage() {
       <PageHeader title={t("create.pageTitle")} />
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-        <Field label={t("create.fieldTitle")} error={errors.type?.message}>
+        <Field label={t("create.fieldTitle")} error={te(errors.type?.message)}>
           <Input
             placeholder={t("create.titlePlaceholder")}
             {...register("type")}
           />
         </Field>
-        <Field label={t("create.fieldDept")} error={errors.dept?.message}>
+        <Field label={t("create.fieldDept")} error={te(errors.dept?.message)}>
           <Input
             placeholder={t("create.deptPlaceholder")}
             {...register("dept")}
           />
         </Field>
-        <Field label={t("create.fieldDate")} error={errors.date?.message}>
+        <Field label={t("create.fieldDate")} error={te(errors.date?.message)}>
           <Input type="date" {...register("date")} />
         </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label={t("create.fieldStart")} error={errors.start?.message}>
+          <Field
+            label={t("create.fieldStart")}
+            error={te(errors.start?.message)}
+          >
             <Input type="time" {...register("start")} />
           </Field>
-          <Field label={t("create.fieldEnd")} error={errors.end?.message}>
+          <Field label={t("create.fieldEnd")} error={te(errors.end?.message)}>
             <Input type="time" {...register("end")} />
           </Field>
         </div>
@@ -143,7 +147,7 @@ export function MeetingCreatePage() {
         <div className="grid grid-cols-2 gap-3">
           <Field
             label={t("create.fieldRepeats")}
-            error={errors.recurrence?.message}
+            error={te(errors.recurrence?.message)}
           >
             <select
               className="h-10 rounded-[var(--radius)] border border-border bg-background px-3 text-sm"
@@ -159,7 +163,7 @@ export function MeetingCreatePage() {
           {recurrence !== "once" ? (
             <Field
               label={t("create.fieldRepeatUntil")}
-              error={errors.recurrence_until?.message}
+              error={te(errors.recurrence_until?.message)}
             >
               <Input type="date" {...register("recurrence_until")} />
             </Field>
@@ -169,7 +173,7 @@ export function MeetingCreatePage() {
         {recurrence === "custom" ? (
           <Field
             label={t("create.fieldOnDays")}
-            error={errors.recurrence_days?.message}
+            error={te(errors.recurrence_days?.message)}
           >
             <Controller
               control={control}
@@ -192,7 +196,7 @@ export function MeetingCreatePage() {
                             : "rounded-[var(--radius)] border border-border bg-background px-3 py-1.5 text-sm text-foreground"
                         }
                       >
-                        {day.label}
+                        {t(`create.weekdays.${day.value}`)}
                       </button>
                     )
                   })}

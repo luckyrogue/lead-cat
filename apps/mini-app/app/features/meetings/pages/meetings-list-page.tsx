@@ -9,13 +9,14 @@ import { EmptyState, ErrorState, LoadingState } from "~/components/states"
 import type { Meeting } from "~/entities/meeting/types"
 import { myMeetingsQuery } from "~/entities/meeting/queries"
 import { groupBySeries } from "~/features/meetings/lib/group-series"
-import { useT } from "~/shared/i18n/context"
+import { useLocale, useT } from "~/shared/i18n/context"
 import { formatDate } from "~/shared/lib/format"
 
 type Tab = "upcoming" | "past"
 
 function MeetingsList({ meetings }: { meetings: Meeting[] }) {
   const t = useT()
+  const locale = useLocale()
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const groups = groupBySeries(meetings)
 
@@ -62,7 +63,7 @@ function MeetingsList({ meetings }: { meetings: Meeting[] }) {
                 🔁 {occurrences.length}
               </span>
               <span className="shrink-0 text-sm text-muted-foreground">
-                {formatDate(first.date)}
+                {formatDate(first.date, locale)}
               </span>
             </button>
             {isOpen ? (
