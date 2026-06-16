@@ -41,6 +41,12 @@ func (unimplementedRepo) GetBotUserByTelegramID(context.Context, int64) (model.B
 	return model.BotUser{}, errUnimplemented
 }
 func (unimplementedRepo) SetReminderMinutes(context.Context, int64, string) error { return errUnimplemented }
+func (unimplementedRepo) SetBotUserPrefs(context.Context, int64, string, string) error {
+	return errUnimplemented
+}
+func (unimplementedRepo) SetPlatformUserPrefs(context.Context, uuid.UUID, string, string) error {
+	return errUnimplemented
+}
 func (unimplementedRepo) GetOrganization(context.Context, uuid.UUID) (model.Organization, error) {
 	return model.Organization{}, errUnimplemented
 }

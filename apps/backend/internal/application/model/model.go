@@ -15,6 +15,8 @@ type PlatformUser struct {
 	AvatarURL  string
 	AuthMethod string
 	CreatedAt  time.Time
+	Timezone   string
+	Language   string
 }
 
 type User struct {
@@ -108,6 +110,8 @@ type BotUser struct {
 	Email           string    `json:"email"`
 	Role            string    `json:"role"`
 	ReminderMinutes string    `json:"reminder_minutes"`
+	Timezone        string    `json:"timezone"`
+	Language        string    `json:"language"`
 }
 
 type AuditEntry struct {

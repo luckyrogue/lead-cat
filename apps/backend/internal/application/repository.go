@@ -23,6 +23,8 @@ type Repository interface {
 
 	GetBotUserByTelegramID(ctx context.Context, telegramID int64) (model.BotUser, error)
 	SetReminderMinutes(ctx context.Context, telegramID int64, csv string) error
+	SetBotUserPrefs(ctx context.Context, telegramID int64, timezone, language string) error
+	SetPlatformUserPrefs(ctx context.Context, userID uuid.UUID, timezone, language string) error
 
 	GetOrganization(ctx context.Context, id uuid.UUID) (model.Organization, error)
 	CreateOrganization(ctx context.Context, name, slug string, ownerUserID uuid.UUID) (model.Organization, error)

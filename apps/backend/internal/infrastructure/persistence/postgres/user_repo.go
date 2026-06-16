@@ -32,9 +32,9 @@ func (s *Store) GetPlatformUserIDByTelegramID(ctx context.Context, telegramID in
 func (s *Store) GetPlatformUserByID(ctx context.Context, id uuid.UUID) (PlatformUser, bool, error) {
 	var u PlatformUser
 	err := s.pool.QueryRow(ctx, `
-		SELECT id, auth_sub, email, telegram_id, avatar_url, auth_method, created_at
+		SELECT id, auth_sub, email, telegram_id, avatar_url, auth_method, created_at, timezone, language
 		FROM platform_users WHERE id = $1`, id).
-		Scan(&u.ID, &u.AuthSub, &u.Email, &u.TelegramID, &u.AvatarURL, &u.AuthMethod, &u.CreatedAt)
+		Scan(&u.ID, &u.AuthSub, &u.Email, &u.TelegramID, &u.AvatarURL, &u.AuthMethod, &u.CreatedAt, &u.Timezone, &u.Language)
 	if IsNotFound(err) {
 		return PlatformUser{}, false, nil
 	}
@@ -42,6 +42,11 @@ func (s *Store) GetPlatformUserByID(ctx context.Context, id uuid.UUID) (Platform
 		return PlatformUser{}, false, err
 	}
 	return u, true, nil
+}
+
+func (s *Store) SetPlatformUserPrefs(ctx context.Context, userID uuid.UUID, timezone, language string) error {
+	_, err := s.pool.Exec(ctx, `UPDATE platform_users SET timezone = $2, language = $3 WHERE id = $1`, userID, timezone, language)
+	return err
 }
 
 func (s *Store) LinkTelegram(ctx context.Context, userID uuid.UUID, telegramID int64) error {
