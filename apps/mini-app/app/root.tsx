@@ -19,7 +19,13 @@ import { initTelegramViewport } from "~/shared/tma/telegram-env"
 import "./app.css"
 
 export function links() {
-  return brandHeadLinks()
+  return [
+    {
+      rel: "preconnect",
+      href: "https://telegram.org",
+    },
+    ...brandHeadLinks(),
+  ]
 }
 
 export function meta() {
@@ -38,6 +44,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           name="viewport"
           content="width=device-width, initial-scale=1, viewport-fit=cover"
         />
+        <script src="https://telegram.org/js/telegram-web-app.js" />
         <Meta />
         <Links />
       </head>

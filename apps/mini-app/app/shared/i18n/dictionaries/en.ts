@@ -31,7 +31,8 @@ export const en = {
   auth: {
     signingIn: "Signing you in…",
     errorTitle: "Couldn't sign in",
-    errorMissingInitData: "Open this app from inside Telegram to continue.",
+    errorMissingInitData:
+      "Telegram не передал данные входа. Открой мини-приложение кнопкой меню у @lead_cat_bot (не ссылкой в браузере).",
     errorGeneric: "Something went wrong while authenticating.",
     notRegisteredTitle: "Not registered yet",
     notRegisteredHint:

@@ -17,7 +17,7 @@ import {
   setSession,
   type AuthUser,
 } from "~/shared/auth/session"
-import { getInitData } from "~/shared/tma/telegram-env"
+import { getInitData, waitForInitData } from "~/shared/tma/telegram-env"
 
 export type AuthStatus = "loading" | "authed" | "not_registered" | "error"
 
@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const inFlight = useRef<Promise<string | null> | null>(null)
 
   const runAuth = useCallback(async (): Promise<string | null> => {
-    const initData = getInitData()
+    const initData = getInitData() || (await waitForInitData())
     if (!initData) {
       setStatus("error")
       setError("missing_init_data")

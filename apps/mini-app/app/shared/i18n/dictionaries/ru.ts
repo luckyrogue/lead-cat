@@ -31,7 +31,8 @@ export const ru: typeof en = {
   auth: {
     signingIn: "Входим…",
     errorTitle: "Не удалось войти",
-    errorMissingInitData: "Открой приложение из Telegram, чтобы продолжить.",
+    errorMissingInitData:
+      "Telegram не передал данные входа. Открой мини-приложение кнопкой меню у @lead_cat_bot (не ссылкой в браузере).",
     errorGeneric: "Что-то пошло не так при авторизации.",
     notRegisteredTitle: "Ты ещё не зарегистрирован",
     notRegisteredHint:

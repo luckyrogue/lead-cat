@@ -32,6 +32,37 @@ export function getInitData(): string {
   return ""
 }
 
+const INIT_DATA_POLL_MS = 50
+const INIT_DATA_TIMEOUT_MS = 4_000
+
+export function waitForInitData(
+  timeoutMs = INIT_DATA_TIMEOUT_MS
+): Promise<string> {
+  if (typeof window === "undefined") {
+    return Promise.resolve("")
+  }
+
+  return new Promise((resolve) => {
+    const started = Date.now()
+
+    const tick = () => {
+      initTelegramViewport()
+      const initData = getInitData()
+      if (initData) {
+        resolve(initData)
+        return
+      }
+      if (Date.now() - started >= timeoutMs) {
+        resolve("")
+        return
+      }
+      window.setTimeout(tick, INIT_DATA_POLL_MS)
+    }
+
+    tick()
+  })
+}
+
 export function initTelegramViewport(): void {
   const webApp = getWebApp()
   if (!webApp) {

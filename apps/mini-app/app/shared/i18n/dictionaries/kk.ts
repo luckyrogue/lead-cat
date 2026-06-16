@@ -31,7 +31,8 @@ export const kk: typeof en = {
   auth: {
     signingIn: "Кіріп жатырмыз…",
     errorTitle: "Кіру мүмкін болмады",
-    errorMissingInitData: "Жалғастыру үшін қолданбаны Telegram ішінен ашыңыз.",
+    errorMissingInitData:
+      "Telegram кіру деректерін жібермеді. @lead_cat_bot мәзір батырмасынан ашыңыз (браузер сілтемесінен емес).",
     errorGeneric: "Авторизация кезінде қате орын алды.",
     notRegisteredTitle: "Әлі тіркелмегенсің",
     notRegisteredHint:
