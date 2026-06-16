@@ -9,6 +9,8 @@ import {
   Star,
 } from "@leadcat/ui"
 
+import { gsap, useSceneMotion } from "~/features/landing/lib/motion"
+
 type Feature = {
   icon: LucideIcon
   title: string
@@ -44,26 +46,58 @@ const features: Feature[] = [
 ]
 
 export function Features() {
+  const scope = useSceneMotion<HTMLElement>((root) => {
+    const q = gsap.utils.selector(root)
+
+    gsap.from(q("[data-features-head]"), {
+      y: 28,
+      autoAlpha: 0,
+      duration: 0.8,
+      stagger: 0.12,
+      ease: "power3.out",
+      scrollTrigger: { trigger: root, start: "top 75%" },
+    })
+
+    gsap.from(q("[data-feature-card]"), {
+      y: 40,
+      autoAlpha: 0,
+      duration: 0.7,
+      stagger: 0.12,
+      ease: "back.out(1.5)",
+      scrollTrigger: { trigger: q("[data-features-grid]"), start: "top 80%" },
+    })
+  })
+
   return (
-    <section id="features" className="relative px-6 py-20">
+    <section ref={scope} id="features" className="relative px-6 py-20">
       <div className="mx-auto max-w-6xl">
         <div className="mb-12 text-center">
-          <div className="mb-4 flex justify-center">
-            <CatFace className="size-16 animate-float" />
+          <div data-features-head className="mb-4 flex justify-center">
+            <CatFace className="animate-float size-16" />
           </div>
-          <h2 className="text-3xl font-bold text-kitty-800 sm:text-4xl">
+          <h2
+            data-features-head
+            className="text-3xl font-bold text-kitty-800 sm:text-4xl"
+          >
             Everything you need to herd the cats
           </h2>
-          <p className="mx-auto mt-3 max-w-xl text-kitty-600">
+          <p
+            data-features-head
+            className="mx-auto mt-3 max-w-xl text-kitty-600"
+          >
             Powerful scheduling under the hood, wrapped in something genuinely
             delightful to use.
           </p>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div
+          data-features-grid
+          className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
+        >
           {features.map(({ icon: Icon, title, body, tint }) => (
             <Card
               key={title}
+              data-feature-card
               className="group h-full transition-transform duration-300 [transition-timing-function:var(--ease-spring)] hover:-translate-y-2 hover:rotate-1"
             >
               <div className="px-5">
