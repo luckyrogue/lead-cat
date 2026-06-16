@@ -74,14 +74,14 @@ func miniappMeetingFromQuery(d query.MiniAppMeeting) miniappMeetingDTO {
 	}
 }
 
-func (a *API) toMeetingDTO(ctx context.Context, m model.Meeting) miniappMeetingDTO {
-	return miniappMeetingFromQuery(a.App.MiniAppMeetingDTO(ctx, m, almatyLoc()))
+func (a *API) toMeetingDTO(ctx context.Context, m model.Meeting, loc *time.Location) miniappMeetingDTO {
+	return miniappMeetingFromQuery(a.App.MiniAppMeetingDTO(ctx, m, loc))
 }
 
-func (a *API) toMeetingDTOs(ctx context.Context, ms []model.Meeting) []miniappMeetingDTO {
+func (a *API) toMeetingDTOs(ctx context.Context, ms []model.Meeting, loc *time.Location) []miniappMeetingDTO {
 	out := make([]miniappMeetingDTO, 0, len(ms))
 	for _, m := range ms {
-		out = append(out, a.toMeetingDTO(ctx, m))
+		out = append(out, a.toMeetingDTO(ctx, m, loc))
 	}
 	return out
 }
@@ -95,7 +95,7 @@ func botUserEmail(c *fiber.Ctx) (string, bool) {
 }
 
 func (a *API) MiniAppMyMeetings(c *fiber.Ctx) error {
-	email, ok := botUserEmail(c)
+	bu, ok := botUser(c)
 	if !ok {
 		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
 	}
@@ -103,15 +103,17 @@ func (a *API) MiniAppMyMeetings(c *fiber.Ctx) error {
 	if !ok {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid scope")
 	}
-	ms, err := a.App.EmployeeSchedule(c.Context(), email, from, to)
+	ms, err := a.App.EmployeeSchedule(c.Context(), bu.Email, from, to)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
-	return c.JSON(fiber.Map{"meetings": a.toMeetingDTOs(c.Context(), ms)})
+	loc := resolveLoc(bu.Timezone)
+	return c.JSON(fiber.Map{"meetings": a.toMeetingDTOs(c.Context(), ms, loc)})
 }
 
 func (a *API) MiniAppSchedule(c *fiber.Ctx) error {
-	if _, ok := botUserEmail(c); !ok {
+	bu, ok := botUser(c)
+	if !ok {
 		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
 	}
 	email := strings.TrimSpace(c.Query("email"))
@@ -126,7 +128,8 @@ func (a *API) MiniAppSchedule(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
-	return c.JSON(fiber.Map{"meetings": a.toMeetingDTOs(c.Context(), ms)})
+	loc := resolveLoc(bu.Timezone)
+	return c.JSON(fiber.Map{"meetings": a.toMeetingDTOs(c.Context(), ms, loc)})
 }
 
 func (a *API) MiniAppEmployees(c *fiber.Ctx) error {
@@ -155,14 +158,15 @@ type miniappFreeSlotsRequest struct {
 }
 
 func (a *API) MiniAppFreeSlots(c *fiber.Ctx) error {
-	if _, ok := botUserEmail(c); !ok {
+	bu, ok := botUser(c)
+	if !ok {
 		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
 	}
 	var req miniappFreeSlotsRequest
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
 	}
-	loc := almatyLoc()
+	loc := resolveLoc(bu.Timezone)
 	from, err1 := time.ParseInLocation("2006-01-02", req.From, loc)
 	toIncl, err2 := time.ParseInLocation("2006-01-02", req.To, loc)
 	if err1 != nil || err2 != nil || toIncl.Before(from) || req.DurationMins <= 0 || len(req.Participants) == 0 {

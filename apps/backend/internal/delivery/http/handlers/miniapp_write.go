@@ -114,7 +114,7 @@ func (a *API) MiniAppCreateMeeting(c *fiber.Ctx) error {
 		zap.Int64("telegram_id", bu.TelegramID),
 		zap.String("meeting_id", m.ID.String()),
 		zap.String("organization_id", organizationID.String()))
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m)})
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m, resolveLoc(bu.Timezone))})
 }
 
 type miniappConflictDTO struct {
@@ -169,14 +169,15 @@ type miniappConflictRequest struct {
 }
 
 func (a *API) MiniAppConflicts(c *fiber.Ctx) error {
-	if _, ok := botUser(c); !ok {
+	bu, ok := botUser(c)
+	if !ok {
 		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
 	}
 	var req miniappConflictRequest
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
 	}
-	loc := almatyLoc()
+	loc := resolveLoc(bu.Timezone)
 	start, err1 := time.ParseInLocation("2006-01-02 15:04", req.Date+" "+req.Start, loc)
 	end, err2 := time.ParseInLocation("2006-01-02 15:04", req.Date+" "+req.End, loc)
 	if err1 != nil || err2 != nil || !end.After(start) || len(req.Participants) == 0 {
@@ -306,7 +307,7 @@ func (a *API) MiniAppUpdateMeeting(c *fiber.Ctx) error {
 			zap.Int64("telegram_id", bu.TelegramID),
 			zap.String("meeting_id", meetingID.String()),
 			zap.String("organization_id", organizationID.String()))
-		return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m)})
+		return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m, resolveLoc(bu.Timezone))})
 	}
 
 	if req.Date != nil {
@@ -333,7 +334,7 @@ func (a *API) MiniAppUpdateMeeting(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
-	return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m)})
+	return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m, resolveLoc(bu.Timezone))})
 }
 
 func (a *API) MiniAppDeleteMeeting(c *fiber.Ctx) error {
@@ -455,7 +456,8 @@ func (a *API) MiniAppAddParticipant(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
-	return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m)})
+	bu, _ := botUser(c)
+	return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m, resolveLoc(bu.Timezone))})
 }
 
 func (a *API) MiniAppChangeSeriesEnd(c *fiber.Ctx) error {
@@ -501,7 +503,7 @@ func (a *API) MiniAppChangeSeriesEnd(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
-	return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m)})
+	return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m, resolveLoc(bu.Timezone))})
 }
 
 func (a *API) MiniAppRemoveParticipant(c *fiber.Ctx) error {
@@ -520,5 +522,6 @@ func (a *API) MiniAppRemoveParticipant(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
-	return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m)})
+	bu, _ := botUser(c)
+	return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m, resolveLoc(bu.Timezone))})
 }
