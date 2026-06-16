@@ -178,6 +178,21 @@ Create one Dokploy **Deploy Webhook** per application and add GitHub secrets:
 
 If a secret is missing, that service is skipped (image is still pushed). In Dokploy, point each app at the matching GHCR image, e.g. `ghcr.io/<owner>/lead-cat-backend`.
 
+### Repository variables (build-time `VITE_*`)
+
+Frontend images are built in GitHub Actions. Set **Settings → Secrets and variables → Actions → Variables** (not Secrets):
+
+| Variable | Used by | Prod value |
+| -------- | ------- | ---------- |
+| `VITE_API_URL` | `admin`, `mini-app` | empty (relative `/api` via nginx) |
+| `VITE_BOT_USERNAME` | `mini-app` | `lead_cat_bot` (no `@`) |
+| `VITE_TMA_DEV_TG_ID` | `mini-app` | empty |
+| `VITE_SITE_URL` | `landing` | `https://lead-cat.space` |
+
+Template: `deploy/github.variables.example`. Unset vars fall back to Dockerfile defaults (`lead_cat_bot`, `https://lead-cat.space`). After changing a variable, push to `main` to rebuild images.
+
+Runtime env (`API_UPSTREAM`, `BOT_TOKEN`, …) stays in **Dokploy**, not GitHub.
+
 ## Dev-only variables
 
 | Variable                              | Status                                            |

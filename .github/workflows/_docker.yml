@@ -59,6 +59,44 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
+      - name: Docker build args
+        id: buildargs
+        env:
+          SERVICE: ${{ matrix.service }}
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_BOT_USERNAME: ${{ vars.VITE_BOT_USERNAME }}
+          VITE_TMA_DEV_TG_ID: ${{ vars.VITE_TMA_DEV_TG_ID }}
+          VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}
+        run: |
+          VITE_BOT_USERNAME="${VITE_BOT_USERNAME:-lead_cat_bot}"
+          VITE_SITE_URL="${VITE_SITE_URL:-https://lead-cat.space}"
+
+          case "$SERVICE" in
+            mini-app)
+              {
+                echo 'build_args<<EOF'
+                echo "VITE_API_URL=${VITE_API_URL}"
+                echo "VITE_BOT_USERNAME=${VITE_BOT_USERNAME}"
+                echo "VITE_TMA_DEV_TG_ID=${VITE_TMA_DEV_TG_ID}"
+                echo 'EOF'
+              } >> "$GITHUB_OUTPUT"
+              ;;
+            admin)
+              {
+                echo 'build_args<<EOF'
+                echo "VITE_API_URL=${VITE_API_URL}"
+                echo 'EOF'
+              } >> "$GITHUB_OUTPUT"
+              ;;
+            landing)
+              {
+                echo 'build_args<<EOF'
+                echo "VITE_SITE_URL=${VITE_SITE_URL}"
+                echo 'EOF'
+              } >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
       - name: Build and push
         uses: docker/build-push-action@v7
         with:
@@ -66,6 +104,7 @@ jobs:
           file: apps/${{ matrix.service }}/Dockerfile
           push: ${{ inputs.push }}
           load: ${{ !inputs.push }}
+          build-args: ${{ steps.buildargs.outputs.build_args }}
           tags: |
             ${{ steps.img.outputs.image }}:${{ steps.meta.outputs.tag }}
             ${{ steps.img.outputs.image }}:latest

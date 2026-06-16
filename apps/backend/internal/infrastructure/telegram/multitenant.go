@@ -21,13 +21,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/platform/scheduleview"
 )
 
-type botBackend interface {
-	meetingedit.Backend
-	scheduleview.Backend
-	checker.Backend
-	scheduler_agent.Backend
-}
-
 type MultiHandler struct {
 	store     *postgres.Store
 	registrar *botreg.Service
@@ -41,13 +34,14 @@ type MultiHandler struct {
 	admins    map[int64]bool
 }
 
-func NewMultiHandler(store *postgres.Store, b *bot.Bot, rdb *redis.Client, adminIDs []int64, webappURL string, backend botBackend, planner application.Planner, log *zap.Logger) *MultiHandler {
+func NewMultiHandler(store *postgres.Store, b *bot.Bot, rdb *redis.Client, adminIDs []int64, webappURL string, services *application.Services, planner application.Planner, log *zap.Logger) *MultiHandler {
 	registrar := botreg.New(store, botreg.NewRedisSessions(rdb), adminIDs)
 	settings := botsettings.New(store)
-	editor := meetingedit.New(backend, meetingedit.NewRedisSessions(rdb))
-	schedule := scheduleview.New(backend, scheduleview.NewRedisSessions(rdb))
-	chk := checker.New(backend, checker.NewRedisSessions(rdb))
-	agent := scheduler_agent.New(planner, backend, scheduler_agent.NewRedisSessions(rdb))
+	editor := meetingedit.New(services, meetingedit.NewRedisSessions(rdb))
+	schedule := scheduleview.New(services, scheduleview.NewRedisSessions(rdb))
+	chk := checker.New(services, checker.NewRedisSessions(rdb))
+	booker := &agentBooker{store: store, services: services}
+	agent := scheduler_agent.NewWithBooker(planner, services, booker, scheduler_agent.NewRedisSessions(rdb))
 	admins := make(map[int64]bool, len(adminIDs))
 	for _, id := range adminIDs {
 		admins[id] = true
@@ -212,6 +206,11 @@ func (h *MultiHandler) handleCallback(ctx context.Context, b *bot.Bot, cq *model
 	if strings.HasPrefix(cq.Data, "chk:") {
 		if reply, handled := h.checker.OnCallback(ctx, cq.From.ID, cq.Data); handled && cq.Message.Message != nil {
 			h.sendCheckerReply(ctx, b, cq.Message.Message.Chat.ID, cq.Message.Message.ID, reply)
+		}
+	}
+	if strings.HasPrefix(cq.Data, "agent:") {
+		if reply, handled := h.agent.OnCallback(ctx, cq.From.ID, cq.Data); handled && cq.Message.Message != nil {
+			h.sendAgentReply(ctx, b, cq.Message.Message.Chat.ID, reply)
 		}
 	}
 	_, _ = b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{CallbackQueryID: cq.ID})
