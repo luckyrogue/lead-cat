@@ -29,19 +29,28 @@ type AgentToolResult struct {
 
 // AgentMessage is one entry in the running transcript. An assistant message may
 // carry ToolCalls; the matching user message carries ToolResults.
+// Thinking and ThinkingSignature carry the thinking block emitted by the model
+// when adaptive thinking is enabled; they must be echoed back verbatim on the
+// next request so the API can verify the thinking block's integrity.
 type AgentMessage struct {
-	Role        string            `json:"role"` // "user" | "assistant"
-	Text        string            `json:"text,omitempty"`
-	ToolCalls   []AgentToolCall   `json:"tool_calls,omitempty"`
-	ToolResults []AgentToolResult `json:"tool_results,omitempty"`
+	Role               string            `json:"role"` // "user" | "assistant"
+	Text               string            `json:"text,omitempty"`
+	Thinking           string            `json:"thinking,omitempty"`
+	ThinkingSignature  string            `json:"thinking_signature,omitempty"`
+	ToolCalls          []AgentToolCall   `json:"tool_calls,omitempty"`
+	ToolResults        []AgentToolResult `json:"tool_results,omitempty"`
 }
 
 // AgentTurn is one assistant turn returned by the planner. When ToolCalls is
 // non-empty the caller must run them and call Plan again; otherwise Text is the
 // final answer.
+// Thinking and ThinkingSignature carry the thinking block when adaptive thinking
+// is enabled; the service must propagate them into AgentMessage for the next turn.
 type AgentTurn struct {
-	Text      string
-	ToolCalls []AgentToolCall
+	Text              string
+	Thinking          string
+	ThinkingSignature string
+	ToolCalls         []AgentToolCall
 }
 
 // Planner performs one stateless model round-trip: given the system prompt, the

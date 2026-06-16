@@ -52,10 +52,14 @@ func (p *Planner) Plan(ctx context.Context, system string, history []application
 func toSDKTools(tools []application.AgentTool) []sdk.ToolUnionParam {
 	out := make([]sdk.ToolUnionParam, 0, len(tools))
 	for _, t := range tools {
+		req, _ := t.InputSchema["required"].([]string)
 		tool := sdk.ToolParam{
 			Name:        t.Name,
 			Description: sdk.String(t.Description),
-			InputSchema: sdk.ToolInputSchemaParam{Properties: t.InputSchema["properties"]},
+			InputSchema: sdk.ToolInputSchemaParam{
+				Properties: t.InputSchema["properties"],
+				Required:   req,
+			},
 		}
 		out = append(out, sdk.ToolUnionParam{OfTool: &tool})
 	}
@@ -68,6 +72,11 @@ func toSDKMessages(history []application.AgentMessage) []sdk.MessageParam {
 		switch m.Role {
 		case "assistant":
 			var blocks []sdk.ContentBlockParamUnion
+			// Thinking block must come first; the API rejects an assistant turn that
+			// has a tool_use block without its preceding thinking block.
+			if m.ThinkingSignature != "" {
+				blocks = append(blocks, sdk.NewThinkingBlock(m.ThinkingSignature, m.Thinking))
+			}
 			if m.Text != "" {
 				blocks = append(blocks, sdk.NewTextBlock(m.Text))
 			}
@@ -100,6 +109,10 @@ func fromSDKResponse(resp *sdk.Message) application.AgentTurn {
 	var turn application.AgentTurn
 	for _, block := range resp.Content {
 		switch block.Type {
+		case "thinking":
+			tb := block.AsThinking()
+			turn.Thinking = tb.Thinking
+			turn.ThinkingSignature = tb.Signature
 		case "text":
 			turn.Text += block.AsText().Text
 		case "tool_use":

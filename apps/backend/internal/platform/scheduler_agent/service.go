@@ -44,7 +44,13 @@ func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Re
 			_ = s.sessions.Set(ctx, telegramID, *st)
 			return Reply{Text: turn.Text}, true
 		}
-		st.History = append(st.History, application.AgentMessage{Role: "assistant", Text: turn.Text, ToolCalls: turn.ToolCalls})
+		st.History = append(st.History, application.AgentMessage{
+			Role:              "assistant",
+			Text:              turn.Text,
+			Thinking:          turn.Thinking,
+			ThinkingSignature: turn.ThinkingSignature,
+			ToolCalls:         turn.ToolCalls,
+		})
 		results := make([]application.AgentToolResult, 0, len(turn.ToolCalls))
 		for _, call := range turn.ToolCalls {
 			out, derr := Dispatch(ctx, s.backend, call.Name, call.Input)
