@@ -40,6 +40,88 @@ export const kk: Dict = {
     logoutLabel: "Шығу",
     loadingWorkspace: "Жұмыс кеңістігі жүктелуде…",
   },
+  members: {
+    eyebrow: "Ұйым",
+    title: "Мүшелер",
+    description: "Ұйымға қол жеткізуі бар пайдаланушылар және олардың рөлдері.",
+    loadingMembers: "Мүшелер жүктелуде…",
+    emptyState: "Мүше жоқ. Шақырулар бетінен әріптестерді шақырыңыз.",
+    table: {
+      colMember: "Мүше",
+      colRole: "Рөл",
+      colStatus: "Күй",
+      colActions: "Әрекеттер",
+      removeAriaLabel: "Мүшені жою",
+    },
+    role: {
+      owner: "Иесі",
+      admin: "Әкімші",
+      member: "Мүше",
+    },
+    status: {
+      active: "Белсенді",
+      invited: "Шақырылған",
+    },
+    dialog: {
+      removeTitle: "Мүшені жою?",
+      removeDescription:
+        "Мүше ұйымнан жойылады және дереу қол жетімділігін жоғалтады.",
+      removeConfirm: "Жою",
+    },
+    toast: {
+      roleUpdated: "Рөл жаңартылды.",
+      roleUpdateFailed: "Рөлді жаңарту мүмкін болмады.",
+      removed: "Мүше жойылды.",
+      removeFailed: "Мүшені жою мүмкін болмады.",
+    },
+  },
+  invites: {
+    eyebrow: "Ұйым",
+    title: "Шақырулар",
+    description:
+      "Электрондық пошта арқылы әріптестерді шақырыңыз және күтудегі шақыруларды басқарыңыз.",
+    cardInviteTitle: "Әріптесті шақыру",
+    cardPendingTitle: "Күтудегі шақырулар",
+    loadingInvites: "Шақырулар жүктелуде…",
+    emptyState: "Күтудегі шақырулар жоқ.",
+    failedToLoad: "Шақыруларды жүктеу мүмкін болмады.",
+    form: {
+      emailLabel: "Электрондық пошта",
+      emailPlaceholder: "әріптес@компания.com",
+      roleLabel: "Рөл",
+      submitButton: "Шақыру",
+    },
+    table: {
+      colEmail: "Электрондық пошта",
+      colRole: "Рөл",
+      colExpires: "Мерзімі",
+      colActions: "Әрекеттер",
+      revokeAriaLabel: "Шақыруды қайтарып алу",
+    },
+    toast: {
+      invited: "{email} шақырылды.",
+      inviteFailed: "Шақыру жіберу мүмкін болмады.",
+      revoked: "Шақыру қайтарып алынды.",
+      revokeFailed: "Шақыруды қайтарып алу мүмкін болмады.",
+    },
+  },
+  settings: {
+    pageTitle: "Баптаулар",
+    pageDescription: "Жеке қалауларыңызды басқарыңыз.",
+    cardTitle: "Қалаулар",
+    cardDescription:
+      "Әкімші панелінде күн мен уақытты қалай көрсету керектігін таңдаңыз.",
+    timezoneLabel: "Уақыт белдеуі",
+    languageLabel: "Тіл",
+    timezoneBrowserDefault: "Браузер әдепкісі",
+    languageDefault: "Әдепкі",
+    toast: {
+      timezoneSaved: "Уақыт белдеуі сақталды.",
+      timezoneFailed: "Уақыт белдеуін сақтау мүмкін болмады.",
+      languageSaved: "Тіл сақталды.",
+      languageFailed: "Тілді сақтау мүмкін болмады.",
+    },
+  },
   meetings: {
     eyebrow: "Ұйым",
     title: "Кездесулер",

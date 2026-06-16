@@ -8,10 +8,11 @@ import {
 } from "@leadcat/ui"
 
 import { useMeSettings, useUpdateMeSettings } from "~/entities/me/queries"
+import { useT } from "~/shared/i18n/context"
 import { toastError, toastSuccess } from "~/shared/lib/toast"
 
 const TIMEZONE_OPTIONS = [
-  { value: "", label: "Browser default" },
+  { value: "", translatable: true },
   { value: "Asia/Almaty", label: "Almaty (UTC+5)" },
   { value: "Asia/Tashkent", label: "Tashkent (UTC+5)" },
   { value: "Asia/Bishkek", label: "Bishkek (UTC+6)" },
@@ -25,13 +26,14 @@ const TIMEZONE_OPTIONS = [
 ]
 
 const LANGUAGE_OPTIONS = [
-  { value: "", label: "Default" },
+  { value: "", translatable: true },
   { value: "ru", label: "Русский" },
   { value: "en", label: "English" },
   { value: "kk", label: "Қазақша" },
 ]
 
 export function SettingsPage() {
+  const t = useT()
   const { data: settings, isPending } = useMeSettings()
   const updateSettings = useUpdateMeSettings()
 
@@ -39,8 +41,9 @@ export function SettingsPage() {
     updateSettings.mutate(
       { timezone: e.target.value },
       {
-        onSuccess: () => toastSuccess("Timezone saved."),
-        onError: (error) => toastError(error, "Could not save timezone."),
+        onSuccess: () => toastSuccess(t("settings.toast.timezoneSaved")),
+        onError: (error) =>
+          toastError(error, t("settings.toast.timezoneFailed")),
       }
     )
   }
@@ -49,8 +52,9 @@ export function SettingsPage() {
     updateSettings.mutate(
       { language: e.target.value },
       {
-        onSuccess: () => toastSuccess("Language saved."),
-        onError: (error) => toastError(error, "Could not save language."),
+        onSuccess: () => toastSuccess(t("settings.toast.languageSaved")),
+        onError: (error) =>
+          toastError(error, t("settings.toast.languageFailed")),
       }
     )
   }
@@ -58,22 +62,24 @@ export function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-foreground">Settings</h1>
+        <h1 className="text-xl font-semibold text-foreground">
+          {t("settings.pageTitle")}
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Manage your personal preferences.
+          {t("settings.pageDescription")}
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Preferences</CardTitle>
-          <CardDescription>
-            Choose how dates and times are displayed across the admin panel.
-          </CardDescription>
+          <CardTitle>{t("settings.cardTitle")}</CardTitle>
+          <CardDescription>{t("settings.cardDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="space-y-1.5">
-            <Label htmlFor="timezone-select">Timezone</Label>
+            <Label htmlFor="timezone-select">
+              {t("settings.timezoneLabel")}
+            </Label>
             <select
               id="timezone-select"
               value={isPending ? "" : (settings?.timezone ?? "")}
@@ -83,14 +89,18 @@ export function SettingsPage() {
             >
               {TIMEZONE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  {opt.label}
+                  {"translatable" in opt
+                    ? t("settings.timezoneBrowserDefault")
+                    : opt.label}
                 </option>
               ))}
             </select>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="language-select">Language</Label>
+            <Label htmlFor="language-select">
+              {t("settings.languageLabel")}
+            </Label>
             <select
               id="language-select"
               value={isPending ? "" : (settings?.language ?? "")}
@@ -100,7 +110,9 @@ export function SettingsPage() {
             >
               {LANGUAGE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  {opt.label}
+                  {"translatable" in opt
+                    ? t("settings.languageDefault")
+                    : opt.label}
                 </option>
               ))}
             </select>

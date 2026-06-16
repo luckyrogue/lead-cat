@@ -40,6 +40,89 @@ export const ru: Dict = {
     logoutLabel: "Выйти",
     loadingWorkspace: "Загрузка рабочего пространства…",
   },
+  members: {
+    eyebrow: "Организация",
+    title: "Участники",
+    description: "Пользователи с доступом к организации и их роли.",
+    loadingMembers: "Загрузка участников…",
+    emptyState:
+      "Участников пока нет. Пригласите коллег через страницу приглашений.",
+    table: {
+      colMember: "Участник",
+      colRole: "Роль",
+      colStatus: "Статус",
+      colActions: "Действия",
+      removeAriaLabel: "Удалить участника",
+    },
+    role: {
+      owner: "Владелец",
+      admin: "Администратор",
+      member: "Участник",
+    },
+    status: {
+      active: "Активен",
+      invited: "Приглашён",
+    },
+    dialog: {
+      removeTitle: "Удалить участника?",
+      removeDescription:
+        "Участник будет удалён из организации и сразу потеряет доступ.",
+      removeConfirm: "Удалить",
+    },
+    toast: {
+      roleUpdated: "Роль обновлена.",
+      roleUpdateFailed: "Не удалось обновить роль.",
+      removed: "Участник удалён.",
+      removeFailed: "Не удалось удалить участника.",
+    },
+  },
+  invites: {
+    eyebrow: "Организация",
+    title: "Приглашения",
+    description:
+      "Приглашайте коллег по email и управляйте ожидающими приглашениями.",
+    cardInviteTitle: "Пригласить коллегу",
+    cardPendingTitle: "Ожидающие приглашения",
+    loadingInvites: "Загрузка приглашений…",
+    emptyState: "Ожидающих приглашений нет.",
+    failedToLoad: "Не удалось загрузить приглашения.",
+    form: {
+      emailLabel: "Email",
+      emailPlaceholder: "коллега@компания.com",
+      roleLabel: "Роль",
+      submitButton: "Пригласить",
+    },
+    table: {
+      colEmail: "Email",
+      colRole: "Роль",
+      colExpires: "Истекает",
+      colActions: "Действия",
+      revokeAriaLabel: "Отозвать приглашение",
+    },
+    toast: {
+      invited: "{email} приглашён.",
+      inviteFailed: "Не удалось отправить приглашение.",
+      revoked: "Приглашение отозвано.",
+      revokeFailed: "Не удалось отозвать приглашение.",
+    },
+  },
+  settings: {
+    pageTitle: "Настройки",
+    pageDescription: "Управляйте личными предпочтениями.",
+    cardTitle: "Предпочтения",
+    cardDescription:
+      "Выберите, как отображать даты и время в панели администратора.",
+    timezoneLabel: "Часовой пояс",
+    languageLabel: "Язык",
+    timezoneBrowserDefault: "По умолчанию браузера",
+    languageDefault: "По умолчанию",
+    toast: {
+      timezoneSaved: "Часовой пояс сохранён.",
+      timezoneFailed: "Не удалось сохранить часовой пояс.",
+      languageSaved: "Язык сохранён.",
+      languageFailed: "Не удалось сохранить язык.",
+    },
+  },
   meetings: {
     eyebrow: "Организация",
     title: "Встречи",

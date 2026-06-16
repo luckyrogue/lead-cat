@@ -11,6 +11,7 @@ import {
 } from "@leadcat/ui"
 
 import type { OrgInvite } from "~/entities/org/types"
+import { useT } from "~/shared/i18n/context"
 
 function formatDate(value?: string) {
   if (!value) {
@@ -38,14 +39,18 @@ export function InvitesTable({
   pendingId,
   onDelete,
 }: InvitesTableProps) {
+  const t = useT()
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Email</TableHead>
-          <TableHead>Role</TableHead>
-          <TableHead>Expires</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
+          <TableHead>{t("invites.table.colEmail")}</TableHead>
+          <TableHead>{t("invites.table.colRole")}</TableHead>
+          <TableHead>{t("invites.table.colExpires")}</TableHead>
+          <TableHead className="text-right">
+            {t("invites.table.colActions")}
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -55,7 +60,7 @@ export function InvitesTable({
               {invite.email}
             </TableCell>
             <TableCell>
-              <Badge tone="muted">{invite.role}</Badge>
+              <Badge tone="muted">{t(`members.role.${invite.role}`)}</Badge>
             </TableCell>
             <TableCell className="text-muted-foreground">
               {formatDate(invite.expires_at)}
@@ -66,7 +71,7 @@ export function InvitesTable({
                 size="sm"
                 disabled={pendingId === invite.id}
                 onClick={() => onDelete(invite)}
-                aria-label="Revoke invite"
+                aria-label={t("invites.table.revokeAriaLabel")}
               >
                 <Trash2 className="size-4" />
               </Button>

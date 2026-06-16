@@ -15,6 +15,7 @@ import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 
 import type { OrgRole } from "~/entities/org/types"
+import { useT } from "~/shared/i18n/context"
 
 const schema = z.object({
   email: z.string().email("Enter a valid email address"),
@@ -29,6 +30,7 @@ type InviteFormProps = {
 }
 
 export function InviteForm({ pending, onSubmit }: InviteFormProps) {
+  const t = useT()
   const {
     control,
     register,
@@ -49,11 +51,11 @@ export function InviteForm({ pending, onSubmit }: InviteFormProps) {
       className="flex flex-col gap-4 sm:flex-row sm:items-end"
     >
       <div className="flex-1 space-y-2">
-        <Label htmlFor="invite-email">Email</Label>
+        <Label htmlFor="invite-email">{t("invites.form.emailLabel")}</Label>
         <Input
           id="invite-email"
           type="email"
-          placeholder="teammate@company.com"
+          placeholder={t("invites.form.emailPlaceholder")}
           {...register("email")}
         />
         {errors.email ? (
@@ -63,7 +65,7 @@ export function InviteForm({ pending, onSubmit }: InviteFormProps) {
         ) : null}
       </div>
       <div className="space-y-2">
-        <Label htmlFor="invite-role">Role</Label>
+        <Label htmlFor="invite-role">{t("invites.form.roleLabel")}</Label>
         <Controller
           control={control}
           name="role"
@@ -73,8 +75,10 @@ export function InviteForm({ pending, onSubmit }: InviteFormProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="member">member</SelectItem>
-                <SelectItem value="admin">admin</SelectItem>
+                <SelectItem value="member">
+                  {t("members.role.member")}
+                </SelectItem>
+                <SelectItem value="admin">{t("members.role.admin")}</SelectItem>
               </SelectContent>
             </Select>
           )}
@@ -86,7 +90,7 @@ export function InviteForm({ pending, onSubmit }: InviteFormProps) {
         ) : (
           <UserPlus className="size-4" />
         )}
-        Invite
+        {t("invites.form.submitButton")}
       </Button>
     </form>
   )

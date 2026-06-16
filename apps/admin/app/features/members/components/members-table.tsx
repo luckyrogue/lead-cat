@@ -16,6 +16,7 @@ import {
 } from "@leadcat/ui"
 
 import type { OrgMember, OrgRole } from "~/entities/org/types"
+import { useT } from "~/shared/i18n/context"
 
 const ROLES: OrgRole[] = ["owner", "admin", "member"]
 
@@ -38,14 +39,18 @@ export function MembersTable({
   onRoleChange,
   onRemove,
 }: MembersTableProps) {
+  const t = useT()
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Member</TableHead>
-          <TableHead>Role</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
+          <TableHead>{t("members.table.colMember")}</TableHead>
+          <TableHead>{t("members.table.colRole")}</TableHead>
+          <TableHead>{t("members.table.colStatus")}</TableHead>
+          <TableHead className="text-right">
+            {t("members.table.colActions")}
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -83,18 +88,18 @@ export function MembersTable({
                     <SelectContent>
                       {ROLES.map((role) => (
                         <SelectItem key={role} value={role}>
-                          {role}
+                          {t(`members.role.${role}`)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 ) : (
-                  <Badge tone="muted">{member.role}</Badge>
+                  <Badge tone="muted">{t(`members.role.${member.role}`)}</Badge>
                 )}
               </TableCell>
               <TableCell>
                 <Badge tone={member.status === "active" ? "sunny" : "muted"}>
-                  {member.status}
+                  {t(`members.status.${member.status}`)}
                 </Badge>
               </TableCell>
               <TableCell className="text-right">
@@ -104,7 +109,7 @@ export function MembersTable({
                     size="sm"
                     disabled={isPending}
                     onClick={() => onRemove(member)}
-                    aria-label="Remove member"
+                    aria-label={t("members.table.removeAriaLabel")}
                   >
                     <Trash2 className="size-4" />
                   </Button>

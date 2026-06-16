@@ -12,9 +12,11 @@ import { InviteForm } from "~/features/invites/components/invite-form"
 import { InvitesTable } from "~/features/invites/components/invites-table"
 import { useActiveOrg } from "~/shared/auth/use-active-org"
 import { useMe } from "~/shared/auth/use-me"
+import { useT } from "~/shared/i18n/context"
 import { toastError, toastSuccess } from "~/shared/lib/toast"
 
 export function InvitesPage() {
+  const t = useT()
   const { data: me } = useMe()
   const { activeOrgId } = useActiveOrg(me?.organizations ?? [])
   const invites = useInvites(activeOrgId)
@@ -23,15 +25,16 @@ export function InvitesPage() {
 
   function handleCreate(values: { email: string; role: OrgRole }) {
     createInvite.mutate(values, {
-      onSuccess: () => toastSuccess(`Invited ${values.email}.`),
-      onError: (error) => toastError(error, "Could not send the invite."),
+      onSuccess: () =>
+        toastSuccess(t("invites.toast.invited", { email: values.email })),
+      onError: (error) => toastError(error, t("invites.toast.inviteFailed")),
     })
   }
 
   function handleDelete(invite: OrgInvite) {
     deleteInvite.mutate(invite.id, {
-      onSuccess: () => toastSuccess("Invite revoked."),
-      onError: (error) => toastError(error, "Could not revoke the invite."),
+      onSuccess: () => toastSuccess(t("invites.toast.revoked")),
+      onError: (error) => toastError(error, t("invites.toast.revokeFailed")),
     })
   }
 
@@ -40,14 +43,14 @@ export function InvitesPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Organization"
-        title="Invites"
-        description="Invite teammates by email and manage pending invitations."
+        eyebrow={t("invites.eyebrow")}
+        title={t("invites.title")}
+        description={t("invites.description")}
       />
 
       <Card>
         <CardHeader>
-          <CardTitle>Invite a teammate</CardTitle>
+          <CardTitle>{t("invites.cardInviteTitle")}</CardTitle>
         </CardHeader>
         <CardContent>
           <InviteForm
@@ -59,11 +62,11 @@ export function InvitesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Pending invites</CardTitle>
+          <CardTitle>{t("invites.cardPendingTitle")}</CardTitle>
         </CardHeader>
         <CardContent>
           {invites.isPending ? (
-            <PageLoading>Loading invites…</PageLoading>
+            <PageLoading>{t("invites.loadingInvites")}</PageLoading>
           ) : invites.error ? (
             <p
               className="rounded-[calc(var(--radius)*1.15)] border border-destructive/20 bg-destructive/5 px-4 py-5 text-sm text-destructive"
@@ -71,11 +74,11 @@ export function InvitesPage() {
             >
               {invites.error instanceof Error
                 ? invites.error.message
-                : "Failed to load invites."}
+                : t("invites.failedToLoad")}
             </p>
           ) : list.length === 0 ? (
             <div className="rounded-[calc(var(--radius)*1.15)] border border-dashed border-border/80 bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
-              No pending invites.
+              {t("invites.emptyState")}
             </div>
           ) : (
             <InvitesTable
