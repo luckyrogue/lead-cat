@@ -29,20 +29,3 @@ export function formatTimeRange(meeting: Meeting, timeZone?: string): string {
     })
   return `${time(start)} – ${time(end)}`
 }
-
-export function recurrenceLabel(recurrence: string): string {
-  switch (recurrence) {
-    case "once":
-      return "One-time"
-    case "daily":
-      return "Daily"
-    case "weekly":
-      return "Weekly"
-    case "monthly":
-      return "Monthly"
-    case "custom":
-      return "Custom"
-    default:
-      return recurrence || "—"
-  }
-}

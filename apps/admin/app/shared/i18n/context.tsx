@@ -8,7 +8,7 @@ type TFn = (key: string, params?: Record<string, string | number>) => string
 
 const LocaleContext = createContext<{ locale: Locale; t: TFn }>({
   locale: DEFAULT_LOCALE,
-  t: (key) => key,
+  t: (key, params) => translate(dictionaries.en, dictionaries.en, key, params),
 })
 
 export function LocaleProvider({

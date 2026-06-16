@@ -1,6 +1,6 @@
-import type { Dict } from "~/shared/i18n/types"
+import { en } from "~/shared/i18n/dictionaries/en"
 
-export const kk: Dict = {
+export const kk: typeof en = {
   common: {
     save: "Сақтау",
     cancel: "Болдырмау",

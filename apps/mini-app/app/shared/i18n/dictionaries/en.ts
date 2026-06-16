@@ -1,6 +1,6 @@
 import type { Dict } from "~/shared/i18n/types"
 
-export const en: Dict = {
+export const en = {
   common: {
     save: "Save",
     cancel: "Cancel",
@@ -170,4 +170,4 @@ export const en: Dict = {
       removeAriaLabel: "Remove {name}",
     },
   },
-}
+} satisfies Dict

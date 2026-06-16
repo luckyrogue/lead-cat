@@ -1,6 +1,6 @@
-import type { Dict } from "~/shared/i18n/types"
+import { en } from "~/shared/i18n/dictionaries/en"
 
-export const ru: Dict = {
+export const ru: typeof en = {
   common: {
     save: "Сохранить",
     cancel: "Отмена",
