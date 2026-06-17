@@ -1,7 +1,7 @@
 import { data } from "react-router"
 
 import { localeCookieHeader } from "~/shared/i18n/locale-request"
-import { LocaleLandingPage } from "~/shared/i18n/locale-landing-page"
+import { LocaleLandingPage } from "~/features/landing/locale-landing-page"
 import { heroAssetLinks } from "~/shared/seo/hero-assets"
 import { landingMeta } from "~/shared/seo/landing-meta"
 import { DEFAULT_LOCALE } from "~/shared/i18n/types"

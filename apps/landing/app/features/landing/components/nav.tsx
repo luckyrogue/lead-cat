@@ -1,4 +1,4 @@
-import { Badge, Button } from "@leadcat/ui"
+import { Button } from "@leadcat/ui"
 import { LeadCatLogo } from "@leadcat/brand"
 import { Link } from "react-router"
 
