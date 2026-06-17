@@ -19,6 +19,17 @@ jobs:
     name: build
     uses: ./.github/workflows/_build.yml
 
+  docker-validate:
+    name: docker (validate)
+    needs: build
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/_docker.yml
+    with:
+      push: false
+    permissions:
+      contents: read
+      packages: write
+
   docker:
     name: docker
     needs: build
