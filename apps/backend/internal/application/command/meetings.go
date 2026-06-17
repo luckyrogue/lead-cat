@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	docalendar "github.com/luckyrogue/lead-cat/internal/domain/calendar"
 	"github.com/luckyrogue/lead-cat/internal/application/model"
+	docalendar "github.com/luckyrogue/lead-cat/internal/domain/calendar"
 	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
 	"github.com/luckyrogue/lead-cat/internal/platform/fanio"
 )

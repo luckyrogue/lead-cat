@@ -29,7 +29,7 @@ func planSeriesReshape(occs []model.Meeting, existingStarts []time.Time, candida
 			continue
 		}
 		if startExists(existingStarts, sp.Start) {
-			continue 
+			continue
 		}
 		out.Create = append(out.Create, sp)
 	}

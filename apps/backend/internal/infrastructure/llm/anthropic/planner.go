@@ -70,8 +70,7 @@ func toSDKMessages(history []application.AgentMessage) []sdk.MessageParam {
 		switch m.Role {
 		case "assistant":
 			var blocks []sdk.ContentBlockParamUnion
-			
-			
+
 			if m.ThinkingSignature != "" {
 				blocks = append(blocks, sdk.NewThinkingBlock(m.ThinkingSignature, m.Thinking))
 			}
@@ -88,7 +87,7 @@ func toSDKMessages(history []application.AgentMessage) []sdk.MessageParam {
 				})
 			}
 			out = append(out, sdk.NewAssistantMessage(blocks...))
-		default: 
+		default:
 			if len(m.ToolResults) > 0 {
 				blocks := make([]sdk.ContentBlockParamUnion, 0, len(m.ToolResults))
 				for _, tr := range m.ToolResults {

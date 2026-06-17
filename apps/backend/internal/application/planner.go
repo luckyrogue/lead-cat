@@ -24,12 +24,12 @@ type AgentToolResult struct {
 }
 
 type AgentMessage struct {
-	Role               string            `json:"role"` 
-	Text               string            `json:"text,omitempty"`
-	Thinking           string            `json:"thinking,omitempty"`
-	ThinkingSignature  string            `json:"thinking_signature,omitempty"`
-	ToolCalls          []AgentToolCall   `json:"tool_calls,omitempty"`
-	ToolResults        []AgentToolResult `json:"tool_results,omitempty"`
+	Role              string            `json:"role"`
+	Text              string            `json:"text,omitempty"`
+	Thinking          string            `json:"thinking,omitempty"`
+	ThinkingSignature string            `json:"thinking_signature,omitempty"`
+	ToolCalls         []AgentToolCall   `json:"tool_calls,omitempty"`
+	ToolResults       []AgentToolResult `json:"tool_results,omitempty"`
 }
 
 type AgentTurn struct {

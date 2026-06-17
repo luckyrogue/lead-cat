@@ -147,7 +147,7 @@ func dispatchFreeSlots(ctx context.Context, be Backend, args json.RawMessage) (s
 	if err != nil {
 		return "", fmt.Errorf("bad 'to' date (want YYYY-MM-DD): %w", err)
 	}
-	
+
 	slots, err := be.FreeSlots(ctx, in.Emails, from, to.AddDate(0, 0, 1), in.DurationMins)
 	if err != nil {
 		return "", err

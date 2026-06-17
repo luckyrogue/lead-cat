@@ -95,11 +95,11 @@ type MeetingWithTZ struct {
 }
 
 type MeetingFilter struct {
-	Status    string     
-	From      *time.Time 
-	To        *time.Time 
-	Dept      string     
-	Organizer *uuid.UUID 
+	Status    string
+	From      *time.Time
+	To        *time.Time
+	Dept      string
+	Organizer *uuid.UUID
 }
 
 type BotUser struct {

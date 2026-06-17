@@ -44,12 +44,6 @@ type miniappFreeSlotDTO struct {
 	Mins  int    `json:"mins"`
 }
 
-func splitMeetingTime(startsAt, endsAt time.Time, loc *time.Location) (date, start, end string) {
-	s := startsAt.In(loc)
-	e := endsAt.In(loc)
-	return s.Format("2006-01-02"), s.Format("15:04"), e.Format("15:04")
-}
-
 func miniappScopeWindow(scope string, now time.Time) (from, to time.Time, ok bool) {
 	const horizon = 365
 	switch scope {

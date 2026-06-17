@@ -13,10 +13,10 @@ import (
 )
 
 var (
-	ErrJSONParse = errors.New("sa_json_parse")
+	ErrJSONParse   = errors.New("sa_json_parse")
 	ErrAPIDisabled = errors.New("calendar_api_disabled")
-	ErrSubject = errors.New("subject_impersonation")
-	ErrCalendar = errors.New("calendar_not_accessible")
+	ErrSubject     = errors.New("subject_impersonation")
+	ErrCalendar    = errors.New("calendar_not_accessible")
 )
 
 func Probe(ctx context.Context, saJSON, subject, calendarID string) (*calendar.Calendar, error) {

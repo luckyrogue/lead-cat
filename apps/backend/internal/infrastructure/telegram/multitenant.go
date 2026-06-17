@@ -93,7 +93,7 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 				h.sendCheckerReply(ctx, b, chatID, 0, reply)
 				return
 			}
-			
+
 			if _, err := h.store.GetBotUserByTelegramID(ctx, from.ID); err == nil {
 				reply, _ := h.agent.OnText(ctx, from.ID, text)
 				h.sendAgentReply(ctx, b, chatID, 0, reply)

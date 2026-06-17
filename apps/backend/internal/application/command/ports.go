@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	docalendar "github.com/luckyrogue/lead-cat/internal/domain/calendar"
 	"github.com/luckyrogue/lead-cat/internal/application/model"
+	docalendar "github.com/luckyrogue/lead-cat/internal/domain/calendar"
 )
 
 type Store interface {
