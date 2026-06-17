@@ -1,0 +1,306 @@
+package scheduleview
+
+import (
+	"context"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+)
+
+// ---------------------------------------------------------------------------
+// fakes
+// ---------------------------------------------------------------------------
+
+type fakeSessions struct {
+	m map[int64]*State
+}
+
+var _ sessions = (*fakeSessions)(nil)
+
+func newFakeSessions() *fakeSessions { return &fakeSessions{m: make(map[int64]*State)} }
+
+func (f *fakeSessions) Get(_ context.Context, id int64) (*State, error) {
+	s, ok := f.m[id]
+	if !ok {
+		return nil, nil
+	}
+	cp := *s
+	return &cp, nil
+}
+
+func (f *fakeSessions) Set(_ context.Context, id int64, s State) error {
+	cp := s
+	f.m[id] = &cp
+	return nil
+}
+
+func (f *fakeSessions) Del(_ context.Context, id int64) error {
+	delete(f.m, id)
+	return nil
+}
+
+type fakeBackend struct {
+	employees     []postgres.Employee
+	meetings      []postgres.Meeting
+	searchCalls   []string
+	scheduleCalls []struct {
+		email    string
+		from, to time.Time
+	}
+}
+
+var _ Backend = (*fakeBackend)(nil)
+
+func (f *fakeBackend) SearchEmployeesGlobal(_ context.Context, query string) ([]postgres.Employee, error) {
+	f.searchCalls = append(f.searchCalls, query)
+	return f.employees, nil
+}
+
+func (f *fakeBackend) EmployeeSchedule(_ context.Context, email string, from, to time.Time) ([]postgres.Meeting, error) {
+	f.scheduleCalls = append(f.scheduleCalls, struct {
+		email    string
+		from, to time.Time
+	}{email, from, to})
+	return f.meetings, nil
+}
+
+// ---------------------------------------------------------------------------
+// helpers
+// ---------------------------------------------------------------------------
+
+func newService(be *fakeBackend, sess *fakeSessions) *Service {
+	return New(be, sess)
+}
+
+// ---------------------------------------------------------------------------
+// TestStart_SetsAwaitSearch
+// ---------------------------------------------------------------------------
+
+func TestStart_SetsAwaitSearch(t *testing.T) {
+	sess := newFakeSessions()
+	svc := newService(&fakeBackend{}, sess)
+
+	const tid = int64(42)
+	reply := svc.Start(context.Background(), tid)
+
+	if reply.Text == "" {
+		t.Fatal("Start: expected non-empty reply text")
+	}
+
+	st, err := sess.Get(context.Background(), tid)
+	if err != nil {
+		t.Fatalf("sessions.Get error: %v", err)
+	}
+	if st == nil {
+		t.Fatal("Start: session not saved")
+	}
+	if st.Step != stepAwait {
+		t.Errorf("Step: want %q, got %q", stepAwait, st.Step)
+	}
+	if st.AwaitingKind != awaitSearch {
+		t.Errorf("AwaitingKind: want %q, got %q", awaitSearch, st.AwaitingKind)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// TestOnText_Search
+// ---------------------------------------------------------------------------
+
+func TestOnText_Search(t *testing.T) {
+	sess := newFakeSessions()
+	be := &fakeBackend{
+		employees: []postgres.Employee{
+			{FullName: "Ivan Petrov", Email: "ivan@example.com"},
+		},
+	}
+	svc := newService(be, sess)
+
+	const tid = int64(7)
+	svc.Start(context.Background(), tid)
+
+	reply, handled := svc.OnText(context.Background(), tid, "ivan")
+
+	if !handled {
+		t.Fatal("OnText: want handled=true")
+	}
+	if reply.Text == "" {
+		t.Fatal("OnText: want non-empty reply text")
+	}
+	if len(be.searchCalls) != 1 || be.searchCalls[0] != "ivan" {
+		t.Errorf("SearchEmployeesGlobal call: want [\"ivan\"], got %v", be.searchCalls)
+	}
+	// Reply should contain at least one keyboard row with sched:pick: data.
+	found := false
+	for _, row := range reply.Keyboard {
+		for _, btn := range row {
+			if strings.HasPrefix(btn.Data, "sched:pick:") {
+				found = true
+			}
+		}
+	}
+	if !found {
+		t.Errorf("OnText search: expected a sched:pick: keyboard button, keyboard=%v", reply.Keyboard)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// TestParseDate_ValidAndError
+// ---------------------------------------------------------------------------
+
+func TestParseDate_ValidAndError(t *testing.T) {
+	loc := time.UTC
+
+	d, err := parseDate("2026-06-01", loc)
+	if err != nil {
+		t.Fatalf("parseDate valid: unexpected error: %v", err)
+	}
+	if d.Year() != 2026 || d.Month() != 6 || d.Day() != 1 {
+		t.Errorf("parseDate valid: got %v", d)
+	}
+
+	_, err = parseDate("nope", loc)
+	if err == nil {
+		t.Fatal("parseDate invalid: expected error, got nil")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// TestParseRange_EndExclusive
+// ---------------------------------------------------------------------------
+
+func TestParseRange_EndExclusive(t *testing.T) {
+	loc := time.UTC
+
+	from, to, err := parseRange("2026-06-01..2026-06-03", loc)
+	if err != nil {
+		t.Fatalf("parseRange: unexpected error: %v", err)
+	}
+	wantFrom := time.Date(2026, 6, 1, 0, 0, 0, 0, loc)
+	wantTo := time.Date(2026, 6, 4, 0, 0, 0, 0, loc) // d2.AddDate(0,0,1) → end-exclusive
+	if !from.Equal(wantFrom) {
+		t.Errorf("parseRange from: want %v, got %v", wantFrom, from)
+	}
+	if !to.Equal(wantTo) {
+		t.Errorf("parseRange to (end-exclusive): want %v, got %v", wantTo, to)
+	}
+
+	// Reversed range must error.
+	_, _, err = parseRange("2026-06-03..2026-06-01", loc)
+	if err == nil {
+		t.Fatal("parseRange reversed: expected error, got nil")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// TestDayWindow
+// ---------------------------------------------------------------------------
+
+func TestDayWindow(t *testing.T) {
+	loc := time.UTC
+	now := time.Date(2026, 6, 10, 14, 30, 0, 0, loc)
+	sod := time.Date(2026, 6, 10, 0, 0, 0, 0, loc)
+
+	// today: [sod, sod+1d)
+	from, to, ok := dayWindow(now, "today", loc)
+	if !ok {
+		t.Fatal("dayWindow today: ok=false")
+	}
+	if !from.Equal(sod) {
+		t.Errorf("today from: want %v, got %v", sod, from)
+	}
+	if !to.Equal(sod.AddDate(0, 0, 1)) {
+		t.Errorf("today to: want %v, got %v", sod.AddDate(0, 0, 1), to)
+	}
+
+	// tomorrow: [sod+1d, sod+2d)
+	from, to, ok = dayWindow(now, "tomorrow", loc)
+	if !ok {
+		t.Fatal("dayWindow tomorrow: ok=false")
+	}
+	if !from.Equal(sod.AddDate(0, 0, 1)) {
+		t.Errorf("tomorrow from: want %v, got %v", sod.AddDate(0, 0, 1), from)
+	}
+	if !to.Equal(sod.AddDate(0, 0, 2)) {
+		t.Errorf("tomorrow to: want %v, got %v", sod.AddDate(0, 0, 2), to)
+	}
+
+	// upcoming: [now, now+1y)
+	from, to, ok = dayWindow(now, "upcoming", loc)
+	if !ok {
+		t.Fatal("dayWindow upcoming: ok=false")
+	}
+	if !from.Equal(now) {
+		t.Errorf("upcoming from: want %v, got %v", now, from)
+	}
+	if !to.Equal(now.AddDate(1, 0, 0)) {
+		t.Errorf("upcoming to: want %v, got %v", now.AddDate(1, 0, 0), to)
+	}
+
+	// unknown kind → ok=false
+	_, _, ok = dayWindow(now, "week", loc)
+	if ok {
+		t.Fatal("dayWindow unknown kind: expected ok=false, got true")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// TestStatusEmoji
+// ---------------------------------------------------------------------------
+
+func TestStatusEmoji(t *testing.T) {
+	now := time.Date(2026, 6, 10, 12, 0, 0, 0, time.UTC)
+
+	future := now.Add(time.Hour)
+	if got := statusEmoji(future, now); got != "🔜" {
+		t.Errorf("future: want 🔜, got %q", got)
+	}
+
+	past := now.Add(-time.Hour)
+	if got := statusEmoji(past, now); got != "✅" {
+		t.Errorf("past: want ✅, got %q", got)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// TestOnCallback_Back
+// ---------------------------------------------------------------------------
+
+func TestOnCallback_Back(t *testing.T) {
+	sess := newFakeSessions()
+	svc := newService(&fakeBackend{}, sess)
+
+	const tid = int64(99)
+
+	// sched:back must call Start and return ok=true.
+	reply, handled := svc.OnCallback(context.Background(), tid, "sched:back")
+
+	if !handled {
+		t.Fatal("OnCallback sched:back: want handled=true")
+	}
+	if reply.Text == "" {
+		t.Fatal("OnCallback sched:back: want non-empty reply text")
+	}
+
+	// Session must be reset to stepAwait/awaitSearch (same as Start).
+	st, err := sess.Get(context.Background(), tid)
+	if err != nil {
+		t.Fatalf("sessions.Get error: %v", err)
+	}
+	if st == nil {
+		t.Fatal("sched:back: session not saved")
+	}
+	if st.Step != stepAwait {
+		t.Errorf("sched:back Step: want %q, got %q", stepAwait, st.Step)
+	}
+	if st.AwaitingKind != awaitSearch {
+		t.Errorf("sched:back AwaitingKind: want %q, got %q", awaitSearch, st.AwaitingKind)
+	}
+}
+
+// TODO(WS2c): OnCallback sched:pick: — requires seeding a candidate list in the session
+//             (set st.Cands) and then firing sched:pick:0; add once indexInto path is
+//             exercised end-to-end.
+// TODO(WS2c): OnCallback sched:periods — similar: needs st.EmployeeEmail in session.
+// TODO(WS2c): OnCallback sched:d:<kind> — period branches (today/tomorrow/upcoming/date/range).
