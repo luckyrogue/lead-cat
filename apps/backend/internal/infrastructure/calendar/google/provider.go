@@ -16,13 +16,19 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
+type configStore interface {
+	GetGoogleConfig(ctx context.Context, id uuid.UUID) (encJSON []byte, subject, calendarID string, err error)
+}
+
+var _ configStore = (*postgres.Store)(nil)
+
 type Provider struct {
-	store  *postgres.Store
+	store  configStore
 	cipher *crypto.TokenCipher
 	cache  sync.Map
 }
 
-func NewProvider(store *postgres.Store, cipher *crypto.TokenCipher) *Provider {
+func NewProvider(store configStore, cipher *crypto.TokenCipher) *Provider {
 	return &Provider{store: store, cipher: cipher}
 }
 
