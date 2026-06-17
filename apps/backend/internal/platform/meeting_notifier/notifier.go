@@ -15,13 +15,13 @@ import (
 )
 
 type Notifier struct {
-	store *postgres.Store
-	bot   *bot.Bot
+	store store
+	bot   sender
 	log   *zap.Logger
 }
 
-func New(store *postgres.Store, b *bot.Bot, log *zap.Logger) *Notifier {
-	return &Notifier{store: store, bot: b, log: log}
+func New(st store, b sender, log *zap.Logger) *Notifier {
+	return &Notifier{store: st, bot: b, log: log}
 }
 
 func (n *Notifier) HandleCreated(ctx context.Context, organizationID, meetingID uuid.UUID) error {
