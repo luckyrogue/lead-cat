@@ -1,0 +1,134 @@
+package botreg
+
+import (
+	"context"
+	"errors"
+	"testing"
+
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+)
+
+type fakeUsers struct {
+	byTelegram map[int64]postgres.BotUser
+	byEmail    map[string]postgres.BotUser
+	created    []postgres.BotUser
+}
+
+func newFakeUsers() *fakeUsers {
+	return &fakeUsers{byTelegram: map[int64]postgres.BotUser{}, byEmail: map[string]postgres.BotUser{}}
+}
+func (f *fakeUsers) GetBotUserByTelegramID(_ context.Context, tid int64) (postgres.BotUser, error) {
+	if u, ok := f.byTelegram[tid]; ok {
+		return u, nil
+	}
+	return postgres.BotUser{}, errors.New("not found")
+}
+func (f *fakeUsers) GetBotUserByEmail(_ context.Context, email string) (postgres.BotUser, error) {
+	if u, ok := f.byEmail[email]; ok {
+		return u, nil
+	}
+	return postgres.BotUser{}, errors.New("not found")
+}
+func (f *fakeUsers) CreateBotUser(_ context.Context, tid int64, fullName, email, role string) (postgres.BotUser, error) {
+	u := postgres.BotUser{TelegramID: tid, FullName: fullName, Email: email, Role: role}
+	f.created = append(f.created, u)
+	f.byTelegram[tid] = u
+	return u, nil
+}
+
+var _ userStore = (*fakeUsers)(nil)
+
+type fakeSessions struct {
+	m map[int64]State
+}
+
+func newFakeSessions() *fakeSessions { return &fakeSessions{m: map[int64]State{}} }
+func (f *fakeSessions) Get(_ context.Context, tid int64) (*State, error) {
+	if s, ok := f.m[tid]; ok {
+		c := s
+		return &c, nil
+	}
+	return nil, nil
+}
+func (f *fakeSessions) Set(_ context.Context, tid int64, s State) error { f.m[tid] = s; return nil }
+func (f *fakeSessions) Del(_ context.Context, tid int64) error          { delete(f.m, tid); return nil }
+
+var _ sessions = (*fakeSessions)(nil)
+
+func TestRegistration_HappyPath_NonAdmin(t *testing.T) {
+	users := newFakeUsers()
+	sess := newFakeSessions()
+	s := New(users, sess, nil)
+	ctx := context.Background()
+
+	if msg := s.Start(ctx, 100); msg == "" {
+		t.Fatal("Start should prompt for name")
+	}
+	if _, ok := sess.m[100]; !ok {
+		t.Fatal("Start should set a session")
+	}
+	if _, ok := s.OnText(ctx, 100, "Иванов Иван"); !ok {
+		t.Fatal("name step should handle text")
+	}
+	if _, ok := s.OnText(ctx, 100, "ivan@corp.io"); !ok {
+		t.Fatal("email step should handle text")
+	}
+	if len(users.created) != 1 {
+		t.Fatalf("want 1 user created, got %d", len(users.created))
+	}
+	if users.created[0].Role != "user" || users.created[0].FullName != "Иванов Иван" || users.created[0].Email != "ivan@corp.io" {
+		t.Fatalf("created user wrong: %+v", users.created[0])
+	}
+	if _, ok := sess.m[100]; ok {
+		t.Fatal("session should be deleted after registration")
+	}
+}
+
+func TestRegistration_AdminRole(t *testing.T) {
+	users := newFakeUsers()
+	sess := newFakeSessions()
+	s := New(users, sess, []int64{42})
+	ctx := context.Background()
+	s.Start(ctx, 42)
+	s.OnText(ctx, 42, "Admin User")
+	s.OnText(ctx, 42, "admin@corp.io")
+	if len(users.created) != 1 || users.created[0].Role != "admin" {
+		t.Fatalf("admin id should create admin role: %+v", users.created)
+	}
+}
+
+func TestStart_AlreadyRegistered(t *testing.T) {
+	users := newFakeUsers()
+	users.byTelegram[7] = postgres.BotUser{TelegramID: 7}
+	sess := newFakeSessions()
+	s := New(users, sess, nil)
+	msg := s.Start(context.Background(), 7)
+	if msg == "" {
+		t.Fatal("should greet returning user")
+	}
+	if _, ok := sess.m[7]; ok {
+		t.Fatal("should not start a session for a registered user")
+	}
+}
+
+func TestRegistration_RejectsBadEmailAndDuplicate(t *testing.T) {
+	users := newFakeUsers()
+	users.byEmail["taken@corp.io"] = postgres.BotUser{Email: "taken@corp.io"}
+	sess := newFakeSessions()
+	s := New(users, sess, nil)
+	ctx := context.Background()
+	s.Start(ctx, 5)
+	s.OnText(ctx, 5, "Some Name")
+	if _, ok := s.OnText(ctx, 5, "not-an-email"); !ok {
+		t.Fatal("bad email should be handled")
+	}
+	if len(users.created) != 0 {
+		t.Fatal("bad email must not create a user")
+	}
+	if _, ok := s.OnText(ctx, 5, "taken@corp.io"); !ok {
+		t.Fatal("duplicate email should be handled")
+	}
+	if len(users.created) != 0 {
+		t.Fatal("duplicate email must not create a user")
+	}
+}
