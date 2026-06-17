@@ -1,5 +1,6 @@
 .PHONY: help setup deps up down ps migrate migrate-down migrate-status \
-	backend backend-watch miniapp admin landing frontend dev lint fmt fmt-check typecheck openapi-generate brand-sync build docker-build clean
+	backend backend-watch miniapp admin landing frontend dev lint fmt fmt-check typecheck openapi-generate brand-sync build docker-build clean \
+	test ci
 
 ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 BACKEND := $(ROOT)apps/backend
@@ -86,6 +87,9 @@ lint:
 	@command -v golangci-lint >/dev/null || (echo "install: brew install golangci-lint" && exit 1)
 	@cd $(BACKEND) && golangci-lint run --config $(ROOT)config/.golangci.yml ./...
 
+test:
+	@cd $(BACKEND) && $(GO) test ./...
+
 fmt:
 	@$(PNPM) --filter mini-app run format
 	@$(PNPM) --filter admin run format
@@ -109,6 +113,9 @@ build:
 	@$(PNPM) --filter mini-app build
 	@$(PNPM) --filter admin build
 	@$(PNPM) --filter landing build
+
+ci: fmt-check lint test typecheck build
+	@echo "ci: all gates passed"
 
 docker-build:
 	docker build -t lead-cat:local -f deploy/Dockerfile --build-arg VITE_AUTH_DEV_MODE=false .
