@@ -18,9 +18,9 @@ const lockKey = "leadcat:reminders:leader"
 
 var defaultOrganizerOffsets = []int{15}
 
-// EmailSender delivers an HTML email. *smtp.Sender satisfies it.
+// EmailSender delivers a multipart/alternative email. *smtp.Sender satisfies it.
 type EmailSender interface {
-	Send(ctx context.Context, to, subject, htmlBody string) error
+	SendMultipart(ctx context.Context, to, subject, textBody, htmlBody, listUnsubscribe string) error
 }
 
 type Scheduler struct {
@@ -141,7 +141,7 @@ func (s *Scheduler) sendReminderEmail(ctx context.Context, m postgres.Meeting, t
 	start, end := m.StartsAt.In(loc), m.EndsAt.In(loc)
 	timeStr := start.Format("15:04") + "–" + end.Format("15:04")
 
-	htmlBody, rerr := renderReminderEmail(reminderEmailData{
+	data := reminderEmailData{
 		Lang:           t.Language,
 		Name:           t.FullName,
 		Title:          m.Name,
@@ -150,12 +150,18 @@ func (s *Scheduler) sendReminderEmail(ctx context.Context, m postgres.Meeting, t
 		Tz:             tzLabel(start),
 		MeetLink:       m.MeetLink,
 		UnsubscribeURL: s.unsubscribeURL,
-	})
+	}
+	htmlBody, rerr := renderReminderEmail(data)
 	if rerr != nil {
 		s.log.Warn("render reminder email", zap.String("meeting_id", m.ID.String()), zap.Error(rerr))
 		return
 	}
-	if err := s.email.Send(ctx, t.Email, reminderEmailSubject(t.Language, m.Name, timeStr), htmlBody); err != nil {
+	textBody, terr := renderReminderText(data)
+	if terr != nil {
+		s.log.Warn("render reminder email text", zap.String("meeting_id", m.ID.String()), zap.Error(terr))
+		return
+	}
+	if err := s.email.SendMultipart(ctx, t.Email, reminderEmailSubject(t.Language, m.Name, timeStr), textBody, htmlBody, s.unsubscribeURL); err != nil {
 		s.log.Warn("send reminder email",
 			zap.String("email", t.Email),
 			zap.String("meeting_id", m.ID.String()),

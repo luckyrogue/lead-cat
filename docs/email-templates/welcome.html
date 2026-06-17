@@ -58,6 +58,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="x-apple-disable-message-reformatting">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
   <title>Lead Cat</title>
 </head>
 <body style="margin:0; padding:0; background-color:#F1EADF;">
@@ -133,7 +135,8 @@
               <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td align="center" bgcolor="#E8714C" style="border-radius:12px;">
-                    <a href="{{ app_url }}" target="_blank" style="display:inline-block; padding:15px 34px; font-family:Arial,Helvetica,sans-serif; font-size:16px; font-weight:bold; color:#FFFFFF; text-decoration:none; border-radius:12px;">{{ t_cta }}&nbsp;🐾</a>
+                    <!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ app_url }}" style="height:48px;v-text-anchor:middle;width:240px;" arcsize="25%" stroke="f" fillcolor="#E8714C"><w:anchorlock/><center style="color:#FFFFFF;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;">{{ t_cta }}</center></v:roundrect><![endif]-->
+                    <!--[if !mso]><!-- --><a href="{{ app_url }}" target="_blank" style="display:inline-block; padding:15px 34px; font-family:Arial,Helvetica,sans-serif; font-size:16px; font-weight:bold; color:#FFFFFF; text-decoration:none; border-radius:12px; mso-padding-alt:0;">{{ t_cta }}&nbsp;🐾</a><!--<![endif]-->
                   </td>
                 </tr>
               </table>

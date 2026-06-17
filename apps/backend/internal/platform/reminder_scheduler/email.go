@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	texttemplate "text/template"
 )
 
 // Reminder email — Go port of docs/email-templates/meeting-reminder.html.
@@ -65,11 +66,25 @@ type reminderEmailData struct {
 	MeetLink       string
 	UnsubscribeURL string
 	L              remLabels
+	// Button is the pre-rendered, Outlook-hardened CTA. It carries
+	// conditional comments (VML), which html/template would otherwise strip,
+	// so it is built in Go and injected as trusted HTML.
+	Button template.HTML
+}
+
+// reminderButton renders the bulletproof CTA: a VML roundrect for Outlook and
+// a styled anchor for everyone else. href/label are HTML-escaped (Meet links
+// are Google-generated, but escaping keeps the attribute context safe).
+func reminderButton(meetLink, cta string) template.HTML {
+	href := template.HTMLEscapeString(meetLink)
+	label := template.HTMLEscapeString(cta)
+	return template.HTML(`<!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="` + href + `" style="height:48px;v-text-anchor:middle;width:260px;" arcsize="25%" stroke="f" fillcolor="#E8714C"><w:anchorlock/><center style="color:#FFFFFF;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;">` + label + `</center></v:roundrect><![endif]-->` +
+		`<!--[if !mso]><!-- --><a href="` + href + `" target="_blank" style="display:inline-block; padding:15px 34px; font-family:Arial,Helvetica,sans-serif; font-size:16px; font-weight:bold; color:#FFFFFF; text-decoration:none; border-radius:12px; mso-padding-alt:0;">` + label + `</a><!--<![endif]-->`)
 }
 
 var reminderEmailTemplate = template.Must(template.New("reminder").Parse(`<!DOCTYPE html>
 <html lang="{{.Lang}}">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="x-apple-disable-message-reformatting"><title>Lead Cat</title></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="x-apple-disable-message-reformatting"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><title>Lead Cat</title></head>
 <body style="margin:0; padding:0; background-color:#F1EADF;">
 <div style="display:none; max-height:0; overflow:hidden; opacity:0; mso-hide:all; font-size:1px; line-height:1px; color:#F1EADF;">{{.Title}} — {{.Time}}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F1EADF;"><tr><td align="center" style="padding:28px 12px;">
@@ -88,7 +103,7 @@ var reminderEmailTemplate = template.Must(template.New("reminder").Parse(`<!DOCT
 </table></td></tr></table></td></tr>
 {{if .MeetLink}}<tr><td align="center" style="padding:24px 32px 8px 32px;">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#E8714C" style="border-radius:12px;">
-<a href="{{.MeetLink}}" target="_blank" style="display:inline-block; padding:15px 34px; font-family:Arial,Helvetica,sans-serif; font-size:16px; font-weight:bold; color:#FFFFFF; text-decoration:none; border-radius:12px;">{{.L.Cta}}</a>
+{{.Button}}
 </td></tr></table></td></tr>{{end}}
 <tr><td align="center" style="padding:10px 32px 34px 32px;"><p style="margin:0; font-size:14px; color:#A89C90; font-family:Arial,Helvetica,sans-serif;">{{.L.Made}}</p></td></tr>
 <tr><td style="background-color:#3A332E; padding:22px 32px;">
@@ -99,6 +114,42 @@ var reminderEmailTemplate = template.Must(template.New("reminder").Parse(`<!DOCT
 </table></td></tr></table></body></html>`))
 
 func renderReminderEmail(d reminderEmailData) (string, error) {
+	d = applyReminderDefaults(d)
+	var b bytes.Buffer
+	if err := reminderEmailTemplate.Execute(&b, d); err != nil {
+		return "", err
+	}
+	return b.String(), nil
+}
+
+// reminderTextTemplate is the plain-text alternative — Go port of
+// docs/email-templates/meeting-reminder.txt. text/template does not escape,
+// which is correct for a text/plain part.
+var reminderTextTemplate = texttemplate.Must(texttemplate.New("reminder.txt").Parse(
+	`{{.L.Hi}}, {{.Name}}!
+
+{{.L.Lead}}
+
+«{{.Title}}»
+{{.L.When}}: {{.Date}}, {{.Time}}{{if .Tz}} ({{.Tz}}){{end}}{{if .Participants}}
+{{.L.Who}}: {{.Participants}}{{end}}{{if .MeetLink}}
+
+{{.L.Cta}}: {{.MeetLink}}{{end}}
+
+{{.L.Made}}
+{{.L.Unsub}}: {{.UnsubscribeURL}}
+`))
+
+func renderReminderText(d reminderEmailData) (string, error) {
+	d = applyReminderDefaults(d)
+	var b bytes.Buffer
+	if err := reminderTextTemplate.Execute(&b, d); err != nil {
+		return "", err
+	}
+	return b.String(), nil
+}
+
+func applyReminderDefaults(d reminderEmailData) reminderEmailData {
 	d.L = reminderLabels(d.Lang)
 	if d.Name == "" {
 		d.Name = d.L.DefaultName
@@ -109,9 +160,8 @@ func renderReminderEmail(d reminderEmailData) (string, error) {
 	if d.UnsubscribeURL == "" {
 		d.UnsubscribeURL = "#"
 	}
-	var b bytes.Buffer
-	if err := reminderEmailTemplate.Execute(&b, d); err != nil {
-		return "", err
+	if d.MeetLink != "" {
+		d.Button = reminderButton(d.MeetLink, d.L.Cta)
 	}
-	return b.String(), nil
+	return d
 }
