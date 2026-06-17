@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"errors"
+	"sync"
 
 	"github.com/google/uuid"
 
@@ -99,31 +100,41 @@ func (p *fakeCalProvider) For(_ context.Context, _ uuid.UUID) (docalendar.Servic
 	return p.svc, nil
 }
 
+// fakeCalService is concurrency-safe: the real series path fans out CreateEvent
+// across goroutines (fanio.All), so the recording slices are guarded by a mutex.
 type fakeCalService struct {
 	failCreate bool
-	created    []docalendar.CalendarEvent
-	updated    []string
-	deleted    []string
+
+	mu      sync.Mutex
+	created []docalendar.CalendarEvent
+	updated []string
+	deleted []string
 }
 
 func (s *fakeCalService) CreateEvent(_ context.Context, e docalendar.CalendarEvent) (docalendar.CalendarResult, error) {
 	if s.failCreate {
 		return docalendar.CalendarResult{}, errors.New("boom")
 	}
+	s.mu.Lock()
 	s.created = append(s.created, e)
+	s.mu.Unlock()
 	id := "evt-" + uuid.NewString()[:8]
 	return docalendar.CalendarResult{EventID: id, MeetLink: "https://meet.google.com/" + id}, nil
 }
 
 func (s *fakeCalService) UpdateEvent(_ context.Context, eventID string, _ docalendar.CalendarEvent) error {
+	s.mu.Lock()
 	s.updated = append(s.updated, eventID)
+	s.mu.Unlock()
 	return nil
 }
 
 func (s *fakeCalService) UpdateAttendees(_ context.Context, _ string, _ []string) error { return nil }
 
 func (s *fakeCalService) DeleteEvent(_ context.Context, eventID string) error {
+	s.mu.Lock()
 	s.deleted = append(s.deleted, eventID)
+	s.mu.Unlock()
 	return nil
 }
 
