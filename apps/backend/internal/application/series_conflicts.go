@@ -18,14 +18,14 @@ func expandSeriesSpans(start, end time.Time, r meeting.Recurrence, days []int, u
 	return meeting.Occurrences(start, end, r, days, until)
 }
 
-func (s *Services) MeetingSeriesConflicts(ctx context.Context, emails []string, start, end time.Time, r meeting.Recurrence, days []int, until time.Time) ([]OccurrenceConflicts, error) {
+func (s *Services) MeetingSeriesConflicts(ctx context.Context, requesterEmail string, emails []string, start, end time.Time, r meeting.Recurrence, days []int, until time.Time) ([]OccurrenceConflicts, error) {
 	spans, err := expandSeriesSpans(start, end, r, days, until)
 	if err != nil {
 		return nil, err
 	}
 	out := make([]OccurrenceConflicts, 0, len(spans))
 	for _, sp := range spans {
-		cs, err := s.MeetingConflicts(ctx, emails, sp.Start, sp.End, uuid.Nil)
+		cs, err := s.MeetingConflicts(ctx, requesterEmail, emails, sp.Start, sp.End, uuid.Nil)
 		if err != nil {
 			return nil, err
 		}

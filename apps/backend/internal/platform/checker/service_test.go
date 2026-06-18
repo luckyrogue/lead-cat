@@ -29,7 +29,7 @@ func (f *fakeBackend) SearchEmployeesGlobal(_ context.Context, query string) ([]
 	return f.employees, nil
 }
 
-func (f *fakeBackend) FreeSlots(_ context.Context, _ []string, _, _ time.Time, _ int) ([]application.FreeSlot, error) {
+func (f *fakeBackend) FreeSlots(_ context.Context, _ string, _ []string, _, _ time.Time, _ int) ([]application.FreeSlot, error) {
 	f.slotsCalled = true
 	return f.freeSlots, nil
 }

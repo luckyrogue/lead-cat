@@ -36,7 +36,7 @@ type FreeSlot struct {
 	Mins       int
 }
 
-func (s *Services) MeetingConflicts(ctx context.Context, emails []string, start, end time.Time, excludeMeetingID uuid.UUID) ([]Conflict, error) {
+func (s *Services) MeetingConflicts(ctx context.Context, requesterEmail string, emails []string, start, end time.Time, excludeMeetingID uuid.UUID) ([]Conflict, error) {
 	if len(emails) == 0 {
 		return nil, nil
 	}
@@ -83,6 +83,15 @@ func (s *Services) MeetingConflicts(ctx context.Context, emails []string, start,
 		}
 	}
 
+	ext := s.gatherExternalBusy(ctx, requesterEmail, emails, start, end)
+	for _, email := range emails {
+		for _, sp := range ext[email] {
+			if sp.End.After(start) && sp.Start.Before(end) {
+				out = append(out, Conflict{Email: email, PersonName: s.personName(ctx, email), Start: sp.Start, End: sp.End})
+			}
+		}
+	}
+
 	sort.Slice(out, func(i, j int) bool {
 		if out[i].Start.Equal(out[j].Start) {
 			return out[i].Email < out[j].Email
@@ -113,21 +122,21 @@ func (s *Services) MeetingUpdateConflicts(ctx context.Context, organizationID, m
 	if err != nil {
 		return nil, nil
 	}
-	emails, err := s.meetingEmails(ctx, organizationID, meetingID)
+	emails, organizerEmail, err := s.meetingEmails(ctx, organizationID, meetingID)
 	if err != nil {
 		return nil, err
 	}
-	return s.MeetingConflicts(ctx, emails, start.UTC(), end.UTC(), meetingID)
+	return s.MeetingConflicts(ctx, organizerEmail, emails, start.UTC(), end.UTC(), meetingID)
 }
 
-func (s *Services) meetingEmails(ctx context.Context, organizationID, meetingID uuid.UUID) ([]string, error) {
+func (s *Services) meetingEmails(ctx context.Context, organizationID, meetingID uuid.UUID) ([]string, string, error) {
 	m, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	parts, err := s.Store.ListParticipants(ctx, meetingID)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	seen := map[string]bool{}
 	var emails []string
@@ -140,12 +149,14 @@ func (s *Services) meetingEmails(ctx context.Context, organizationID, meetingID 
 	for _, p := range parts {
 		add(p.Email)
 	}
+	var organizerEmail string
 	if m.OrganizerUserID != nil {
 		if u, uerr := s.Store.GetUserByID(ctx, *m.OrganizerUserID); uerr == nil {
+			organizerEmail = u.Email
 			add(u.Email)
 		}
 	}
-	return emails, nil
+	return emails, organizerEmail, nil
 }
 
 func (s *Services) personName(ctx context.Context, email string) string {
@@ -160,7 +171,7 @@ func (s *Services) personName(ctx context.Context, email string) string {
 	return email
 }
 
-func (s *Services) FreeSlots(ctx context.Context, emails []string, from, to time.Time, durMins int) ([]FreeSlot, error) {
+func (s *Services) FreeSlots(ctx context.Context, requesterEmail string, emails []string, from, to time.Time, durMins int) ([]FreeSlot, error) {
 	if len(emails) == 0 || durMins <= 0 {
 		return nil, nil
 	}
@@ -171,6 +182,10 @@ func (s *Services) FreeSlots(ctx context.Context, emails []string, from, to time
 	busy := make([]meeting.Span, 0, len(ms))
 	for _, m := range ms {
 		busy = append(busy, meeting.Span{Start: m.StartsAt, End: m.EndsAt})
+	}
+	ext := s.gatherExternalBusy(ctx, requesterEmail, emails, from, to)
+	for _, spans := range ext {
+		busy = append(busy, spans...)
 	}
 	minDur := time.Duration(durMins) * time.Minute
 

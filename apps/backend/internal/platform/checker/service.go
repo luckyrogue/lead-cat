@@ -13,7 +13,7 @@ import (
 
 type Backend interface {
 	SearchEmployeesGlobal(ctx context.Context, query string) ([]postgres.Employee, error)
-	FreeSlots(ctx context.Context, emails []string, from, to time.Time, durMins int) ([]application.FreeSlot, error)
+	FreeSlots(ctx context.Context, requesterEmail string, emails []string, from, to time.Time, durMins int) ([]application.FreeSlot, error)
 }
 
 type sessions interface {
@@ -146,7 +146,7 @@ func (s *Service) duration(ctx context.Context, telegramID int64, st *State, dur
 	loc := almaty()
 	from, _ := time.ParseInLocation("2006-01-02", st.From, loc)
 	toIncl, _ := time.ParseInLocation("2006-01-02", st.To, loc)
-	slots, err := s.backend.FreeSlots(ctx, st.Emails, from, toIncl.AddDate(0, 0, 1), durMins)
+	slots, err := s.backend.FreeSlots(ctx, "", st.Emails, from, toIncl.AddDate(0, 0, 1), durMins)
 	if err != nil {
 		return Reply{Text: "Не удалось выполнить поиск, попробуй позже."}
 	}

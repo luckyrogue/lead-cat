@@ -166,7 +166,7 @@ func (a *API) MiniAppFreeSlots(c *fiber.Ctx) error {
 	if err1 != nil || err2 != nil || toIncl.Before(from) || req.DurationMins <= 0 || len(req.Participants) == 0 {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid range/participants/duration")
 	}
-	slots, err := a.App.FreeSlots(c.Context(), req.Participants, from, toIncl.AddDate(0, 0, 1), req.DurationMins)
+	slots, err := a.App.FreeSlots(c.Context(), bu.Email, req.Participants, from, toIncl.AddDate(0, 0, 1), req.DurationMins)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}

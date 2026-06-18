@@ -24,8 +24,8 @@ var almatyLoc = func() *time.Location {
 
 type Backend interface {
 	SearchEmployeesGlobal(ctx context.Context, query string) ([]model.Employee, error)
-	FreeSlots(ctx context.Context, emails []string, from, to time.Time, durMins int) ([]application.FreeSlot, error)
-	MeetingConflicts(ctx context.Context, emails []string, start, end time.Time, exclude uuid.UUID) ([]application.Conflict, error)
+	FreeSlots(ctx context.Context, requesterEmail string, emails []string, from, to time.Time, durMins int) ([]application.FreeSlot, error)
+	MeetingConflicts(ctx context.Context, requesterEmail string, emails []string, start, end time.Time, exclude uuid.UUID) ([]application.Conflict, error)
 }
 
 func ToolSpecs() []application.AgentTool {
@@ -148,7 +148,7 @@ func dispatchFreeSlots(ctx context.Context, be Backend, args json.RawMessage) (s
 		return "", fmt.Errorf("bad 'to' date (want YYYY-MM-DD): %w", err)
 	}
 
-	slots, err := be.FreeSlots(ctx, in.Emails, from, to.AddDate(0, 0, 1), in.DurationMins)
+	slots, err := be.FreeSlots(ctx, "", in.Emails, from, to.AddDate(0, 0, 1), in.DurationMins)
 	if err != nil {
 		return "", err
 	}
@@ -183,7 +183,7 @@ func dispatchConflicts(ctx context.Context, be Backend, args json.RawMessage) (s
 	if err != nil {
 		return "", fmt.Errorf("bad 'end' (want 'YYYY-MM-DD HH:MM'): %w", err)
 	}
-	conflicts, err := be.MeetingConflicts(ctx, in.Emails, start.UTC(), end.UTC(), uuid.Nil)
+	conflicts, err := be.MeetingConflicts(ctx, "", in.Emails, start.UTC(), end.UTC(), uuid.Nil)
 	if err != nil {
 		return "", err
 	}

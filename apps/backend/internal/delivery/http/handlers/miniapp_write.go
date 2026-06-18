@@ -195,7 +195,7 @@ func (a *API) MiniAppConflicts(c *fiber.Ctx) error {
 				exclude = id
 			}
 		}
-		conflicts, err := a.App.MeetingConflicts(c.Context(), req.Participants, start, end, exclude)
+		conflicts, err := a.App.MeetingConflicts(c.Context(), bu.Email, req.Participants, start, end, exclude)
 		if err != nil {
 			return fiber.NewError(fiber.StatusInternalServerError, "internal")
 		}
@@ -223,7 +223,7 @@ func (a *API) MiniAppConflicts(c *fiber.Ctx) error {
 	if req.RecurrenceDays != nil {
 		days = *req.RecurrenceDays
 	}
-	ocs, err := a.App.MeetingSeriesConflicts(c.Context(), req.Participants, start, end, meeting.Recurrence(rec), days, until)
+	ocs, err := a.App.MeetingSeriesConflicts(c.Context(), bu.Email, req.Participants, start, end, meeting.Recurrence(rec), days, until)
 	if err != nil {
 
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())

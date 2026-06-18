@@ -19,10 +19,10 @@ type stubBackend struct{}
 func (stubBackend) SearchEmployeesGlobal(context.Context, string) ([]model.Employee, error) {
 	return nil, nil
 }
-func (stubBackend) FreeSlots(context.Context, []string, time.Time, time.Time, int) ([]application.FreeSlot, error) {
+func (stubBackend) FreeSlots(context.Context, string, []string, time.Time, time.Time, int) ([]application.FreeSlot, error) {
 	return nil, nil
 }
-func (stubBackend) MeetingConflicts(context.Context, []string, time.Time, time.Time, uuid.UUID) ([]application.Conflict, error) {
+func (stubBackend) MeetingConflicts(context.Context, string, []string, time.Time, time.Time, uuid.UUID) ([]application.Conflict, error) {
 	return nil, nil
 }
 
