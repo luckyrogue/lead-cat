@@ -106,6 +106,16 @@ export const kk: typeof en = {
       revokeFailed: "Шақыруды қайтарып алу мүмкін болмады.",
     },
   },
+  onboarding: {
+    invites: {
+      title: "Сізді шақырды",
+      description:
+        "Бар ұйымға қосылу үшін шақыруды қабылдаңыз немесе төменде өзіңіздікін жасаңыз.",
+      accept: "Қабылдау",
+      decline: "Бас тарту",
+      acceptFailed: "Шақыруды қабылдау мүмкін болмады",
+    },
+  },
   settings: {
     pageTitle: "Баптаулар",
     pageDescription: "Жеке қалауларыңызды басқарыңыз.",

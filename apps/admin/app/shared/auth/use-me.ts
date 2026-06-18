@@ -24,5 +24,6 @@ export function useMe() {
     queryFn: fetchMe,
     retry: false,
     staleTime: 60_000,
+    refetchOnMount: "always",
   })
 }

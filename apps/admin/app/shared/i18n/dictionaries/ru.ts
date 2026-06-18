@@ -107,6 +107,16 @@ export const ru: typeof en = {
       revokeFailed: "Не удалось отозвать приглашение.",
     },
   },
+  onboarding: {
+    invites: {
+      title: "Вас пригласили",
+      description:
+        "Примите приглашение, чтобы присоединиться к существующей организации, или создайте свою ниже.",
+      accept: "Принять",
+      decline: "Отклонить",
+      acceptFailed: "Не удалось принять приглашение",
+    },
+  },
   settings: {
     pageTitle: "Настройки",
     pageDescription: "Управляйте личными предпочтениями.",

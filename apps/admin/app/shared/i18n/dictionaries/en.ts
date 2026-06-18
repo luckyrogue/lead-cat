@@ -145,6 +145,16 @@ export const en = {
       },
     },
   },
+  onboarding: {
+    invites: {
+      title: "You've been invited",
+      description:
+        "Accept an invitation to join an existing organization, or create your own below.",
+      accept: "Accept",
+      decline: "Decline",
+      acceptFailed: "Couldn't accept the invitation",
+    },
+  },
   settings: {
     pageTitle: "Settings",
     pageDescription: "Manage your personal preferences.",
