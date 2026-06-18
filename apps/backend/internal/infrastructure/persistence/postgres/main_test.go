@@ -41,7 +41,7 @@ func newStore() *pg.Store {
 	return pg.New(testDB.Pool, zap.NewNop(), cipher)
 }
 
-func seedOrg(t *testing.T, s *pg.Store) uuid.UUID {
+func seedOrg(t *testing.T, s *pg.Store) (uuid.UUID, uuid.UUID) {
 	t.Helper()
 	ctx := context.Background()
 	u, err := s.UpsertUserIdentity(ctx, "sub-"+uuid.NewString(), uuid.NewString()+"@x.io")
@@ -52,7 +52,7 @@ func seedOrg(t *testing.T, s *pg.Store) uuid.UUID {
 	if err != nil {
 		t.Fatalf("seed org: %v", err)
 	}
-	return org.ID
+	return org.ID, u.ID
 }
 
 func seedMeeting(t *testing.T, s *pg.Store, orgID uuid.UUID) pg.Meeting {

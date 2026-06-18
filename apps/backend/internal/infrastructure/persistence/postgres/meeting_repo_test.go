@@ -13,7 +13,7 @@ import (
 func TestMeeting_CreateGetRoundTrip(t *testing.T) {
 	testDB.Truncate(t)
 	s := newStore()
-	org := seedOrg(t, s)
+	org, _ := seedOrg(t, s)
 	created := seedMeeting(t, s, org)
 
 	got, err := s.GetMeeting(context.Background(), org, created.ID)
@@ -31,7 +31,7 @@ func TestMeeting_CreateGetRoundTrip(t *testing.T) {
 func TestMeeting_Update(t *testing.T) {
 	testDB.Truncate(t)
 	s := newStore()
-	org := seedOrg(t, s)
+	org, _ := seedOrg(t, s)
 	m := seedMeeting(t, s, org)
 
 	m.Dept = "Sales"
@@ -48,7 +48,7 @@ func TestMeeting_Update(t *testing.T) {
 func TestMeeting_Cancel(t *testing.T) {
 	testDB.Truncate(t)
 	s := newStore()
-	org := seedOrg(t, s)
+	org, _ := seedOrg(t, s)
 	m := seedMeeting(t, s, org)
 	if err := s.CancelMeeting(context.Background(), org, m.ID); err != nil {
 		t.Fatalf("cancel: %v", err)
@@ -62,7 +62,7 @@ func TestMeeting_Cancel(t *testing.T) {
 func TestMeeting_CreateSeries_Atomic(t *testing.T) {
 	testDB.Truncate(t)
 	s := newStore()
-	org := seedOrg(t, s)
+	org, _ := seedOrg(t, s)
 	series := uuid.New()
 	until := time.Date(2026, 6, 3, 0, 0, 0, 0, time.UTC)
 	ms := []pg.Meeting{
@@ -94,7 +94,7 @@ func TestMeeting_CreateSeries_Atomic(t *testing.T) {
 func TestMeeting_CreateSeries_RollsBackOnBadRow(t *testing.T) {
 	testDB.Truncate(t)
 	s := newStore()
-	org := seedOrg(t, s)
+	org, _ := seedOrg(t, s)
 	bogusOrg := uuid.New() // no such organization -> FK violation on the 2nd row
 	ms := []pg.Meeting{
 		{OrganizationID: org, Dept: "Eng", Type: "Sync", Host: "Mia", Recurrence: "daily", Name: "ok",
@@ -114,7 +114,7 @@ func TestMeeting_CreateSeries_RollsBackOnBadRow(t *testing.T) {
 func TestMeeting_Participants_AddRemove(t *testing.T) {
 	testDB.Truncate(t)
 	s := newStore()
-	org := seedOrg(t, s)
+	org, _ := seedOrg(t, s)
 	m := seedMeeting(t, s, org)
 	ctx := context.Background()
 	if err := s.AddParticipants(ctx, m.ID, []pg.MeetingParticipant{{Email: "a@x.io"}, {Email: "b@x.io"}}); err != nil {

@@ -86,7 +86,7 @@ func TestReminderClaim_Idempotent(t *testing.T) {
 	testDB.Truncate(t)
 	s := newStore()
 	ctx := context.Background()
-	org := seedOrg(t, s)
+	org, _ := seedOrg(t, s)
 	m := seedMeeting(t, s, org)
 	first, err := s.TryClaimReminder(ctx, m.ID, 999, 15)
 	if err != nil || !first {

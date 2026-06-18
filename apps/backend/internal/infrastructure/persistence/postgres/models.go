@@ -20,4 +20,5 @@ type (
 	WebSession         = model.WebSession
 	CalendarConnection = model.CalendarConnection
 	CalendarOAuthState = model.CalendarOAuthState
+	InviteView         = model.InviteView
 )
