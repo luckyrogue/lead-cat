@@ -41,6 +41,15 @@ type Prober interface {
 	Probe(ctx context.Context, saJSON, subject, calendarID string) (ProbeResult, error)
 }
 
+type Interval struct {
+	Start time.Time
+	End   time.Time
+}
+
+type BusyReader interface {
+	BusyTimes(ctx context.Context, emails []string, from, to time.Time) (map[string][]Interval, error)
+}
+
 var ErrNotConfigured = errors.New("google not configured")
 
 var (
