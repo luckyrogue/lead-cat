@@ -174,6 +174,11 @@ func (s *stubRepo) DeleteInvite(_ context.Context, _, _ uuid.UUID) error { retur
 func (s *stubRepo) AcceptInvitesForEmail(_ context.Context, _ string, _ uuid.UUID) (int, error) {
 	return 0, nil
 }
+func (s *stubRepo) ListPendingInvitesForEmail(_ context.Context, _ string) ([]model.InviteView, error) {
+	return nil, nil
+}
+func (s *stubRepo) AcceptInvite(_ context.Context, _, _ uuid.UUID, _ string) error { return nil }
+func (s *stubRepo) DeclineInvite(_ context.Context, _ uuid.UUID, _ string) error   { return nil }
 func (s *stubRepo) ListEmployees(_ context.Context, _ uuid.UUID) ([]model.Employee, error) {
 	return nil, nil
 }

@@ -47,6 +47,9 @@ type Repository interface {
 	ListInvites(ctx context.Context, orgID uuid.UUID) ([]model.OrganizationInvite, error)
 	DeleteInvite(ctx context.Context, orgID, inviteID uuid.UUID) error
 	AcceptInvitesForEmail(ctx context.Context, email string, userID uuid.UUID) (int, error)
+	ListPendingInvitesForEmail(ctx context.Context, email string) ([]model.InviteView, error)
+	AcceptInvite(ctx context.Context, inviteID, userID uuid.UUID, email string) error
+	DeclineInvite(ctx context.Context, inviteID uuid.UUID, email string) error
 
 	ListEmployees(ctx context.Context, organizationID uuid.UUID) ([]model.Employee, error)
 	SearchEmployeesGlobal(ctx context.Context, query string) ([]model.Employee, error)

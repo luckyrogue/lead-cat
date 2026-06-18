@@ -35,7 +35,7 @@ func (s *Store) ListInvites(ctx context.Context, orgID uuid.UUID) ([]Organizatio
 		SELECT id, organization_id, email, role, token_hash, expires_at,
 		       accepted_at, created_by_user_id, created_at
 		FROM organization_invites
-		WHERE organization_id = $1 AND accepted_at IS NULL
+		WHERE organization_id = $1 AND accepted_at IS NULL AND declined_at IS NULL
 		ORDER BY created_at`, orgID)
 	if err != nil {
 		return nil, err

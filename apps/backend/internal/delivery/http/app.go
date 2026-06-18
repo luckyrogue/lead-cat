@@ -87,6 +87,9 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	web.Get("/me", webAuth.Middleware, api.WebMe)
 	web.Get("/me/settings", webAuth.Middleware, api.WebGetMeSettings)
 	web.Patch("/me/settings", webAuth.Middleware, api.WebPatchMeSettings)
+	web.Get("/me/invites", webAuth.Middleware, api.WebMyInvites)
+	web.Post("/me/invites/:iid/accept", webAuth.Middleware, api.WebAcceptInvite)
+	web.Post("/me/invites/:iid/decline", webAuth.Middleware, api.WebDeclineInvite)
 
 	registerRetiredPlatformAuth(app)
 	app.All("/api/me", handlers.PlatformGone)

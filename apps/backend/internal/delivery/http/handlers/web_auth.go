@@ -132,9 +132,6 @@ func (a *API) WebAuthCallback(c *fiber.Ctx) error {
 		a.Log.Error("web_upsert_identity_failed", zap.Error(err))
 		return fiber.NewError(fiber.StatusInternalServerError, "upsert_failed")
 	}
-	if _, err := a.App.AcceptInvitesForEmail(ctx, profile.Email, user.ID); err != nil {
-		a.Log.Warn("web_accept_invites_failed", zap.Error(err))
-	}
 
 	raw, err := a.App.CreateWebSession(ctx, user.ID, c.Get("User-Agent"), c.IP())
 	if err != nil {
@@ -183,9 +180,6 @@ func (a *API) WebMagicVerify(c *fiber.Ctx) error {
 	if err != nil {
 		a.Log.Error("web_upsert_identity_failed", zap.Error(err))
 		return fiber.NewError(fiber.StatusInternalServerError, "upsert_failed")
-	}
-	if _, err := a.App.AcceptInvitesForEmail(ctx, email, user.ID); err != nil {
-		a.Log.Warn("web_accept_invites_failed", zap.Error(err))
 	}
 	raw, err := a.App.CreateWebSession(ctx, user.ID, c.Get("User-Agent"), c.IP())
 	if err != nil {
