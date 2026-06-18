@@ -17,7 +17,7 @@ type CalendarService = docalendar.Service
 var ErrGoogleNotConfigured = docalendar.ErrNotConfigured
 
 type CalendarProvider interface {
-	For(ctx context.Context, organizationID uuid.UUID) (CalendarService, error)
+	For(ctx context.Context, organizationID uuid.UUID, organizerEmail string) (CalendarService, error)
 }
 
 type GoogleProber = docalendar.Prober

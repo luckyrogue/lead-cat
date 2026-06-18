@@ -78,11 +78,17 @@ func main() {
 	}
 	defer queueClient.Close()
 
+	var calendarConnector *google.CalendarConnector
+	if cfg.GoogleClientID != "" && cfg.GoogleClientSecret != "" {
+		calendarConnector = google.NewCalendarConnector(cfg.GoogleClientID, cfg.GoogleClientSecret)
+	}
 	var calProvider application.CalendarProvider
 	if cfg.CalendarStub {
 		calProvider = calendarstub.NewProvider()
+	} else if calendarConnector != nil {
+		calProvider = calendargoogle.NewProvider(store, store, cipher, calendarConnector)
 	} else {
-		calProvider = calendargoogle.NewProvider(store, cipher)
+		calProvider = calendargoogle.NewProvider(store, store, cipher, nil)
 	}
 	services := &application.Services{Store: store, Cipher: cipher, Queue: queueClient, Calendar: calProvider, GoogleProber: calendargoogle.NewProber(), Log: logger}
 	services.WireCQRS()
@@ -105,8 +111,8 @@ func main() {
 		}
 	}
 	connectors := map[string]application.CalendarConnector{}
-	if cfg.GoogleClientID != "" && cfg.GoogleClientSecret != "" {
-		connectors["google"] = google.NewCalendarConnector(cfg.GoogleClientID, cfg.GoogleClientSecret)
+	if calendarConnector != nil {
+		connectors["google"] = calendarConnector
 	}
 	services.ConfigureCalendarConnectors(connectors)
 

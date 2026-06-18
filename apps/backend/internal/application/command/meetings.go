@@ -48,6 +48,17 @@ type Meetings struct {
 	Log      *zap.Logger
 }
 
+func (c *Meetings) organizerEmail(ctx context.Context, organizerUserID *uuid.UUID) string {
+	if organizerUserID == nil {
+		return ""
+	}
+	u, err := c.Store.GetUserByID(ctx, *organizerUserID)
+	if err != nil {
+		return ""
+	}
+	return u.Email
+}
+
 func (c *Meetings) CreateMeeting(ctx context.Context, organizationID, organizerID uuid.UUID, in CreateInput) (model.Meeting, error) {
 	w, err := c.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
@@ -99,7 +110,7 @@ func (c *Meetings) CreateMeeting(ctx context.Context, organizationID, organizerI
 			emails = append(emails, p.Email)
 		}
 	}
-	calSvc, err := c.Calendar.For(ctx, organizationID)
+	calSvc, err := c.Calendar.For(ctx, organizationID, c.organizerEmail(ctx, &organizerID))
 	if err != nil {
 		return model.Meeting{}, err
 	}
@@ -189,7 +200,7 @@ func (c *Meetings) UpdateMeeting(ctx context.Context, organizationID, userID, me
 	}
 
 	if updated.GoogleEventID != "" {
-		calSvc, err := c.Calendar.For(ctx, organizationID)
+		calSvc, err := c.Calendar.For(ctx, organizationID, c.organizerEmail(ctx, cur.OrganizerUserID))
 		if err != nil {
 			return model.Meeting{}, err
 		}
@@ -230,7 +241,7 @@ func (c *Meetings) CancelMeeting(ctx context.Context, organizationID, userID, id
 		return nil
 	}
 	if m.GoogleEventID != "" {
-		if calSvc, ferr := c.Calendar.For(ctx, organizationID); ferr == nil {
+		if calSvc, ferr := c.Calendar.For(ctx, organizationID, c.organizerEmail(ctx, m.OrganizerUserID)); ferr == nil {
 			_ = calSvc.DeleteEvent(ctx, m.GoogleEventID)
 		}
 	}

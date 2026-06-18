@@ -20,6 +20,17 @@ func ownerOrOrganizer(w model.Organization, organizerUserID *uuid.UUID, userID u
 	return organizerUserID != nil && *organizerUserID == userID
 }
 
+func (s *Services) organizerEmail(ctx context.Context, organizerUserID *uuid.UUID) string {
+	if organizerUserID == nil {
+		return ""
+	}
+	u, err := s.Store.GetUserByID(ctx, *organizerUserID)
+	if err != nil {
+		return ""
+	}
+	return u.Email
+}
+
 func normalizeEmail(s string) (string, error) {
 	addr, err := mail.ParseAddress(strings.TrimSpace(s))
 	if err != nil {
@@ -83,7 +94,7 @@ func (s *Services) AddParticipant(ctx context.Context, organizationID, userID, m
 	if err := s.Store.AddParticipants(ctx, meetingID, []model.MeetingParticipant{{Email: email}}); err != nil {
 		return err
 	}
-	if err := s.syncAttendees(ctx, organizationID, m.GoogleEventID, meetingID); err != nil {
+	if err := s.syncAttendees(ctx, organizationID, m.GoogleEventID, meetingID, m.OrganizerUserID); err != nil {
 		return err
 	}
 	if s.Queue != nil {
@@ -106,7 +117,7 @@ func (s *Services) RemoveParticipant(ctx context.Context, organizationID, userID
 	if err := s.Store.RemoveParticipant(ctx, meetingID, email); err != nil {
 		return err
 	}
-	if err := s.syncAttendees(ctx, organizationID, m.GoogleEventID, meetingID); err != nil {
+	if err := s.syncAttendees(ctx, organizationID, m.GoogleEventID, meetingID, m.OrganizerUserID); err != nil {
 		return err
 	}
 	if s.Queue != nil {
@@ -135,7 +146,7 @@ func (s *Services) loadForParticipantOp(ctx context.Context, organizationID, mee
 	return m, org, nil
 }
 
-func (s *Services) syncAttendees(ctx context.Context, organizationID uuid.UUID, googleEventID string, meetingID uuid.UUID) error {
+func (s *Services) syncAttendees(ctx context.Context, organizationID uuid.UUID, googleEventID string, meetingID uuid.UUID, organizerUserID *uuid.UUID) error {
 	if googleEventID == "" {
 		return nil
 	}
@@ -149,7 +160,7 @@ func (s *Services) syncAttendees(ctx context.Context, organizationID uuid.UUID, 
 			emails = append(emails, p.Email)
 		}
 	}
-	calSvc, err := s.Calendar.For(ctx, organizationID)
+	calSvc, err := s.Calendar.For(ctx, organizationID, s.organizerEmail(ctx, organizerUserID))
 	if err != nil {
 		return err
 	}

@@ -25,6 +25,10 @@ func NewCalendarConnector(clientID, clientSecret string) *CalendarConnector {
 
 func (c *CalendarConnector) Name() string { return "google" }
 
+func (c *CalendarConnector) OAuthConfig(redirectURL string) *oauth2.Config {
+	return c.cfg(redirectURL)
+}
+
 func (c *CalendarConnector) cfg(redirectURL string) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     c.clientID,

@@ -30,8 +30,8 @@ func TestFor_ErrNotConfigured(t *testing.T) {
 		"empty-subject": {enc: []byte("x"), subject: ""},
 	} {
 		t.Run(name, func(t *testing.T) {
-			p := NewProvider(fcs, nil)
-			if _, err := p.For(context.Background(), uuid.New()); err != docalendar.ErrNotConfigured {
+			p := NewProvider(nil, fcs, nil, nil)
+			if _, err := p.For(context.Background(), uuid.New(), ""); err != docalendar.ErrNotConfigured {
 				t.Fatalf("want ErrNotConfigured, got %v", err)
 			}
 		})
@@ -43,14 +43,14 @@ func TestFor_CacheHit_DefaultsCalendarID(t *testing.T) {
 	enc := []byte("encrypted-bytes")
 	subject := "svc@x.io"
 	fcs := &fakeConfigStore{enc: enc, subject: subject, calendarID: ""} // blank -> defaults to "primary"
-	p := NewProvider(fcs, nil)
+	p := NewProvider(nil, fcs, nil, nil)
 
 	sum := sha256.Sum256(enc)
 	key := org.String() + "|" + subject + "|primary|" + hex.EncodeToString(sum[:])
 	want := &adapter{calendarID: "primary"}
 	p.cache.Store(key, want)
 
-	got, err := p.For(context.Background(), org)
+	got, err := p.For(context.Background(), org, "")
 	if err != nil {
 		t.Fatalf("For: %v", err)
 	}

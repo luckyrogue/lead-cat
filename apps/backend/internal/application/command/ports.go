@@ -11,6 +11,7 @@ import (
 
 type Store interface {
 	GetOrganization(ctx context.Context, id uuid.UUID) (model.Organization, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (model.User, error)
 	GetMeeting(ctx context.Context, organizationID, id uuid.UUID) (model.Meeting, error)
 	CreateMeeting(ctx context.Context, m model.Meeting) (model.Meeting, error)
 	CreateMeetingSeries(ctx context.Context, ms []model.Meeting, ps []model.MeetingParticipant) ([]model.Meeting, error)
@@ -20,7 +21,7 @@ type Store interface {
 }
 
 type CalendarProvider interface {
-	For(ctx context.Context, organizationID uuid.UUID) (docalendar.Service, error)
+	For(ctx context.Context, organizationID uuid.UUID, organizerEmail string) (docalendar.Service, error)
 }
 
 type JobQueue interface {

@@ -38,6 +38,10 @@ func (f *fakeStore) GetOrganization(_ context.Context, _ uuid.UUID) (model.Organ
 	return f.org, nil
 }
 
+func (f *fakeStore) GetUserByID(_ context.Context, id uuid.UUID) (model.User, error) {
+	return model.User{ID: id}, nil
+}
+
 func (f *fakeStore) GetMeeting(_ context.Context, _, id uuid.UUID) (model.Meeting, error) {
 	m, ok := f.meetings[id]
 	if !ok {
@@ -93,7 +97,7 @@ type fakeCalProvider struct {
 	forErr error
 }
 
-func (p *fakeCalProvider) For(_ context.Context, _ uuid.UUID) (docalendar.Service, error) {
+func (p *fakeCalProvider) For(_ context.Context, _ uuid.UUID, _ string) (docalendar.Service, error) {
 	if p.forErr != nil {
 		return nil, p.forErr
 	}

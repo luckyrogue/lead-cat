@@ -94,7 +94,7 @@ func (s *Services) UpdateSeries(ctx context.Context, organizationID, userID, mee
 		return 0, err
 	}
 
-	if calSvc, ferr := s.Calendar.For(ctx, organizationID); ferr != nil {
+	if calSvc, ferr := s.Calendar.For(ctx, organizationID, s.organizerEmail(ctx, picked.OrganizerUserID)); ferr != nil {
 		if s.Log != nil {
 			s.Log.Warn("series update calendar provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))
 		}
@@ -136,7 +136,7 @@ func (s *Services) CancelSeries(ctx context.Context, organizationID, userID, mee
 		return 0, err
 	}
 
-	if calSvc, ferr := s.Calendar.For(ctx, organizationID); ferr != nil {
+	if calSvc, ferr := s.Calendar.For(ctx, organizationID, s.organizerEmail(ctx, picked.OrganizerUserID)); ferr != nil {
 		if s.Log != nil {
 			s.Log.Warn("cancel series calendar provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))
 		}
@@ -187,7 +187,7 @@ func (s *Services) UpdateWholeSeries(ctx context.Context, organizationID, userID
 	if err := s.Store.UpdateMeetingsTx(ctx, organizationID, rows); err != nil {
 		return 0, err
 	}
-	if calSvc, ferr := s.Calendar.For(ctx, organizationID); ferr != nil {
+	if calSvc, ferr := s.Calendar.For(ctx, organizationID, s.organizerEmail(ctx, picked.OrganizerUserID)); ferr != nil {
 		if s.Log != nil {
 			s.Log.Warn("whole_series_update_calendar_provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))
 		}
@@ -228,7 +228,7 @@ func (s *Services) CancelWholeSeries(ctx context.Context, organizationID, userID
 	if err != nil {
 		return 0, err
 	}
-	if calSvc, ferr := s.Calendar.For(ctx, organizationID); ferr != nil {
+	if calSvc, ferr := s.Calendar.For(ctx, organizationID, s.organizerEmail(ctx, picked.OrganizerUserID)); ferr != nil {
 		if s.Log != nil {
 			s.Log.Warn("whole_series_cancel_calendar_provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))
 		}
@@ -294,7 +294,7 @@ func (s *Services) ChangeSeriesEnd(ctx context.Context, organizationID, userID, 
 
 	added := 0
 	if len(plan.Create) > 0 {
-		calSvc, ferr := s.Calendar.For(ctx, organizationID)
+		calSvc, ferr := s.Calendar.For(ctx, organizationID, s.organizerEmail(ctx, anchor.OrganizerUserID))
 		if ferr != nil {
 			return 0, 0, ferr
 		}
@@ -345,7 +345,7 @@ func (s *Services) ChangeSeriesEnd(ctx context.Context, organizationID, userID, 
 			cancelSet[id] = true
 		}
 		cutoff := time.Date(newUntil.Year(), newUntil.Month(), newUntil.Day(), 0, 0, 0, 0, loc).AddDate(0, 0, 1)
-		if calSvc, ferr := s.Calendar.For(ctx, organizationID); ferr == nil {
+		if calSvc, ferr := s.Calendar.For(ctx, organizationID, s.organizerEmail(ctx, anchor.OrganizerUserID)); ferr == nil {
 			var ids []string
 			for _, o := range occs {
 				if cancelSet[o.ID] && o.GoogleEventID != "" {
