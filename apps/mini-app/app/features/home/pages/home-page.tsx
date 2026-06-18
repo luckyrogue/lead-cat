@@ -7,12 +7,15 @@ import { EmptyState, ErrorState, LoadingState } from "~/components/states"
 import { myMeetingsQuery } from "~/entities/meeting/queries"
 import { useAuth } from "~/shared/auth/auth-context"
 import { useT } from "~/shared/i18n/context"
+import { getGreetingName } from "~/shared/lib/display-name"
+import { getTelegramUser } from "~/shared/tma/telegram-env"
 
 export function HomePage() {
   const t = useT()
   const { user } = useAuth()
   const meetings = useQuery(myMeetingsQuery("upcoming"))
-  const firstName = (user?.name ?? "").split(" ")[0] || "there"
+  const firstName =
+    getGreetingName(user?.name, getTelegramUser()?.first_name) || "there"
   const list = meetings.data ?? []
 
   return (
