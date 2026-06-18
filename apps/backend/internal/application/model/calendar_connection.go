@@ -12,3 +12,11 @@ type CalendarConnection struct {
 	ConnectedAt  time.Time
 	UpdatedAt    time.Time
 }
+
+type CalendarOAuthState struct {
+	State     string
+	Email     string
+	Provider  string
+	Verifier  string
+	ExpiresAt time.Time
+}

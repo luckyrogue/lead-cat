@@ -19,4 +19,5 @@ type (
 	MagicLinkToken     = model.MagicLinkToken
 	WebSession         = model.WebSession
 	CalendarConnection = model.CalendarConnection
+	CalendarOAuthState = model.CalendarOAuthState
 )
