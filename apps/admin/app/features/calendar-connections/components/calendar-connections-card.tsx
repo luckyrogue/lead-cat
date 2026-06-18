@@ -21,6 +21,7 @@ export function CalendarConnectionsCard() {
   const start = useStartConnect()
   const disconnectMutation = useDisconnect()
   const google = data.find((c) => c.provider === "google")
+  const microsoft = data.find((c) => c.provider === "microsoft")
 
   return (
     <Card>
@@ -31,30 +32,57 @@ export function CalendarConnectionsCard() {
         </div>
         <CardDescription>{t("settings.calendars.subtitle")}</CardDescription>
       </CardHeader>
-      <CardContent className="flex items-center gap-3">
-        {google?.connected ? (
-          <>
-            <span className="text-sm text-muted-foreground">
-              {t("settings.calendars.connected", { email: google.email })}
-            </span>
+      <CardContent className="flex flex-col gap-4">
+        <div className="flex items-center gap-3">
+          {google?.connected ? (
+            <>
+              <span className="text-sm text-muted-foreground">
+                {t("settings.calendars.connected", { email: google.email })}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={disconnectMutation.isPending}
+                onClick={() => disconnectMutation.mutate("google")}
+              >
+                {t("settings.calendars.disconnect")}
+              </Button>
+            </>
+          ) : (
             <Button
-              variant="outline"
               size="sm"
-              disabled={disconnectMutation.isPending}
-              onClick={() => disconnectMutation.mutate("google")}
+              disabled={start.isPending}
+              onClick={() => start.mutate("google")}
             >
-              {t("settings.calendars.disconnect")}
+              {t("settings.calendars.connectGoogle")}
             </Button>
-          </>
-        ) : (
-          <Button
-            size="sm"
-            disabled={start.isPending}
-            onClick={() => start.mutate("google")}
-          >
-            {t("settings.calendars.connectGoogle")}
-          </Button>
-        )}
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          {microsoft?.connected ? (
+            <>
+              <span className="text-sm text-muted-foreground">
+                {t("settings.calendars.connected", { email: microsoft.email })}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={disconnectMutation.isPending}
+                onClick={() => disconnectMutation.mutate("microsoft")}
+              >
+                {t("settings.calendars.disconnect")}
+              </Button>
+            </>
+          ) : (
+            <Button
+              size="sm"
+              disabled={start.isPending}
+              onClick={() => start.mutate("microsoft")}
+            >
+              {t("settings.calendars.connectMicrosoft")}
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   )

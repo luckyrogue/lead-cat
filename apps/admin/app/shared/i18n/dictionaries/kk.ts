@@ -127,6 +127,7 @@ export const kk: typeof en = {
       subtitle:
         "Өз күнтізбеңізді қосыңыз, сонда сіз ұйымдастырған кездесулер оған автоматты түрде қосылады.",
       connectGoogle: "Google қосу",
+      connectMicrosoft: "Microsoft қосу",
       disconnect: "Ажырату",
       connected: "{email} ретінде қосылған",
     },

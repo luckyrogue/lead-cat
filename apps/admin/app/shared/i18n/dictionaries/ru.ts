@@ -128,6 +128,7 @@ export const ru: typeof en = {
       subtitle:
         "Подключите свой календарь, чтобы организованные вами встречи добавлялись в него.",
       connectGoogle: "Подключить Google",
+      connectMicrosoft: "Подключить Microsoft",
       disconnect: "Отключить",
       connected: "Подключено как {email}",
     },
