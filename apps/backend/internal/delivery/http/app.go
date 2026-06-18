@@ -130,6 +130,17 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	miniapp.Delete("/meetings/:id/participants", api.MiniAppRemoveParticipant)
 	miniapp.Patch("/meetings/:id/series-end", api.MiniAppChangeSeriesEnd)
 
+	app.Get("/api/calendar/connect/:provider/callback", api.CalendarConnectCallback)
+
+	calendarWeb := app.Group("/api/calendar", webAuth.Middleware)
+	calendarWeb.Post("/connect/:provider/start", api.CalendarConnectStart)
+	calendarWeb.Get("/connections", api.CalendarConnectionsList)
+	calendarWeb.Delete("/connections/:provider", api.CalendarDisconnect)
+
+	miniapp.Post("/calendar/connect/:provider/start", api.CalendarConnectStart)
+	miniapp.Get("/calendar/connections", api.CalendarConnectionsList)
+	miniapp.Delete("/calendar/connections/:provider", api.CalendarDisconnect)
+
 	miniappAdmin := miniapp.Group("/admin", middleware.RequireBotAdmin)
 	miniappAdmin.Get("/organization", api.MiniAppAdminGetWorkspace)
 	miniappAdmin.Post("/organization", api.MiniAppAdminCreateWorkspace)

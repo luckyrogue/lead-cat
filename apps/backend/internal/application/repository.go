@@ -85,4 +85,10 @@ type Repository interface {
 	ResolveWebSession(ctx context.Context, tokenHash []byte, now time.Time) (model.WebSession, bool, error)
 	TouchWebSession(ctx context.Context, id uuid.UUID, lastSeen, expiresAt time.Time) error
 	RevokeWebSession(ctx context.Context, tokenHash []byte, now time.Time) error
+
+	CreateCalendarOAuthState(ctx context.Context, st model.CalendarOAuthState) error
+	ConsumeCalendarOAuthState(ctx context.Context, state string) (model.CalendarOAuthState, error)
+	UpsertCalendarConnection(ctx context.Context, conn model.CalendarConnection) error
+	ListCalendarConnections(ctx context.Context, email string) ([]model.CalendarConnection, error)
+	DeleteCalendarConnection(ctx context.Context, email, provider string) error
 }
