@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/crypto"
 	pg "github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 	"github.com/luckyrogue/lead-cat/internal/testsupport/pgtest"
 )
@@ -32,7 +33,13 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func newStore() *pg.Store { return pg.New(testDB.Pool, zap.NewNop()) }
+func newStore() *pg.Store {
+	cipher, err := crypto.NewTokenCipher("pgtest-fixed-32-byte-key-for-tests!")
+	if err != nil {
+		panic("newStore: cipher: " + err.Error())
+	}
+	return pg.New(testDB.Pool, zap.NewNop(), cipher)
+}
 
 func seedOrg(t *testing.T, s *pg.Store) uuid.UUID {
 	t.Helper()

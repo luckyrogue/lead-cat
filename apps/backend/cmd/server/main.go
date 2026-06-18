@@ -60,12 +60,12 @@ func main() {
 		}
 	}
 
-	store := postgres.New(pool, logger)
-	employeedir.Seed(ctx, store, logger)
 	cipher, err := crypto.NewTokenCipher(cfg.MasterEncryptionKey)
 	if err != nil {
 		logger.Fatal("cipher", zap.Error(err))
 	}
+	store := postgres.New(pool, logger, cipher)
+	employeedir.Seed(ctx, store, logger)
 
 	rdb := redis.NewClient(redisOpts(cfg.RedisURL))
 	if err := rdb.Ping(ctx).Err(); err != nil {

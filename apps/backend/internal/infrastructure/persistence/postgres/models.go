@@ -18,4 +18,5 @@ type (
 	OrganizationInvite = model.OrganizationInvite
 	MagicLinkToken     = model.MagicLinkToken
 	WebSession         = model.WebSession
+	CalendarConnection = model.CalendarConnection
 )

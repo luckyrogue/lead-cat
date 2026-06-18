@@ -20,6 +20,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 	"go.uber.org/zap"
 
+	"github.com/luckyrogue/lead-cat/internal/infrastructure/crypto"
 	pg "github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
@@ -90,7 +91,13 @@ func migrationsDir() string {
 }
 
 // Store returns a repository bound to the pool.
-func (d *DB) Store(log *zap.Logger) *pg.Store { return pg.New(d.Pool, log) }
+func (d *DB) Store(log *zap.Logger) *pg.Store {
+	cipher, err := crypto.NewTokenCipher("pgtest-fixed-32-byte-key-for-tests!")
+	if err != nil {
+		panic("pgtest: cipher: " + err.Error())
+	}
+	return pg.New(d.Pool, log, cipher)
+}
 
 // Truncate wipes every application table so each test starts clean.
 func (d *DB) Truncate(t *testing.T) {
