@@ -1,5 +1,5 @@
 import {
-  DatePicker,
+  DateRangePicker,
   Input,
   Label,
   Select,
@@ -33,7 +33,7 @@ export function MeetingsFilterBar({
   const locale = useLocale()
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <Field label={t("meetings.filter.labelStatus")}>
         <Select
           value={filter.status ?? "all"}
@@ -86,23 +86,18 @@ export function MeetingsFilterBar({
         </Select>
       </Field>
 
-      <Field label={t("meetings.filter.labelFrom")}>
-        <DatePicker
-          value={filter.from ?? ""}
-          onChange={(value) => onFilterChange({ from: value || undefined })}
+      <Field label={t("meetings.filter.labelDateRange")} className="sm:col-span-2">
+        <DateRangePicker
+          value={{ from: filter.from ?? "", to: filter.to ?? "" }}
+          onChange={(range) =>
+            onFilterChange({
+              from: range.from || undefined,
+              to: range.to || undefined,
+            })
+          }
           allowClear
           localeCode={locale}
-          placeholder={t("meetings.filter.labelFrom")}
-        />
-      </Field>
-
-      <Field label={t("meetings.filter.labelTo")}>
-        <DatePicker
-          value={filter.to ?? ""}
-          onChange={(value) => onFilterChange({ to: value || undefined })}
-          allowClear
-          localeCode={locale}
-          placeholder={t("meetings.filter.labelTo")}
+          placeholder={t("common.dateRangePlaceholder")}
         />
       </Field>
 
@@ -120,12 +115,14 @@ export function MeetingsFilterBar({
 function Field({
   label,
   children,
+  className,
 }: {
   label: string
   children: React.ReactNode
+  className?: string
 }) {
   return (
-    <div className="min-w-0 space-y-2">
+    <div className={className ? `min-w-0 space-y-2 ${className}` : "min-w-0 space-y-2"}>
       <Label className="text-xs text-muted-foreground">{label}</Label>
       {children}
     </div>

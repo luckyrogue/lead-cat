@@ -5,12 +5,12 @@ import {
   DatePicker,
   Input,
   Label,
+  MeetingWhenPicker,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  TimePicker,
   toast,
 } from "@leadcat/ui"
 import { useState } from "react"
@@ -30,7 +30,7 @@ import { useCreateMeeting } from "~/entities/meeting/mutations"
 import type { Employee } from "~/entities/employee/types"
 import type { OccurrenceConflicts } from "~/entities/meeting/types"
 import { useT, useLocale } from "~/shared/i18n/context"
-import { addMinutesToTime, todayIso } from "~/shared/lib/format"
+import { todayIso, addMinutesToTime } from "~/shared/lib/format"
 
 const RECURRENCES = ["once", "daily", "weekly", "monthly", "custom"] as const
 
@@ -50,6 +50,7 @@ export function MeetingCreatePage() {
     handleSubmit,
     getValues,
     watch,
+    setValue,
     control,
     formState: { errors },
   } = useForm<CreateMeetingForm>({
@@ -59,7 +60,7 @@ export function MeetingCreatePage() {
       dept: "",
       date: todayIso(),
       start: "10:00",
-      end: addMinutesToTime("10:00", 30),
+      end: addMinutesToTime("10:00", 60),
       recurrence: "once",
       recurrence_until: "",
       recurrence_days: [],
@@ -68,6 +69,9 @@ export function MeetingCreatePage() {
   })
 
   const recurrence = watch("recurrence")
+  const meetingDate = watch("date")
+  const meetingStart = watch("start")
+  const meetingEnd = watch("end")
   const te = (message?: string) => (message ? t(message) : undefined)
 
   async function onCheckConflicts() {
@@ -145,51 +149,33 @@ export function MeetingCreatePage() {
             {...register("dept")}
           />
         </Field>
-        <Field label={t("create.fieldDate")} error={te(errors.date?.message)}>
-          <Controller
-            control={control}
-            name="date"
-            render={({ field }) => (
-              <DatePicker
-                value={field.value}
-                onChange={field.onChange}
-                localeCode={locale}
-                placeholder={t("create.fieldDate")}
-              />
-            )}
+        <Field
+          label={t("create.fieldWhen")}
+          error={
+            te(errors.date?.message) ??
+            te(errors.start?.message) ??
+            te(errors.end?.message)
+          }
+        >
+          <MeetingWhenPicker
+            value={{
+              date: meetingDate,
+              start: meetingStart,
+              end: meetingEnd,
+            }}
+            onChange={(next) => {
+              setValue("date", next.date, { shouldValidate: true })
+              setValue("start", next.start, { shouldValidate: true })
+              setValue("end", next.end, { shouldValidate: true })
+            }}
+            localeCode={locale}
+            labels={{
+              date: t("create.fieldDate"),
+              start: t("create.fieldStart"),
+              end: t("create.fieldEnd"),
+            }}
           />
         </Field>
-        <div className="grid grid-cols-2 gap-3">
-          <Field
-            label={t("create.fieldStart")}
-            error={te(errors.start?.message)}
-          >
-            <Controller
-              control={control}
-              name="start"
-              render={({ field }) => (
-                <TimePicker
-                  value={field.value}
-                  onChange={field.onChange}
-                  placeholder={t("create.fieldStart")}
-                />
-              )}
-            />
-          </Field>
-          <Field label={t("create.fieldEnd")} error={te(errors.end?.message)}>
-            <Controller
-              control={control}
-              name="end"
-              render={({ field }) => (
-                <TimePicker
-                  value={field.value}
-                  onChange={field.onChange}
-                  placeholder={t("create.fieldEnd")}
-                />
-              )}
-            />
-          </Field>
-        </div>
 
         <div className="grid grid-cols-2 gap-3">
           <Field

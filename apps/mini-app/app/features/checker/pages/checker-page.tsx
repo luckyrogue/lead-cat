@@ -1,4 +1,4 @@
-import { Button, DatePicker, Input, Label, toast } from "@leadcat/ui"
+import { Button, DateRangePicker, Input, Label, toast } from "@leadcat/ui"
 import { useState } from "react"
 
 import { EmployeePicker } from "~/components/employee-picker"
@@ -56,24 +56,17 @@ export function CheckerPage() {
         <EmployeePicker selected={participants} onChange={setParticipants} />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Field label={t("checker.fieldFrom")}>
-          <DatePicker
-            value={from}
-            onChange={setFrom}
-            localeCode={locale}
-            placeholder={t("checker.fieldFrom")}
-          />
-        </Field>
-        <Field label={t("checker.fieldTo")}>
-          <DatePicker
-            value={to}
-            onChange={setTo}
-            localeCode={locale}
-            placeholder={t("checker.fieldTo")}
-          />
-        </Field>
-      </div>
+      <Field label={t("checker.fieldDateRange")}>
+        <DateRangePicker
+          value={{ from, to }}
+          onChange={(range) => {
+            setFrom(range.from)
+            setTo(range.to)
+          }}
+          localeCode={locale}
+          placeholder={t("common.dateRangePlaceholder")}
+        />
+      </Field>
 
       <Field label={t("checker.fieldDuration")}>
         <Input

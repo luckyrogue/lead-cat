@@ -12,6 +12,7 @@ export const en = {
     saved: "Saved",
     saveFailed: "Save failed",
     failedToLoad: "Failed to load.",
+    dateRangePlaceholder: "Select date range",
   },
   nav: {
     dashboard: "Dashboard",
@@ -205,6 +206,7 @@ export const en = {
       labelOrganizer: "Organizer",
       labelFrom: "From",
       labelTo: "To",
+      labelDateRange: "Date range",
       labelDepartment: "Department",
       statusAll: "All",
       statusScheduled: "Scheduled",
@@ -225,6 +227,7 @@ export const en = {
       placeholderHost: "Host name",
       labelDate: "Date",
       hintDateLocked: "Locked for series edits",
+      labelWhen: "When",
       labelStart: "Start",
       labelEnd: "End",
       labelRepeats: "Repeats",

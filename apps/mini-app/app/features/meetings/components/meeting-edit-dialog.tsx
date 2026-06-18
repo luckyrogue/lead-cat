@@ -8,7 +8,7 @@ import {
   DialogTitle,
   Input,
   Label,
-  TimePicker,
+  MeetingWhenPicker,
   toast,
 } from "@leadcat/ui"
 import { useEffect, useState } from "react"
@@ -126,37 +126,25 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
           <Field label={t("meetings.edit.fieldTitle")}>
             <Input value={type} onChange={(e) => setType(e.target.value)} />
           </Field>
-          <Field
-            label={
-              lockDate
-                ? t("meetings.edit.fieldDateLocked")
-                : t("meetings.edit.fieldDate")
-            }
-          >
-            <DatePicker
-              value={date}
-              disabled={lockDate}
-              onChange={setDate}
+          <Field label={t("meetings.edit.fieldWhen")}>
+            <MeetingWhenPicker
+              value={{ date, start, end }}
+              onChange={(next) => {
+                setDate(next.date)
+                setStart(next.start)
+                setEnd(next.end)
+              }}
+              disabledDate={lockDate}
               localeCode={locale}
-              placeholder={t("meetings.edit.fieldDate")}
+              labels={{
+                date: lockDate
+                  ? t("meetings.edit.fieldDateLocked")
+                  : t("meetings.edit.fieldDate"),
+                start: t("meetings.edit.fieldStart"),
+                end: t("meetings.edit.fieldEnd"),
+              }}
             />
           </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label={t("meetings.edit.fieldStart")}>
-              <TimePicker
-                value={start}
-                onChange={setStart}
-                placeholder={t("meetings.edit.fieldStart")}
-              />
-            </Field>
-            <Field label={t("meetings.edit.fieldEnd")}>
-              <TimePicker
-                value={end}
-                onChange={setEnd}
-                placeholder={t("meetings.edit.fieldEnd")}
-              />
-            </Field>
-          </div>
           <Field label={t("meetings.edit.fieldDescription")}>
             <Input value={desc} onChange={(e) => setDesc(e.target.value)} />
           </Field>

@@ -6,13 +6,15 @@ import {
   Input,
   Label,
   Loader2,
+  MeetingWhenPicker,
   Pencil,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  TimePicker,
+  addMinutesToTime,
+  todayIso,
 } from "@leadcat/ui"
 import { useState } from "react"
 import { Controller, useForm } from "react-hook-form"
@@ -97,14 +99,28 @@ export function MeetingForm({
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<MeetingFormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { ...EMPTY, ...defaults },
+    defaultValues: {
+      ...EMPTY,
+      ...(mode === "create"
+        ? {
+            date: todayIso(),
+            start: "10:00",
+            end: addMinutesToTime("10:00", 60),
+          }
+        : {}),
+      ...defaults,
+    },
   })
 
   const te = (message?: string) => (message ? t(message) : undefined)
   const recurrence = watch("recurrence")
+  const meetingDate = watch("date")
+  const meetingStart = watch("start")
+  const meetingEnd = watch("end")
   const isEdit = mode === "edit"
   const showScope = isEdit && series
   const [scope, setScope] = useState<MeetingScope>("this")
@@ -168,59 +184,35 @@ export function MeetingForm({
         />
       </Field>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Field
-          label={t("meetings.form.labelDate")}
-          hint={lockDate ? t("meetings.form.hintDateLocked") : undefined}
-          error={te(errors.date?.message)}
-        >
-          <Controller
-            control={control}
-            name="date"
-            render={({ field }) => (
-              <DatePicker
-                value={field.value}
-                onChange={field.onChange}
-                disabled={lockDate}
-                localeCode={locale}
-                placeholder={t("meetings.form.labelDate")}
-              />
-            )}
-          />
-        </Field>
-        <Field
-          label={t("meetings.form.labelStart")}
-          error={te(errors.start?.message)}
-        >
-          <Controller
-            control={control}
-            name="start"
-            render={({ field }) => (
-              <TimePicker
-                value={field.value}
-                onChange={field.onChange}
-                placeholder={t("meetings.form.labelStart")}
-              />
-            )}
-          />
-        </Field>
-        <Field
-          label={t("meetings.form.labelEnd")}
-          error={te(errors.end?.message)}
-        >
-          <Controller
-            control={control}
-            name="end"
-            render={({ field }) => (
-              <TimePicker
-                value={field.value}
-                onChange={field.onChange}
-                placeholder={t("meetings.form.labelEnd")}
-              />
-            )}
-          />
-        </Field>
-      </div>
+      <Field
+        label={t("meetings.form.labelWhen")}
+        hint={lockDate ? t("meetings.form.hintDateLocked") : undefined}
+        error={
+          te(errors.date?.message) ??
+          te(errors.start?.message) ??
+          te(errors.end?.message)
+        }
+      >
+        <MeetingWhenPicker
+          value={{
+            date: meetingDate,
+            start: meetingStart,
+            end: meetingEnd,
+          }}
+          onChange={(next) => {
+            setValue("date", next.date, { shouldValidate: true })
+            setValue("start", next.start, { shouldValidate: true })
+            setValue("end", next.end, { shouldValidate: true })
+          }}
+          disabledDate={lockDate}
+          localeCode={locale}
+          labels={{
+            date: t("meetings.form.labelDate"),
+            start: t("meetings.form.labelStart"),
+            end: t("meetings.form.labelEnd"),
+          }}
+        />
+      </Field>
 
       {!isEdit ? (
         <>

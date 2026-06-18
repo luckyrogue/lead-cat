@@ -12,6 +12,7 @@ export const ru: typeof en = {
     saved: "Сохранено",
     saveFailed: "Не удалось сохранить",
     failedToLoad: "Не удалось загрузить.",
+    dateRangePlaceholder: "Выберите период",
   },
   nav: {
     dashboard: "Главная",
@@ -168,6 +169,7 @@ export const ru: typeof en = {
       labelOrganizer: "Организатор",
       labelFrom: "От",
       labelTo: "До",
+      labelDateRange: "Период",
       labelDepartment: "Отдел",
       statusAll: "Все",
       statusScheduled: "Запланировано",
@@ -188,6 +190,7 @@ export const ru: typeof en = {
       placeholderHost: "Имя ведущего",
       labelDate: "Дата",
       hintDateLocked: "Заблокировано для редактирования серии",
+      labelWhen: "Когда",
       labelStart: "Начало",
       labelEnd: "Конец",
       labelRepeats: "Повторение",

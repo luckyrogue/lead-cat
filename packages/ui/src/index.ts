@@ -59,6 +59,12 @@ export {
 } from "./components/ui/popover"
 export { Calendar, CalendarDayButton } from "./components/ui/calendar"
 export { DatePicker, pickerTriggerClassName } from "./components/ui/date-picker"
+export { DateRangePicker } from "./components/ui/date-range-picker"
+export { MeetingWhenPicker } from "./components/ui/meeting-when-picker"
+export type {
+  MeetingWhenLabels,
+  MeetingWhenValue,
+} from "./components/ui/meeting-when-picker"
 export { TimePicker } from "./components/ui/time-picker"
 export { Toaster } from "./components/ui/sonner"
 
@@ -71,6 +77,13 @@ export { CatHead } from "./components/cat/cat-head"
 
 export { cn } from "./lib/cn"
 export type { ClassValue } from "./lib/cn"
+export {
+  addMinutesToTime,
+  DEFAULT_MEETING_DURATION_MIN,
+  diffMinutes,
+  todayIso,
+} from "./lib/date"
+export type { IsoDateRange } from "./lib/date"
 
 export {
   ArrowRight,

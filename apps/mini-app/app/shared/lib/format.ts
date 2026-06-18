@@ -1,5 +1,10 @@
 import { DEFAULT_LOCALE, type Locale } from "~/shared/i18n/types"
 
+export {
+  addMinutesToTime,
+  todayIso,
+} from "@leadcat/ui"
+
 export function formatDate(
   iso: string,
   locale: Locale = DEFAULT_LOCALE
@@ -49,28 +54,10 @@ function parseDate(iso: string): Date | null {
   return new Date(y, m - 1, d)
 }
 
-export function todayIso(): string {
-  const d = new Date()
-  const m = String(d.getMonth() + 1).padStart(2, "0")
-  const day = String(d.getDate()).padStart(2, "0")
-  return `${d.getFullYear()}-${m}-${day}`
-}
-
 export function addDaysIso(iso: string, days: number): string {
   const d = parseDate(iso) ?? new Date()
   d.setDate(d.getDate() + days)
   const m = String(d.getMonth() + 1).padStart(2, "0")
   const day = String(d.getDate()).padStart(2, "0")
   return `${d.getFullYear()}-${m}-${day}`
-}
-
-export function addMinutesToTime(time: string, minutes: number): string {
-  const [h, m] = time.split(":").map(Number)
-  if (Number.isNaN(h) || Number.isNaN(m)) {
-    return time
-  }
-  const total = h * 60 + m + minutes
-  const hh = Math.floor((total % (24 * 60)) / 60)
-  const mm = total % 60
-  return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`
 }

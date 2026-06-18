@@ -12,6 +12,7 @@ export const kk: typeof en = {
     saved: "Сақталды",
     saveFailed: "Сақтау мүмкін болмады",
     failedToLoad: "Жүктеу мүмкін болмады.",
+    dateRangePlaceholder: "Кезеңді таңдаңыз",
   },
   nav: {
     dashboard: "Басты бет",
@@ -166,6 +167,7 @@ export const kk: typeof en = {
       labelOrganizer: "Ұйымдастырушы",
       labelFrom: "Бастап",
       labelTo: "Дейін",
+      labelDateRange: "Кезең",
       labelDepartment: "Бөлім",
       statusAll: "Барлығы",
       statusScheduled: "Жоспарланған",
@@ -186,6 +188,7 @@ export const kk: typeof en = {
       placeholderHost: "Жетекші аты",
       labelDate: "Күні",
       hintDateLocked: "Сериялы өңдеу үшін бекітілген",
+      labelWhen: "Қашан",
       labelStart: "Басталуы",
       labelEnd: "Аяқталуы",
       labelRepeats: "Қайталану",
