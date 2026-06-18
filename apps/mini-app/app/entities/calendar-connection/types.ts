@@ -1,4 +1,4 @@
-export type CalendarProvider = "google"
+export type CalendarProvider = "google" | "microsoft"
 
 export type CalendarConnection = {
   provider: CalendarProvider

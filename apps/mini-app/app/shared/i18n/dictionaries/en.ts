@@ -127,6 +127,7 @@ export const en = {
     calendar: {
       title: "Google Calendar",
       connectGoogle: "Connect Google Calendar",
+      connectMicrosoft: "Connect Microsoft",
       disconnect: "Disconnect",
       connected: "Connected: {email}",
     },

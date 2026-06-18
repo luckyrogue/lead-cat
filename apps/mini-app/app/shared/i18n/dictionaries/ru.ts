@@ -127,6 +127,7 @@ export const ru: typeof en = {
     calendar: {
       title: "Google Календарь",
       connectGoogle: "Подключить Google Календарь",
+      connectMicrosoft: "Подключить Microsoft",
       disconnect: "Отключить",
       connected: "Подключён: {email}",
     },

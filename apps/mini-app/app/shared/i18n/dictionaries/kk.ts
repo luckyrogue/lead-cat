@@ -127,6 +127,7 @@ export const kk: typeof en = {
     calendar: {
       title: "Google Күнтізбе",
       connectGoogle: "Google Күнтізбені қосу",
+      connectMicrosoft: "Microsoft қосу",
       disconnect: "Ажырату",
       connected: "Қосылған: {email}",
     },

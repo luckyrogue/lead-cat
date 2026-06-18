@@ -2,6 +2,7 @@ import { Button, Card, CardContent, cn } from "@leadcat/ui"
 import { useEffect } from "react"
 
 import { useCalendarConnections, useDisconnect, useStartConnect } from "~/entities/calendar-connection/queries"
+import type { CalendarProvider } from "~/entities/calendar-connection/types"
 import { useT } from "~/shared/i18n/context"
 import { getWebApp } from "~/shared/tma/telegram-env"
 
@@ -18,9 +19,10 @@ export function CalendarConnectionRow() {
   }, [refetch])
 
   const google = data.find((c) => c.provider === "google")
+  const microsoft = data.find((c) => c.provider === "microsoft")
 
-  const connect = async () => {
-    const res = await start.mutateAsync("google")
+  const connect = async (provider: CalendarProvider) => {
+    const res = await start.mutateAsync(provider)
     getWebApp()?.openLink?.(res.auth_url)
   }
 
@@ -50,9 +52,35 @@ export function CalendarConnectionRow() {
             <Button
               size="sm"
               disabled={start.isPending}
-              onClick={connect}
+              onClick={() => connect("google")}
             >
               {t("profile.calendar.connectGoogle")}
+            </Button>
+          )}
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          {microsoft?.connected ? (
+            <>
+              <span className="truncate text-sm text-muted-foreground">
+                {t("profile.calendar.connected", { email: microsoft.email })}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={disconnect.isPending}
+                className={cn("shrink-0 text-destructive hover:text-destructive")}
+                onClick={() => disconnect.mutate("microsoft")}
+              >
+                {t("profile.calendar.disconnect")}
+              </Button>
+            </>
+          ) : (
+            <Button
+              size="sm"
+              disabled={start.isPending}
+              onClick={() => connect("microsoft")}
+            >
+              {t("profile.calendar.connectMicrosoft")}
             </Button>
           )}
         </div>
