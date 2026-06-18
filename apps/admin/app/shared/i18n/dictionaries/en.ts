@@ -104,6 +104,13 @@ export const en = {
       revoked: "Invite revoked.",
       revokeFailed: "Could not revoke the invite.",
     },
+    requests: {
+      title: "Join requests",
+      description: "People requesting to join this organization.",
+      accept: "Accept",
+      decline: "Decline",
+      empty: "No pending join requests.",
+    },
   },
   locale: {
     label: "Language",
@@ -153,6 +160,17 @@ export const en = {
       accept: "Accept",
       decline: "Decline",
       acceptFailed: "Couldn't accept the invitation",
+    },
+    join: {
+      title: "Join an organization",
+      description: "Enter the organization slug to request access.",
+      slugLabel: "Organization slug",
+      slugPlaceholder: "acme-inc",
+      submit: "Request to join",
+      sent: "Your request has been sent. You will be notified once an admin approves it.",
+      pending: "Pending approval",
+      notFound: "No organization found with that slug.",
+      requestFailed: "Couldn't send the request. Please try again.",
     },
   },
   settings: {

@@ -10,7 +10,7 @@ import {
   Label,
   Loader2,
 } from "@leadcat/ui"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { Navigate, useNavigate } from "react-router"
 import { z } from "zod"
@@ -19,8 +19,10 @@ import { AuthLocaleShell } from "~/components/auth-locale-shell"
 import { BrandLogo } from "~/components/brand-logo"
 import { PageLoading } from "~/components/page-loading"
 import { useAcceptInvite, useDeclineInvite, useMyInvites } from "~/entities/invite/queries"
+import { useMyJoinRequests, useRequestToJoin } from "~/entities/join-request/queries"
 import { useCreateOrg } from "~/entities/org/queries"
 import { setActiveOrgId } from "~/shared/api/active-org"
+import { toApiError } from "~/shared/api/client"
 import { useMe } from "~/shared/auth/use-me"
 import { useT } from "~/shared/i18n/context"
 import { toastError } from "~/shared/lib/toast"
@@ -48,6 +50,12 @@ function OnboardingBody({
   const { data: invites = [] } = useMyInvites()
   const accept = useAcceptInvite()
   const decline = useDeclineInvite()
+  const { data: myJoinRequests = [] } = useMyJoinRequests()
+  const requestToJoin = useRequestToJoin()
+  const [slug, setSlug] = useState("")
+  const [joinSent, setJoinSent] = useState(false)
+  const [joinNotFound, setJoinNotFound] = useState(false)
+
   const schema = useMemo(
     () =>
       z.object({
@@ -89,6 +97,34 @@ function OnboardingBody({
       onError: (error) => toastError(error, t("auth.onboarding.createFailed")),
     })
   }
+
+  function handleJoinSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const trimmed = slug.trim()
+    if (!trimmed) return
+    setJoinNotFound(false)
+    requestToJoin.mutate(trimmed, {
+      onSuccess: (data) => {
+        if (data.already_member) {
+          setActiveOrgId(data.organization_id)
+          navigate("/", { replace: true })
+        } else {
+          setJoinSent(true)
+          setSlug("")
+        }
+      },
+      onError: (err) => {
+        const apiErr = toApiError(err)
+        if (apiErr.status === 404) {
+          setJoinNotFound(true)
+        } else {
+          toastError(err, t("onboarding.join.requestFailed"))
+        }
+      },
+    })
+  }
+
+  const pendingJoinRequests = myJoinRequests.filter((r) => r.status === "pending")
 
   return (
     <div className="flex min-h-svh items-start justify-center overflow-hidden px-4 pt-16 pb-10 sm:items-center sm:px-6 sm:py-10">
@@ -135,6 +171,56 @@ function OnboardingBody({
             </CardContent>
           </Card>
         ) : null}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("onboarding.join.title")}</CardTitle>
+            <CardDescription>{t("onboarding.join.description")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {joinSent ? (
+              <p className="text-sm text-muted-foreground">{t("onboarding.join.sent")}</p>
+            ) : (
+              <form onSubmit={handleJoinSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="join-slug">{t("onboarding.join.slugLabel")}</Label>
+                  <Input
+                    id="join-slug"
+                    placeholder={t("onboarding.join.slugPlaceholder")}
+                    value={slug}
+                    onChange={(e) => {
+                      setSlug(e.target.value)
+                      setJoinNotFound(false)
+                    }}
+                  />
+                  {joinNotFound ? (
+                    <p className="text-sm text-destructive" role="alert">
+                      {t("onboarding.join.notFound")}
+                    </p>
+                  ) : null}
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={requestToJoin.isPending || !slug.trim()}
+                >
+                  {requestToJoin.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : null}
+                  {t("onboarding.join.submit")}
+                </Button>
+              </form>
+            )}
+            {pendingJoinRequests.length > 0 ? (
+              <div className="mt-4 space-y-2">
+                {pendingJoinRequests.map((r) => (
+                  <p key={r.organization_id} className="text-sm text-muted-foreground">
+                    {t("onboarding.join.pending")} — {r.org_name}
+                  </p>
+                ))}
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader>
             <CardTitle>{t("auth.onboarding.title")}</CardTitle>
