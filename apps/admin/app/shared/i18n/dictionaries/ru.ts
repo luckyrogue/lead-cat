@@ -122,6 +122,14 @@ export const ru: typeof en = {
       languageSaved: "Язык сохранён.",
       languageFailed: "Не удалось сохранить язык.",
     },
+    calendars: {
+      title: "Календари",
+      subtitle:
+        "Подключите свой календарь, чтобы организованные вами встречи добавлялись в него.",
+      connectGoogle: "Подключить Google",
+      disconnect: "Отключить",
+      connected: "Подключено как {email}",
+    },
   },
   meetings: {
     eyebrow: "Организация",

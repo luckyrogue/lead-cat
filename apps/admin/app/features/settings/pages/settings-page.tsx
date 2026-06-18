@@ -13,6 +13,7 @@ import {
 } from "@leadcat/ui"
 
 import { useMeSettings, useUpdateMeSettings } from "~/entities/me/queries"
+import { CalendarConnectionsCard } from "~/features/calendar-connections/components/calendar-connections-card"
 import { resolveLocale, useT } from "~/shared/i18n/context"
 import { writeLocalePreference } from "~/shared/i18n/locale-preference"
 import { toastError, toastSuccess } from "~/shared/lib/toast"
@@ -82,6 +83,8 @@ export function SettingsPage() {
           {t("settings.pageDescription")}
         </p>
       </div>
+
+      <CalendarConnectionsCard />
 
       <Card>
         <CardHeader>

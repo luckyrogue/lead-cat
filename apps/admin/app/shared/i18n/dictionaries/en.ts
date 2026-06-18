@@ -160,6 +160,14 @@ export const en = {
       languageSaved: "Language saved.",
       languageFailed: "Could not save language.",
     },
+    calendars: {
+      title: "Calendars",
+      subtitle:
+        "Connect your own calendar so meetings you organize land on it.",
+      connectGoogle: "Connect Google",
+      disconnect: "Disconnect",
+      connected: "Connected as {email}",
+    },
   },
   meetings: {
     eyebrow: "Organization",

@@ -121,6 +121,14 @@ export const kk: typeof en = {
       languageSaved: "Тіл сақталды.",
       languageFailed: "Тілді сақтау мүмкін болмады.",
     },
+    calendars: {
+      title: "Күнтізбелер",
+      subtitle:
+        "Өз күнтізбеңізді қосыңыз, сонда сіз ұйымдастырған кездесулер оған автоматты түрде қосылады.",
+      connectGoogle: "Google қосу",
+      disconnect: "Ажырату",
+      connected: "{email} ретінде қосылған",
+    },
   },
   meetings: {
     eyebrow: "Ұйым",
