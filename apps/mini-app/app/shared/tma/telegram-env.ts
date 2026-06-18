@@ -1,15 +1,5 @@
-type TelegramWebAppUser = {
-  id?: number
-  first_name?: string
-  last_name?: string
-  username?: string
-}
-
 type TelegramWebApp = {
   initData?: string
-  initDataUnsafe?: {
-    user?: TelegramWebAppUser
-  }
   ready?: () => void
   expand?: () => void
   colorScheme?: "light" | "dark"
@@ -29,10 +19,6 @@ function getTelegram(): TelegramGlobal | undefined {
 
 export function getWebApp(): TelegramWebApp | undefined {
   return getTelegram()?.WebApp
-}
-
-export function getTelegramUser(): TelegramWebAppUser | undefined {
-  return getWebApp()?.initDataUnsafe?.user
 }
 
 export function getInitData(): string {
