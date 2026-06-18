@@ -3,6 +3,8 @@ package application
 import (
 	"context"
 	"time"
+
+	docalendar "github.com/luckyrogue/lead-cat/internal/domain/calendar"
 )
 
 const (
@@ -40,4 +42,10 @@ type CalendarConnector interface {
 	Name() string
 	AuthURL(state, pkceChallenge, redirectURL string) string
 	Exchange(ctx context.Context, code, pkceVerifier, redirectURL string) (CalendarToken, error)
+}
+
+type BusyReader = docalendar.BusyReader
+
+type BusyResolver interface {
+	ReaderFor(ctx context.Context, email string) (BusyReader, bool)
 }

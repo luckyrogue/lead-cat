@@ -23,6 +23,7 @@ type Services struct {
 	Cipher       Cipher
 	Queue        JobQueue
 	Calendar     CalendarProvider
+	Busy         BusyResolver
 	GoogleProber GoogleProber
 	Log          *zap.Logger
 	Bot          *bot.Bot

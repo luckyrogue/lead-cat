@@ -106,6 +106,24 @@ func main() {
 	services := &application.Services{Store: store, Cipher: cipher, Queue: queueClient, Calendar: calProvider, GoogleProber: calendargoogle.NewProber(), Log: logger}
 	services.WireCQRS()
 
+	var busyResolver application.BusyResolver
+	if calendarConnector != nil || msConn != nil {
+		var grf interface {
+			For(ctx context.Context, conn model.CalendarConnection) (docalendar.BusyReader, bool)
+		}
+		if calendarConnector != nil {
+			grf = calendargoogle.NewReaderFactory(store, calendarConnector)
+		}
+		var mrf interface {
+			For(ctx context.Context, conn model.CalendarConnection) (docalendar.Service, bool)
+		}
+		if msConn != nil {
+			mrf = calendarms.NewFactory(store, msConn)
+		}
+		busyResolver = calendarresolver.NewBusyResolver(store, grf, mrf)
+	}
+	services.Busy = busyResolver
+
 	sso := map[string]application.SSOProvider{}
 	if cfg.GoogleClientID != "" {
 		if p, err := google.New(context.Background(), cfg.GoogleClientID, cfg.GoogleClientSecret); err != nil {
