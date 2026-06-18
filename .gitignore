@@ -42,5 +42,7 @@ tmp/
 
 node_modules/
 
+.turbo/
+
 .agents/
 .claude/

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "globalDependencies": [
+    "pnpm-lock.yaml",
+    "apps/backend/openapi/openapi.json"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["build/**", ".react-router/**"]
+    },
+    "typecheck": {
+      "outputs": [".react-router/types/**"]
+    },
+    "lint": {},
+    "format": {
+      "cache": false
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "sync": {
+      "cache": false
+    },
+    "generate": {
+      "outputs": ["public/**", "src/generated/**"]
+    }
+  }
+}

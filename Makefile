@@ -86,14 +86,13 @@ dev:
 lint:
 	@command -v golangci-lint >/dev/null || (echo "install: brew install golangci-lint" && exit 1)
 	@cd $(BACKEND) && golangci-lint run --config $(ROOT)config/.golangci.yml ./...
+	@$(PNPM) turbo run lint --filter=./apps/*
 
 test:
 	@cd $(BACKEND) && $(GO) test ./...
 
 fmt:
-	@$(PNPM) --filter mini-app run format
-	@$(PNPM) --filter admin run format
-	@$(PNPM) --filter landing run format
+	@$(PNPM) turbo run format --filter=./apps/*
 	@command -v golangci-lint >/dev/null && (cd $(BACKEND) && golangci-lint fmt --config $(ROOT)config/.golangci.yml) || true
 
 fmt-check:
@@ -103,16 +102,12 @@ fmt-check:
 	@command -v golangci-lint >/dev/null && (cd $(BACKEND) && golangci-lint fmt --diff --config $(ROOT)config/.golangci.yml) || true
 
 typecheck:
-	@$(PNPM) --filter mini-app typecheck
-	@$(PNPM) --filter admin typecheck
-	@$(PNPM) --filter landing typecheck
+	@$(PNPM) turbo run typecheck --filter=./apps/*
 
 build:
 	@cd $(BACKEND) && $(GO) build -o bin/lead-cat ./cmd/server && $(GO) build -o bin/migrate ./cmd/migrate
 	@$(MAKE) openapi-generate
-	@$(PNPM) --filter mini-app build
-	@$(PNPM) --filter admin build
-	@$(PNPM) --filter landing build
+	@$(PNPM) turbo run build --filter=./apps/*
 
 ci: fmt-check lint test typecheck build
 	@echo "ci: all gates passed"
@@ -121,4 +116,4 @@ docker-build:
 	docker build -t lead-cat:local -f deploy/Dockerfile --build-arg VITE_AUTH_DEV_MODE=false .
 
 clean:
-	rm -rf $(BACKEND)/bin $(MINIAPP)/dist $(ADMIN)/dist $(LANDING)/dist
+	rm -rf $(BACKEND)/bin $(MINIAPP)/build $(MINIAPP)/dist $(ADMIN)/build $(ADMIN)/dist $(LANDING)/build $(LANDING)/dist .turbo

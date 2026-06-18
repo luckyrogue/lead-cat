@@ -4,6 +4,15 @@
   "version": "0.0.0",
   "packageManager": "pnpm@9.15.4",
   "scripts": {
-    "openapi:generate": "pnpm --filter @leadcat/api-client generate"
+    "openapi:generate": "pnpm --filter @leadcat/api-client generate",
+    "brand:sync": "pnpm --filter @leadcat/brand sync",
+    "brand:generate": "pnpm --filter @leadcat/brand generate",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "format": "turbo run format"
+  },
+  "devDependencies": {
+    "turbo": "^2.9.18"
   }
 }

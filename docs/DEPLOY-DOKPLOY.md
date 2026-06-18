@@ -165,18 +165,30 @@ On push to `main` or tag `v*.*.*`:
 
 Images are tagged with commit SHA on `main`, or the git tag on releases (`:latest` is updated too).
 
-### Repository secrets
+### Repository secrets (Dokploy deploy webhooks)
 
-Create one Dokploy **Deploy Webhook** per application and add GitHub secrets:
+CI builds and pushes **four images**, then calls **one webhook per service**. Each Dokploy application must be separate (backend, landing, admin, mini-app) with its own deploy webhook — otherwise a single hook would redeploy the wrong stack.
 
-| Secret | Service |
-| ------ | ------- |
-| `DOKPLOY_WEBHOOK_BACKEND` | `backend` |
-| `DOKPLOY_WEBHOOK_LANDING` | `landing` |
-| `DOKPLOY_WEBHOOK_ADMIN` | `admin` |
-| `DOKPLOY_WEBHOOK_MINI_APP` | `mini-app` |
+**In Dokploy (repeat for each app):**
 
-If a secret is missing, that service is skipped (image is still pushed). In Dokploy, point each app at the matching GHCR image, e.g. `ghcr.io/<owner>/lead-cat-backend`.
+1. Open the application (e.g. `lead-cat-admin`).
+2. **Deployments** → **Webhook** (or **Settings** → deploy webhook) → copy the URL.
+3. Ensure the app pulls `ghcr.io/<github-owner>/lead-cat-<service>` (see table below).
+
+**In GitHub:** Settings → Secrets and variables → Actions → **Secrets** → New repository secret:
+
+| Secret | Dokploy app | GHCR image | Typical domain |
+| ------ | ----------- | ---------- | -------------- |
+| `DOKPLOY_WEBHOOK_BACKEND` | backend | `lead-cat-backend` | `tail.lead-cat.space` (optional public API) |
+| `DOKPLOY_WEBHOOK_LANDING` | landing | `lead-cat-landing` | `lead-cat.space` |
+| `DOKPLOY_WEBHOOK_ADMIN` | admin | `lead-cat-admin` | `purr.lead-cat.space` |
+| `DOKPLOY_WEBHOOK_MINI_APP` | mini-app | `lead-cat-mini-app` | `meow.lead-cat.space` |
+
+Template: `deploy/github.secrets.example`.
+
+If a secret is **missing**, CI still pushes the image but logs `DOKPLOY webhook for <service> is not configured, skipping deploy` and does not trigger that app. Configure all four secrets for full auto-deploy on `main`.
+
+`API_UPSTREAM` on admin/mini-app must point at the **internal** backend URL (e.g. `http://production-backend-inwyf2:8080`), not the public API domain.
 
 ### Repository variables (build-time `VITE_*`)
 
