@@ -104,6 +104,12 @@ func main() {
 			logger.Info("web_auth_provider_configured", zap.String("provider", "microsoft"))
 		}
 	}
+	connectors := map[string]application.CalendarConnector{}
+	if cfg.GoogleClientID != "" && cfg.GoogleClientSecret != "" {
+		connectors["google"] = google.NewCalendarConnector(cfg.GoogleClientID, cfg.GoogleClientSecret)
+	}
+	services.ConfigureCalendarConnectors(connectors)
+
 	sender := smtpemail.New(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUsername, cfg.SMTPPassword, cfg.SMTPFrom)
 	if len(sso) == 0 && cfg.SMTPHost == "" {
 		logger.Info("web_auth_disabled_missing_config")

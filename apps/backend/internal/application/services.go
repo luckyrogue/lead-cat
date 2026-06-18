@@ -31,6 +31,7 @@ type Services struct {
 	syncChat     ChatSyncer
 
 	sso        map[string]SSOProvider
+	connectors map[string]CalendarConnector
 	email      EmailSender
 	magic      *magicLinkService
 	sessions   *webSessionService
@@ -82,6 +83,13 @@ func (s *Services) AcceptInvitesForEmail(ctx context.Context, email string, user
 func (s *Services) SSOProviderByName(name string) (SSOProvider, bool) {
 	p, ok := s.sso[name]
 	return p, ok
+}
+
+func (s *Services) ConfigureCalendarConnectors(c map[string]CalendarConnector) { s.connectors = c }
+
+func (s *Services) CalendarConnectorByName(name string) (CalendarConnector, bool) {
+	c, ok := s.connectors[name]
+	return c, ok
 }
 
 func (s *Services) ListOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]model.Organization, error) {

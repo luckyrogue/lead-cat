@@ -1,6 +1,9 @@
 package application
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 const (
 	AuthMethodGoogle    = "google"
@@ -24,4 +27,17 @@ type SSOProvider interface {
 
 type EmailSender interface {
 	Send(ctx context.Context, to, subject, htmlBody string) error
+}
+
+type CalendarToken struct {
+	AccessToken  string
+	RefreshToken string
+	Expiry       time.Time
+	Scopes       string
+}
+
+type CalendarConnector interface {
+	Name() string
+	AuthURL(state, pkceChallenge, redirectURL string) string
+	Exchange(ctx context.Context, code, pkceVerifier, redirectURL string) (CalendarToken, error)
 }
