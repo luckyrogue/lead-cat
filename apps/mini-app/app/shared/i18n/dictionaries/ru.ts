@@ -125,7 +125,7 @@ export const ru: typeof en = {
       toastLoadError: "Не удалось загрузить настройки",
     },
     calendar: {
-      title: "Google Календарь",
+      title: "Календари",
       connectGoogle: "Подключить Google Календарь",
       connectMicrosoft: "Подключить Microsoft",
       disconnect: "Отключить",

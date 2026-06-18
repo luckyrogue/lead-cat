@@ -125,7 +125,7 @@ export const kk: typeof en = {
       toastLoadError: "Параметрлерді жүктеу мүмкін болмады",
     },
     calendar: {
-      title: "Google Күнтізбе",
+      title: "Күнтізбелер",
       connectGoogle: "Google Күнтізбені қосу",
       connectMicrosoft: "Microsoft қосу",
       disconnect: "Ажырату",

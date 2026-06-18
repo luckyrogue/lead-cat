@@ -125,7 +125,7 @@ export const en = {
       toastLoadError: "Couldn't load settings",
     },
     calendar: {
-      title: "Google Calendar",
+      title: "Calendars",
       connectGoogle: "Connect Google Calendar",
       connectMicrosoft: "Connect Microsoft",
       disconnect: "Disconnect",
