@@ -106,7 +106,7 @@ export function DatePicker({
             ...(fromDate ? [{ before: fromDate }] : []),
             ...(toDate ? [{ after: toDate }] : []),
           ]}
-          initialFocus
+          autoFocus
         />
       </PopoverContent>
     </Popover>

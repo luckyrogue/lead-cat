@@ -121,7 +121,7 @@ export function DateRangePicker({
             ...(toDate ? [{ after: toDate }] : []),
           ]}
           numberOfMonths={1}
-          initialFocus
+          autoFocus
         />
       </PopoverContent>
     </Popover>

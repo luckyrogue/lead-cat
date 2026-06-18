@@ -2,7 +2,7 @@
   "name": "lead-cat",
   "private": true,
   "version": "0.0.0",
-  "packageManager": "pnpm@9.15.4",
+  "packageManager": "pnpm@11.8.0",
   "scripts": {
     "openapi:generate": "pnpm --filter @leadcat/api-client generate",
     "brand:sync": "pnpm --filter @leadcat/brand sync",

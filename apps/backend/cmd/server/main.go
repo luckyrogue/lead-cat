@@ -18,8 +18,12 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
+	model "github.com/luckyrogue/lead-cat/internal/application/model"
 	deliveryhttp "github.com/luckyrogue/lead-cat/internal/delivery/http"
+	docalendar "github.com/luckyrogue/lead-cat/internal/domain/calendar"
 	calendargoogle "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/google"
+	calendarms "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/microsoft"
+	calendarresolver "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/resolver"
 	calendarstub "github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/stub"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/crypto"
 	smtpemail "github.com/luckyrogue/lead-cat/internal/infrastructure/email/smtp"
@@ -82,13 +86,22 @@ func main() {
 	if cfg.GoogleClientID != "" && cfg.GoogleClientSecret != "" {
 		calendarConnector = google.NewCalendarConnector(cfg.GoogleClientID, cfg.GoogleClientSecret)
 	}
+	var msConn *microsoft.CalendarConnector
+	if cfg.MicrosoftClientID != "" && cfg.MicrosoftClientSecret != "" {
+		msConn = microsoft.NewCalendarConnector(cfg.MicrosoftClientID, cfg.MicrosoftClientSecret)
+	}
 	var calProvider application.CalendarProvider
 	if cfg.CalendarStub {
 		calProvider = calendarstub.NewProvider()
-	} else if calendarConnector != nil {
-		calProvider = calendargoogle.NewProvider(store, store, cipher, calendarConnector)
 	} else {
-		calProvider = calendargoogle.NewProvider(store, store, cipher, nil)
+		gprov := calendargoogle.NewProvider(store, store, cipher, calendarConnector)
+		var msFactory interface {
+			For(ctx context.Context, conn model.CalendarConnection) (docalendar.Service, bool)
+		}
+		if msConn != nil {
+			msFactory = calendarms.NewFactory(store, msConn)
+		}
+		calProvider = calendarresolver.New(store, gprov, msFactory)
 	}
 	services := &application.Services{Store: store, Cipher: cipher, Queue: queueClient, Calendar: calProvider, GoogleProber: calendargoogle.NewProber(), Log: logger}
 	services.WireCQRS()
@@ -113,6 +126,9 @@ func main() {
 	connectors := map[string]application.CalendarConnector{}
 	if calendarConnector != nil {
 		connectors["google"] = calendarConnector
+	}
+	if msConn != nil {
+		connectors["microsoft"] = msConn
 	}
 	services.ConfigureCalendarConnectors(connectors)
 
