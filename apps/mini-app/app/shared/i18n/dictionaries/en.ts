@@ -121,6 +121,12 @@ export const en = {
       toastError: "Couldn't save preferences",
       toastLoadError: "Couldn't load settings",
     },
+    calendar: {
+      title: "Google Calendar",
+      connectGoogle: "Connect Google Calendar",
+      disconnect: "Disconnect",
+      connected: "Connected: {email}",
+    },
   },
   colleague: {
     title: "Colleague schedule",

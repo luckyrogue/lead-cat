@@ -26,3 +26,7 @@ export const settingsKeys = {
 export const meKeys = {
   all: ["me"] as const,
 }
+
+export const calendarConnectionKeys = {
+  all: ["calendar-connections"] as const,
+}

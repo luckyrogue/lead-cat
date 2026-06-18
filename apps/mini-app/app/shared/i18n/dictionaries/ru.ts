@@ -121,6 +121,12 @@ export const ru: typeof en = {
       toastError: "Не удалось сохранить настройки",
       toastLoadError: "Не удалось загрузить настройки",
     },
+    calendar: {
+      title: "Google Календарь",
+      connectGoogle: "Подключить Google Календарь",
+      disconnect: "Отключить",
+      connected: "Подключён: {email}",
+    },
   },
   colleague: {
     title: "Расписание коллеги",
