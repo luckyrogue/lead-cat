@@ -48,9 +48,9 @@ export function InviteForm({ pending, onSubmit }: InviteFormProps) {
         onSubmit(values)
         reset({ email: "", role: values.role })
       })}
-      className="flex flex-col gap-4 sm:flex-row sm:items-end"
+      className="flex items-end justify-end gap-3"
     >
-      <div className="flex-1 space-y-2">
+      <div className="min-w-0 flex-1 space-y-2">
         <Label htmlFor="invite-email">{t("invites.form.emailLabel")}</Label>
         <Input
           id="invite-email"
@@ -64,7 +64,7 @@ export function InviteForm({ pending, onSubmit }: InviteFormProps) {
           </p>
         ) : null}
       </div>
-      <div className="space-y-2">
+      <div className="shrink-0 space-y-2">
         <Label htmlFor="invite-role">{t("invites.form.roleLabel")}</Label>
         <Controller
           control={control}
@@ -84,7 +84,7 @@ export function InviteForm({ pending, onSubmit }: InviteFormProps) {
           )}
         />
       </div>
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" disabled={pending} className="shrink-0">
         {pending ? (
           <Loader2 className="size-4 animate-spin" />
         ) : (
