@@ -94,4 +94,12 @@ type Repository interface {
 	UpsertCalendarConnection(ctx context.Context, conn model.CalendarConnection) error
 	ListCalendarConnections(ctx context.Context, email string) ([]model.CalendarConnection, error)
 	DeleteCalendarConnection(ctx context.Context, email, provider string) error
+
+	GetOrganizationBySlug(ctx context.Context, slug string) (model.Organization, error)
+	GetOrgMember(ctx context.Context, orgID, userID uuid.UUID) (model.Member, bool, error)
+	CreateJoinRequest(ctx context.Context, orgID, userID uuid.UUID) error
+	ListJoinRequestsForUser(ctx context.Context, userID uuid.UUID) ([]model.JoinRequestView, error)
+	ListPendingJoinRequests(ctx context.Context, orgID uuid.UUID) ([]model.JoinRequestAdminView, error)
+	AcceptJoinRequest(ctx context.Context, orgID, requestID, deciderID uuid.UUID) error
+	DeclineJoinRequest(ctx context.Context, orgID, requestID, deciderID uuid.UUID) error
 }

@@ -264,6 +264,21 @@ func (s *stubRepo) TouchWebSession(_ context.Context, _ uuid.UUID, _, _ time.Tim
 	return nil
 }
 func (s *stubRepo) RevokeWebSession(_ context.Context, _ []byte, _ time.Time) error { return nil }
+func (s *stubRepo) GetOrganizationBySlug(_ context.Context, _ string) (model.Organization, error) {
+	return model.Organization{}, nil
+}
+func (s *stubRepo) GetOrgMember(_ context.Context, _, _ uuid.UUID) (model.Member, bool, error) {
+	return model.Member{}, false, nil
+}
+func (s *stubRepo) CreateJoinRequest(_ context.Context, _, _ uuid.UUID) error { return nil }
+func (s *stubRepo) ListJoinRequestsForUser(_ context.Context, _ uuid.UUID) ([]model.JoinRequestView, error) {
+	return nil, nil
+}
+func (s *stubRepo) ListPendingJoinRequests(_ context.Context, _ uuid.UUID) ([]model.JoinRequestAdminView, error) {
+	return nil, nil
+}
+func (s *stubRepo) AcceptJoinRequest(_ context.Context, _, _, _ uuid.UUID) error  { return nil }
+func (s *stubRepo) DeclineJoinRequest(_ context.Context, _, _, _ uuid.UUID) error { return nil }
 
 func buildFakeServices(t *testing.T, repo *stubRepo, connector *fakeCalendarConnector) *application.Services {
 	t.Helper()

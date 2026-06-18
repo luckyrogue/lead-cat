@@ -90,6 +90,8 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	web.Get("/me/invites", webAuth.Middleware, api.WebMyInvites)
 	web.Post("/me/invites/:iid/accept", webAuth.Middleware, api.WebAcceptInvite)
 	web.Post("/me/invites/:iid/decline", webAuth.Middleware, api.WebDeclineInvite)
+	web.Post("/me/join-requests", webAuth.Middleware, api.WebRequestToJoin)
+	web.Get("/me/join-requests", webAuth.Middleware, api.WebMyJoinRequests)
 
 	registerRetiredPlatformAuth(app)
 	app.All("/api/me", handlers.PlatformGone)
@@ -115,6 +117,9 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	scoped.Get("/invites", middleware.RequireOrgRole("admin"), api.ListInvites)
 	scoped.Post("/invites", middleware.RequireOrgRole("admin"), api.InviteMember)
 	scoped.Delete("/invites/:iid", middleware.RequireOrgRole("admin"), api.DeleteInvite)
+	scoped.Get("/join-requests", middleware.RequireOrgRole("admin"), api.OrgJoinRequests)
+	scoped.Post("/join-requests/:rid/accept", middleware.RequireOrgRole("admin"), api.AcceptJoinRequest)
+	scoped.Post("/join-requests/:rid/decline", middleware.RequireOrgRole("admin"), api.DeclineJoinRequest)
 
 	miniappAuth := middleware.NewMiniAppAuth(miniappToken, services)
 	miniapp := app.Group("/api/miniapp", miniappAuth.Middleware)
