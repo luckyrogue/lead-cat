@@ -23,4 +23,5 @@ type (
 	InviteView           = model.InviteView
 	JoinRequestView      = model.JoinRequestView
 	JoinRequestAdminView = model.JoinRequestAdminView
+	BookingEventType     = model.BookingEventType
 )
