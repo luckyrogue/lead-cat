@@ -1,6 +1,7 @@
-import { Button, Card, CardContent, CardHeader, CardTitle, Loader2 } from "@leadcat/ui"
+import { Card, CardContent, CardHeader, CardTitle, Loader2 } from "@leadcat/ui"
 import { useEffect, useState } from "react"
 import { useParams } from "react-router"
+import { BookingForm } from "./book.$slug.form"
 
 interface Slot {
   start: string
@@ -75,12 +76,15 @@ export default function BookSlugPage() {
   const [state, setState] = useState<PageState>({ status: "loading" })
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null)
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
+  const [showForm, setShowForm] = useState(false)
+  const [fetchKey, setFetchKey] = useState(0)
 
   useEffect(() => {
     if (!slug) return
     setState({ status: "loading" })
     setSelectedSlot(null)
     setSelectedDay(null)
+    setShowForm(false)
 
     fetch(`/api/book/${slug}`)
       .then((res) => {
@@ -102,7 +106,7 @@ export default function BookSlugPage() {
         setSelectedDay(firstDay)
       })
       .catch(() => setState({ status: "error" }))
-  }, [slug])
+  }, [slug, fetchKey])
 
   if (state.status === "loading") {
     return (
@@ -223,15 +227,25 @@ export default function BookSlugPage() {
               </Card>
             ) : null}
 
-            {selectedSlot ? (
+            {selectedSlot && !showForm ? (
               <div className="space-y-2">
-                <Button className="w-full" disabled>
+                <button
+                  type="button"
+                  onClick={() => setShowForm(true)}
+                  className="flex h-9 w-full items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
                   Continue
-                </Button>
-                <p className="text-center text-xs text-muted-foreground">
-                  Booking confirmation coming soon.
-                </p>
+                </button>
               </div>
+            ) : null}
+
+            {selectedSlot && showForm && slug ? (
+              <BookingForm
+                slug={slug}
+                selectedSlot={selectedSlot}
+                timezone={event.timezone}
+                onConflict={() => setFetchKey((k) => k + 1)}
+              />
             ) : null}
           </>
         )}
