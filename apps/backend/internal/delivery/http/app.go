@@ -144,6 +144,8 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	booking.Patch("/event-types/:id", api.BookingUpdateEventType)
 	booking.Delete("/event-types/:id", api.BookingDeleteEventType)
 
+	app.Get("/api/book/:slug", api.PublicBooking)
+
 	app.Get("/api/calendar/connect/:provider/callback", api.CalendarConnectCallback)
 
 	calendarWeb := app.Group("/api/calendar", webAuth.Middleware)
