@@ -59,13 +59,13 @@ func TestBookingAvailability_WeekdayHasSlots(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(slots) == 0 {
-		t.Fatal("expected slots on a Mon-Fri weekday, got none")
+	// 09:00–17:00 window, 30-min slots → 16 discrete slots
+	if len(slots) != 16 {
+		t.Fatalf("expected 16 slots for 09:00–17:00/30min day, got %d", len(slots))
 	}
-	// All slots should be at least DurationMins long
 	for _, sl := range slots {
-		if sl.End.Sub(sl.Start) < 30*time.Minute {
-			t.Errorf("slot too short (< 30m): %v – %v", sl.Start, sl.End)
+		if sl.End.Sub(sl.Start) != 30*time.Minute {
+			t.Errorf("slot not exactly 30m: %v – %v", sl.Start, sl.End)
 		}
 	}
 }
@@ -92,9 +92,9 @@ func TestBookingAvailability_BusyMeetingExcludesSlot(t *testing.T) {
 			t.Errorf("slot overlaps busy block: %v – %v", sl.Start, sl.End)
 		}
 	}
-	// First slot should start at 09:30
-	if len(slots) == 0 {
-		t.Fatal("expected some slots after busy block")
+	// busy 09:00–09:30 removes 1 slot → 15 remain; first at 09:30
+	if len(slots) != 15 {
+		t.Fatalf("expected 15 slots after busy 09:00–09:30, got %d", len(slots))
 	}
 	first := slots[0].Start.In(almaty)
 	if first.Hour() != 9 || first.Minute() != 30 {

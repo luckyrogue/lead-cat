@@ -73,10 +73,12 @@ func (s *Services) BookingAvailability(ctx context.Context, et model.BookingEven
 			}
 		}
 		for _, f := range meeting.FreeSlots(dayBusy, winStart, winEnd, dur) {
-			if !f.Start.After(now) {
-				continue
+			for start := f.Start; !start.Add(dur).After(f.End); start = start.Add(dur) {
+				if !start.After(now) {
+					continue
+				}
+				out = append(out, BookingSlot{Start: start.UTC(), End: start.Add(dur).UTC()})
 			}
-			out = append(out, BookingSlot{Start: f.Start.UTC(), End: f.End.UTC()})
 		}
 	}
 	return out, nil
