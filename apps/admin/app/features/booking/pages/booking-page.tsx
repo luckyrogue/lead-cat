@@ -5,9 +5,9 @@ import {
   CalendarClock,
   Check,
   Link2,
+  Loader2,
   Pencil,
   Trash2,
-  X,
 } from "@leadcat/ui"
 
 import {
@@ -169,7 +169,7 @@ export function BookingPage() {
                     onClick={() => handleDelete(et)}
                   >
                     {isPendingDelete ? (
-                      <X className="size-4 animate-spin" />
+                      <Loader2 className="size-4 animate-spin" />
                     ) : (
                       <Trash2 className="size-4" />
                     )}
