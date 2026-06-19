@@ -9,4 +9,7 @@ export default createConfig({
   rootDir,
   tsconfigPath: path.join(rootDir, "tsconfig.json"),
   featureModules: ["dashboard", "meetings", "members", "invites", "auth"],
+  crossFeatureExceptions: {
+    dashboard: ["onboarding-checklist"],
+  },
 })

@@ -33,6 +33,17 @@ export const en = {
     statMembersHint: "People with access to this organization",
     statInvites: "Pending invites",
     statInvitesHint: "Invitations awaiting acceptance",
+    checklist: {
+      title: "Get started",
+      progress: "{done} of {total} done",
+      calendar: "Connect your calendar",
+      calendarCta: "Connect",
+      invite: "Invite a teammate",
+      inviteCta: "Invite",
+      meeting: "Create your first meeting",
+      meetingCta: "Create",
+      dismiss: "Dismiss",
+    },
   },
   sidebar: {
     selectOrganization: "Select organization",

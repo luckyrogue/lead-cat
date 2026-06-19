@@ -33,6 +33,17 @@ export const ru: typeof en = {
     statMembersHint: "Пользователи с доступом к организации",
     statInvites: "Ожидающие приглашения",
     statInvitesHint: "Приглашения, ожидающие принятия",
+    checklist: {
+      title: "Начало работы",
+      progress: "Выполнено {done} из {total}",
+      calendar: "Подключите календарь",
+      calendarCta: "Подключить",
+      invite: "Пригласите коллегу",
+      inviteCta: "Пригласить",
+      meeting: "Создайте первую встречу",
+      meetingCta: "Создать",
+      dismiss: "Скрыть",
+    },
   },
   sidebar: {
     selectOrganization: "Выбрать организацию",

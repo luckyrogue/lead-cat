@@ -33,6 +33,17 @@ export const kk: typeof en = {
     statMembersHint: "Ұйымға қол жеткізуі бар пайдаланушылар",
     statInvites: "Күтудегі шақырулар",
     statInvitesHint: "Қабылдауды күтіп тұрған шақырулар",
+    checklist: {
+      title: "Жұмысты бастау",
+      progress: "{total} ішінен {done} орындалды",
+      calendar: "Күнтізбені қосыңыз",
+      calendarCta: "Қосу",
+      invite: "Әріптесті шақырыңыз",
+      inviteCta: "Шақыру",
+      meeting: "Алғашқы кездесуді жасаңыз",
+      meetingCta: "Жасау",
+      dismiss: "Жабу",
+    },
   },
   sidebar: {
     selectOrganization: "Ұйымды таңдаңыз",
