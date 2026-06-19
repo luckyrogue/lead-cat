@@ -17,4 +17,5 @@ export default [
   ]),
   route("onboarding", "routes/onboarding.tsx"),
   route("logout", "routes/logout.tsx"),
+  route("book/:slug", "routes/book.$slug.tsx"),
 ] satisfies RouteConfig
