@@ -16,6 +16,21 @@ import type {
   UpdateMeetingInput,
 } from "~/entities/meeting/types"
 
+type ConflictsInput = {
+  participants: string[]
+  date: string
+  start: string
+  end: string
+  exclude_id?: string
+}
+
+type FreeSlotsInput = {
+  participants: string[]
+  from: string
+  to: string
+  duration_mins: number
+}
+
 export async function fetchMyMeetings(scope: MeetingScope): Promise<Meeting[]> {
   const res = await apiFetch<MiniAppMeetingsResponse>("/api/miniapp/meetings", {
     params: { scope },
@@ -85,14 +100,6 @@ export async function changeSeriesEnd(id: string, until: string): Promise<Meetin
   return res.meeting
 }
 
-type ConflictsInput = {
-  participants: string[]
-  date: string
-  start: string
-  end: string
-  exclude_id?: string
-}
-
 export async function fetchConflicts(input: ConflictsInput): Promise<OccurrenceConflicts[]> {
   const res = await apiFetch<{ occurrences: MiniAppOccurrenceConflicts[] }>(
     "/api/miniapp/conflicts",
@@ -103,13 +110,6 @@ export async function fetchConflicts(input: ConflictsInput): Promise<OccurrenceC
 
 export function flattenConflicts(occurrences: OccurrenceConflicts[]): Conflict[] {
   return occurrences.flatMap((o) => o.conflicts)
-}
-
-type FreeSlotsInput = {
-  participants: string[]
-  from: string
-  to: string
-  duration_mins: number
 }
 
 export async function fetchFreeSlots(input: FreeSlotsInput): Promise<FreeSlot[]> {
