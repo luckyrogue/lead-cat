@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -25,6 +26,7 @@ type CreateInput struct {
 	RecurrenceUntil string
 	RecurrenceDays  []int
 	Description     string
+	Title           string
 	Participants    []model.MeetingParticipant
 	Timezone        string
 }
@@ -116,7 +118,10 @@ func (c *Meetings) CreateMeeting(ctx context.Context, organizationID, organizerI
 	}
 
 	if rec == meeting.Once {
-		name := meeting.GenerateName(in.Dept, in.Type, in.Host, startsAt, rec)
+		name := strings.TrimSpace(in.Title)
+		if name == "" {
+			name = meeting.GenerateName(in.Dept, in.Type, in.Host, startsAt, rec)
+		}
 		cal, err := calSvc.CreateEvent(ctx, docalendar.CalendarEvent{
 			Title: name, Description: in.Description, Start: startsAt, End: endsAt, AttendeeEmails: emails,
 		})
