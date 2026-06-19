@@ -12,6 +12,7 @@ export default [
     route("members", "routes/_app.members._index.tsx"),
     route("invites", "routes/_app.invites._index.tsx"),
     route("meetings", "routes/_app.meetings._index.tsx"),
+    route("booking", "routes/_app.booking._index.tsx"),
     route("settings", "routes/_app.settings.tsx"),
   ]),
   route("onboarding", "routes/onboarding.tsx"),

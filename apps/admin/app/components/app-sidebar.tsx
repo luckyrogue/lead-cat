@@ -1,4 +1,5 @@
 import {
+  CalendarClock,
   LayoutDashboard,
   Mailbox,
   Settings,
@@ -25,6 +26,7 @@ const navItems: NavItem[] = [
   { href: "/members", labelKey: "nav.members", icon: Users },
   { href: "/invites", labelKey: "nav.invites", icon: Mailbox },
   { href: "/meetings", labelKey: "nav.meetings", icon: Video },
+  { href: "/booking", labelKey: "nav.booking", icon: CalendarClock },
   { href: "/settings", labelKey: "nav.settings", icon: Settings },
 ]
 
