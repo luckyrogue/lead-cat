@@ -138,6 +138,12 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	miniapp.Delete("/meetings/:id/participants", api.MiniAppRemoveParticipant)
 	miniapp.Patch("/meetings/:id/series-end", api.MiniAppChangeSeriesEnd)
 
+	booking := app.Group("/api/booking", webAuth.Middleware)
+	booking.Get("/event-types", api.BookingListEventTypes)
+	booking.Post("/event-types", api.BookingCreateEventType)
+	booking.Patch("/event-types/:id", api.BookingUpdateEventType)
+	booking.Delete("/event-types/:id", api.BookingDeleteEventType)
+
 	app.Get("/api/calendar/connect/:provider/callback", api.CalendarConnectCallback)
 
 	calendarWeb := app.Group("/api/calendar", webAuth.Middleware)

@@ -279,6 +279,22 @@ func (s *stubRepo) ListPendingJoinRequests(_ context.Context, _ uuid.UUID) ([]mo
 }
 func (s *stubRepo) AcceptJoinRequest(_ context.Context, _, _, _ uuid.UUID) error  { return nil }
 func (s *stubRepo) DeclineJoinRequest(_ context.Context, _, _, _ uuid.UUID) error { return nil }
+func (s *stubRepo) CreateBookingEventType(_ context.Context, et model.BookingEventType) (model.BookingEventType, error) {
+	return et, nil
+}
+func (s *stubRepo) GetBookingEventType(_ context.Context, _ uuid.UUID) (model.BookingEventType, error) {
+	return model.BookingEventType{}, nil
+}
+func (s *stubRepo) GetBookingEventTypeBySlug(_ context.Context, _ string) (model.BookingEventType, error) {
+	return model.BookingEventType{}, nil
+}
+func (s *stubRepo) ListBookingEventTypesForUser(_ context.Context, _ uuid.UUID) ([]model.BookingEventType, error) {
+	return nil, nil
+}
+func (s *stubRepo) UpdateBookingEventType(_ context.Context, _ model.BookingEventType) error {
+	return nil
+}
+func (s *stubRepo) DeleteBookingEventType(_ context.Context, _ uuid.UUID) error { return nil }
 
 func buildFakeServices(t *testing.T, repo *stubRepo, connector *fakeCalendarConnector) *application.Services {
 	t.Helper()

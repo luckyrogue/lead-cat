@@ -102,4 +102,11 @@ type Repository interface {
 	ListPendingJoinRequests(ctx context.Context, orgID uuid.UUID) ([]model.JoinRequestAdminView, error)
 	AcceptJoinRequest(ctx context.Context, orgID, requestID, deciderID uuid.UUID) error
 	DeclineJoinRequest(ctx context.Context, orgID, requestID, deciderID uuid.UUID) error
+
+	CreateBookingEventType(ctx context.Context, et model.BookingEventType) (model.BookingEventType, error)
+	GetBookingEventType(ctx context.Context, id uuid.UUID) (model.BookingEventType, error)
+	GetBookingEventTypeBySlug(ctx context.Context, slug string) (model.BookingEventType, error)
+	ListBookingEventTypesForUser(ctx context.Context, hostUserID uuid.UUID) ([]model.BookingEventType, error)
+	UpdateBookingEventType(ctx context.Context, et model.BookingEventType) error
+	DeleteBookingEventType(ctx context.Context, id uuid.UUID) error
 }
