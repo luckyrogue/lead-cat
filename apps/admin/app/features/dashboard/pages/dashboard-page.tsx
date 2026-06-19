@@ -12,7 +12,7 @@ import { useInvites, useMembers } from "~/entities/org/queries"
 import { useActiveOrg } from "~/shared/auth/use-active-org"
 import { useMe } from "~/shared/auth/use-me"
 import { useT } from "~/shared/i18n/context"
-import { ActivationChecklist } from "~/features/onboarding-checklist/components/activation-checklist"
+import { ActivationChecklist } from "../components/activation-checklist"
 
 function StatCard({
   title,

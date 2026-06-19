@@ -17,8 +17,8 @@ import { useCalendarConnections } from "~/entities/calendar-connection/queries"
 import { useMeetings } from "~/entities/meeting/queries"
 import { useInvites, useMembers } from "~/entities/org/queries"
 import { useT } from "~/shared/i18n/context"
-import { allDone, computeSteps, doneCount, type ChecklistStepKey } from "../lib/steps"
-import { dismissChecklist, isChecklistDismissed } from "../lib/dismissed"
+import { allDone, computeSteps, doneCount, type ChecklistStepKey } from "../lib/checklist-steps"
+import { dismissChecklist, isChecklistDismissed } from "../lib/checklist-dismissed"
 
 const META: Record<ChecklistStepKey, { icon: LucideIcon; to: string }> = {
   calendar: { icon: CalendarDays, to: "/settings" },
