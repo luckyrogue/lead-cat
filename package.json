@@ -13,7 +13,7 @@
     "format": "turbo run format",
     "format:check": "turbo run format:check --filter=./apps/*",
     "test": "turbo run test --filter=./apps/* --filter=@leadcat/ui",
-    "e2e": "bash scripts/e2e.sh"
+    "e2e": "bash e2e/run.sh"
   },
   "devDependencies": {
     "prettier": "^3.8.4",

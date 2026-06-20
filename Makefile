@@ -10,8 +10,6 @@ LANDING := $(ROOT)apps/landing
 COMPOSE := docker compose -f deploy/docker-compose.yml
 GO := env -u GOROOT go
 PNPM := pnpm
-GOLANGCI := golangci-lint --config $(ROOT)config/.golangci.yml
-
 .DEFAULT_GOAL := help
 
 help:
@@ -86,7 +84,7 @@ dev:
 
 lint: ## golangci-lint + eslint (apps)
 	@command -v golangci-lint >/dev/null || (echo "install: brew install golangci-lint" && exit 1)
-	@cd $(BACKEND) && $(GOLANGCI) run ./...
+	@cd $(BACKEND) && golangci-lint run ./...
 	@$(PNPM) turbo run lint --filter=./apps/*
 
 test: ## go test -race + vitest (apps + ui)
@@ -95,11 +93,11 @@ test: ## go test -race + vitest (apps + ui)
 
 fmt: ## format frontend + go (golangci fmt)
 	@$(PNPM) turbo run format --filter=./apps/*
-	@command -v golangci-lint >/dev/null && (cd $(BACKEND) && $(GOLANGCI) fmt) || true
+	@command -v golangci-lint >/dev/null && (cd $(BACKEND) && golangci-lint fmt) || true
 
 fmt-check: ## check formatting (prettier + golangci fmt diff)
 	@$(PNPM) turbo run format:check --filter=./apps/*
-	@command -v golangci-lint >/dev/null && (cd $(BACKEND) && $(GOLANGCI) fmt --diff) || (echo "install: brew install golangci-lint" && exit 1)
+	@command -v golangci-lint >/dev/null && (cd $(BACKEND) && golangci-lint fmt --diff) || (echo "install: brew install golangci-lint" && exit 1)
 
 typecheck: ## tsc + react-router typegen (apps)
 	@$(PNPM) turbo run typecheck --filter=./apps/*

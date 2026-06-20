@@ -33,5 +33,4 @@ Or step by step: `make help`
 - `apps/backend/` — Go monolith (`cmd/server`, `cmd/migrate`, `internal/`, `migrations/`)
 - `apps/mini-app/`, `apps/admin/`, `apps/landing/` — React frontends
 - `deploy/` — `Dockerfile`, `docker-compose.yml` (local Postgres + Redis), `.env.example`
-- `config/` — shared tooling configs (Prettier, tsconfig base, EditorConfig, golangci-lint)
 - `packages/` — shared UI, brand, config

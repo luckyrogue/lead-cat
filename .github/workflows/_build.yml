@@ -34,10 +34,9 @@ jobs:
         with:
           version: v2.12.2
           working-directory: apps/backend
-          args: --config ../../config/.golangci.yml
 
       - name: golangci fmt
-        run: golangci-lint fmt --diff --config ../../config/.golangci.yml
+        run: golangci-lint fmt --diff
 
   frontend:
     name: pnpm

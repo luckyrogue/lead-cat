@@ -30,8 +30,7 @@ cd apps/backend && env -u GOROOT go test ./...
 ## Pull requests
 
 - Link the issue or describe the user-visible change.
-- Ensure CI is green.
-- Use the PR template checklist.
+- Ensure CI is green (`make ci` locally when possible).
 
 ## Code style
 

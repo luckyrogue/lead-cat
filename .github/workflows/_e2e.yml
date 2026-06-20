@@ -33,7 +33,7 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Run E2E (builds stack + runs Playwright)
-        run: bash scripts/e2e.sh
+        run: bash e2e/run.sh
 
       - name: Upload Playwright report on failure
         if: failure()

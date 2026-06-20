@@ -164,7 +164,7 @@ Access matrix summary (from ТЗ §2):
 | Docker + Compose | recent  | Local Postgres + Redis via `deploy/docker-compose.yml`.             |
 | PostgreSQL       | 18      | `postgres:18-alpine` in local compose and CI smoke.                 |
 | Redis            | 8       | `redis:8-alpine`; asynq queues and scheduler leader-lock.           |
-| golangci-lint    | 2.x     | `make lint` / `make fmt` (config in `config/.golangci.yml`).        |
+| golangci-lint    | 2.x     | `make lint` / `make fmt` (config in `apps/backend/.golangci.yml`).  |
 | air (optional)   | latest  | `make backend-watch` hot reload.                                    |
 
 **Backend:** Go, Fiber (`gofiber/fiber/v2`), asynq, pgx, goose migrations. Clean architecture — `domain` ← `application` ← `infrastructure` / `delivery` / `platform`.
