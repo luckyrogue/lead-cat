@@ -26,13 +26,13 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Audit workspace dependencies
+      - name: Audit
         run: pnpm audit --audit-level=high
 
-      - name: Install e2e deps
+      - name: Install
         working-directory: e2e
         run: pnpm install --ignore-workspace --frozen-lockfile
 
-      - name: Audit e2e dependencies
+      - name: Audit
         working-directory: e2e
         run: pnpm audit --audit-level=high
