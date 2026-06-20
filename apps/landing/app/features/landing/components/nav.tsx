@@ -1,7 +1,7 @@
-import { Button } from "@leadcat/ui"
 import { LeadCatLogo } from "@leadcat/brand"
 import { Link } from "react-router"
 
+import { GetStartedButton } from "~/features/landing/components/get-started-button"
 import { LanguageSwitcher } from "~/shared/i18n/language-switcher"
 import { useLocale, useT } from "~/shared/i18n/context"
 import { localePath } from "~/shared/i18n/locale-path"
@@ -57,7 +57,7 @@ export function Nav() {
         </nav>
         <div className="flex items-center gap-3">
           <LanguageSwitcher />
-          <Button size="sm">{t("nav.getStarted")}</Button>
+          <GetStartedButton size="sm">{t("nav.getStarted")}</GetStartedButton>
         </div>
       </div>
     </header>

@@ -94,10 +94,12 @@ The backend no longer serves the frontend; leave `STATIC_DIR` unset.
 | Dockerfile | `apps/landing/Dockerfile` (context `.`) |
 | Port       | `3000` (`PORT` env, default 3000)       |
 | Runtime    | Node SSR via `react-router-serve`       |
-| Build arg  | `VITE_SITE_URL` — public site URL for canonical, Open Graph, sitemap |
+| Build args | `VITE_SITE_URL`, `VITE_BOT_USERNAME` (CTA → `https://t.me/…`), optional `VITE_ADMIN_URL` (fallback login) |
 
 ```env
 VITE_SITE_URL=https://your-domain.example.com
+VITE_BOT_USERNAME=your_bot_username
+VITE_ADMIN_URL=https://admin.your-domain.example.com
 ```
 
 Set at **build time** (canonical URLs, `og:image`, `robots.txt`, `sitemap.xml`). Routes:

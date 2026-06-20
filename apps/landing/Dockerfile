@@ -2,7 +2,11 @@ FROM node:22-alpine AS build
 WORKDIR /repo
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 ARG VITE_SITE_URL=https://lead-cat.space
+ARG VITE_BOT_USERNAME=lead_cat_bot
+ARG VITE_ADMIN_URL=
 ENV VITE_SITE_URL=${VITE_SITE_URL}
+ENV VITE_BOT_USERNAME=${VITE_BOT_USERNAME}
+ENV VITE_ADMIN_URL=${VITE_ADMIN_URL}
 COPY . .
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @leadcat/brand generate && pnpm --filter @leadcat/brand sync

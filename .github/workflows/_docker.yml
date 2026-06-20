@@ -92,6 +92,8 @@ jobs:
               {
                 echo 'build_args<<EOF'
                 echo "VITE_SITE_URL=${VITE_SITE_URL}"
+                echo "VITE_BOT_USERNAME=${VITE_BOT_USERNAME:-lead_cat_bot}"
+                echo "VITE_ADMIN_URL=${VITE_ADMIN_URL:-}"
                 echo 'EOF'
               } >> "$GITHUB_OUTPUT"
               ;;

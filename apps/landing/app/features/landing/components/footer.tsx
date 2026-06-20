@@ -1,5 +1,7 @@
-import { Button, CatFace, Paw } from "@leadcat/ui"
+import { CatFace, Paw } from "@leadcat/ui"
 import { LeadCatLogo, SITE_NAME } from "@leadcat/brand"
+
+import { GetStartedButton } from "~/features/landing/components/get-started-button"
 
 import { gsap, useSceneMotion } from "~/features/landing/lib/motion"
 import { useT } from "~/shared/i18n/context"
@@ -85,10 +87,10 @@ export function Footer() {
         </h2>
         <p className="mx-auto mt-3 max-w-md text-kitty-600">{t("footer.copy")}</p>
         <div data-footer-cta className="mt-7 flex justify-center">
-          <Button size="lg">
+          <GetStartedButton size="lg">
             {t("footer.cta")}
             <Paw className="size-5" />
-          </Button>
+          </GetStartedButton>
         </div>
 
         <div className="mt-14 flex flex-col items-center gap-3 text-sm text-kitty-400">
