@@ -40,7 +40,7 @@
 
   > These platform endpoints/flows exist only for alpha operator bootstrap and are
   > being replaced by in-Mini-App admin (`/api/tma/admin/*`, see
-  > `docs/superpowers/specs/2026-06-05-tma-setup-replacement-design.md`). Not part
+  > `docs/superpowers/specs/2026-06-09-slice-d-tma-admin-integrations-design.md`). Not part
   > of the product; slated for removal.
   ```
 

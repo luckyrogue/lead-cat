@@ -5,7 +5,11 @@ import { meQueryKey } from "~/shared/auth/use-me"
 export const myInvitesKey = ["invites", "mine"] as const
 
 export function useMyInvites() {
-  return useQuery({ queryKey: myInvitesKey, queryFn: listMyInvites, retry: false })
+  return useQuery({
+    queryKey: myInvitesKey,
+    queryFn: listMyInvites,
+    retry: false,
+  })
 }
 
 export function useAcceptInvite() {

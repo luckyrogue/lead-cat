@@ -17,8 +17,16 @@ import { useCalendarConnections } from "~/entities/calendar-connection/queries"
 import { useMeetings } from "~/entities/meeting/queries"
 import { useInvites, useMembers } from "~/entities/org/queries"
 import { useT } from "~/shared/i18n/context"
-import { allDone, computeSteps, doneCount, type ChecklistStepKey } from "../lib/checklist-steps"
-import { dismissChecklist, isChecklistDismissed } from "../lib/checklist-dismissed"
+import {
+  allDone,
+  computeSteps,
+  doneCount,
+  type ChecklistStepKey,
+} from "../lib/checklist-steps"
+import {
+  dismissChecklist,
+  isChecklistDismissed,
+} from "../lib/checklist-dismissed"
 
 const META: Record<ChecklistStepKey, { icon: LucideIcon; to: string }> = {
   calendar: { icon: CalendarDays, to: "/settings" },
@@ -92,10 +100,16 @@ export function ActivationChecklist({
               <span className="flex items-center gap-2">
                 <Icon
                   className={
-                    step.done ? "size-4 text-primary" : "size-4 text-muted-foreground"
+                    step.done
+                      ? "size-4 text-primary"
+                      : "size-4 text-muted-foreground"
                   }
                 />
-                <span className={step.done ? "text-muted-foreground line-through" : ""}>
+                <span
+                  className={
+                    step.done ? "text-muted-foreground line-through" : ""
+                  }
+                >
                   {t(`dashboard.checklist.${step.key}`)}
                 </span>
               </span>

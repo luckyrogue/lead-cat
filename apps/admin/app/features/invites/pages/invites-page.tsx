@@ -1,4 +1,11 @@
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@leadcat/ui"
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@leadcat/ui"
 
 import { PageHeader } from "~/components/page-header"
 import { PageLoading } from "~/components/page-loading"
@@ -126,7 +133,10 @@ export function InvitesPage() {
                       onClick={() =>
                         acceptJoinRequest.mutate(
                           { orgId: activeOrgId ?? "", rid: req.request_id },
-                          { onError: (e) => toastError(e, t("invites.requests.accept")) }
+                          {
+                            onError: (e) =>
+                              toastError(e, t("invites.requests.accept")),
+                          }
                         )
                       }
                     >
@@ -139,7 +149,10 @@ export function InvitesPage() {
                       onClick={() =>
                         declineJoinRequest.mutate(
                           { orgId: activeOrgId ?? "", rid: req.request_id },
-                          { onError: (e) => toastError(e, t("invites.requests.decline")) }
+                          {
+                            onError: (e) =>
+                              toastError(e, t("invites.requests.decline")),
+                          }
                         )
                       }
                     >

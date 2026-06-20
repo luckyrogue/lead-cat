@@ -6,10 +6,14 @@
 
 ## Test plan
 
-- [ ] `make ci` passes locally (or relevant subset: lint / test / typecheck / build)
+- [ ] `make ci` passes locally (fmt-check, lint, test, typecheck, build)
 - [ ] Manual check described below (if UI or auth flow changed)
 
 <!-- Steps you ran, or "N/A — docs-only". -->
+
+## CI (GitHub)
+
+PRs run: **go** (vet, test -race, golangci), **pnpm** (format, vitest, typecheck, lint, build, OpenAPI drift), **security** (govulncheck, pnpm audit), **e2e**, **docker validate**. Merges to `main` also run e2e before image push.
 
 ## Checklist
 

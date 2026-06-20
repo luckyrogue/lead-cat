@@ -49,7 +49,7 @@ Each slice is a single brainstorm → spec → plan → subagent-driven executio
 
 **Ships:** `PATCH /api/tma/meetings/:id`, `DELETE /api/tma/meetings/:id`, real `POST /api/tma/conflicts`; CreateWizard threads `editId`, uses real authed organizer, calls live conflicts on review step, guards recurring with a localized note + disabled confirm.
 **Acceptance:** an authed TMA user can create / edit / delete a single meeting they organized; conflicts surface real overlaps from other employees (not just the caller's view); the wizard's "edit" path PATCHes the source meeting instead of duplicating it; organizer-only UI for edit/delete (backend still enforces 403).
-**Reuses:** existing `EnsureTMAOrganizer`, `CreateMeeting`/`UpdateMeeting`/`CancelMeeting`, `MeetingConflicts`. Note: an earlier sub-project-3 brainstorm exists (`docs/superpowers/specs/2026-06-05-tma-write-paths-design.md`) and its core decisions still hold — Slice A's brainstorm should reality-check it against `main` (some backend bits may already have landed) and trim/extend accordingly.
+**Reuses:** existing `EnsureTMAOrganizer`, `CreateMeeting`/`UpdateMeeting`/`CancelMeeting`, `MeetingConflicts`. See [`docs/superpowers/specs/2026-06-06-slice-a-tma-writes-design.md`](2026-06-06-slice-a-tma-writes-design.md) for the locked slice-A scope; reality-check against `main` before planning.
 **Effort:** ~1 week.
 
 ### Slice B — Recurrence (series everywhere)
@@ -69,7 +69,7 @@ Each slice is a single brainstorm → spec → plan → subagent-driven executio
 
 **Ships:** `/api/tma/admin/*` route group (TMA-authed, `bot_users.role == admin` guard); first endpoints per the existing setup-replacement spec — `GET /api/tma/admin/integrations`, `PATCH /api/tma/admin/integrations` (Google SA JSON + subject + calendar id), `POST /api/tma/admin/integrations/verify`. Admin overlay UI in Profile → Admin → Integrations.
 **Acceptance:** an admin can paste the SA JSON inside the Mini App and verify the connection; after that, `POST /api/tma/meetings` succeeds against the configured workspace. The curl-based path stays as deprecated appendix until D ships.
-**Reuses:** `docs/superpowers/specs/2026-06-05-tma-setup-replacement-design.md`.
+**Reuses:** [`docs/superpowers/specs/2026-06-09-slice-d-tma-admin-integrations-design.md`](2026-06-09-slice-d-tma-admin-integrations-design.md).
 **Effort:** ~1 week.
 
 ### Slice E — Admin panel (ТЗ §6)
@@ -136,4 +136,4 @@ If a parallel hand were ever brought in, C and D can go in parallel after A; G c
 
 ## Next step
 
-**Start Slice A** — TMA writes (non-recurring) finish. There's an existing sub-project-3 design (`docs/superpowers/specs/2026-06-05-tma-write-paths-design.md`) that covers most of slice A; its core decisions still hold but the spec should be reality-checked against current `main` (some bits may already have landed in your recent code work) before going to writing-plans.
+**Start Slice A** — TMA writes (non-recurring) finish. Use [`docs/superpowers/specs/2026-06-06-slice-a-tma-writes-design.md`](2026-06-06-slice-a-tma-writes-design.md); reality-check against current `main` before writing-plans.

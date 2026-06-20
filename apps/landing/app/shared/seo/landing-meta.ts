@@ -70,7 +70,7 @@ export function landingJsonLd(locale: Locale, siteUrl = resolveSiteUrl()) {
 
 export function landingMeta(
   locale: Locale,
-  options?: { pathname?: string; siteUrl?: string },
+  options?: { pathname?: string; siteUrl?: string }
 ) {
   const dict = dictionaries[locale]
   const siteUrl = options?.siteUrl ?? resolveSiteUrl()
@@ -106,7 +106,12 @@ export function landingMeta(
     { name: "twitter:description", content: dict.meta.description },
     { name: "twitter:image", content: image },
     { name: "twitter:image:alt", content: dict.meta.title },
-    { tagName: "link", rel: "alternate", hrefLang: "ru", href: absoluteUrl("/", siteUrl) },
+    {
+      tagName: "link",
+      rel: "alternate",
+      hrefLang: "ru",
+      href: absoluteUrl("/", siteUrl),
+    },
     {
       tagName: "link",
       rel: "alternate",
@@ -144,7 +149,7 @@ export function sitemapXml(siteUrl = resolveSiteUrl()): string {
     <loc>${absoluteUrl(page.loc, siteUrl)}</loc>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
-  </url>`,
+  </url>`
     )
     .join("\n")
 

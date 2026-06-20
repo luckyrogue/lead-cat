@@ -2,19 +2,6 @@
 .env
 .env.*
 
-frontend/node_modules/
-frontend/dist/
-frontend/dist-ssr/
-frontend/.tanstack/
-frontend/.nitro/
-frontend/.output/
-frontend/.vinxi/
-frontend/.wrangler/
-frontend/__unconfig*/
-frontend/*.local
-frontend/count.txt
-frontend/todos.json
-
 *.exe
 *.exe~
 *.dll
@@ -23,8 +10,8 @@ frontend/todos.json
 *.test
 *.out
 coverage.out
-backend/bin/
-backend/tmp/
+apps/backend/bin/
+apps/backend/tmp/
 /server
 /migrate
 /lead-cat

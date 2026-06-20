@@ -17,7 +17,10 @@ import {
 } from "@leadcat/ui"
 import { Controller, useForm } from "react-hook-form"
 
-import type { BookingEventType, EventTypeInput } from "~/entities/booking-event-type/types"
+import type {
+  BookingEventType,
+  EventTypeInput,
+} from "~/entities/booking-event-type/types"
 import { useT } from "~/shared/i18n/context"
 
 import { Field } from "./event-type-dialog-field"
@@ -90,7 +93,9 @@ export function EventTypeDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            {editing ? t("booking.dialog.editTitle") : t("booking.dialog.createTitle")}
+            {editing
+              ? t("booking.dialog.editTitle")
+              : t("booking.dialog.createTitle")}
           </DialogTitle>
           <DialogDescription>
             {editing
@@ -104,7 +109,10 @@ export function EventTypeDialog({
           onSubmit={handleSubmit(submit)}
           className="flex flex-col gap-4"
         >
-          <Field label={t("booking.fields.title")} error={te(errors.title?.message)}>
+          <Field
+            label={t("booking.fields.title")}
+            error={te(errors.title?.message)}
+          >
             <Input
               placeholder={t("booking.fields.titlePlaceholder")}
               {...register("title")}
@@ -113,13 +121,16 @@ export function EventTypeDialog({
 
           <Field label={t("booking.fields.description")}>
             <textarea
-              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               placeholder={t("booking.fields.descriptionPlaceholder")}
               {...register("description")}
             />
           </Field>
 
-          <Field label={t("booking.fields.duration")} error={te(errors.duration_mins?.message)}>
+          <Field
+            label={t("booking.fields.duration")}
+            error={te(errors.duration_mins?.message)}
+          >
             <Controller
               control={control}
               name="duration_mins"
@@ -192,7 +203,10 @@ export function EventTypeDialog({
             </Field>
           </div>
 
-          <Field label={t("booking.fields.timezone")} error={te(errors.timezone?.message)}>
+          <Field
+            label={t("booking.fields.timezone")}
+            error={te(errors.timezone?.message)}
+          >
             <Controller
               control={control}
               name="timezone"
@@ -243,11 +257,7 @@ export function EventTypeDialog({
         </form>
 
         <DialogFooter>
-          <Button
-            type="submit"
-            form="event-type-form"
-            disabled={pending}
-          >
+          <Button type="submit" form="event-type-form" disabled={pending}>
             {pending ? <Loader2 className="size-4 animate-spin" /> : null}
             {editing ? t("booking.dialog.save") : t("booking.dialog.create")}
           </Button>

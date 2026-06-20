@@ -46,12 +46,14 @@ function formatTimeLabel(isoStart: string, timezone: string): string {
 
 function getTzLabel(timezone: string): string {
   try {
-    return new Intl.DateTimeFormat(undefined, {
-      timeZone: timezone,
-      timeZoneName: "short",
-    })
-      .formatToParts(new Date())
-      .find((p) => p.type === "timeZoneName")?.value ?? timezone
+    return (
+      new Intl.DateTimeFormat(undefined, {
+        timeZone: timezone,
+        timeZoneName: "short",
+      })
+        .formatToParts(new Date())
+        .find((p) => p.type === "timeZoneName")?.value ?? timezone
+    )
   } catch {
     return timezone
   }
@@ -119,7 +121,9 @@ export default function BookSlugPage() {
   if (state.status === "notFound") {
     return (
       <div className="flex min-h-svh items-center justify-center p-6">
-        <p className="text-muted-foreground">This booking link isn't available.</p>
+        <p className="text-muted-foreground">
+          This booking link isn't available.
+        </p>
       </div>
     )
   }
@@ -127,7 +131,9 @@ export default function BookSlugPage() {
   if (state.status === "error") {
     return (
       <div className="flex min-h-svh items-center justify-center p-6">
-        <p className="text-destructive">Something went wrong. Please try again.</p>
+        <p className="text-destructive">
+          Something went wrong. Please try again.
+        </p>
       </div>
     )
   }
@@ -151,7 +157,9 @@ export default function BookSlugPage() {
               <span>{event.org_name}</span>
             </div>
             {event.description ? (
-              <p className="mt-1 text-sm text-muted-foreground">{event.description}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {event.description}
+              </p>
             ) : null}
           </CardHeader>
         </Card>
@@ -198,19 +206,25 @@ export default function BookSlugPage() {
               <Card>
                 <CardHeader>
                   <p className="text-sm font-medium">
-                    {selectedDay} &middot; <span className="text-muted-foreground">{tzLabel}</span>
+                    {selectedDay} &middot;{" "}
+                    <span className="text-muted-foreground">{tzLabel}</span>
                   </p>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
                     {daySlots.map((slot) => {
-                      const timeLabel = formatTimeLabel(slot.start, event.timezone)
+                      const timeLabel = formatTimeLabel(
+                        slot.start,
+                        event.timezone
+                      )
                       const isSelected = selectedSlot?.start === slot.start
                       return (
                         <button
                           key={slot.start}
                           type="button"
-                          onClick={() => setSelectedSlot(isSelected ? null : slot)}
+                          onClick={() =>
+                            setSelectedSlot(isSelected ? null : slot)
+                          }
                           className={[
                             "rounded-md border px-3 py-1.5 text-sm transition-colors",
                             isSelected
@@ -232,7 +246,7 @@ export default function BookSlugPage() {
                 <button
                   type="button"
                   onClick={() => setShowForm(true)}
-                  className="flex h-9 w-full items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="flex h-9 w-full items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                 >
                   Continue
                 </button>

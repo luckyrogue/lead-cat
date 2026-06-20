@@ -18,8 +18,15 @@ import { z } from "zod"
 import { AuthLocaleShell } from "~/components/auth-locale-shell"
 import { BrandLogo } from "~/components/brand-logo"
 import { PageLoading } from "~/components/page-loading"
-import { useAcceptInvite, useDeclineInvite, useMyInvites } from "~/entities/invite/queries"
-import { useMyJoinRequests, useRequestToJoin } from "~/entities/join-request/queries"
+import {
+  useAcceptInvite,
+  useDeclineInvite,
+  useMyInvites,
+} from "~/entities/invite/queries"
+import {
+  useMyJoinRequests,
+  useRequestToJoin,
+} from "~/entities/join-request/queries"
 import { useCreateOrg } from "~/entities/org/queries"
 import { setActiveOrgId } from "~/shared/api/active-org"
 import { toApiError } from "~/shared/api/client"
@@ -124,7 +131,9 @@ function OnboardingBody({
     })
   }
 
-  const pendingJoinRequests = myJoinRequests.filter((r) => r.status === "pending")
+  const pendingJoinRequests = myJoinRequests.filter(
+    (r) => r.status === "pending"
+  )
 
   return (
     <div className="flex min-h-svh items-start justify-center overflow-hidden px-4 pt-16 pb-10 sm:items-center sm:px-6 sm:py-10">
@@ -135,11 +144,16 @@ function OnboardingBody({
           <Card>
             <CardHeader>
               <CardTitle>{t("onboarding.invites.title")}</CardTitle>
-              <CardDescription>{t("onboarding.invites.description")}</CardDescription>
+              <CardDescription>
+                {t("onboarding.invites.description")}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {invites.map((inv) => (
-                <div key={inv.invite_id} className="flex items-center justify-between gap-3">
+                <div
+                  key={inv.invite_id}
+                  className="flex items-center justify-between gap-3"
+                >
                   <span className="font-medium">{inv.org_name}</span>
                   <div className="flex gap-2">
                     <Button
@@ -151,7 +165,8 @@ function OnboardingBody({
                             setActiveOrgId(inv.organization_id)
                             navigate("/", { replace: true })
                           },
-                          onError: (e) => toastError(e, t("onboarding.invites.acceptFailed")),
+                          onError: (e) =>
+                            toastError(e, t("onboarding.invites.acceptFailed")),
                         })
                       }
                     >
@@ -174,15 +189,21 @@ function OnboardingBody({
         <Card>
           <CardHeader>
             <CardTitle>{t("onboarding.join.title")}</CardTitle>
-            <CardDescription>{t("onboarding.join.description")}</CardDescription>
+            <CardDescription>
+              {t("onboarding.join.description")}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {joinSent ? (
-              <p className="text-sm text-muted-foreground">{t("onboarding.join.sent")}</p>
+              <p className="text-sm text-muted-foreground">
+                {t("onboarding.join.sent")}
+              </p>
             ) : (
               <form onSubmit={handleJoinSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="join-slug">{t("onboarding.join.slugLabel")}</Label>
+                  <Label htmlFor="join-slug">
+                    {t("onboarding.join.slugLabel")}
+                  </Label>
                   <Input
                     id="join-slug"
                     placeholder={t("onboarding.join.slugPlaceholder")}
@@ -213,7 +234,10 @@ function OnboardingBody({
             {pendingJoinRequests.length > 0 ? (
               <div className="mt-4 space-y-2">
                 {pendingJoinRequests.map((r) => (
-                  <p key={r.organization_id} className="text-sm text-muted-foreground">
+                  <p
+                    key={r.organization_id}
+                    className="text-sm text-muted-foreground"
+                  >
                     {t("onboarding.join.pending")} — {r.org_name}
                   </p>
                 ))}
@@ -224,12 +248,16 @@ function OnboardingBody({
         <Card>
           <CardHeader>
             <CardTitle>{t("auth.onboarding.title")}</CardTitle>
-            <CardDescription>{t("auth.onboarding.description")}</CardDescription>
+            <CardDescription>
+              {t("auth.onboarding.description")}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="org-name">{t("auth.onboarding.nameLabel")}</Label>
+                <Label htmlFor="org-name">
+                  {t("auth.onboarding.nameLabel")}
+                </Label>
                 <Input
                   id="org-name"
                   placeholder={t("auth.onboarding.namePlaceholder")}

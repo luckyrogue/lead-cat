@@ -2,11 +2,7 @@ import { createContext, useContext, useMemo } from "react"
 
 import { dictionaries } from "~/shared/i18n/dictionaries"
 import { translate } from "~/shared/i18n/translate"
-import {
-  DEFAULT_LOCALE,
-  isLocale,
-  type Locale,
-} from "~/shared/i18n/types"
+import { DEFAULT_LOCALE, isLocale, type Locale } from "~/shared/i18n/types"
 
 type TFn = (key: string, params?: Record<string, string | number>) => string
 

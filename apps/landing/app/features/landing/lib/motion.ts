@@ -21,8 +21,7 @@ export function useSceneMotion<T extends HTMLElement = HTMLDivElement>(
       return
     }
     const mm = gsap.matchMedia()
-    
-    
+
     mm.add("(prefers-reduced-motion: no-preference)", () =>
       buildRef.current(scope)
     )

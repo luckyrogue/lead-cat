@@ -16,7 +16,9 @@ describe("translate", () => {
     expect(translate(active, fallback, "nav.missing")).toBe("nav.missing")
   })
   it("interpolates params, leaving unknown placeholders intact", () => {
-    expect(translate(active, fallback, "hi", { name: "Иван" })).toBe("Привет, Иван")
+    expect(translate(active, fallback, "hi", { name: "Иван" })).toBe(
+      "Привет, Иван"
+    )
     expect(translate(active, fallback, "hi")).toBe("Привет, {name}")
   })
 })

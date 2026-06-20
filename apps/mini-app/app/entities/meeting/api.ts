@@ -38,14 +38,19 @@ export async function fetchMyMeetings(scope: MeetingScope): Promise<Meeting[]> {
   return res.meetings ?? []
 }
 
-export async function fetchSchedule(email: string, scope: MeetingScope): Promise<Meeting[]> {
+export async function fetchSchedule(
+  email: string,
+  scope: MeetingScope
+): Promise<Meeting[]> {
   const res = await apiFetch<MiniAppMeetingsResponse>("/api/miniapp/schedule", {
     params: { email, scope },
   })
   return res.meetings ?? []
 }
 
-export async function createMeeting(input: CreateMeetingInput): Promise<Meeting> {
+export async function createMeeting(
+  input: CreateMeetingInput
+): Promise<Meeting> {
   const res = await apiFetch<{ meeting: Meeting }>("/api/miniapp/meetings", {
     method: "POST",
     body: input,
@@ -58,11 +63,14 @@ export async function updateMeeting(
   input: UpdateMeetingInput,
   scope: MeetingMutationScope = "this"
 ): Promise<Meeting> {
-  const res = await apiFetch<{ meeting: Meeting }>(`/api/miniapp/meetings/${id}`, {
-    method: "PATCH",
-    params: { scope },
-    body: input,
-  })
+  const res = await apiFetch<{ meeting: Meeting }>(
+    `/api/miniapp/meetings/${id}`,
+    {
+      method: "PATCH",
+      params: { scope },
+      body: input,
+    }
+  )
   return res.meeting
 }
 
@@ -76,7 +84,10 @@ export async function deleteMeeting(
   })
 }
 
-export async function addParticipant(id: string, email: string): Promise<Meeting> {
+export async function addParticipant(
+  id: string,
+  email: string
+): Promise<Meeting> {
   const res = await apiFetch<{ meeting: Meeting }>(
     `/api/miniapp/meetings/${id}/participants`,
     { method: "POST", body: { email } }
@@ -84,7 +95,10 @@ export async function addParticipant(id: string, email: string): Promise<Meeting
   return res.meeting
 }
 
-export async function removeParticipant(id: string, email: string): Promise<Meeting> {
+export async function removeParticipant(
+  id: string,
+  email: string
+): Promise<Meeting> {
   const res = await apiFetch<{ meeting: Meeting }>(
     `/api/miniapp/meetings/${id}/participants`,
     { method: "DELETE", params: { email } }
@@ -92,7 +106,10 @@ export async function removeParticipant(id: string, email: string): Promise<Meet
   return res.meeting
 }
 
-export async function changeSeriesEnd(id: string, until: string): Promise<Meeting> {
+export async function changeSeriesEnd(
+  id: string,
+  until: string
+): Promise<Meeting> {
   const res = await apiFetch<{ meeting: Meeting }>(
     `/api/miniapp/meetings/${id}/series-end`,
     { method: "PATCH", body: { until } }
@@ -100,7 +117,9 @@ export async function changeSeriesEnd(id: string, until: string): Promise<Meetin
   return res.meeting
 }
 
-export async function fetchConflicts(input: ConflictsInput): Promise<OccurrenceConflicts[]> {
+export async function fetchConflicts(
+  input: ConflictsInput
+): Promise<OccurrenceConflicts[]> {
   const res = await apiFetch<{ occurrences: MiniAppOccurrenceConflicts[] }>(
     "/api/miniapp/conflicts",
     { method: "POST", body: input }
@@ -108,14 +127,21 @@ export async function fetchConflicts(input: ConflictsInput): Promise<OccurrenceC
   return res.occurrences ?? []
 }
 
-export function flattenConflicts(occurrences: OccurrenceConflicts[]): Conflict[] {
+export function flattenConflicts(
+  occurrences: OccurrenceConflicts[]
+): Conflict[] {
   return occurrences.flatMap((o) => o.conflicts)
 }
 
-export async function fetchFreeSlots(input: FreeSlotsInput): Promise<FreeSlot[]> {
-  const res = await apiFetch<MiniAppFreeSlotsResponse>("/api/miniapp/free-slots", {
-    method: "POST",
-    body: input,
-  })
+export async function fetchFreeSlots(
+  input: FreeSlotsInput
+): Promise<FreeSlot[]> {
+  const res = await apiFetch<MiniAppFreeSlotsResponse>(
+    "/api/miniapp/free-slots",
+    {
+      method: "POST",
+      body: input,
+    }
+  )
   return res.slots ?? []
 }

@@ -1,6 +1,9 @@
 import { z } from "zod"
 
-import type { BookingEventType, EventTypeInput } from "~/entities/booking-event-type/types"
+import type {
+  BookingEventType,
+  EventTypeInput,
+} from "~/entities/booking-event-type/types"
 
 export const DURATION_OPTIONS = [15, 30, 45, 60] as const
 

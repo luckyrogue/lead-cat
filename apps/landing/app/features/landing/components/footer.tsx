@@ -85,7 +85,9 @@ export function Footer() {
             </span>
           ))}
         </h2>
-        <p className="mx-auto mt-3 max-w-md text-kitty-600">{t("footer.copy")}</p>
+        <p className="mx-auto mt-3 max-w-md text-kitty-600">
+          {t("footer.copy")}
+        </p>
         <div data-footer-cta className="mt-7 flex justify-center">
           <GetStartedButton size="lg">
             {t("footer.cta")}
@@ -96,7 +98,8 @@ export function Footer() {
         <div className="mt-14 flex flex-col items-center gap-3 text-sm text-kitty-400">
           <LeadCatLogo className="text-kitty-600" />
           <p>
-            &copy; {new Date().getFullYear()} {SITE_NAME}. {t("footer.copyright")}
+            &copy; {new Date().getFullYear()} {SITE_NAME}.{" "}
+            {t("footer.copyright")}
           </p>
         </div>
       </div>

@@ -154,7 +154,8 @@ export const en = {
     },
     onboarding: {
       title: "Create your organization",
-      description: "Set up a workspace to manage members, invites, and meetings.",
+      description:
+        "Set up a workspace to manage members, invites, and meetings.",
       nameLabel: "Organization name",
       namePlaceholder: "Acme Inc.",
       submit: "Create organization",

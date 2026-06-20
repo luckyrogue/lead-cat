@@ -1,5 +1,5 @@
 .PHONY: help setup deps up down ps migrate migrate-down migrate-status \
-	backend backend-watch miniapp admin landing frontend dev lint fmt fmt-check typecheck openapi-generate brand-sync build docker-build clean \
+	backend backend-watch miniapp admin landing frontend dev lint fmt fmt-check typecheck openapi-generate brand-sync build clean \
 	test ci
 
 ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
@@ -10,6 +10,7 @@ LANDING := $(ROOT)apps/landing
 COMPOSE := docker compose -f deploy/docker-compose.yml
 GO := env -u GOROOT go
 PNPM := pnpm
+GOLANGCI := golangci-lint --config $(ROOT)config/.golangci.yml
 
 .DEFAULT_GOAL := help
 
@@ -83,37 +84,33 @@ landing:
 dev:
 	@$(MAKE) -j2 backend-watch frontend
 
-lint:
+lint: ## golangci-lint + eslint (apps)
 	@command -v golangci-lint >/dev/null || (echo "install: brew install golangci-lint" && exit 1)
-	@cd $(BACKEND) && golangci-lint run --config $(ROOT)config/.golangci.yml ./...
+	@cd $(BACKEND) && $(GOLANGCI) run ./...
 	@$(PNPM) turbo run lint --filter=./apps/*
 
-test:
-	@cd $(BACKEND) && $(GO) test ./...
+test: ## go test -race + vitest (apps + ui)
+	@cd $(BACKEND) && $(GO) test -race ./...
+	@$(PNPM) turbo run test --filter=./apps/* --filter=@leadcat/ui
 
-fmt:
+fmt: ## format frontend + go (golangci fmt)
 	@$(PNPM) turbo run format --filter=./apps/*
-	@command -v golangci-lint >/dev/null && (cd $(BACKEND) && golangci-lint fmt --config $(ROOT)config/.golangci.yml) || true
+	@command -v golangci-lint >/dev/null && (cd $(BACKEND) && $(GOLANGCI) fmt) || true
 
-fmt-check:
-	@$(PNPM) --filter mini-app run format:check
-	@$(PNPM) --filter admin run format:check
-	@$(PNPM) --filter landing run format:check
-	@command -v golangci-lint >/dev/null && (cd $(BACKEND) && golangci-lint fmt --diff --config $(ROOT)config/.golangci.yml) || true
+fmt-check: ## check formatting (prettier + golangci fmt diff)
+	@$(PNPM) turbo run format:check --filter=./apps/*
+	@command -v golangci-lint >/dev/null && (cd $(BACKEND) && $(GOLANGCI) fmt --diff) || (echo "install: brew install golangci-lint" && exit 1)
 
-typecheck:
+typecheck: ## tsc + react-router typegen (apps)
 	@$(PNPM) turbo run typecheck --filter=./apps/*
 
-build:
+build: ## go binaries + openapi + frontend production build
 	@cd $(BACKEND) && $(GO) build -o bin/lead-cat ./cmd/server && $(GO) build -o bin/migrate ./cmd/migrate
 	@$(MAKE) openapi-generate
 	@$(PNPM) turbo run build --filter=./apps/*
 
-ci: fmt-check lint test typecheck build
+ci: fmt-check lint test typecheck build ## local CI gate (matches GitHub _build.yml)
 	@echo "ci: all gates passed"
-
-docker-build:
-	docker build -t lead-cat:local -f deploy/Dockerfile --build-arg VITE_AUTH_DEV_MODE=false .
 
 clean:
 	rm -rf $(BACKEND)/bin $(MINIAPP)/build $(MINIAPP)/dist $(ADMIN)/build $(ADMIN)/dist $(LANDING)/build $(LANDING)/dist .turbo

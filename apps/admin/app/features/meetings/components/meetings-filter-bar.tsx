@@ -86,7 +86,10 @@ export function MeetingsFilterBar({
         </Select>
       </Field>
 
-      <Field label={t("meetings.filter.labelDateRange")} className="sm:col-span-2">
+      <Field
+        label={t("meetings.filter.labelDateRange")}
+        className="sm:col-span-2"
+      >
         <DateRangePicker
           value={{ from: filter.from ?? "", to: filter.to ?? "" }}
           onChange={(range) =>
@@ -122,7 +125,11 @@ function Field({
   className?: string
 }) {
   return (
-    <div className={className ? `min-w-0 space-y-2 ${className}` : "min-w-0 space-y-2"}>
+    <div
+      className={
+        className ? `min-w-0 space-y-2 ${className}` : "min-w-0 space-y-2"
+      }
+    >
       <Label className="text-xs text-muted-foreground">{label}</Label>
       {children}
     </div>

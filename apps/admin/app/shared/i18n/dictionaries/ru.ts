@@ -361,8 +361,7 @@ export const ru: typeof en = {
     loading: "Загрузка…",
     login: {
       title: "С возвращением",
-      description:
-        "Войдите, чтобы управлять организациями и встречами.",
+      description: "Войдите, чтобы управлять организациями и встречами.",
       continueGoogle: "Войти через Google",
       continueMicrosoft: "Войти через Microsoft",
       divider: "или",

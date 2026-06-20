@@ -1,4 +1,12 @@
-import { Button, Card, CardDescription, CardFooter, CardHeader, CardTitle, CatFace } from "@leadcat/ui"
+import {
+  Button,
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  CatFace,
+} from "@leadcat/ui"
 import { isRouteErrorResponse } from "react-router"
 
 type RouteErrorPageProps = {
@@ -21,14 +29,18 @@ export function RouteErrorPage({ error }: RouteErrorPageProps) {
 
   return (
     <main className="flex min-h-svh flex-col items-center justify-center gap-4 px-6 text-center">
-      <CatFace className="size-16 animate-float" />
+      <CatFace className="animate-float size-16" />
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardFooter className="justify-center">
-          <Button type="button" variant="secondary" onClick={() => window.location.reload()}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => window.location.reload()}
+          >
             Reload
           </Button>
         </CardFooter>

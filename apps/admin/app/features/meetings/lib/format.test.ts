@@ -27,11 +27,13 @@ describe("formatDateTime", () => {
 describe("meetingTitle", () => {
   it("uses the trimmed type when present", () => {
     expect(meetingTitle(mk({ type: "  Standup  ", name: "X | Y" }), "fb")).toBe(
-      "Standup",
+      "Standup"
     )
   })
   it("falls back to the second pipe segment of name", () => {
-    expect(meetingTitle(mk({ type: "  ", name: "Team | Sync" }), "fb")).toBe("Sync")
+    expect(meetingTitle(mk({ type: "  ", name: "Team | Sync" }), "fb")).toBe(
+      "Sync"
+    )
   })
   it("falls back to the provided fallback when nothing usable", () => {
     expect(meetingTitle(mk({ type: "", name: "OnlyOne" }), "fb")).toBe("fb")

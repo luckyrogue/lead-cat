@@ -26,7 +26,10 @@ export function LanguageSelector({
     <Select value={value} onValueChange={(next) => onChange(next as Locale)}>
       <SelectTrigger
         aria-label={t("locale.label")}
-        className={className ?? "h-9 w-[9.5rem] border-border/70 bg-background/80 backdrop-blur-sm"}
+        className={
+          className ??
+          "h-9 w-[9.5rem] border-border/70 bg-background/80 backdrop-blur-sm"
+        }
       >
         <SelectValue />
       </SelectTrigger>

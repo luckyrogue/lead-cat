@@ -11,15 +11,15 @@ The five brainstorm questions resolved as follows:
 
 | # | Decision |
 |---|----------|
-| 1 | **Scope** — phases 1 + 2 + 3 (Google integration + chat/members + scenarios); supersedes [`2026-06-05-tma-setup-replacement-design.md`](2026-06-05-tma-setup-replacement-design.md) which was written before `PatchIntegrations` landed Google support |
+| 1 | **Scope** — phases 1 + 2 + 3 (Google integration + chat/members + scenarios); supersedes the pre-monorepo TMA setup cutover draft (removed) which was written before `PatchIntegrations` landed Google support |
 | 2 | **Google verify depth** — _real_: parse SA JSON → impersonate `subject` → `Calendars.Get(calendarID)`. No probe-insert / no side-effect events |
 | 3 | **SA upload UX** — paste-only `<textarea>` with client-side JSON validation. No file input (TMA WebView edge cases) |
 | 4 | **Audit log** — persistent `admin_audit_log` table + `GET /api/tma/admin/audit` endpoint. Whitelisted `details` keys per action to prevent secret leaks |
 | 5 | **Workspace model** — single workspace. `EnsureSingleWorkspace` returns first by `created_at`, or creates one with defaults (`name='Lead Cat'`, `tz='Asia/Almaty'`, `meet_link=''`). Multi-workspace picker out of scope |
 
-## Reality check vs prior spec
+## Reality check vs prior draft
 
-The [`2026-06-05-tma-setup-replacement-design.md`](2026-06-05-tma-setup-replacement-design.md) spec was authored before Google SA support landed in `PatchIntegrations`. Current `main` (HEAD `be3c330`) has:
+The pre-monorepo TMA setup cutover draft was authored before Google SA support landed in `PatchIntegrations`. Current `main` (HEAD `be3c330`) has:
 
 | Surface | Status |
 |---------|--------|

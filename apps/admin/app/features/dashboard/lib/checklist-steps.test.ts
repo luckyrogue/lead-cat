@@ -18,18 +18,22 @@ describe("computeSteps", () => {
   })
   it("marks invite done when there are invites OR more than one member", () => {
     expect(
-      computeSteps({ ...base, invitesCount: 1 }).find((s) => s.key === "invite")!.done,
+      computeSteps({ ...base, invitesCount: 1 }).find(
+        (s) => s.key === "invite"
+      )!.done
     ).toBe(true)
     expect(
-      computeSteps({ ...base, membersCount: 2 }).find((s) => s.key === "invite")!.done,
+      computeSteps({ ...base, membersCount: 2 }).find(
+        (s) => s.key === "invite"
+      )!.done
     ).toBe(true)
-    expect(
-      computeSteps(base).find((s) => s.key === "invite")!.done,
-    ).toBe(false)
+    expect(computeSteps(base).find((s) => s.key === "invite")!.done).toBe(false)
   })
   it("marks meeting done when there is at least one meeting", () => {
     expect(
-      computeSteps({ ...base, meetingsCount: 3 }).find((s) => s.key === "meeting")!.done,
+      computeSteps({ ...base, meetingsCount: 3 }).find(
+        (s) => s.key === "meeting"
+      )!.done
     ).toBe(true)
   })
 })

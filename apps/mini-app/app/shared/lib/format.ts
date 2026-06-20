@@ -1,9 +1,6 @@
 import { DEFAULT_LOCALE, type Locale } from "~/shared/i18n/types"
 
-export {
-  addMinutesToTime,
-  todayIso,
-} from "@leadcat/ui"
+export { addMinutesToTime, todayIso } from "@leadcat/ui"
 
 export function formatDate(
   iso: string,

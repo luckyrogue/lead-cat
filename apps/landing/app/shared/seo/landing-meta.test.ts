@@ -27,7 +27,9 @@ describe("sitemapXml", () => {
 
 describe("robotsTxt", () => {
   it("points at the absolute sitemap URL", () => {
-    expect(robotsTxt(SITE)).toContain("Sitemap: https://example.test/sitemap.xml")
+    expect(robotsTxt(SITE)).toContain(
+      "Sitemap: https://example.test/sitemap.xml"
+    )
   })
 })
 

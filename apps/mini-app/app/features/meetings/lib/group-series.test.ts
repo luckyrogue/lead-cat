@@ -28,9 +28,6 @@ describe("groupBySeries", () => {
       throw new Error("expected first group to be a series")
     }
     expect(first.seriesId).toBe("s1")
-    expect(first.meetings.map((m) => m.id)).toEqual([
-      "s1a",
-      "s1b",
-    ])
+    expect(first.meetings.map((m) => m.id)).toEqual(["s1a", "s1b"])
   })
 })

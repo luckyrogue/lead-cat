@@ -14,7 +14,9 @@ type RetryableConfig = InternalAxiosRequestConfig & { _retry?: boolean }
 
 let reauthHandler: (() => Promise<string | null>) | null = null
 
-export function setReauthHandler(handler: (() => Promise<string | null>) | null): void {
+export function setReauthHandler(
+  handler: (() => Promise<string | null>) | null
+): void {
   reauthHandler = handler
 }
 
@@ -34,7 +36,12 @@ api.interceptors.response.use(
     const config = error.config as RetryableConfig | undefined
     const isAuthCall = config?.url?.includes("/api/auth/miniapp")
 
-    if (error.response?.status === 401 && config && !config._retry && !isAuthCall) {
+    if (
+      error.response?.status === 401 &&
+      config &&
+      !config._retry &&
+      !isAuthCall
+    ) {
       config._retry = true
       if (reauthHandler) {
         const token = await reauthHandler()
@@ -49,7 +56,10 @@ api.interceptors.response.use(
   }
 )
 
-export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
+export async function apiFetch<T>(
+  path: string,
+  options: ApiFetchOptions = {}
+): Promise<T> {
   return sharedApiFetch<T>(api, path, options)
 }
 

@@ -3,7 +3,7 @@
 **Status:** approved (brainstorm), ready for implementation plan.
 **Topic:** Rebuild all project documentation + agent-guidance files to describe a single-purpose Google Meet meetings-management Telegram Mini App, removing the old multi-tenant SaaS / notify-bot / scenarios framing.
 **ТЗ (source of truth):** `docs/NEW-FEATURES.md` (canonical, 1025 lines — left untouched).
-**Related:** `docs/superpowers/specs/2026-06-05-tma-setup-replacement-design.md` (the user's TMA-admin setup cutover — informs the "platform = deprecated" framing).
+**Related:** [`docs/superpowers/specs/2026-06-09-slice-d-tma-admin-integrations-design.md`](2026-06-09-slice-d-tma-admin-integrations-design.md) (TMA admin setup cutover — informs the "platform = deprecated" framing).
 
 ## Goal
 

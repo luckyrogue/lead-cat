@@ -1,5 +1,8 @@
 import { api } from "~/shared/api/client"
-import type { BookingEventType, EventTypeInput } from "~/entities/booking-event-type/types"
+import type {
+  BookingEventType,
+  EventTypeInput,
+} from "~/entities/booking-event-type/types"
 
 export async function listEventTypes(): Promise<BookingEventType[]> {
   const { data } = await api.get<{ event_types: BookingEventType[] }>(

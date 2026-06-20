@@ -1,6 +1,15 @@
-import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 
-import { disconnectCalendar, listConnections, startConnect } from "~/entities/calendar-connection/api"
+import {
+  disconnectCalendar,
+  listConnections,
+  startConnect,
+} from "~/entities/calendar-connection/api"
 import type { CalendarProvider } from "~/entities/calendar-connection/types"
 import { calendarConnectionKeys } from "~/shared/api/query-keys"
 

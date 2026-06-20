@@ -1,6 +1,14 @@
-import { queryOptions, useMutation, useQueryClient } from "@tanstack/react-query"
+import {
+  queryOptions,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query"
 
-import { fetchSettings, updatePrefs, updateReminderMinutes } from "~/entities/settings/api"
+import {
+  fetchSettings,
+  updatePrefs,
+  updateReminderMinutes,
+} from "~/entities/settings/api"
 import { settingsKeys } from "~/shared/api/query-keys"
 
 export function settingsQuery() {

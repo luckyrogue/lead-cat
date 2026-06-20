@@ -7,7 +7,7 @@ type FormatOptions = {
 
 export function formatMeetingDate(
   value: string,
-  { timeZone, locale }: FormatOptions = {},
+  { timeZone, locale }: FormatOptions = {}
 ): string {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) {
@@ -39,7 +39,7 @@ export function formatDateTime(value: string, timeZone?: string): string {
 
 export function formatTimeRange(
   meeting: Meeting,
-  { timeZone, locale }: FormatOptions = {},
+  { timeZone, locale }: FormatOptions = {}
 ): string {
   const start = new Date(meeting.starts_at)
   const end = new Date(meeting.ends_at)

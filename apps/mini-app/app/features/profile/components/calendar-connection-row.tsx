@@ -1,7 +1,11 @@
 import { Button, Card, CardContent, cn } from "@leadcat/ui"
 import { useEffect } from "react"
 
-import { useCalendarConnections, useDisconnect, useStartConnect } from "~/entities/calendar-connection/queries"
+import {
+  useCalendarConnections,
+  useDisconnect,
+  useStartConnect,
+} from "~/entities/calendar-connection/queries"
 import type { CalendarProvider } from "~/entities/calendar-connection/types"
 import { useT } from "~/shared/i18n/context"
 import { getWebApp } from "~/shared/tma/telegram-env"
@@ -42,7 +46,9 @@ export function CalendarConnectionRow() {
                 variant="ghost"
                 size="sm"
                 disabled={disconnect.isPending}
-                className={cn("shrink-0 text-destructive hover:text-destructive")}
+                className={cn(
+                  "shrink-0 text-destructive hover:text-destructive"
+                )}
                 onClick={() => disconnect.mutate("google")}
               >
                 {t("profile.calendar.disconnect")}
@@ -68,7 +74,9 @@ export function CalendarConnectionRow() {
                 variant="ghost"
                 size="sm"
                 disabled={disconnect.isPending}
-                className={cn("shrink-0 text-destructive hover:text-destructive")}
+                className={cn(
+                  "shrink-0 text-destructive hover:text-destructive"
+                )}
                 onClick={() => disconnect.mutate("microsoft")}
               >
                 {t("profile.calendar.disconnect")}

@@ -25,8 +25,7 @@ export const en = {
     badge: "Scheduling, but cuddly",
     titleLine1: "Meetings your team will",
     titleHighlight: "actually love",
-    copy:
-      "Lead Cat sniffs out the purrfect time across everyone's calendars — no more back-and-forth, no more double-booking. Just happy little meetings.",
+    copy: "Lead Cat sniffs out the purrfect time across everyone's calendars — no more back-and-forth, no more double-booking. Just happy little meetings.",
     ctaPrimary: "Get started — it's free",
     ctaSecondary: "See how it works",
     footnote:
@@ -94,8 +93,7 @@ export const en = {
   showcase: {
     badge: "Right inside Telegram",
     title: "Your whole schedule, one cozy tap away",
-    copy:
-      "No new app to learn. Lead Cat lives in the Mini App your team already opens every day.",
+    copy: "No new app to learn. Lead Cat lives in the Mini App your team already opens every day.",
     perks: [
       "Book, reschedule and confirm without leaving chat",
       "Tap a slot — invites and reminders send themselves",
@@ -112,8 +110,7 @@ export const en = {
   },
   footer: {
     headingWords: ["Ready", "to", "make", "meetings", "purr?"],
-    copy:
-      "Join the teams that traded scheduling chaos for a happy little cat.",
+    copy: "Join the teams that traded scheduling chaos for a happy little cat.",
     cta: "Adopt Lead Cat",
     copyright: "Made with whiskers and warmth.",
   },

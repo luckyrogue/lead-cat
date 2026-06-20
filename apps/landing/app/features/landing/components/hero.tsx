@@ -116,7 +116,9 @@ export function Hero() {
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4 md:justify-start">
             <span data-hero-cta className="inline-block">
-              <GetStartedButton size="lg">{t("hero.ctaPrimary")}</GetStartedButton>
+              <GetStartedButton size="lg">
+                {t("hero.ctaPrimary")}
+              </GetStartedButton>
             </span>
             <span data-hero-cta className="inline-block">
               <Button variant="secondary" size="lg" asChild>

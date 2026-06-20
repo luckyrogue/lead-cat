@@ -26,7 +26,7 @@ export function LanguageSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="inline-flex items-center gap-1.5 rounded-2xl border border-border/60 bg-cream-50/80 px-3 py-1.5 text-xs font-bold text-kitty-700 transition-colors outline-none hover:border-coral-200 hover:text-coral-500 focus-visible:ring-2 focus-visible:ring-coral-300/60"
+        className="text-kitty-700 inline-flex items-center gap-1.5 rounded-2xl border border-border/60 bg-cream-50/80 px-3 py-1.5 text-xs font-bold transition-colors outline-none hover:border-coral-200 hover:text-coral-500 focus-visible:ring-2 focus-visible:ring-coral-300/60"
         aria-label={t("lang.switchLabel")}
       >
         <span>{localeLabels[locale]}</span>
@@ -37,7 +37,7 @@ export function LanguageSwitcher() {
           <DropdownMenuItem key={code} asChild>
             <Link
               to={localePath(code, hash)}
-              className="font-medium text-kitty-700"
+              className="text-kitty-700 font-medium"
             >
               <span className="flex-1">{t(`lang.${code}`)}</span>
               <Check

@@ -11,9 +11,13 @@
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "format": "turbo run format",
+    "format:check": "turbo run format:check --filter=./apps/*",
+    "test": "turbo run test --filter=./apps/* --filter=@leadcat/ui",
     "e2e": "bash scripts/e2e.sh"
   },
   "devDependencies": {
+    "prettier": "^3.8.4",
+    "prettier-plugin-tailwindcss": "^0.8.0",
     "turbo": "^2.9.18"
   }
 }

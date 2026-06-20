@@ -43,13 +43,19 @@ function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 }
 
-export function BookingForm({ slug, selectedSlot, timezone, onConflict }: Props) {
+export function BookingForm({
+  slug,
+  selectedSlot,
+  timezone,
+  onConflict,
+}: Props) {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [touched, setTouched] = useState({ name: false, email: false })
   const [formState, setFormState] = useState<FormState>({ status: "idle" })
 
-  const nameError = touched.name && name.trim() === "" ? "Name is required." : null
+  const nameError =
+    touched.name && name.trim() === "" ? "Name is required." : null
   const emailError =
     touched.email && !isValidEmail(email) ? "A valid email is required." : null
   const canSubmit =
@@ -67,7 +73,11 @@ export function BookingForm({ slug, selectedSlot, timezone, onConflict }: Props)
       const res = await fetch(`/api/book/${slug}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), email: email.trim(), start: selectedSlot.start }),
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          start: selectedSlot.start,
+        }),
       })
 
       if (res.ok) {
@@ -139,7 +149,7 @@ export function BookingForm({ slug, selectedSlot, timezone, onConflict }: Props)
               value={name}
               onChange={(e) => setName(e.target.value)}
               onBlur={() => setTouched((t) => ({ ...t, name: true }))}
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
               placeholder="Your name"
             />
             {nameError ? (
@@ -159,7 +169,7 @@ export function BookingForm({ slug, selectedSlot, timezone, onConflict }: Props)
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onBlur={() => setTouched((t) => ({ ...t, email: true }))}
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
               placeholder="you@example.com"
             />
             {emailError ? (
@@ -190,7 +200,9 @@ export function BookingForm({ slug, selectedSlot, timezone, onConflict }: Props)
             className="w-full"
             disabled={formState.status === "submitting"}
           >
-            {formState.status === "submitting" ? "Booking..." : "Confirm booking"}
+            {formState.status === "submitting"
+              ? "Booking..."
+              : "Confirm booking"}
           </Button>
         </form>
       </CardContent>

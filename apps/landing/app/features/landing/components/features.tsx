@@ -13,12 +13,7 @@ import { gsap, useSceneMotion } from "~/features/landing/lib/motion"
 import { useT } from "~/shared/i18n/context"
 import { useLandingDict } from "~/shared/i18n/use-landing-dict"
 
-const featureIcons: LucideIcon[] = [
-  CalendarDays,
-  Bell,
-  Heart,
-  Star,
-]
+const featureIcons: LucideIcon[] = [CalendarDays, Bell, Heart, Star]
 
 const featureTints = [
   "from-peach-100 to-cream-200",

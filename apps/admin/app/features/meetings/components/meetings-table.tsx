@@ -42,7 +42,10 @@ type OccurrenceRowProps = {
   locale: string
 }
 
-function meetingStatusLabel(status: string, t: ReturnType<typeof useT>): string {
+function meetingStatusLabel(
+  status: string,
+  t: ReturnType<typeof useT>
+): string {
   const key = `meetings.status.${status}`
   const label = t(key)
   return label === key ? status : label

@@ -16,7 +16,10 @@ import {
   useUpdateEventType,
   useDeleteEventType,
 } from "~/entities/booking-event-type/queries"
-import type { BookingEventType, EventTypeInput } from "~/entities/booking-event-type/types"
+import type {
+  BookingEventType,
+  EventTypeInput,
+} from "~/entities/booking-event-type/types"
 import { EventTypeDialog } from "~/features/booking/components/event-type-dialog"
 import { ListPageShell } from "~/components/list-page-shell"
 import { toastError, toastSuccess } from "~/shared/lib/toast"

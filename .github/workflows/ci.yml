@@ -19,6 +19,10 @@ jobs:
     name: build
     uses: ./.github/workflows/_build.yml
 
+  security:
+    name: security
+    uses: ./.github/workflows/_security.yml
+
   docker-validate:
     name: docker (validate)
     needs: build
@@ -33,12 +37,12 @@ jobs:
   e2e:
     name: e2e
     needs: build
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     uses: ./.github/workflows/_e2e.yml
 
   docker:
     name: docker
-    needs: build
+    needs: [build, e2e]
     if: |
       success() &&
       github.event_name == 'push' &&

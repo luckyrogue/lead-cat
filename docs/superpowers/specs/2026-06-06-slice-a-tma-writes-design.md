@@ -2,7 +2,7 @@
 
 **Status:** approved (brainstorm), ready for implementation plan.
 **Part of:** the meetings beta roadmap (`docs/superpowers/specs/2026-06-06-roadmap-to-beta-design.md`), slice A of 8.
-**Ancestor spec:** `docs/superpowers/specs/2026-06-05-tma-write-paths-design.md` (earlier "sub-project 3" brainstorm) — supersedes its open parts; locks-in the parts that already shipped.
+**Ancestor brainstorm:** pre-monorepo TMA write-paths draft removed; see `docs/NEW-FEATURES.md` §4 and this spec for the shipped vs remaining scope.
 **ТЗ:** `docs/NEW-FEATURES.md` §4.4 (edit), §4.5 (delete), §4.7 (conflicts on create).
 
 ## Goal
