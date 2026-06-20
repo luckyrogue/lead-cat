@@ -24,8 +24,11 @@ describe("groupBySeries", () => {
     ])
     expect(result.map((g) => g.kind)).toEqual(["series", "series", "single"])
     const first = result[0]
-    expect(first.kind === "series" && first.seriesId).toBe("s1")
-    expect(first.kind === "series" && first.meetings.map((m) => m.id)).toEqual([
+    if (first.kind !== "series") {
+      throw new Error("expected first group to be a series")
+    }
+    expect(first.seriesId).toBe("s1")
+    expect(first.meetings.map((m) => m.id)).toEqual([
       "s1a",
       "s1b",
     ])

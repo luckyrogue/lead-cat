@@ -13,7 +13,10 @@ describe("groupBySeries (admin)", () => {
     const result = groupBySeries([mk("s1a", "s1"), mk("solo"), mk("s1b", "s1")])
     expect(result.map((g) => g.kind)).toEqual(["series", "single"])
     const first = result[0]
-    expect(first.kind === "series" && first.meetings.map((m) => m.id)).toEqual([
+    if (first.kind !== "series") {
+      throw new Error("expected first group to be a series")
+    }
+    expect(first.meetings.map((m) => m.id)).toEqual([
       "s1a",
       "s1b",
     ])
