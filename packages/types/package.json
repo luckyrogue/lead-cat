@@ -11,7 +11,7 @@
   },
   "devDependencies": {
     "@leadcat/config": "workspace:*",
-    "@types/node": "^25",
+    "@types/node": "^26",
     "typescript": "^6.0.3",
     "vite": "^8.0.16"
   }
