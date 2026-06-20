@@ -14,6 +14,7 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/application/query"
 	"github.com/luckyrogue/lead-cat/internal/platform/authweb"
+	"github.com/luckyrogue/lead-cat/internal/platform/emailtemplates"
 )
 
 type ChatSyncer func(ctx context.Context, organizationID uuid.UUID) (int, error)
@@ -37,12 +38,14 @@ type Services struct {
 	magic      *magicLinkService
 	sessions   *webSessionService
 	appBaseURL string
+	webappURL  string
 }
 
-func (s *Services) ConfigureWebAuth(sso map[string]SSOProvider, email EmailSender, appBaseURL string, sessionTTL, magicTTL time.Duration) {
+func (s *Services) ConfigureWebAuth(sso map[string]SSOProvider, email EmailSender, appBaseURL, webappURL string, sessionTTL, magicTTL time.Duration) {
 	s.sso = sso
 	s.email = email
 	s.appBaseURL = appBaseURL
+	s.webappURL = webappURL
 	s.magic = newMagicLinkService(s.Store, email, appBaseURL, magicTTL, time.Now)
 	s.sessions = newWebSessionService(s.Store, sessionTTL, time.Now)
 }
@@ -65,8 +68,13 @@ func (s *Services) RevokeWebSession(ctx context.Context, rawToken string) error 
 	return s.sessions.RevokeSession(ctx, rawToken)
 }
 
-func (s *Services) RequestMagicLink(ctx context.Context, email string) error {
-	return s.magic.RequestMagicLink(ctx, email)
+func (s *Services) RequestMagicLink(ctx context.Context, email, language string) error {
+	if language == "" {
+		if lang, ok, err := s.Store.GetPlatformUserLanguageByEmail(ctx, email); err == nil && ok {
+			language = lang
+		}
+	}
+	return s.magic.RequestMagicLink(ctx, email, language)
 }
 
 func (s *Services) VerifyMagicLink(ctx context.Context, rawToken string) (string, error) {
@@ -107,7 +115,12 @@ func (s *Services) CreateOrganizationForOwner(ctx context.Context, name string, 
 		return model.Organization{}, err
 	}
 	slug := base + "-" + suffix[:6]
-	return s.Store.CreateOrganization(ctx, name, slug, ownerUserID)
+	org, err := s.Store.CreateOrganization(ctx, name, slug, ownerUserID)
+	if err != nil {
+		return model.Organization{}, err
+	}
+	s.sendWelcomeEmail(ctx, ownerUserID)
+	return org, nil
 }
 
 func (s *Services) WireCQRS() {
@@ -266,10 +279,31 @@ func (s *Services) InviteToOrg(ctx context.Context, orgID uuid.UUID, email, role
 		return model.OrganizationInvite{}, err
 	}
 	if s.email != nil {
-		link := s.appBaseURL + "/login"
-		body := fmt.Sprintf(`<p>You've been invited to a Lead Cat organization.</p><p>Sign in to accept: <a href="%s">%s</a></p>`, link, link)
-		if err := s.email.Send(ctx, email, "You're invited to Lead Cat", body); err != nil {
-			s.Log.Warn("invite_email_failed", zap.Error(err))
+		org, oerr := s.Store.GetOrganization(ctx, orgID)
+		if oerr != nil {
+			s.Log.Warn("invite_email_org_lookup_failed", zap.Error(oerr))
+		} else {
+			lang := "ru"
+			if l, ok, lerr := s.Store.GetPlatformUserLanguageByEmail(ctx, email); lerr == nil && ok {
+				lang = l
+			}
+			loginURL := s.appBaseURL + "/login"
+			inviterName := ""
+			if inviter, ok, ierr := s.Store.GetPlatformUserByID(ctx, inviterUserID); ierr == nil && ok {
+				inviterName = emailtemplates.FirstNameFromDisplay("", inviter.Email)
+			}
+			subject, text, html, rerr := emailtemplates.RenderOrgInvite(emailtemplates.InviteData{
+				Language:    lang,
+				OrgName:     org.Name,
+				RoleLabel:   emailtemplates.RoleLabelLocal(lang, role),
+				LoginURL:    loginURL,
+				InviterName: inviterName,
+			})
+			if rerr != nil {
+				s.Log.Warn("invite_email_render_failed", zap.Error(rerr))
+			} else if err := s.email.SendMultipart(ctx, email, subject, text, html, ""); err != nil {
+				s.Log.Warn("invite_email_failed", zap.Error(err))
+			}
 		}
 	}
 	return inv, nil
@@ -326,4 +360,39 @@ func (s *Services) AddMember(ctx context.Context, organizationID uuid.UUID, user
 
 func (s *Services) DeleteMember(ctx context.Context, memberID uuid.UUID) error {
 	return s.Store.DeleteMember(ctx, memberID)
+}
+
+func (s *Services) sendWelcomeEmail(ctx context.Context, ownerUserID uuid.UUID) {
+	if s.email == nil {
+		return
+	}
+	user, ok, err := s.Store.GetPlatformUserByID(ctx, ownerUserID)
+	if err != nil || !ok || user.Email == "" {
+		return
+	}
+	lang := user.Language
+	if lang == "" {
+		lang = "ru"
+	}
+	unsub := s.webappURL
+	if unsub == "" {
+		unsub = "#"
+	}
+	appURL := s.webappURL
+	if appURL == "" {
+		appURL = "#"
+	}
+	subject, text, html, rerr := emailtemplates.RenderWelcome(emailtemplates.WelcomeData{
+		Language:       lang,
+		FirstName:      emailtemplates.FirstNameFromDisplay("", user.Email),
+		AppURL:         appURL,
+		UnsubscribeURL: unsub,
+	})
+	if rerr != nil {
+		s.Log.Warn("welcome_email_render_failed", zap.Error(rerr))
+		return
+	}
+	if err := s.email.SendMultipart(ctx, user.Email, subject, text, html, unsub); err != nil {
+		s.Log.Warn("welcome_email_failed", zap.Error(err))
+	}
 }

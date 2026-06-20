@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/luckyrogue/lead-cat/internal/platform/authweb"
+	"github.com/luckyrogue/lead-cat/internal/platform/emailtemplates"
 )
 
 var ErrInvalidMagicLink = errors.New("invalid or expired magic link")
@@ -31,7 +32,7 @@ func newMagicLinkService(repo magicLinkRepo, mailer EmailSender, baseURL string,
 	return &magicLinkService{repo: repo, mailer: mailer, baseURL: baseURL, ttl: ttl, clock: clock}
 }
 
-func (s *magicLinkService) RequestMagicLink(ctx context.Context, email string) error {
+func (s *magicLinkService) RequestMagicLink(ctx context.Context, email, language string) error {
 	raw, err := authweb.NewState(nil)
 	if err != nil {
 		return err
@@ -40,9 +41,15 @@ func (s *magicLinkService) RequestMagicLink(ctx context.Context, email string) e
 		return err
 	}
 	link := fmt.Sprintf("%s/api/auth/web/magic/verify?token=%s", s.baseURL, raw)
-	body := fmt.Sprintf(`<p>Sign in to Lead Cat:</p><p><a href="%s">%s</a></p><p>This link expires in %d minutes.</p>`,
-		link, link, int(s.ttl.Minutes()))
-	return s.mailer.Send(ctx, email, "Your Lead Cat sign-in link", body)
+	subject, text, html, err := emailtemplates.RenderMagicLink(emailtemplates.MagicLinkData{
+		Language:       language,
+		SignInURL:      link,
+		ExpiresMinutes: int(s.ttl.Minutes()),
+	})
+	if err != nil {
+		return err
+	}
+	return s.mailer.SendMultipart(ctx, email, subject, text, html, "")
 }
 
 func (s *magicLinkService) VerifyMagicLink(ctx context.Context, rawToken string) (string, error) {

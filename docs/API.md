@@ -43,7 +43,7 @@ Cookie-based sessions for the web app (see `docs/AUTH.md`).
 | ------ | ---- | ------- |
 | `GET` | `/api/auth/web/:provider/start` | Start OAuth (Google, Microsoft) |
 | `GET` | `/api/auth/web/:provider/callback` | OAuth callback; sets session cookie |
-| `POST` | `/api/auth/web/magic/request` | Request email magic link |
+| `POST` | `/api/auth/web/magic/request` | Request email magic link (`email`, optional `language`: `ru`\|`en`\|`kk`) |
 | `GET` | `/api/auth/web/magic/verify` | Verify magic link |
 | `POST` | `/api/auth/web/logout` | Revoke session |
 | `GET` | `/api/auth/web/me` | Current user profile |

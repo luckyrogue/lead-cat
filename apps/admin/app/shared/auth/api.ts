@@ -1,7 +1,10 @@
 import { api } from "~/shared/api/client"
 
-export async function requestMagicLink(email: string): Promise<void> {
-  await api.post("/api/auth/web/magic/request", { email })
+export async function requestMagicLink(
+  email: string,
+  language?: string
+): Promise<void> {
+  await api.post("/api/auth/web/magic/request", { email, language })
 }
 
 export async function logout(): Promise<void> {

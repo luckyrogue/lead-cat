@@ -9,8 +9,10 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
+	"github.com/luckyrogue/lead-cat/internal/application"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 	"github.com/luckyrogue/lead-cat/internal/platform/botsettings"
+	"github.com/luckyrogue/lead-cat/internal/platform/emailtemplates"
 	"github.com/luckyrogue/lead-cat/internal/platform/meetingrecipients"
 )
 
@@ -18,22 +20,18 @@ const lockKey = "leadcat:reminders:leader"
 
 var defaultOrganizerOffsets = []int{15}
 
-// EmailSender delivers a multipart/alternative email. *smtp.Sender satisfies it.
-type EmailSender interface {
-	SendMultipart(ctx context.Context, to, subject, textBody, htmlBody, listUnsubscribe string) error
-}
-
+// Scheduler sends meeting reminders via Telegram and optionally email.
 type Scheduler struct {
 	store          *postgres.Store
 	bot            *bot.Bot
 	rdb            *redis.Client
-	email          EmailSender
+	email          application.EmailSender
 	emailEnabled   bool
 	unsubscribeURL string
 	log            *zap.Logger
 }
 
-func New(store *postgres.Store, b *bot.Bot, rdb *redis.Client, email EmailSender, emailEnabled bool, unsubscribeURL string, log *zap.Logger) *Scheduler {
+func New(store *postgres.Store, b *bot.Bot, rdb *redis.Client, email application.EmailSender, emailEnabled bool, unsubscribeURL string, log *zap.Logger) *Scheduler {
 	return &Scheduler{
 		store:          store,
 		bot:            b,
@@ -141,27 +139,22 @@ func (s *Scheduler) sendReminderEmail(ctx context.Context, m postgres.Meeting, t
 	start, end := m.StartsAt.In(loc), m.EndsAt.In(loc)
 	timeStr := start.Format("15:04") + "–" + end.Format("15:04")
 
-	data := reminderEmailData{
-		Lang:           t.Language,
-		Name:           t.FullName,
-		Title:          m.Name,
-		Date:           start.Format("02.01.2006"),
-		Time:           timeStr,
-		Tz:             tzLabel(start),
-		MeetLink:       m.MeetLink,
-		UnsubscribeURL: s.unsubscribeURL,
+	data := emailtemplates.ReminderData{
+		Language:         t.Language,
+		Name:             t.FullName,
+		Title:            m.Name,
+		Date:             start.Format("02.01.2006"),
+		Time:             timeStr,
+		Tz:               tzLabel(start),
+		MeetLink:         m.MeetLink,
+		UnsubscribeURL:   s.unsubscribeURL,
 	}
-	htmlBody, rerr := renderReminderEmail(data)
+	subject, textBody, htmlBody, rerr := emailtemplates.RenderReminder(data)
 	if rerr != nil {
 		s.log.Warn("render reminder email", zap.String("meeting_id", m.ID.String()), zap.Error(rerr))
 		return
 	}
-	textBody, terr := renderReminderText(data)
-	if terr != nil {
-		s.log.Warn("render reminder email text", zap.String("meeting_id", m.ID.String()), zap.Error(terr))
-		return
-	}
-	if err := s.email.SendMultipart(ctx, t.Email, reminderEmailSubject(t.Language, m.Name, timeStr), textBody, htmlBody, s.unsubscribeURL); err != nil {
+	if err := s.email.SendMultipart(ctx, t.Email, subject, textBody, htmlBody, s.unsubscribeURL); err != nil {
 		s.log.Warn("send reminder email",
 			zap.String("email", t.Email),
 			zap.String("meeting_id", m.ID.String()),

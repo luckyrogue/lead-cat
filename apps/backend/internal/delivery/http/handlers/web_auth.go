@@ -151,7 +151,8 @@ func (a *API) WebAuthCallback(c *fiber.Ctx) error {
 
 func (a *API) WebMagicRequest(c *fiber.Ctx) error {
 	var body struct {
-		Email string `json:"email"`
+		Email    string `json:"email"`
+		Language string `json:"language"`
 	}
 	if err := c.BodyParser(&body); err != nil {
 		return c.SendStatus(fiber.StatusNoContent)
@@ -163,7 +164,7 @@ func (a *API) WebMagicRequest(c *fiber.Ctx) error {
 	if _, err := mail.ParseAddress(email); err != nil {
 		return c.SendStatus(fiber.StatusNoContent)
 	}
-	if err := a.App.RequestMagicLink(c.UserContext(), email); err != nil {
+	if err := a.App.RequestMagicLink(c.UserContext(), email, strings.TrimSpace(body.Language)); err != nil {
 		a.Log.Warn("web_magic_request_failed", zap.Error(err))
 	}
 	return c.SendStatus(fiber.StatusNoContent)

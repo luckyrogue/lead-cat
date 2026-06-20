@@ -1,74 +1,63 @@
 # Lead Cat email templates
 
-Standalone, email-client-safe HTML templates (table layout, inline styles, bulletproof CTAs, hidden preheader, unsubscribe). **No PostHog dependency** — render them with any Liquid-capable sender, or drop the rendered HTML into the backend SMTP sender (`internal/infrastructure/email/smtp`).
+Standalone, email-client-safe HTML templates (table layout, inline styles, bulletproof CTAs, hidden preheader). **No PostHog dependency** — render them with any Liquid-capable sender, or use the Go ports in `apps/backend/internal/platform/emailtemplates/`.
 
-The reminder email is also ported to Go and wired into the backend — see [Production wiring](#production-wiring).
+| Email | HTML | Plain text | Go renderer |
+|---|---|---|---|
+| Welcome (day 0) | `welcome.html` | `welcome.txt` | `RenderWelcome` |
+| Magic link sign-in | `magic-link.html` | `magic-link.txt` | `RenderMagicLink` |
+| Organization invite | `org-invite.html` | `org-invite.txt` | `RenderOrgInvite` |
+| Meeting reminder | `meeting-reminder.html` | `meeting-reminder.txt` | `RenderReminder` |
 
-| Email | HTML | Plain text |
-|---|---|---|
-| Welcome (day 0) | `welcome.html` | `welcome.txt` |
-| Meeting reminder | `meeting-reminder.html` | `meeting-reminder.txt` |
+**Sync rule:** when you change a `.html` / `.txt` design file, update the matching Go port in `emailtemplates/` so production mail stays in sync. The backend does **not** read these files at runtime.
 
 ## Brand
 Cozy Lead Cat. Palette repeated literally throughout (no CSS vars in email):
 cream `#FBF7F0` · page `#F1EADF` · coral accent `#E8714C` · sunny `#F6C453` · ink `#3A332E` · muted `#8A7F75`. Headlines `Georgia` serif, body `Arial` sans.
 
 ## Localization (ru / en / kk)
-Each file is **one template, branched with Liquid** on a `language` variable (`ru` | `en` | `kk`); **default `ru`** (matches the app's default locale). The localized strings are defined once in a `{% case language %}` block at the top, then referenced in the markup — so there's one template per email, not three.
+Each file is **one template, branched with Liquid** on a `language` variable (`ru` | `en` | `kk`); **default `ru`**. The Go renderers mirror the same strings via `NormalizeLang`.
 
-**How the language is chosen at send time:** set the `language` variable to the recipient's stored preference (the per-user `language` field from settings). Fallback chain: explicit pref → Telegram `language_code` → `ru`. If the sender doesn't pass `language`, everyone gets `ru`.
+**How the language is chosen at send time:** set `language` to the recipient's stored preference (`platform_users.language`). Fallback chain: explicit request param (magic link) → DB lookup by email → `ru`.
 
 ## Variables
-All have `| default:` fallbacks, so a missing value never renders blank.
 
-**welcome**
-| Variable | Example | Notes |
-|---|---|---|
-| `language` | `ru` | `ru`\|`en`\|`kk`; default `ru` |
-| `first_name` | `Mia` | default `there`/`друг`/`дос` |
-| `app_url` | `https://t.me/lead_cat_bot/app` | Mini App deep link |
-| `unsubscribe_url` | … | required for marketing sends |
+**welcome** — `language`, `first_name`, `app_url`, `unsubscribe_url`
 
-**meeting-reminder**
-| Variable | Example | Notes |
-|---|---|---|
-| `language` | `ru` | default `ru` |
-| `first_name` | `Mia` | |
-| `meeting_title` | `Design sync` | |
-| `meeting_date` | `16.06.2026` | pre-formatted by the sender |
-| `meeting_time` | `10:00–10:30` | pre-formatted |
-| `meeting_tz` | `UTC+5` | optional; hidden if blank |
-| `participants` | `mia@co.com, alex@co.com` | optional; row hidden if blank |
-| `meet_link` | `https://meet.google.com/…` | optional; **Join** button hidden if blank |
-| `unsubscribe_url` | … | |
+**magic-link** — `language`, `sign_in_url`, `expires_minutes`, `first_name` (optional)
 
-Format `meeting_date`/`meeting_time`/`meeting_tz` on the sender side — mirror the backend's existing notification format (`02.01.2006`, `15:04`, `UTC±H` from `meeting_notifier/message.go`).
+**org-invite** — `language`, `org_name`, `role_label`, `login_url`, `inviter_name` (optional)
+
+**meeting-reminder** — `language`, `first_name`, `meeting_title`, `meeting_date`, `meeting_time`, `meeting_tz`, `participants`, `meet_link`, `unsubscribe_url`
+
+Format date/time on the sender side (`02.01.2006`, `15:04`, `UTC±H`).
 
 ## Subjects
-Also Liquid-branched (set on the send, not in the HTML body — see the comment at the top of each `.html`):
+Also Liquid-branched (see comment at the top of each `.html`):
 - **welcome** — ru `Добро пожаловать в Lead Cat 🐾` · en `Welcome to Lead Cat 🐾` · kk `Lead Cat-қа қош келдің 🐾`
-- **reminder** — ru `Напоминание: «{{ meeting_title }}» в {{ meeting_time }}` · en `Reminder: "{{ meeting_title }}" at {{ meeting_time }}` · kk `Еске салу: «{{ meeting_title }}» {{ meeting_time }}`
+- **magic-link** — ru `Войти в Lead Cat` · en `Sign in to Lead Cat` · kk `Lead Cat-қа кіру`
+- **org-invite** — ru `Приглашение в {org}` · en `Invitation to {org}` · kk `{org} ұйымына шақыру`
+- **reminder** — ru `Напоминание: «{title}» в {time}` · en `Reminder: "{title}" at {time}` · kk `Еске салу: «{title}» {time}`
 
 ## Deliverability & client hardening
-These templates are built to land in the inbox and render across the awkward clients:
+- **multipart/alternative** — always send text + HTML via `EmailSender.SendMultipart`.
+- **Outlook-hardened CTAs** — VML `<v:roundrect>` injected as trusted `template.HTML` in Go.
+- **List-Unsubscribe** — set for welcome and reminder (`WEBAPP_URL` profile link); transactional magic-link and invite omit it.
+- **Dark mode** — `color-scheme: light` meta tags pin the light palette.
 
-- **multipart/alternative** — always send a `text/plain` part alongside the HTML. The `.txt` files are the plain-text bodies; spam filters penalize HTML-only mail and some clients show the text part. The Go sender does this via `SendMultipart` (below); for other senders, attach `welcome.txt` / `meeting-reminder.txt` as the text alternative.
-- **Outlook-hardened CTAs** — the buttons carry a VML `<v:roundrect>` inside an `<!--[if mso]>` block so Word-rendering Outlook (desktop) shows a real rounded, padded button; every other client uses the styled `<a>` (wrapped in `<!--[if !mso]>` so Outlook ignores it — no double button).
-- **List-Unsubscribe** — set the `List-Unsubscribe` + `List-Unsubscribe-Post: List-Unsubscribe=One-Click` headers (RFC 8058) to the same URL as the in-body unsubscribe link. Gmail/Apple Mail surface a native unsubscribe affordance and reward it for reputation. The visible footer link is **not** a substitute. The Go sender sets these when given an unsubscribe URL.
-- **Dark mode** — `color-scheme: light` + `supported-color-schemes: light` meta tags pin the design to its light palette so clients don't force-invert the cream/coral into muddy colors. (The layout is light-only by intent.)
-
-Still on you (infra, not template): **SPF, DKIM, DMARC** on the sending domain — without them even perfect HTML lands in spam.
+Still on you: **SPF, DKIM, DMARC** on the sending domain.
 
 ## Production wiring
-The meeting reminder is the one path wired into the backend today. The Go port lives in `internal/platform/reminder_scheduler/email.go` (kept in sync with `meeting-reminder.html` / `.txt`) and renders both the HTML and plain-text parts in the recipient's language + timezone.
+All four emails render in `internal/platform/emailtemplates/` and send via `smtp.Sender.SendMultipart`.
 
-- Gated behind `REMINDER_EMAIL_ENABLED=true` (off by default); sends only to recipients with a known email.
-- Delivered via `smtp.Sender.SendMultipart(ctx, to, subject, text, html, listUnsubscribe)` — multipart + RFC 2047-encoded subject + List-Unsubscribe headers.
-- `smtp.Sender.Send(ctx, to, subject, html)` remains for the HTML-only web-auth magic-link path.
+| Email | Trigger | List-Unsubscribe |
+|---|---|---|
+| Magic link | `POST /api/auth/web/magic/request` | — |
+| Org invite | `InviteToOrg` (admin) | — |
+| Welcome | `CreateOrganizationForOwner` (onboarding) | `WEBAPP_URL` |
+| Meeting reminder | `reminder_scheduler` tick | `WEBAPP_URL` |
 
-The Outlook VML for the Go template is injected as a trusted `template.HTML` value, because `html/template` strips HTML comments (and would otherwise drop the `<!--[if mso]>` conditionals).
-
-The `welcome.*` templates are not wired to the backend yet — they're ready for whichever sender (PostHog or SMTP) sends onboarding mail.
+Meeting reminder email is gated behind `REMINDER_EMAIL_ENABLED=true` (off by default); SMTP alone is not enough — enable this flag for email reminders.
 
 ## If you later want these in PostHog
-Re-run the `designing-email-templates` skill after authorizing the PostHog MCP. Map variables to `person.properties.*` (e.g. `language` → `person.properties.language`, `first_name` → `person.properties.first_name`) and use the built-in `{{ unsubscribe_url }}`. The HTML here can seed an `html`-type block, or it can be rebuilt as native Unlayer blocks for visual editing.
+Re-run the `designing-email-templates` skill after authorizing the PostHog MCP. Map variables to `person.properties.*` and use the built-in `{{ unsubscribe_url }}`.

@@ -44,6 +44,22 @@ func (s *Store) GetPlatformUserByID(ctx context.Context, id uuid.UUID) (Platform
 	return u, true, nil
 }
 
+func (s *Store) GetPlatformUserLanguageByEmail(ctx context.Context, email string) (string, bool, error) {
+	var lang *string
+	err := s.pool.QueryRow(ctx, `
+		SELECT language FROM platform_users WHERE lower(email) = lower($1) LIMIT 1`, email).Scan(&lang)
+	if IsNotFound(err) {
+		return "", false, nil
+	}
+	if err != nil {
+		return "", false, err
+	}
+	if lang == nil || *lang == "" {
+		return "", false, nil
+	}
+	return *lang, true, nil
+}
+
 func (s *Store) SetPlatformUserPrefs(ctx context.Context, userID uuid.UUID, timezone, language string) error {
 	_, err := s.pool.Exec(ctx, `UPDATE platform_users SET timezone = $2, language = $3 WHERE id = $1`, userID, timezone, language)
 	return err

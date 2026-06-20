@@ -28,7 +28,7 @@ type SSOProvider interface {
 }
 
 type EmailSender interface {
-	Send(ctx context.Context, to, subject, htmlBody string) error
+	SendMultipart(ctx context.Context, to, subject, textBody, htmlBody, listUnsubscribe string) error
 }
 
 type CalendarToken struct {

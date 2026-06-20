@@ -27,12 +27,6 @@ func envelopeFrom(from string) string {
 	return strings.TrimSpace(from)
 }
 
-// Send delivers an HTML-only email. Kept for callers (web-auth magic links)
-// that have no plain-text alternative.
-func (s *Sender) Send(_ context.Context, to, subject, htmlBody string) error {
-	return s.send(to, subject, "", htmlBody, "")
-}
-
 // SendMultipart delivers a multipart/alternative email (text + HTML). When
 // listUnsubscribe is non-empty it is advertised via the List-Unsubscribe and
 // List-Unsubscribe-Post headers (RFC 8058 one-click). A missing textBody falls

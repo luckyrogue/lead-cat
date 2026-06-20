@@ -1643,7 +1643,12 @@
                 "type": "object",
                 "required": ["email"],
                 "properties": {
-                  "email": { "type": "string", "format": "email" }
+                  "email": { "type": "string", "format": "email" },
+                  "language": {
+                    "type": "string",
+                    "enum": ["ru", "en", "kk"],
+                    "description": "Optional email locale; defaults to stored user preference or ru"
+                  }
                 }
               }
             }

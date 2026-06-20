@@ -17,6 +17,7 @@ type Repository interface {
 	UpsertUserIdentity(ctx context.Context, authSub, email string) (model.User, error)
 	UpsertWebIdentity(ctx context.Context, email, name, avatarURL, authMethod string) (model.PlatformUser, error)
 	GetPlatformUserByID(ctx context.Context, id uuid.UUID) (model.PlatformUser, bool, error)
+	GetPlatformUserLanguageByEmail(ctx context.Context, email string) (string, bool, error)
 	GetPlatformUserIDByTelegramID(ctx context.Context, telegramID int64) (uuid.UUID, bool, error)
 	LinkTelegram(ctx context.Context, userID uuid.UUID, telegramID int64) error
 	LinkMemberUserIDsByTelegram(ctx context.Context, userID uuid.UUID, telegramUsername string) error

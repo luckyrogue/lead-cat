@@ -17,7 +17,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { requestMagicLink, ssoStartUrl } from "~/shared/auth/api"
-import { useT } from "~/shared/i18n/context"
+import { useLocale, useT } from "~/shared/i18n/context"
 import { toastError } from "~/shared/lib/toast"
 
 function GoogleMark() {
@@ -44,6 +44,7 @@ function MicrosoftMark() {
 
 export function LoginForm() {
   const t = useT()
+  const locale = useLocale()
   const [sentTo, setSentTo] = useState<string | null>(null)
   const schema = useMemo(
     () =>
@@ -63,7 +64,7 @@ export function LoginForm() {
 
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
-      await requestMagicLink(values.email)
+      await requestMagicLink(values.email, locale)
       setSentTo(values.email)
     } catch (error) {
       toastError(error, t("auth.login.magicLinkFailed"))

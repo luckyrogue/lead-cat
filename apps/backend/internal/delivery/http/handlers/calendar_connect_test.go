@@ -110,6 +110,10 @@ func (s *stubRepo) UpsertWebIdentity(_ context.Context, _, _, _, _ string) (mode
 func (s *stubRepo) GetPlatformUserByID(_ context.Context, _ uuid.UUID) (model.PlatformUser, bool, error) {
 	return model.PlatformUser{}, false, nil
 }
+
+func (s *stubRepo) GetPlatformUserLanguageByEmail(_ context.Context, _ string) (string, bool, error) {
+	return "", false, nil
+}
 func (s *stubRepo) GetPlatformUserIDByTelegramID(_ context.Context, _ int64) (uuid.UUID, bool, error) {
 	return uuid.UUID{}, false, nil
 }
@@ -305,7 +309,7 @@ func buildFakeServices(t *testing.T, repo *stubRepo, connector *fakeCalendarConn
 	svc.ConfigureCalendarConnectors(map[string]application.CalendarConnector{
 		"google": connector,
 	})
-	svc.ConfigureWebAuth(nil, nil, "http://localhost", time.Hour, time.Hour)
+	svc.ConfigureWebAuth(nil, nil, "http://localhost", "", time.Hour, time.Hour)
 	return svc
 }
 

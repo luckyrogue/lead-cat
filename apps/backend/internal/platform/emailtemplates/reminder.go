@@ -1,4 +1,4 @@
-package reminder_scheduler
+package emailtemplates
 
 import (
 	"bytes"
@@ -7,21 +7,30 @@ import (
 	texttemplate "text/template"
 )
 
-// Reminder email — Go port of docs/email-templates/meeting-reminder.html.
-// Keep the two in sync. Localized ru/en/kk; default ru. User-supplied fields
-// (Name, Title, Participants) are auto-escaped by html/template.
+// ReminderData — Go port of docs/email-templates/meeting-reminder.{html,txt}.
+type ReminderData struct {
+	Language         string
+	Name             string
+	Title            string
+	Date             string
+	Time             string
+	Tz               string
+	Participants     string
+	MeetLink         string
+	UnsubscribeURL   string
+}
 
 type remLabels struct {
 	Hi, Lead, When, Who, Cta, Foot, Unsub, Made, DefaultName, DefaultTitle string
 }
 
 func reminderLabels(lang string) remLabels {
-	switch lang {
+	switch NormalizeLang(lang) {
 	case "en":
 		return remLabels{
 			Hi: "Hi", Lead: "A gentle nudge — you have a meeting coming up:",
 			When: "When", Who: "Who", Cta: "Join Google Meet",
-			Foot:  "You’re receiving this reminder from Lead Cat.",
+			Foot:  "You're receiving this reminder from Lead Cat.",
 			Unsub: "Manage reminders", Made: "See you there 🐾",
 			DefaultName: "there", DefaultTitle: "Your meeting",
 		}
@@ -33,7 +42,7 @@ func reminderLabels(lang string) remLabels {
 			Unsub: "Еске салуларды басқару", Made: "Сонда көріскенше 🐾",
 			DefaultName: "дос", DefaultTitle: "Кездесу",
 		}
-	default: // ru
+	default:
 		return remLabels{
 			Hi: "Привет", Lead: "Мягко напоминаем — скоро у тебя встреча:",
 			When: "Когда", Who: "Кто", Cta: "Подключиться к Google Meet",
@@ -44,8 +53,8 @@ func reminderLabels(lang string) remLabels {
 	}
 }
 
-func reminderEmailSubject(lang, title, timeStr string) string {
-	switch lang {
+func reminderSubject(lang, title, timeStr string) string {
+	switch NormalizeLang(lang) {
 	case "en":
 		return fmt.Sprintf(`Reminder: "%s" at %s`, title, timeStr)
 	case "kk":
@@ -55,7 +64,7 @@ func reminderEmailSubject(lang, title, timeStr string) string {
 	}
 }
 
-type reminderEmailData struct {
+type reminderRenderData struct {
 	Lang           string
 	Name           string
 	Title          string
@@ -66,23 +75,10 @@ type reminderEmailData struct {
 	MeetLink       string
 	UnsubscribeURL string
 	L              remLabels
-	// Button is the pre-rendered, Outlook-hardened CTA. It carries
-	// conditional comments (VML), which html/template would otherwise strip,
-	// so it is built in Go and injected as trusted HTML.
-	Button template.HTML
+	Button         template.HTML
 }
 
-// reminderButton renders the bulletproof CTA: a VML roundrect for Outlook and
-// a styled anchor for everyone else. href/label are HTML-escaped (Meet links
-// are Google-generated, but escaping keeps the attribute context safe).
-func reminderButton(meetLink, cta string) template.HTML {
-	href := template.HTMLEscapeString(meetLink)
-	label := template.HTMLEscapeString(cta)
-	return template.HTML(`<!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="` + href + `" style="height:48px;v-text-anchor:middle;width:260px;" arcsize="25%" stroke="f" fillcolor="#E8714C"><w:anchorlock/><center style="color:#FFFFFF;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;">` + label + `</center></v:roundrect><![endif]-->` +
-		`<!--[if !mso]><!-- --><a href="` + href + `" target="_blank" style="display:inline-block; padding:15px 34px; font-family:Arial,Helvetica,sans-serif; font-size:16px; font-weight:bold; color:#FFFFFF; text-decoration:none; border-radius:12px; mso-padding-alt:0;">` + label + `</a><!--<![endif]-->`)
-}
-
-var reminderEmailTemplate = template.Must(template.New("reminder").Parse(`<!DOCTYPE html>
+var reminderHTMLTemplate = template.Must(template.New("reminder").Parse(`<!DOCTYPE html>
 <html lang="{{.Lang}}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="x-apple-disable-message-reformatting"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><title>Lead Cat</title></head>
 <body style="margin:0; padding:0; background-color:#F1EADF;">
@@ -113,18 +109,6 @@ var reminderEmailTemplate = template.Must(template.New("reminder").Parse(`<!DOCT
 </td></tr>
 </table></td></tr></table></body></html>`))
 
-func renderReminderEmail(d reminderEmailData) (string, error) {
-	d = applyReminderDefaults(d)
-	var b bytes.Buffer
-	if err := reminderEmailTemplate.Execute(&b, d); err != nil {
-		return "", err
-	}
-	return b.String(), nil
-}
-
-// reminderTextTemplate is the plain-text alternative — Go port of
-// docs/email-templates/meeting-reminder.txt. text/template does not escape,
-// which is correct for a text/plain part.
 var reminderTextTemplate = texttemplate.Must(texttemplate.New("reminder.txt").Parse(
 	`{{.L.Hi}}, {{.Name}}!
 
@@ -140,16 +124,31 @@ var reminderTextTemplate = texttemplate.Must(texttemplate.New("reminder.txt").Pa
 {{.L.Unsub}}: {{.UnsubscribeURL}}
 `))
 
-func renderReminderText(d reminderEmailData) (string, error) {
-	d = applyReminderDefaults(d)
-	var b bytes.Buffer
-	if err := reminderTextTemplate.Execute(&b, d); err != nil {
-		return "", err
+// RenderReminder returns localized subject, plain text, and HTML bodies.
+func RenderReminder(d ReminderData) (subject, text, html string, err error) {
+	rd := applyReminderDefaults(reminderRenderData{
+		Lang:           NormalizeLang(d.Language),
+		Name:           d.Name,
+		Title:          d.Title,
+		Date:           d.Date,
+		Time:           d.Time,
+		Tz:             d.Tz,
+		Participants:   d.Participants,
+		MeetLink:       d.MeetLink,
+		UnsubscribeURL: d.UnsubscribeURL,
+	})
+	subject = reminderSubject(rd.Lang, rd.Title, rd.Time)
+	var tb, hb bytes.Buffer
+	if err = reminderTextTemplate.Execute(&tb, rd); err != nil {
+		return "", "", "", err
 	}
-	return b.String(), nil
+	if err = reminderHTMLTemplate.Execute(&hb, rd); err != nil {
+		return "", "", "", err
+	}
+	return subject, tb.String(), hb.String(), nil
 }
 
-func applyReminderDefaults(d reminderEmailData) reminderEmailData {
+func applyReminderDefaults(d reminderRenderData) reminderRenderData {
 	d.L = reminderLabels(d.Lang)
 	if d.Name == "" {
 		d.Name = d.L.DefaultName
@@ -161,7 +160,7 @@ func applyReminderDefaults(d reminderEmailData) reminderEmailData {
 		d.UnsubscribeURL = "#"
 	}
 	if d.MeetLink != "" {
-		d.Button = reminderButton(d.MeetLink, d.L.Cta)
+		d.Button = BulletproofButton(d.MeetLink, d.L.Cta)
 	}
 	return d
 }
