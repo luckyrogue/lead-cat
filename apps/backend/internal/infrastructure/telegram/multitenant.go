@@ -14,6 +14,7 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 	"github.com/luckyrogue/lead-cat/internal/platform/botreg"
+	"github.com/luckyrogue/lead-cat/internal/platform/boti18n"
 	"github.com/luckyrogue/lead-cat/internal/platform/botsettings"
 	"github.com/luckyrogue/lead-cat/internal/platform/checker"
 	"github.com/luckyrogue/lead-cat/internal/platform/meetingedit"
@@ -162,7 +163,7 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 		}
 	case "/help":
 		if isPrivate {
-			h.reply(ctx, b, update.Message, helpText())
+			h.reply(ctx, b, update.Message, helpText(h.resolveLang(ctx, from)))
 		}
 	case "/admin":
 		if isPrivate {
@@ -346,6 +347,16 @@ func toInlineMarkup(rows [][]botsettings.Button) models.InlineKeyboardMarkup {
 
 func (h *MultiHandler) reply(ctx context.Context, b *bot.Bot, msg *models.Message, text string) {
 	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: msg.Chat.ID, Text: text})
+}
+
+// resolveLang returns the acting user's language: their stored bot_users.language
+// if registered, else their Telegram client language_code, else ru.
+func (h *MultiHandler) resolveLang(ctx context.Context, from *models.User) string {
+	var stored string
+	if u, err := h.store.GetBotUserByTelegramID(ctx, from.ID); err == nil {
+		stored = u.Language
+	}
+	return boti18n.Resolve(stored, from.LanguageCode)
 }
 
 func (h *MultiHandler) trackChatMember(ctx context.Context, msg *models.Message) {

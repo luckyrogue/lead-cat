@@ -4,17 +4,19 @@ import (
 	"strings"
 
 	"github.com/go-telegram/bot/models"
+
+	"github.com/luckyrogue/lead-cat/internal/platform/boti18n"
 )
 
-func PublicCommands() []models.BotCommand {
+func PublicCommands(lang string) []models.BotCommand {
 	return []models.BotCommand{
-		{Command: "menu", Description: "Открыть приложение"},
-		{Command: "new", Description: "Запланировать встречу"},
-		{Command: "schedule", Description: "Расписание коллеги"},
-		{Command: "checker", Description: "Найти свободный слот"},
-		{Command: "settings", Description: "Напоминания"},
-		{Command: "edit", Description: "Редактировать встречи"},
-		{Command: "help", Description: "Помощь"},
+		{Command: "menu", Description: boti18n.T(lang, "cmd.menu")},
+		{Command: "new", Description: boti18n.T(lang, "cmd.new")},
+		{Command: "schedule", Description: boti18n.T(lang, "cmd.schedule")},
+		{Command: "checker", Description: boti18n.T(lang, "cmd.checker")},
+		{Command: "settings", Description: boti18n.T(lang, "cmd.settings")},
+		{Command: "edit", Description: boti18n.T(lang, "cmd.edit")},
+		{Command: "help", Description: boti18n.T(lang, "cmd.help")},
 	}
 }
 
@@ -32,16 +34,6 @@ func joinURL(base, path string) string {
 	return base + "/" + strings.TrimLeft(path, "/")
 }
 
-func helpText() string {
-	return strings.Join([]string{
-		"Lead Cat — помощник по встречам 🐾",
-		"",
-		"/menu — открыть приложение",
-		"/new — запланировать встречу",
-		"/schedule — расписание коллеги",
-		"/checker — найти свободный слот",
-		"/settings — настроить напоминания",
-		"/edit — редактировать свои встречи",
-		"/help — это сообщение",
-	}, "\n")
+func helpText(lang string) string {
+	return boti18n.T(lang, "cmd.help.text")
 }

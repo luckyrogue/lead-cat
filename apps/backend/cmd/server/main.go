@@ -188,8 +188,16 @@ func main() {
 		botUsername = me.Username
 		planner := llmanthropic.New(os.Getenv("ANTHROPIC_API_KEY"))
 		tgHandler = telegram.NewMultiHandler(store, tg, rdb, cfg.BotAdminTelegramIDs, cfg.WebappURL, services, planner, logger)
-		if _, cerr := tg.SetMyCommands(ctx, &bot.SetMyCommandsParams{Commands: telegram.PublicCommands()}); cerr != nil {
+		if _, cerr := tg.SetMyCommands(ctx, &bot.SetMyCommandsParams{Commands: telegram.PublicCommands("ru")}); cerr != nil {
 			logger.Warn("set_my_commands", zap.Error(cerr))
+		}
+		for _, lc := range []string{"en", "kk"} {
+			if _, cerr := tg.SetMyCommands(ctx, &bot.SetMyCommandsParams{
+				Commands:     telegram.PublicCommands(lc),
+				LanguageCode: lc,
+			}); cerr != nil {
+				logger.Warn("set_commands_failed", zap.String("lang", lc), zap.Error(cerr))
+			}
 		}
 	} else if cfg.AuthDevMode {
 		logger.Warn("AUTH_DEV_MODE: telegram polling disabled (set BOT_TOKEN for /start and bot commands)")
