@@ -1,4 +1,4 @@
-const MAILPIT = process.env.E2E_MAILPIT_URL ?? "http://localhost:8025"
+const MAILPIT = process.env.E2E_MAILPIT_URL ?? "http://localhost:8125"
 
 export async function getLatestMagicLink(email: string): Promise<string> {
   for (let i = 0; i < 30; i++) {
@@ -9,11 +9,16 @@ export async function getLatestMagicLink(email: string): Promise<string> {
       if (id) {
         const msg = await fetch(`${MAILPIT}/api/v1/message/${id}`)
         const body = (await msg.json()) as { Text?: string; HTML?: string }
-        const m = (body.Text ?? "" + (body.HTML ?? "")).match(/https?:\/\/[^\s"'<>]*magic\/verify[^\s"'<>]*/)
+        const combined = (body.Text ?? "") + (body.HTML ?? "")
+        const decoded = combined.replace(/&amp;/g, "&")
+        const m = decoded.match(/https?:\/\/[^\s"'<>]*\/api\/auth\/web\/magic\/verify[^\s"'<>]*/)
         if (m) return m[0]
       }
     }
     await new Promise((r) => setTimeout(r, 1000))
   }
-  throw new Error(`no magic link for ${email}`)
+  throw new Error(
+    `No magic-link email arrived for <${email}> within 30 s. ` +
+      `Check that the backend is running and that Mailpit is reachable at ${MAILPIT}.`
+  )
 }
