@@ -9,15 +9,15 @@ import (
 
 // ReminderData — Go port of docs/email-templates/meeting-reminder.{html,txt}.
 type ReminderData struct {
-	Language         string
-	Name             string
-	Title            string
-	Date             string
-	Time             string
-	Tz               string
-	Participants     string
-	MeetLink         string
-	UnsubscribeURL   string
+	Language       string
+	Name           string
+	Title          string
+	Date           string
+	Time           string
+	Tz             string
+	Participants   string
+	MeetLink       string
+	UnsubscribeURL string
 }
 
 type remLabels struct {

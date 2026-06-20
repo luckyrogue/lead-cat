@@ -140,14 +140,14 @@ func (s *Scheduler) sendReminderEmail(ctx context.Context, m postgres.Meeting, t
 	timeStr := start.Format("15:04") + "–" + end.Format("15:04")
 
 	data := emailtemplates.ReminderData{
-		Language:         t.Language,
-		Name:             t.FullName,
-		Title:            m.Name,
-		Date:             start.Format("02.01.2006"),
-		Time:             timeStr,
-		Tz:               tzLabel(start),
-		MeetLink:         m.MeetLink,
-		UnsubscribeURL:   s.unsubscribeURL,
+		Language:       t.Language,
+		Name:           t.FullName,
+		Title:          m.Name,
+		Date:           start.Format("02.01.2006"),
+		Time:           timeStr,
+		Tz:             tzLabel(start),
+		MeetLink:       m.MeetLink,
+		UnsubscribeURL: s.unsubscribeURL,
 	}
 	subject, textBody, htmlBody, rerr := emailtemplates.RenderReminder(data)
 	if rerr != nil {

@@ -8,10 +8,10 @@ import (
 
 // WelcomeData — Go port of docs/email-templates/welcome.{html,txt}.
 type WelcomeData struct {
-	Language         string
-	FirstName        string
-	AppURL           string
-	UnsubscribeURL   string
+	Language       string
+	FirstName      string
+	AppURL         string
+	UnsubscribeURL string
 }
 
 type welcomeL struct {
@@ -24,7 +24,7 @@ func welcomeLabels(lang string) welcomeL {
 		return welcomeL{
 			Pre: "Two taps to your first purrfectly-timed meeting.", Hi: "Hi",
 			Intro: "Welcome aboard! Lead Cat sniffs out the purrfect time across everyone's calendars — no back-and-forth, no double-booking. Two quick steps and you're set.",
-			S1T: "Connect your calendar", S1B: "Link Google in two taps so Lead Cat knows when you're free.",
+			S1T:   "Connect your calendar", S1B: "Link Google in two taps so Lead Cat knows when you're free.",
 			S2T: "Open the Mini App", S2B: "Everything lives inside Telegram — book, reschedule and confirm without leaving chat.",
 			Cta: "Open Lead Cat", Help: "Works with Google Calendar & Telegram. No credit card, no claws out.",
 			Foot: "You're receiving this because you signed up for Lead Cat.", Unsub: "Unsubscribe",
@@ -34,7 +34,7 @@ func welcomeLabels(lang string) welcomeL {
 		return welcomeL{
 			Pre: "Алғашқы кездесуіңе екі-ақ түрту қалды.", Hi: "Сәлем",
 			Intro: "Қош келдің! Lead Cat бәрінің күнтізбесінен ортақ ыңғайлы уақытты тауып береді — артық хат алмасу да, қос брондау да жоқ. Екі қадам — дайынсың.",
-			S1T: "Күнтізбеңді қос", S1B: "Google-ды екі түртумен қос, сонда Lead Cat бос уақытыңды біледі.",
+			S1T:   "Күнтізбеңді қос", S1B: "Google-ды екі түртумен қос, сонда Lead Cat бос уақытыңды біледі.",
 			S2T: "Мини-қосымшаны аш", S2B: "Бәрі Telegram ішінде — чаттан шықпай жоспарла, ауыстыр, растай бер.",
 			Cta: "Lead Cat-ты ашу", Help: "Google Calendar мен Telegram-мен жұмыс істейді. Карта да, тырнақ та керек емес.",
 			Foot: "Бұл хатты Lead Cat-қа тіркелгендіктен алдың.", Unsub: "Жазылудан бас тарту",
@@ -44,7 +44,7 @@ func welcomeLabels(lang string) welcomeL {
 		return welcomeL{
 			Pre: "Два касания — и первая встреча в идеальное время.", Hi: "Привет",
 			Intro: "Добро пожаловать! Lead Cat вынюхивает идеальное время по календарям всех участников — без переписок и накладок. Два шага — и всё готово.",
-			S1T: "Подключи календарь", S1B: "Привяжи Google в два касания, чтобы Lead Cat знал, когда ты свободен.",
+			S1T:   "Подключи календарь", S1B: "Привяжи Google в два касания, чтобы Lead Cat знал, когда ты свободен.",
 			S2T: "Открой мини-приложение", S2B: "Всё живёт внутри Telegram — планируй, переноси и подтверждай, не выходя из чата.",
 			Cta: "Открыть Lead Cat", Help: "Работает с Google Calendar и Telegram. Без карты и без когтей.",
 			Foot: "Ты получил это письмо, потому что зарегистрировался в Lead Cat.", Unsub: "Отписаться",
@@ -65,12 +65,12 @@ func welcomeSubject(lang string) string {
 }
 
 type welcomeRenderData struct {
-	Lang             string
-	Name             string
-	AppURL           string
-	UnsubscribeURL   string
-	L                welcomeL
-	Button           template.HTML
+	Lang           string
+	Name           string
+	AppURL         string
+	UnsubscribeURL string
+	L              welcomeL
+	Button         template.HTML
 }
 
 var welcomeHTMLTemplate = template.Must(template.New("welcome").Parse(`<!DOCTYPE html>
