@@ -1,0 +1,56 @@
+name: Sync Wiki
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - wiki/**
+      - .github/workflows/sync-wiki.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-wiki-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Push wiki content
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          wiki_url="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git"
+          workdir="$(mktemp -d)"
+          cd "$workdir"
+
+          if git clone "$wiki_url" repo 2>/dev/null; then
+            cd repo
+          else
+            git init -b master repo
+            cd repo
+            git remote add origin "$wiki_url"
+          fi
+
+          rsync -a --delete "${GITHUB_WORKSPACE}/wiki/" ./
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+
+          if git diff --staged --quiet; then
+            echo "Wiki already up to date."
+            exit 0
+          fi
+
+          git commit -m "Sync wiki from ${GITHUB_SHA::7}"
+          git push origin HEAD:master
