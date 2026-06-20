@@ -11,4 +11,5 @@ for i in $(seq 1 60); do
   sleep 3
 done
 [ "${ready}" = 1 ] || { echo "stack did not become ready"; $compose logs --tail=50; exit 1; }
+export E2E_MAILPIT_URL="${E2E_MAILPIT_URL:-http://localhost:8125}"
 ( cd e2e && pnpm exec playwright test "$@" )

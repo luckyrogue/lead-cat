@@ -28,7 +28,7 @@ services:
   mailpit:
     image: axllent/mailpit:latest
     ports:
-      - "8025:8025"
+      - "8125:8025"
     networks:
       - e2e
 
@@ -37,9 +37,12 @@ services:
       context: ..
       dockerfile: apps/backend/Dockerfile
     environment:
+      AUTH_DEV_MODE: "true"
+      AUTO_MIGRATE: "true"
+      MASTER_ENCRYPTION_KEY: e2e-master-encryption-key-please-32b
       DATABASE_URL: postgres://notify:notify@postgres:5432/notify?sslmode=disable
       REDIS_URL: redis://redis:6379
-      JWT_SECRET: e2e-secret
+      JWT_SECRET: e2e-secret-at-least-32-bytes-long-xx
       CALENDAR_STUB: "true"
       APP_BASE_URL: http://admin
       WEBAPP_URL: http://admin
