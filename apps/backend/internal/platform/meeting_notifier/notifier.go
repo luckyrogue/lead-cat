@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/platform/boti18n"
 	"github.com/luckyrogue/lead-cat/internal/platform/meetingrecipients"
 )
 
@@ -24,6 +25,18 @@ func New(st store, b sender, log *zap.Logger) *Notifier {
 	return &Notifier{store: st, bot: b, log: log}
 }
 
+// recipientLoc resolves a recipient's display timezone, falling back to the
+// organization TZ then Asia/Almaty; on a load error it warns and uses UTC.
+func (n *Notifier) recipientLoc(recipientTZ, orgTZ string) *time.Location {
+	tz := cmp.Or(recipientTZ, orgTZ, "Asia/Almaty")
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		n.log.Warn("load location", zap.String("tz", tz), zap.Error(err))
+		return time.UTC
+	}
+	return loc
+}
+
 func (n *Notifier) HandleCreated(ctx context.Context, organizationID, meetingID uuid.UUID) error {
 	m, err := n.store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
@@ -33,12 +46,6 @@ func (n *Notifier) HandleCreated(ctx context.Context, organizationID, meetingID 
 	if err != nil {
 		return fmt.Errorf("get organization: %w", err)
 	}
-	loc, err := time.LoadLocation(cmp.Or(w.TZ, "Asia/Almaty"))
-	if err != nil {
-		n.log.Warn("load location", zap.String("tz", w.TZ), zap.Error(err))
-		loc = time.UTC
-	}
-	text := buildMessage(m.Name, m.MeetLink, m.StartsAt, m.EndsAt, loc)
 
 	recs, err := meetingrecipients.Resolve(ctx, n.store, m)
 	if err != nil {
@@ -52,6 +59,8 @@ func (n *Notifier) HandleCreated(ctx context.Context, organizationID, meetingID 
 		if !claimed {
 			continue
 		}
+		loc := n.recipientLoc(r.Timezone, w.TZ)
+		text := buildMessage(r.Language, m.Name, m.MeetLink, m.StartsAt, m.EndsAt, loc)
 		if _, err := n.bot.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID: r.TelegramID,
 			Text:   text,
@@ -82,11 +91,6 @@ func (n *Notifier) notifyParticipant(ctx context.Context, organizationID, meetin
 	if err != nil {
 		return fmt.Errorf("get organization: %w", err)
 	}
-	loc, err := time.LoadLocation(cmp.Or(w.TZ, "Asia/Almaty"))
-	if err != nil {
-		n.log.Warn("load location", zap.String("tz", w.TZ), zap.Error(err))
-		loc = time.UTC
-	}
 	u, err := n.store.GetBotUserByEmail(ctx, email)
 	if postgres.IsNotFound(err) {
 		return nil
@@ -94,11 +98,12 @@ func (n *Notifier) notifyParticipant(ctx context.Context, organizationID, meetin
 	if err != nil {
 		return fmt.Errorf("get bot user: %w", err)
 	}
+	loc := n.recipientLoc(u.Timezone, w.TZ)
 	var text string
 	if added {
-		text = buildEventMessage("➕ Вас добавили на встречу", m.Name, m.MeetLink, m.StartsAt, m.EndsAt, loc)
+		text = buildEventMessage(boti18n.T(u.Language, "notif.added"), m.Name, m.MeetLink, m.StartsAt, m.EndsAt, loc)
 	} else {
-		text = buildRemovedMessage(m.Name, m.StartsAt, loc)
+		text = buildRemovedMessage(u.Language, m.Name, m.StartsAt, loc)
 	}
 	if _, err := n.bot.SendMessage(ctx, &bot.SendMessageParams{ChatID: u.TelegramID, Text: text}); err != nil {
 		n.log.Warn("send participant notice",
@@ -120,18 +125,14 @@ func (n *Notifier) HandleCancelled(ctx context.Context, organizationID, meetingI
 	if err != nil {
 		return fmt.Errorf("get organization: %w", err)
 	}
-	loc, err := time.LoadLocation(cmp.Or(w.TZ, "Asia/Almaty"))
-	if err != nil {
-		n.log.Warn("load location", zap.String("tz", w.TZ), zap.Error(err))
-		loc = time.UTC
-	}
-	text := buildCancelledMessage(m.Name, m.StartsAt, loc)
 
 	recs, err := meetingrecipients.Resolve(ctx, n.store, m)
 	if err != nil {
 		return fmt.Errorf("resolve recipients: %w", err)
 	}
 	for _, r := range recs {
+		loc := n.recipientLoc(r.Timezone, w.TZ)
+		text := buildCancelledMessage(r.Language, m.Name, m.StartsAt, loc)
 		if _, err := n.bot.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID: r.TelegramID,
 			Text:   text,
@@ -154,18 +155,14 @@ func (n *Notifier) HandleUpdated(ctx context.Context, organizationID, meetingID 
 	if err != nil {
 		return fmt.Errorf("get organization: %w", err)
 	}
-	loc, err := time.LoadLocation(cmp.Or(w.TZ, "Asia/Almaty"))
-	if err != nil {
-		n.log.Warn("load location", zap.String("tz", w.TZ), zap.Error(err))
-		loc = time.UTC
-	}
-	text := buildUpdatedMessage(m.Name, m.MeetLink, m.StartsAt, m.EndsAt, loc)
 
 	recs, err := meetingrecipients.Resolve(ctx, n.store, m)
 	if err != nil {
 		return fmt.Errorf("resolve recipients: %w", err)
 	}
 	for _, r := range recs {
+		loc := n.recipientLoc(r.Timezone, w.TZ)
+		text := buildUpdatedMessage(r.Language, m.Name, m.MeetLink, m.StartsAt, m.EndsAt, loc)
 		if _, err := n.bot.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID: r.TelegramID,
 			Text:   text,

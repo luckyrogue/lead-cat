@@ -3,6 +3,8 @@ package meeting_notifier
 import (
 	"fmt"
 	"time"
+
+	"github.com/luckyrogue/lead-cat/internal/platform/boti18n"
 )
 
 func buildEventMessage(header, name, meetLink string, startsAt, endsAt time.Time, loc *time.Location) string {
@@ -21,22 +23,22 @@ func buildEventMessage(header, name, meetLink string, startsAt, endsAt time.Time
 	return msg
 }
 
-func buildMessage(name, meetLink string, startsAt, endsAt time.Time, loc *time.Location) string {
-	return buildEventMessage("📅 Новая встреча", name, meetLink, startsAt, endsAt, loc)
+func buildMessage(lang, name, meetLink string, startsAt, endsAt time.Time, loc *time.Location) string {
+	return buildEventMessage(boti18n.T(lang, "notif.created"), name, meetLink, startsAt, endsAt, loc)
 }
 
-func buildUpdatedMessage(name, meetLink string, startsAt, endsAt time.Time, loc *time.Location) string {
-	return buildEventMessage("✏️ Встреча изменена", name, meetLink, startsAt, endsAt, loc)
+func buildUpdatedMessage(lang, name, meetLink string, startsAt, endsAt time.Time, loc *time.Location) string {
+	return buildEventMessage(boti18n.T(lang, "notif.updated"), name, meetLink, startsAt, endsAt, loc)
 }
 
-func buildRemovedMessage(name string, startsAt time.Time, loc *time.Location) string {
+func buildRemovedMessage(lang, name string, startsAt time.Time, loc *time.Location) string {
 	s := startsAt.In(loc)
-	return fmt.Sprintf("➖ Вас удалили из встречи\n«%s»\n🗓 %s (%s)", name, s.Format("02.01.2006"), tzLabel(s))
+	return fmt.Sprintf("%s\n«%s»\n🗓 %s (%s)", boti18n.T(lang, "notif.removed"), name, s.Format("02.01.2006"), tzLabel(s))
 }
 
-func buildCancelledMessage(name string, startsAt time.Time, loc *time.Location) string {
+func buildCancelledMessage(lang, name string, startsAt time.Time, loc *time.Location) string {
 	s := startsAt.In(loc)
-	return fmt.Sprintf("❌ Встреча отменена\n«%s»\n🗓 %s (%s)", name, s.Format("02.01.2006"), tzLabel(s))
+	return fmt.Sprintf("%s\n«%s»\n🗓 %s (%s)", boti18n.T(lang, "notif.cancelled"), name, s.Format("02.01.2006"), tzLabel(s))
 }
 
 func tzLabel(t time.Time) string {

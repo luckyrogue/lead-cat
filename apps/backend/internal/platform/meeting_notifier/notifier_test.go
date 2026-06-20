@@ -203,3 +203,33 @@ func TestHandleUpdated_TZFallback(t *testing.T) {
 		t.Fatalf("want 2 sends despite blank tz, got %d", len(snd.sent))
 	}
 }
+
+func TestHandleCreated_PerRecipientLangAndTZ(t *testing.T) {
+	fs := baseStore()
+	// Two participants in different languages and timezones.
+	fs.participants = []postgres.MeetingParticipant{{Email: "ru@x.io"}, {Email: "en@x.io"}}
+	fs.byEmail = map[string]postgres.BotUser{
+		"ru@x.io": {TelegramID: 601, Email: "ru@x.io", Language: "ru", Timezone: "Asia/Almaty"},
+		"en@x.io": {TelegramID: 602, Email: "en@x.io", Language: "en", Timezone: "Europe/London"},
+	}
+	fs.meeting.OrganizerUserID = nil // only the two participants
+	fs.claimed = map[int64]bool{601: true, 602: true}
+	snd := &fakeSender{}
+	if err := newNotifier(fs, snd).HandleCreated(context.Background(), uuid.New(), fs.meeting.ID); err != nil {
+		t.Fatalf("created: %v", err)
+	}
+	if len(snd.sent) != 2 {
+		t.Fatalf("want 2 sends, got %d: %+v", len(snd.sent), snd.sent)
+	}
+	byChat := map[int64]string{}
+	for _, m := range snd.sent {
+		byChat[m.ChatID] = m.Text
+	}
+	// 10:00 Almaty (UTC+5) for ru; 06:00 London (UTC+1, BST) for en.
+	if !strings.Contains(byChat[601], "📅 Новая встреча") || !strings.Contains(byChat[601], "10:00") {
+		t.Fatalf("ru recipient text wrong: %q", byChat[601])
+	}
+	if !strings.Contains(byChat[602], "📅 New meeting") || !strings.Contains(byChat[602], "06:00") {
+		t.Fatalf("en recipient text wrong: %q", byChat[602])
+	}
+}
