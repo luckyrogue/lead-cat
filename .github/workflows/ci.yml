@@ -30,6 +30,12 @@ jobs:
       contents: read
       packages: write
 
+  e2e:
+    name: e2e
+    needs: build
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/_e2e.yml
+
   docker:
     name: docker
     needs: build
