@@ -1,7 +1,0 @@
-# Default owners for review on pull requests.
-* @luckyrogue
-
-/apps/backend/ @luckyrogue
-/e2e/ @luckyrogue
-/deploy/ @luckyrogue
-/.github/ @luckyrogue
