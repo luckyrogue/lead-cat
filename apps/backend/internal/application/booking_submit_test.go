@@ -4,10 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"github.com/luckyrogue/lead-cat/internal/application/command"
 	"github.com/luckyrogue/lead-cat/internal/application/model"
@@ -96,6 +98,21 @@ func (s *submitFakeCalService) UpdateAttendees(_ context.Context, _ string, _ []
 
 func (s *submitFakeCalService) DeleteEvent(_ context.Context, _ string) error { return nil }
 
+type fakeEmailSender struct {
+	sent   []sentEmail
+	failOn string // recipient substring that triggers an error; "" = never fail
+}
+
+type sentEmail struct{ to, subject, text, html string }
+
+func (f *fakeEmailSender) SendMultipart(_ context.Context, to, subject, text, htmlBody, _ string) error {
+	if f.failOn != "" && strings.Contains(to, f.failOn) {
+		return errors.New("smtp boom")
+	}
+	f.sent = append(f.sent, sentEmail{to: to, subject: subject, text: text, html: htmlBody})
+	return nil
+}
+
 type submitFakeQueue struct{}
 
 func (submitFakeQueue) EnqueueMeetingCreated(_ context.Context, _, _ uuid.UUID) error   { return nil }
@@ -119,12 +136,13 @@ func submitEvent() model.BookingEventType {
 	}
 }
 
-func newSubmitServices(store *submitFakeStore) (*Services, *submitFakeCalService) {
+func newSubmitServices(store *submitFakeStore) (*Services, *submitFakeCalService, *fakeEmailSender) {
 	cal := &submitFakeCalService{meetLink: "https://meet.google.com/abc-defg-hij"}
 	prov := &submitFakeCalProvider{svc: cal}
 	cmd := &command.Meetings{Store: store, Calendar: prov, Queue: submitFakeQueue{}}
-	s := &Services{Store: store, Commands: cmd}
-	return s, cal
+	mailer := &fakeEmailSender{}
+	s := &Services{Store: store, Commands: cmd, email: mailer, Log: zap.NewNop()}
+	return s, cal, mailer
 }
 
 // freeMondaySlot returns 2026-06-22 (Monday) 10:00 Asia/Almaty as a future UTC instant.
@@ -143,7 +161,7 @@ func TestSubmitBooking_HappyPath(t *testing.T) {
 		host:   model.PlatformUser{Email: "host@example.com"},
 		hostOK: true,
 	}
-	s, cal := newSubmitServices(store)
+	s, cal, _ := newSubmitServices(store)
 
 	conf, err := s.SubmitBooking(context.Background(), "intro-call-abc123", BookingRequest{
 		Name:  "Visitor V",
@@ -184,7 +202,7 @@ func TestSubmitBooking_HappyPath(t *testing.T) {
 
 func TestSubmitBooking_InvalidEmail(t *testing.T) {
 	store := &submitFakeStore{et: submitEvent(), host: model.PlatformUser{Email: "host@example.com"}, hostOK: true}
-	s, _ := newSubmitServices(store)
+	s, _, _ := newSubmitServices(store)
 	_, err := s.SubmitBooking(context.Background(), "intro-call-abc123", BookingRequest{
 		Name: "V", Email: "not-an-email", Start: freeMondaySlot(t),
 	})
@@ -195,7 +213,7 @@ func TestSubmitBooking_InvalidEmail(t *testing.T) {
 
 func TestSubmitBooking_PastStart(t *testing.T) {
 	store := &submitFakeStore{et: submitEvent(), host: model.PlatformUser{Email: "host@example.com"}, hostOK: true}
-	s, _ := newSubmitServices(store)
+	s, _, _ := newSubmitServices(store)
 	loc, _ := time.LoadLocation("Asia/Almaty")
 	past := time.Date(2000, 6, 22, 10, 0, 0, 0, loc).UTC()
 	_, err := s.SubmitBooking(context.Background(), "intro-call-abc123", BookingRequest{
@@ -208,7 +226,7 @@ func TestSubmitBooking_PastStart(t *testing.T) {
 
 func TestSubmitBooking_OutsideWindow(t *testing.T) {
 	store := &submitFakeStore{et: submitEvent(), host: model.PlatformUser{Email: "host@example.com"}, hostOK: true}
-	s, _ := newSubmitServices(store)
+	s, _, _ := newSubmitServices(store)
 	loc, _ := time.LoadLocation("Asia/Almaty")
 	// 07:00 Almaty is before the 09:00 window start.
 	early := time.Date(2099, 6, 22, 7, 0, 0, 0, loc).UTC()
@@ -222,7 +240,7 @@ func TestSubmitBooking_OutsideWindow(t *testing.T) {
 
 func TestSubmitBooking_WrongWeekday(t *testing.T) {
 	store := &submitFakeStore{et: submitEvent(), host: model.PlatformUser{Email: "host@example.com"}, hostOK: true}
-	s, _ := newSubmitServices(store)
+	s, _, _ := newSubmitServices(store)
 	loc, _ := time.LoadLocation("Asia/Almaty")
 	// 2099-06-20 is a Saturday — not in Mon-Fri.
 	sat := time.Date(2099, 6, 20, 10, 0, 0, 0, loc).UTC()
@@ -250,7 +268,7 @@ func TestSubmitBooking_Conflict(t *testing.T) {
 			},
 		},
 	}
-	s, _ := newSubmitServices(store)
+	s, _, _ := newSubmitServices(store)
 	_, err := s.SubmitBooking(context.Background(), "intro-call-abc123", BookingRequest{
 		Name: "V", Email: "visitor@example.com", Start: start.UTC(),
 	})
@@ -261,7 +279,7 @@ func TestSubmitBooking_Conflict(t *testing.T) {
 
 func TestSubmitBooking_UnknownSlug(t *testing.T) {
 	store := &submitFakeStore{etErr: sql.ErrNoRows}
-	s, _ := newSubmitServices(store)
+	s, _, _ := newSubmitServices(store)
 	_, err := s.SubmitBooking(context.Background(), "no-such", BookingRequest{
 		Name: "V", Email: "visitor@example.com", Start: freeMondaySlot(t),
 	})
@@ -274,12 +292,84 @@ func TestSubmitBooking_Inactive(t *testing.T) {
 	et := submitEvent()
 	et.Active = false
 	store := &submitFakeStore{et: et, host: model.PlatformUser{Email: "host@example.com"}, hostOK: true}
-	s, _ := newSubmitServices(store)
+	s, _, _ := newSubmitServices(store)
 	_, err := s.SubmitBooking(context.Background(), "intro-call-abc123", BookingRequest{
 		Name: "V", Email: "visitor@example.com", Start: freeMondaySlot(t),
 	})
 	if !errors.Is(err, model.ErrInvalidBooking) {
 		t.Fatalf("expected ErrInvalidBooking for inactive, got %v", err)
+	}
+}
+
+func TestSubmitBooking_SendsBookerAndHostEmails(t *testing.T) {
+	store := &submitFakeStore{
+		et:     submitEvent(),
+		host:   model.PlatformUser{Email: "host@example.com", Language: "en", Timezone: "Asia/Almaty"},
+		hostOK: true,
+	}
+	s, _, mailer := newSubmitServices(store)
+
+	_, err := s.SubmitBooking(context.Background(), "intro-call-abc123", BookingRequest{
+		Name: "Visitor V", Email: "visitor@example.com", Start: freeMondaySlot(t), Language: "en",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(mailer.sent) != 2 {
+		t.Fatalf("expected 2 emails, got %d", len(mailer.sent))
+	}
+	var toBooker, toHost bool
+	for _, e := range mailer.sent {
+		if e.to == "visitor@example.com" {
+			toBooker = true
+			if !strings.Contains(e.html, "https://meet.google.com/abc-defg-hij") {
+				t.Errorf("booker email missing meet link")
+			}
+			if strings.Contains(e.html, "host@example.com") {
+				t.Errorf("booker email must not expose host email")
+			}
+		}
+		if e.to == "host@example.com" {
+			toHost = true
+			if !strings.Contains(e.html, "visitor@example.com") {
+				t.Errorf("host email should include booker email")
+			}
+		}
+	}
+	if !toBooker || !toHost {
+		t.Fatalf("expected emails to both booker and host; booker=%v host=%v", toBooker, toHost)
+	}
+}
+
+func TestSubmitBooking_EmailFailureDoesNotFailBooking(t *testing.T) {
+	store := &submitFakeStore{
+		et:     submitEvent(),
+		host:   model.PlatformUser{Email: "host@example.com"},
+		hostOK: true,
+	}
+	s, cal, mailer := newSubmitServices(store)
+	mailer.failOn = "@example.com" // both sends error
+
+	conf, err := s.SubmitBooking(context.Background(), "intro-call-abc123", BookingRequest{
+		Name: "Visitor V", Email: "visitor@example.com", Start: freeMondaySlot(t),
+	})
+	if err != nil {
+		t.Fatalf("booking must succeed despite email failure, got %v", err)
+	}
+	if conf.MeetLink != cal.meetLink {
+		t.Errorf("expected meet link returned")
+	}
+}
+
+func TestSubmitBooking_NilMailerIsNoop(t *testing.T) {
+	store := &submitFakeStore{et: submitEvent(), host: model.PlatformUser{Email: "host@example.com"}, hostOK: true}
+	s, _, _ := newSubmitServices(store)
+	s.email = nil // unconfigured mailer
+	_, err := s.SubmitBooking(context.Background(), "intro-call-abc123", BookingRequest{
+		Name: "V", Email: "visitor@example.com", Start: freeMondaySlot(t),
+	})
+	if err != nil {
+		t.Fatalf("nil mailer must be a no-op, got %v", err)
 	}
 }
 

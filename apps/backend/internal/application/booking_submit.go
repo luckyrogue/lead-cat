@@ -7,14 +7,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"github.com/luckyrogue/lead-cat/internal/application/model"
+	"github.com/luckyrogue/lead-cat/internal/platform/emailtemplates"
 )
 
 type BookingRequest struct {
-	Name  string
-	Email string
-	Start time.Time
+	Name     string
+	Email    string
+	Start    time.Time
+	Language string
 }
 
 type BookingConfirmation struct {
@@ -83,5 +86,65 @@ func (s *Services) SubmitBooking(ctx context.Context, slug string, req BookingRe
 	if err != nil {
 		return BookingConfirmation{}, err
 	}
+
+	s.sendBookingEmails(ctx, et, host, req, name, start, end, m.MeetLink)
+
 	return BookingConfirmation{MeetLink: m.MeetLink, Start: start.UTC(), End: end.UTC()}, nil
+}
+
+// sendBookingEmails sends the booker confirmation and the host notification.
+// Best-effort: a nil mailer is a no-op; render/send errors are logged and swallowed
+// so a created booking never becomes an error response.
+func (s *Services) sendBookingEmails(
+	ctx context.Context,
+	et model.BookingEventType,
+	host model.PlatformUser,
+	req BookingRequest,
+	bookerName string,
+	start, end time.Time,
+	meetLink string,
+) {
+	if s.email == nil {
+		return
+	}
+
+	// Booker email — times in the event-type timezone, page/browser language.
+	bookerDate := start.Format("Mon, 02 Jan 2006")
+	bookerTime := start.Format("15:04") + " – " + end.Format("15:04")
+	if subject, text, htmlBody, rerr := emailtemplates.RenderBookingConfirmation(emailtemplates.BookingConfirmationData{
+		Language:   req.Language,
+		BookerName: bookerName,
+		EventTitle: et.Title,
+		Date:       bookerDate,
+		Time:       bookerTime,
+		Tz:         et.Timezone,
+		MeetLink:   meetLink,
+	}); rerr != nil {
+		s.Log.Warn("booking_confirmation_render_failed", zap.Error(rerr))
+	} else if serr := s.email.SendMultipart(ctx, req.Email, subject, text, htmlBody, ""); serr != nil {
+		s.Log.Warn("booking_confirmation_send_failed", zap.Error(serr))
+	}
+
+	// Host email — times in the host timezone (fallback event-type tz), host language.
+	hostTz := host.Timezone
+	if hostTz == "" {
+		hostTz = et.Timezone
+	}
+	hostLoc := loadLoc(hostTz)
+	hStart := start.In(hostLoc)
+	hEnd := end.In(hostLoc)
+	if subject, text, htmlBody, rerr := emailtemplates.RenderBookingHostNotification(emailtemplates.BookingHostNotificationData{
+		Language:    host.Language,
+		EventTitle:  et.Title,
+		BookerName:  bookerName,
+		BookerEmail: req.Email,
+		Date:        hStart.Format("Mon, 02 Jan 2006"),
+		Time:        hStart.Format("15:04") + " – " + hEnd.Format("15:04"),
+		Tz:          hostTz,
+		MeetLink:    meetLink,
+	}); rerr != nil {
+		s.Log.Warn("booking_host_notification_render_failed", zap.Error(rerr))
+	} else if serr := s.email.SendMultipart(ctx, host.Email, subject, text, htmlBody, ""); serr != nil {
+		s.Log.Warn("booking_host_notification_send_failed", zap.Error(serr))
+	}
 }
