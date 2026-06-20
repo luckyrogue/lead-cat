@@ -3,6 +3,7 @@ package botreg
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
@@ -61,16 +62,16 @@ func TestRegistration_HappyPath_NonAdmin(t *testing.T) {
 	s := New(users, sess, nil)
 	ctx := context.Background()
 
-	if msg := s.Start(ctx, 100); msg == "" {
+	if msg := s.Start(ctx, 100, "ru"); msg == "" {
 		t.Fatal("Start should prompt for name")
 	}
 	if _, ok := sess.m[100]; !ok {
 		t.Fatal("Start should set a session")
 	}
-	if _, ok := s.OnText(ctx, 100, "Иванов Иван"); !ok {
+	if _, ok := s.OnText(ctx, 100, "Иванов Иван", "ru"); !ok {
 		t.Fatal("name step should handle text")
 	}
-	if _, ok := s.OnText(ctx, 100, "ivan@corp.io"); !ok {
+	if _, ok := s.OnText(ctx, 100, "ivan@corp.io", "ru"); !ok {
 		t.Fatal("email step should handle text")
 	}
 	if len(users.created) != 1 {
@@ -89,9 +90,9 @@ func TestRegistration_AdminRole(t *testing.T) {
 	sess := newFakeSessions()
 	s := New(users, sess, []int64{42})
 	ctx := context.Background()
-	s.Start(ctx, 42)
-	s.OnText(ctx, 42, "Admin User")
-	s.OnText(ctx, 42, "admin@corp.io")
+	s.Start(ctx, 42, "ru")
+	s.OnText(ctx, 42, "Admin User", "ru")
+	s.OnText(ctx, 42, "admin@corp.io", "ru")
 	if len(users.created) != 1 || users.created[0].Role != "admin" {
 		t.Fatalf("admin id should create admin role: %+v", users.created)
 	}
@@ -102,7 +103,7 @@ func TestStart_AlreadyRegistered(t *testing.T) {
 	users.byTelegram[7] = postgres.BotUser{TelegramID: 7}
 	sess := newFakeSessions()
 	s := New(users, sess, nil)
-	msg := s.Start(context.Background(), 7)
+	msg := s.Start(context.Background(), 7, "ru")
 	if msg == "" {
 		t.Fatal("should greet returning user")
 	}
@@ -117,18 +118,44 @@ func TestRegistration_RejectsBadEmailAndDuplicate(t *testing.T) {
 	sess := newFakeSessions()
 	s := New(users, sess, nil)
 	ctx := context.Background()
-	s.Start(ctx, 5)
-	s.OnText(ctx, 5, "Some Name")
-	if _, ok := s.OnText(ctx, 5, "not-an-email"); !ok {
+	s.Start(ctx, 5, "ru")
+	s.OnText(ctx, 5, "Some Name", "ru")
+	if _, ok := s.OnText(ctx, 5, "not-an-email", "ru"); !ok {
 		t.Fatal("bad email should be handled")
 	}
 	if len(users.created) != 0 {
 		t.Fatal("bad email must not create a user")
 	}
-	if _, ok := s.OnText(ctx, 5, "taken@corp.io"); !ok {
+	if _, ok := s.OnText(ctx, 5, "taken@corp.io", "ru"); !ok {
 		t.Fatal("duplicate email should be handled")
 	}
 	if len(users.created) != 0 {
 		t.Fatal("duplicate email must not create a user")
+	}
+}
+
+func TestStart_Localized(t *testing.T) {
+	svc := New(newFakeUsers(), newFakeSessions(), nil)
+	en := svc.Start(context.Background(), 1, "en")
+	ru := svc.Start(context.Background(), 2, "ru")
+	if en == ru {
+		t.Fatalf("Start must differ by language; both = %q", en)
+	}
+	if !strings.Contains(en, "register") {
+		t.Errorf("en Start = %q", en)
+	}
+}
+
+func TestOnText_NameStep_Localized(t *testing.T) {
+	users := newFakeUsers()
+	sess := newFakeSessions()
+	svc := New(users, sess, nil)
+	_ = svc.Start(context.Background(), 1, "en") // sets awaiting_name
+	reply, handled := svc.OnText(context.Background(), 1, "John Smith", "en")
+	if !handled {
+		t.Fatal("expected handled")
+	}
+	if !strings.Contains(reply, "email") {
+		t.Errorf("en ask_email = %q", reply)
 	}
 }

@@ -78,7 +78,7 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 	cmd, ok := parseCommand(text)
 	if !ok {
 		if isPrivate {
-			if reply, handled := h.registrar.OnText(ctx, from.ID, text); handled {
+			if reply, handled := h.registrar.OnText(ctx, from.ID, text, h.resolveLang(ctx, from)); handled {
 				h.reply(ctx, b, update.Message, reply)
 				return
 			}
@@ -105,7 +105,7 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 	switch cmd {
 	case "/start":
 		if isPrivate {
-			h.reply(ctx, b, update.Message, h.registrar.Start(ctx, from.ID))
+			h.reply(ctx, b, update.Message, h.registrar.Start(ctx, from.ID, h.resolveLang(ctx, from)))
 		}
 	case "/chatid":
 		_ = h.store.UpsertPendingChat(ctx, from.ID, chatID, update.Message.Chat.Title)

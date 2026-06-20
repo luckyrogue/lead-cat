@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/platform/boti18n"
 )
 
 type State struct {
@@ -45,27 +46,27 @@ func New(users userStore, sess sessions, adminIDs []int64) *Service {
 	return &Service{users: users, sessions: sess, admins: admins}
 }
 
-func (s *Service) Start(ctx context.Context, telegramID int64) string {
+func (s *Service) Start(ctx context.Context, telegramID int64, lang string) string {
 	if _, err := s.users.GetBotUserByTelegramID(ctx, telegramID); err == nil {
-		return "С возвращением! 🐾 Открой приложение из меню."
+		return boti18n.T(lang, "botreg.welcome_back")
 	}
 	_ = s.sessions.Set(ctx, telegramID, State{Step: stepName})
-	return "Привет! Давай зарегистрируемся.\nВведи ФИО (Фамилия Имя Отчество):"
+	return boti18n.T(lang, "botreg.start")
 }
 
-func (s *Service) finishRegistration(ctx context.Context, telegramID int64, st State) (string, bool) {
+func (s *Service) finishRegistration(ctx context.Context, telegramID int64, st State, lang string) (string, bool) {
 	role := "user"
 	if s.admins[telegramID] {
 		role = "admin"
 	}
 	if _, err := s.users.CreateBotUser(ctx, telegramID, st.FullName, st.Email, role); err != nil {
-		return "Не удалось завершить регистрацию, попробуй позже.", true
+		return boti18n.T(lang, "botreg.failed"), true
 	}
 	_ = s.sessions.Del(ctx, telegramID)
-	return "Готово, " + st.FullName + "! 🐾", true
+	return boti18n.T(lang, "botreg.done", st.FullName), true
 }
 
-func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (string, bool) {
+func (s *Service) OnText(ctx context.Context, telegramID int64, text, lang string) (string, bool) {
 	st, err := s.sessions.Get(ctx, telegramID)
 	if err != nil || st == nil {
 		return "", false
@@ -74,24 +75,24 @@ func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (st
 	switch st.Step {
 	case stepName:
 		if text == "" {
-			return "Введи ФИО:", true
+			return boti18n.T(lang, "botreg.ask_name"), true
 		}
 		st.FullName = text
 		st.Step = stepEmail
 		_ = s.sessions.Set(ctx, telegramID, *st)
-		return "Теперь корпоративную почту:", true
+		return boti18n.T(lang, "botreg.ask_email"), true
 
 	case stepEmail:
 		addr, perr := mail.ParseAddress(text)
 		if perr != nil {
-			return "Не похоже на email. Попробуй ещё раз:", true
+			return boti18n.T(lang, "botreg.bad_email"), true
 		}
 		email := strings.ToLower(strings.TrimSpace(addr.Address))
 		if _, gerr := s.users.GetBotUserByEmail(ctx, email); gerr == nil {
-			return "Эта почта уже привязана к другому аккаунту.", true
+			return boti18n.T(lang, "botreg.email_taken"), true
 		}
 		st.Email = email
-		return s.finishRegistration(ctx, telegramID, *st)
+		return s.finishRegistration(ctx, telegramID, *st, lang)
 	}
 	return "", false
 }
