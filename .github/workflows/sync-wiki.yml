@@ -34,14 +34,15 @@ jobs:
           cd "$workdir"
 
           if git clone "$wiki_url" repo 2>/dev/null; then
+            rsync -a --delete --exclude .git "${GITHUB_WORKSPACE}/wiki/" repo/
             cd repo
           else
-            git init -b master repo
+            mkdir repo
+            rsync -a "${GITHUB_WORKSPACE}/wiki/" repo/
             cd repo
+            git init -b master
             git remote add origin "$wiki_url"
           fi
-
-          rsync -a --delete "${GITHUB_WORKSPACE}/wiki/" ./
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
