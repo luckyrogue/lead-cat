@@ -13,13 +13,18 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/delivery/http/middleware"
 )
 
-func newRedis(t *testing.T) *redis.Client {
+func newRedisWithMR(t *testing.T) (*miniredis.Miniredis, *redis.Client) {
 	mr, err := miniredis.Run()
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(mr.Close)
-	return redis.NewClient(&redis.Options{Addr: mr.Addr()})
+	return mr, redis.NewClient(&redis.Options{Addr: mr.Addr()})
+}
+
+func newRedis(t *testing.T) *redis.Client {
+	_, rdb := newRedisWithMR(t)
+	return rdb
 }
 
 func appWith(h fiber.Handler) *fiber.App {
@@ -74,5 +79,63 @@ func TestRateLimit_FailOpenOnRedisError(t *testing.T) {
 	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 1, time.Minute, "t"))
 	if code := reqIP(app, "1.1.1.1"); code != 200 {
 		t.Fatalf("fail-open: want 200 got %d", code)
+	}
+}
+
+func TestRateLimit_WindowReset(t *testing.T) {
+	mr, rdb := newRedisWithMR(t)
+	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 2, time.Minute, "t"))
+
+	if code := reqIP(app, "3.3.3.3"); code != 200 {
+		t.Fatalf("req 1: want 200 got %d", code)
+	}
+	if code := reqIP(app, "3.3.3.3"); code != 200 {
+		t.Fatalf("req 2: want 200 got %d", code)
+	}
+	if code := reqIP(app, "3.3.3.3"); code != 429 {
+		t.Fatalf("req 3 (over limit): want 429 got %d", code)
+	}
+
+	mr.FastForward(61 * time.Second)
+
+	if code := reqIP(app, "3.3.3.3"); code != 200 {
+		t.Fatalf("after window reset: want 200 got %d", code)
+	}
+}
+
+func TestRateLimit_RetryAfterHeader(t *testing.T) {
+	_, rdb := newRedisWithMR(t)
+	app := fiber.New(fiber.Config{
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			code := fiber.StatusInternalServerError
+			if e, ok := err.(*fiber.Error); ok {
+				code = e.Code
+			}
+			return c.Status(code).JSON(fiber.Map{"error": err.Error()})
+		},
+	})
+	app.Get("/x", middleware.RateLimit(rdb, zap.NewNop(), 1, time.Minute, "t"), func(c *fiber.Ctx) error {
+		return c.SendString("ok")
+	})
+
+	if code := reqIP(app, "4.4.4.4"); code != 200 {
+		t.Fatalf("first req: want 200 got %d", code)
+	}
+
+	r := httptest.NewRequest("GET", "/x", nil)
+	r.Header.Set("X-Forwarded-For", "4.4.4.4")
+	resp, err := app.Test(r, 5000)
+	if err != nil {
+		t.Fatalf("test request: %v", err)
+	}
+	if resp.StatusCode != 429 {
+		t.Fatalf("second req: want 429 got %d", resp.StatusCode)
+	}
+	retryAfter := resp.Header.Get("Retry-After")
+	if retryAfter == "" {
+		t.Error("Retry-After header missing on 429 response")
+	}
+	if retryAfter != "60" {
+		t.Errorf("Retry-After=%q want 60", retryAfter)
 	}
 }

@@ -40,7 +40,6 @@ func TestCalendarConnector_AuthURL(t *testing.T) {
 }
 
 func TestCalendarConnector_Exchange(t *testing.T) {
-	expiry := time.Now().Add(time.Hour).UTC().Truncate(time.Second)
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]interface{}{
@@ -59,6 +58,7 @@ func TestCalendarConnector_Exchange(t *testing.T) {
 		TokenURL: srv.URL,
 	}
 
+	before := time.Now()
 	tok, err := c.Exchange(context.Background(), "code-xyz", "verifier-xyz", "https://app.example.com/cb")
 	if err != nil {
 		t.Fatalf("Exchange: %v", err)
@@ -69,8 +69,14 @@ func TestCalendarConnector_Exchange(t *testing.T) {
 	if tok.RefreshToken != "rt" {
 		t.Errorf("RefreshToken=%q want rt", tok.RefreshToken)
 	}
-	if tok.Expiry.Before(expiry) {
-		t.Errorf("Expiry=%v too early", tok.Expiry)
+	if tok.Expiry.IsZero() {
+		t.Error("Expiry is zero")
+	}
+	if !tok.Expiry.After(before) {
+		t.Errorf("Expiry=%v must be in the future (after %v)", tok.Expiry, before)
+	}
+	if !tok.Expiry.Before(time.Now().Add(2 * time.Hour)) {
+		t.Errorf("Expiry=%v too far in the future for a 3600s token", tok.Expiry)
 	}
 	if !strings.Contains(tok.Scopes, "calendar.events") || !strings.Contains(tok.Scopes, "calendar.readonly") {
 		t.Errorf("Scopes=%q must include calendar.events + calendar.readonly", tok.Scopes)

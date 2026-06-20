@@ -98,3 +98,21 @@ func TestBusyTimes(t *testing.T) {
 		t.Fatalf("expected 1 busy block, got %v", busy)
 	}
 }
+
+func TestBusyTimes_MalformedTimestamp(t *testing.T) {
+	a, _ := newTestAdapter(t, func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"value":[{"scheduleId":"a@x.com","scheduleItems":[{"status":"busy","start":{"dateTime":"not-a-time","timeZone":"UTC"},"end":{"dateTime":"also-bad","timeZone":"UTC"}}]}]}`))
+	})
+	busy, err := a.BusyTimes(context.Background(), []string{"a@x.com"},
+		time.Date(2026, 6, 20, 0, 0, 0, 0, time.UTC), time.Date(2026, 6, 21, 0, 0, 0, 0, time.UTC))
+	if err != nil {
+		t.Fatal(err)
+	}
+	intervals := busy["a@x.com"]
+	if len(intervals) != 1 {
+		t.Fatalf("expected 1 interval (zero-time) for malformed timestamps, got %v", intervals)
+	}
+	if !intervals[0].Start.IsZero() {
+		t.Errorf("expected zero Start for malformed timestamp, got %v", intervals[0].Start)
+	}
+}

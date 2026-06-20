@@ -328,6 +328,37 @@ func TestBookingDeleteEventType_Returns204(t *testing.T) {
 	}
 }
 
+func TestBookingDeleteEventType_OtherHost_Returns403(t *testing.T) {
+	repo := newBookingRepo()
+	otherUser := uuid.MustParse("99999999-0000-0000-0000-000000000009")
+	repo.getBookingEventTypeFn = func(_ context.Context, _ uuid.UUID) (model.BookingEventType, error) {
+		return model.BookingEventType{
+			ID:               bookingETID,
+			HostUserID:       otherUser,
+			OrganizationID:   bookingOrgID,
+			Title:            "Other's event",
+			DurationMins:     30,
+			Timezone:         "UTC",
+			AvailWeekdays:    []int{1},
+			AvailStartMinute: 0,
+			AvailEndMinute:   60,
+		}, nil
+	}
+	app := buildBookingApp(t, repo)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/booking/event-types/"+bookingETID.String(), nil)
+	resp, err := app.Test(req, -1)
+	if err != nil {
+		t.Fatalf("request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusForbidden {
+		b, _ := io.ReadAll(resp.Body)
+		t.Fatalf("expected 403, got %d: %s", resp.StatusCode, b)
+	}
+}
+
 func TestBookingUpdateEventType_NotFound_Returns404(t *testing.T) {
 	repo := newBookingRepo()
 	repo.getBookingEventTypeFn = func(_ context.Context, _ uuid.UUID) (model.BookingEventType, error) {

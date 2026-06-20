@@ -34,3 +34,28 @@ func TestGoogleReader_BusyTimes(t *testing.T) {
 		t.Fatalf("bad start: %v", busy["a@x.com"][0].Start)
 	}
 }
+
+func TestGoogleReader_BusyTimes_MalformedTimestamp(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"calendars":{"a@x.com":{"busy":[{"start":"not-a-time","end":"also-bad"}]}}}`))
+	}))
+	defer srv.Close()
+	svc, err := calendar.NewService(context.Background(), option.WithEndpoint(srv.URL), option.WithHTTPClient(srv.Client()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := newGoogleReader(svc)
+	busy, err := r.BusyTimes(context.Background(), []string{"a@x.com"},
+		time.Date(2026, 6, 20, 0, 0, 0, 0, time.UTC), time.Date(2026, 6, 21, 0, 0, 0, 0, time.UTC))
+	if err != nil {
+		t.Fatal(err)
+	}
+	intervals := busy["a@x.com"]
+	if len(intervals) != 1 {
+		t.Fatalf("expected 1 interval (zero-time) for malformed timestamps, got %v", intervals)
+	}
+	if !intervals[0].Start.IsZero() {
+		t.Errorf("expected zero Start for malformed timestamp, got %v", intervals[0].Start)
+	}
+}

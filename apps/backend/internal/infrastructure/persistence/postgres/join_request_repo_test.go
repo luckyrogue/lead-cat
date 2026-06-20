@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
@@ -45,7 +47,9 @@ func TestJoinRequest_Decline(t *testing.T) {
 	ctx := context.Background()
 	orgID, ownerID := seedOrg(t, store)
 	eveID := seedUser(t, store, "eve@x.com")
-	_ = store.CreateJoinRequest(ctx, orgID, eveID)
+	if err := store.CreateJoinRequest(ctx, orgID, eveID); err != nil {
+		t.Fatal(err)
+	}
 	pend, _ := store.ListPendingJoinRequests(ctx, orgID)
 	if err := store.DeclineJoinRequest(ctx, orgID, pend[0].RequestID, ownerID); err != nil {
 		t.Fatalf("decline: %v", err)
@@ -67,10 +71,26 @@ func TestJoinRequest_AcceptNotFound(t *testing.T) {
 	ctx := context.Background()
 	orgID, ownerID := seedOrg(t, store)
 	daveID := seedUser(t, store, "dave2@x.com")
-	_ = store.CreateJoinRequest(ctx, orgID, daveID)
+	if err := store.CreateJoinRequest(ctx, orgID, daveID); err != nil {
+		t.Fatal(err)
+	}
 	pend, _ := store.ListPendingJoinRequests(ctx, orgID)
-	_ = store.AcceptJoinRequest(ctx, orgID, pend[0].RequestID, ownerID)
+	if err := store.AcceptJoinRequest(ctx, orgID, pend[0].RequestID, ownerID); err != nil {
+		t.Fatal(err)
+	}
 	if err := store.AcceptJoinRequest(ctx, orgID, pend[0].RequestID, ownerID); !model.IsNotFound(err) {
 		t.Fatalf("expected IsNotFound on re-accept, got %v", err)
+	}
+}
+
+func TestDeclineJoinRequest_NotFound(t *testing.T) {
+	testDB.Truncate(t)
+	store := newStore()
+	ctx := context.Background()
+	orgID, ownerID := seedOrg(t, store)
+	unknownRequestID := uuid.New()
+	err := store.DeclineJoinRequest(ctx, orgID, unknownRequestID, ownerID)
+	if !model.IsNotFound(err) {
+		t.Fatalf("expected IsNotFound for unknown request id, got %v", err)
 	}
 }
