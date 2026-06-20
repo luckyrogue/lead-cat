@@ -1,0 +1,80 @@
+name: leadcat-e2e
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: notify
+      POSTGRES_PASSWORD: notify
+      POSTGRES_DB: notify
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notify"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - e2e
+
+  redis:
+    image: redis:8-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - e2e
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"
+    networks:
+      - e2e
+
+  backend:
+    build:
+      context: ..
+      dockerfile: apps/backend/Dockerfile
+    environment:
+      DATABASE_URL: postgres://notify:notify@postgres:5432/notify?sslmode=disable
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: e2e-secret
+      CALENDAR_STUB: "true"
+      APP_BASE_URL: http://admin
+      WEBAPP_URL: http://admin
+      CORS_ALLOWED_ORIGINS: http://admin
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_FROM: e2e@leadcat.test
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 6
+    networks:
+      - e2e
+
+  admin:
+    build:
+      context: ..
+      dockerfile: apps/admin/Dockerfile
+    environment:
+      API_UPSTREAM: http://backend:8080
+    ports:
+      - "8090:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - e2e
+
+networks:
+  e2e:
+    driver: bridge

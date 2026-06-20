@@ -10,7 +10,8 @@
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
-    "format": "turbo run format"
+    "format": "turbo run format",
+    "e2e": "bash scripts/e2e.sh"
   },
   "devDependencies": {
     "turbo": "^2.9.18"
