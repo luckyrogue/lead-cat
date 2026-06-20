@@ -21,7 +21,8 @@ type Config struct {
 	CalendarStub        bool
 	StaticDir           string
 
-	AuthDevMode bool
+	AuthDevMode       bool
+	TrustProxyHeaders bool
 
 	JWTSecret string
 	JWTIssuer string
@@ -98,6 +99,7 @@ func Load() (Config, error) {
 		}
 	}
 	cfg.AuthDevMode = strings.EqualFold(os.Getenv("AUTH_DEV_MODE"), "true")
+	cfg.TrustProxyHeaders = strings.EqualFold(os.Getenv("TRUST_PROXY_HEADERS"), "true")
 
 	ttlHours := 168
 	if v := strings.TrimSpace(os.Getenv("JWT_TTL_HOURS")); v != "" {

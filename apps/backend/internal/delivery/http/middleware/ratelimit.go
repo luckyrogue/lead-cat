@@ -11,22 +11,21 @@ import (
 	"go.uber.org/zap"
 )
 
-func clientIP(c *fiber.Ctx) string {
-	if xff := c.Get("X-Forwarded-For"); xff != "" {
-		if i := strings.IndexByte(xff, ','); i >= 0 {
-			return strings.TrimSpace(xff[:i])
+func clientIP(c *fiber.Ctx, trustProxy bool) string {
+	if trustProxy {
+		if xri := strings.TrimSpace(c.Get("X-Real-IP")); xri != "" {
+			return xri
 		}
-		return strings.TrimSpace(xff)
 	}
 	return c.IP()
 }
 
-func RateLimit(rdb *redis.Client, log *zap.Logger, max int, window time.Duration, prefix string) fiber.Handler {
+func RateLimit(rdb *redis.Client, log *zap.Logger, max int, window time.Duration, prefix string, trustProxy bool) fiber.Handler {
 	windowSecs := int64(window.Seconds())
 	return func(c *fiber.Ctx) error {
 		ctx := c.UserContext()
 		bucket := time.Now().Unix() / windowSecs
-		key := fmt.Sprintf("ratelimit:%s:%s:%d", prefix, clientIP(c), bucket)
+		key := fmt.Sprintf("ratelimit:%s:%s:%d", prefix, clientIP(c, trustProxy), bucket)
 		n, err := rdb.Incr(ctx, key).Result()
 		if err != nil {
 			if log != nil {

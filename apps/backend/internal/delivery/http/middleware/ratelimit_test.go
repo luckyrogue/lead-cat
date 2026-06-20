@@ -33,9 +33,9 @@ func appWith(h fiber.Handler) *fiber.App {
 	return app
 }
 
-func reqIP(app *fiber.App, ip string) int {
+func reqXRI(app *fiber.App, ip string) int {
 	r := httptest.NewRequest("GET", "/x", nil)
-	r.Header.Set("X-Forwarded-For", ip)
+	r.Header.Set("X-Real-IP", ip)
 	resp, err := app.Test(r, 5000)
 	if err != nil {
 		return 0
@@ -45,24 +45,24 @@ func reqIP(app *fiber.App, ip string) int {
 
 func TestRateLimit_AllowsThenBlocks(t *testing.T) {
 	rdb := newRedis(t)
-	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 3, time.Minute, "t"))
+	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 3, time.Minute, "t", true))
 	for i := 0; i < 3; i++ {
-		if code := reqIP(app, "1.1.1.1"); code != 200 {
+		if code := reqXRI(app, "1.1.1.1"); code != 200 {
 			t.Fatalf("req %d: want 200 got %d", i, code)
 		}
 	}
-	if code := reqIP(app, "1.1.1.1"); code != 429 {
+	if code := reqXRI(app, "1.1.1.1"); code != 429 {
 		t.Fatalf("4th: want 429 got %d", code)
 	}
 }
 
 func TestRateLimit_IndependentIPs(t *testing.T) {
 	rdb := newRedis(t)
-	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 1, time.Minute, "t"))
-	if reqIP(app, "1.1.1.1") != 200 || reqIP(app, "2.2.2.2") != 200 {
+	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 1, time.Minute, "t", true))
+	if reqXRI(app, "1.1.1.1") != 200 || reqXRI(app, "2.2.2.2") != 200 {
 		t.Fatal("distinct IPs must each be allowed once")
 	}
-	if reqIP(app, "1.1.1.1") != 429 {
+	if reqXRI(app, "1.1.1.1") != 429 {
 		t.Fatal("second hit from same IP must be 429")
 	}
 }
@@ -76,29 +76,29 @@ func TestRateLimit_FailOpenOnRedisError(t *testing.T) {
 		MaxRetries:  0,
 	})
 	mr.Close()
-	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 1, time.Minute, "t"))
-	if code := reqIP(app, "1.1.1.1"); code != 200 {
+	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 1, time.Minute, "t", true))
+	if code := reqXRI(app, "1.1.1.1"); code != 200 {
 		t.Fatalf("fail-open: want 200 got %d", code)
 	}
 }
 
 func TestRateLimit_WindowReset(t *testing.T) {
 	mr, rdb := newRedisWithMR(t)
-	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 2, time.Minute, "t"))
+	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 2, time.Minute, "t", true))
 
-	if code := reqIP(app, "3.3.3.3"); code != 200 {
+	if code := reqXRI(app, "3.3.3.3"); code != 200 {
 		t.Fatalf("req 1: want 200 got %d", code)
 	}
-	if code := reqIP(app, "3.3.3.3"); code != 200 {
+	if code := reqXRI(app, "3.3.3.3"); code != 200 {
 		t.Fatalf("req 2: want 200 got %d", code)
 	}
-	if code := reqIP(app, "3.3.3.3"); code != 429 {
+	if code := reqXRI(app, "3.3.3.3"); code != 429 {
 		t.Fatalf("req 3 (over limit): want 429 got %d", code)
 	}
 
 	mr.FastForward(61 * time.Second)
 
-	if code := reqIP(app, "3.3.3.3"); code != 200 {
+	if code := reqXRI(app, "3.3.3.3"); code != 200 {
 		t.Fatalf("after window reset: want 200 got %d", code)
 	}
 }
@@ -114,16 +114,16 @@ func TestRateLimit_RetryAfterHeader(t *testing.T) {
 			return c.Status(code).JSON(fiber.Map{"error": err.Error()})
 		},
 	})
-	app.Get("/x", middleware.RateLimit(rdb, zap.NewNop(), 1, time.Minute, "t"), func(c *fiber.Ctx) error {
+	app.Get("/x", middleware.RateLimit(rdb, zap.NewNop(), 1, time.Minute, "t", true), func(c *fiber.Ctx) error {
 		return c.SendString("ok")
 	})
 
-	if code := reqIP(app, "4.4.4.4"); code != 200 {
+	if code := reqXRI(app, "4.4.4.4"); code != 200 {
 		t.Fatalf("first req: want 200 got %d", code)
 	}
 
 	r := httptest.NewRequest("GET", "/x", nil)
-	r.Header.Set("X-Forwarded-For", "4.4.4.4")
+	r.Header.Set("X-Real-IP", "4.4.4.4")
 	resp, err := app.Test(r, 5000)
 	if err != nil {
 		t.Fatalf("test request: %v", err)
@@ -137,5 +137,35 @@ func TestRateLimit_RetryAfterHeader(t *testing.T) {
 	}
 	if retryAfter != "60" {
 		t.Errorf("Retry-After=%q want 60", retryAfter)
+	}
+}
+
+func TestRateLimit_IgnoresSpoofedHeaderWhenUntrusted(t *testing.T) {
+	rdb := newRedis(t)
+	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 2, time.Minute, "t", false))
+
+	sendWith := func(xri, xff string) int {
+		r := httptest.NewRequest("GET", "/x", nil)
+		if xri != "" {
+			r.Header.Set("X-Real-IP", xri)
+		}
+		if xff != "" {
+			r.Header.Set("X-Forwarded-For", xff)
+		}
+		resp, err := app.Test(r, 5000)
+		if err != nil {
+			return 0
+		}
+		return resp.StatusCode
+	}
+
+	if code := sendWith("10.0.0.1", "10.0.0.1"); code != 200 {
+		t.Fatalf("req 1 spoofed IP A: want 200 got %d", code)
+	}
+	if code := sendWith("10.0.0.2", "10.0.0.2"); code != 200 {
+		t.Fatalf("req 2 spoofed IP B: want 200 got %d", code)
+	}
+	if code := sendWith("10.0.0.3", "10.0.0.3"); code != 429 {
+		t.Fatalf("req 3 different spoofed IP: want 429 got %d (all share c.IP())", code)
 	}
 }

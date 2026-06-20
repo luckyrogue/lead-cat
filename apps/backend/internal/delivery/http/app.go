@@ -81,7 +81,7 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	web := app.Group("/api/auth/web")
 	web.Get("/:provider/start", api.WebAuthStart)
 	web.Get("/:provider/callback", api.WebAuthCallback)
-	web.Post("/magic/request", middleware.RateLimit(rdb, log, 5, 15*time.Minute, "magic"), api.WebMagicRequest)
+	web.Post("/magic/request", middleware.RateLimit(rdb, log, 5, 15*time.Minute, "magic", cfg.TrustProxyHeaders), api.WebMagicRequest)
 	web.Get("/magic/verify", api.WebMagicVerify)
 	web.Post("/logout", webAuth.Middleware, api.WebLogout)
 	web.Get("/me", webAuth.Middleware, api.WebMe)
@@ -144,8 +144,8 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	booking.Patch("/event-types/:id", api.BookingUpdateEventType)
 	booking.Delete("/event-types/:id", api.BookingDeleteEventType)
 
-	app.Get("/api/book/:slug", middleware.RateLimit(rdb, log, 60, time.Minute, "book_get"), api.PublicBooking)
-	app.Post("/api/book/:slug", middleware.RateLimit(rdb, log, 10, time.Hour, "book_post"), api.PublicBookingSubmit)
+	app.Get("/api/book/:slug", middleware.RateLimit(rdb, log, 60, time.Minute, "book_get", cfg.TrustProxyHeaders), api.PublicBooking)
+	app.Post("/api/book/:slug", middleware.RateLimit(rdb, log, 10, time.Hour, "book_post", cfg.TrustProxyHeaders), api.PublicBookingSubmit)
 
 	app.Get("/api/calendar/connect/:provider/callback", api.CalendarConnectCallback)
 

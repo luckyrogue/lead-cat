@@ -49,6 +49,10 @@ func main() {
 		logger.Fatal("config", zap.Error(err))
 	}
 
+	if os.Getenv("METRICS_TOKEN") == "" && !cfg.AuthDevMode {
+		logger.Warn("metrics_endpoint_unprotected", zap.String("hint", "set METRICS_TOKEN to require a bearer token on /metrics"))
+	}
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
@@ -154,7 +158,7 @@ func main() {
 	if len(sso) == 0 && cfg.SMTPHost == "" {
 		logger.Info("web_auth_disabled_missing_config")
 	}
-	services.ConfigureWebAuth(sso, sender, cfg.AppBaseURL, cfg.WebSessionTTL, cfg.MagicLinkTTL)
+	services.ConfigureWebAuth(sso, sender, cfg.AppBaseURL, cfg.WebappURL, cfg.WebSessionTTL, cfg.MagicLinkTTL)
 
 	var tgHandler *telegram.MultiHandler
 	botOpts := []bot.Option{

@@ -77,9 +77,12 @@ SMTP_PORT=587
 SMTP_USERNAME=
 SMTP_PASSWORD=
 SMTP_FROM=Lead Cat <no-reply@your-domain.example.com>
+REMINDER_EMAIL_ENABLED=false   # set true to send meeting reminders by email (requires SMTP)
 LOG_LEVEL=info                 # debug | info | warn | error
 LOG_FORMAT=json                # json (prod) | console (local)
 CALENDAR_STUB=false            # true = skip real Google Calendar calls (staging)
+METRICS_TOKEN=<random-secret>  # REQUIRED in prod — /metrics is publicly readable if unset
+TRUST_PROXY_HEADERS=true       # set true when behind nginx (trusts X-Real-IP for rate limiting)
 ```
 
 The backend no longer serves the frontend; leave `STATIC_DIR` unset.
