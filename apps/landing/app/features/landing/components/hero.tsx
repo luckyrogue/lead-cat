@@ -1,6 +1,7 @@
 import { Badge, Button, Paw } from "@leadcat/ui"
 
 import { CatStage } from "~/features/landing/components/cat-stage"
+import { AdminPanelLink } from "~/features/landing/components/admin-panel-link"
 import { GetStartedButton } from "~/features/landing/components/get-started-button"
 import { FloatingMotifs } from "~/features/landing/components/floating-motifs"
 import {
@@ -131,6 +132,11 @@ export function Hero() {
             className="mt-5 text-sm font-semibold text-kitty-400"
           >
             {t("hero.footnote")}
+          </p>
+          <p data-hero-copy className="mt-2 text-sm text-kitty-500">
+            <AdminPanelLink className="font-semibold text-coral-500 underline-offset-4 hover:underline">
+              {t("hero.adminPanelLink")}
+            </AdminPanelLink>
           </p>
         </div>
 

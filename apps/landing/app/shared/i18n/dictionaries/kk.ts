@@ -4,9 +4,9 @@ export const kk: LandingDict = {
   meta: {
     title: "Lead Cat — команда сүйетін кездесулер",
     description:
-      "Lead Cat барлық күнтізбелерде тамаша уақытты табады. Google Calendar синхрондауы және жайлы Telegram Mini App.",
+      "Lead Cat барлық күнтізбелерде тамаша уақытты табады. Команда үшін Telegram Mini App және ұйымдарға арналған веб-әкімші панелі.",
     keywords:
-      "кездесу жоспарлаушы, google calendar, telegram mini app, командалық кесте, lead cat",
+      "кездесу жоспарлаушы, google calendar, telegram mini app, әкімші панелі, командалық кесте, lead cat",
     ogLocale: "kk_KZ",
   },
   lang: {
@@ -19,6 +19,7 @@ export const kk: LandingDict = {
     features: "Мүмкіндіктер",
     howItWorks: "Қалай жұмыс істейді",
     miniApp: "Mini App",
+    adminPanel: "Әкімші панелі",
     getStarted: "Бастау",
   },
   hero: {
@@ -29,13 +30,15 @@ export const kk: LandingDict = {
     ctaPrimary: "Бастау — тегін",
     ctaSecondary: "Қалай жұмыс істейді",
     footnote:
-      "Google Calendar және Telegram-мен жұмыс істейді. Карта қажет емес.",
+      "Команда үшін Telegram Mini App · браузердегі веб-әкімші панелі. Google Calendar, карта қажет емес.",
+    adminPanelLink: "Әкімші панелін ашу →",
   },
   trustMarquee: {
     ariaLabel: "Lead Cat не істейді",
     items: [
       "Google Calendar синхрондауы",
       "Telegram Mini App",
+      "Веб-әкімші панелі",
       "Қос брондау жоқ",
       "Round-robin хосттар",
       "Жұмсақ еске салулар",
@@ -63,7 +66,7 @@ export const kk: LandingDict = {
       },
       {
         title: "Жұмыс істейтін жеріңізде",
-        body: "Google Calendar синхрондауы және жайлы Telegram Mini App. Чаттан шықпай брондаңыз және ауыстырыңыз.",
+        body: "Күнделікті жоспарлау үшін Telegram Mini App және ұйымдар, мүшелер мен кездесулер үшін веб-панель. Google Calendar екеуінде де.",
       },
     ],
   },

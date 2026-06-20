@@ -1,6 +1,7 @@
 import { LeadCatLogo } from "@leadcat/brand"
 import { Link } from "react-router"
 
+import { AdminPanelLink } from "~/features/landing/components/admin-panel-link"
 import { GetStartedButton } from "~/features/landing/components/get-started-button"
 import { LanguageSwitcher } from "~/shared/i18n/language-switcher"
 import { useLocale, useT } from "~/shared/i18n/context"
@@ -54,6 +55,9 @@ export function Nav() {
           >
             {t("nav.miniApp")}
           </a>
+          <AdminPanelLink className="transition-colors hover:text-coral-500">
+            {t("nav.adminPanel")}
+          </AdminPanelLink>
         </nav>
         <div className="flex items-center gap-3">
           <LanguageSwitcher />

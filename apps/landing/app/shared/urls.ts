@@ -18,6 +18,10 @@ function adminBaseUrl(): string {
   return "http://localhost:3001"
 }
 
+export function getAdminLoginUrl(): string {
+  return `${adminBaseUrl()}/login`
+}
+
 /** Primary marketing CTA: open the Telegram bot, or admin login when bot username is unset. */
 export function getStartedUrl(): string {
   const username = botUsername()

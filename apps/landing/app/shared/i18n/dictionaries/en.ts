@@ -4,9 +4,9 @@ export const en = {
   meta: {
     title: "Lead Cat — meetings your team will actually love",
     description:
-      "Lead Cat finds the purrfect time across everyone's calendars. Native Google Calendar sync and a cozy Telegram Mini App.",
+      "Lead Cat finds the purrfect time across everyone's calendars. Telegram Mini App for the team and a web admin panel for org owners.",
     keywords:
-      "meeting scheduler, google calendar, telegram mini app, team scheduling, appointment booking, lead cat",
+      "meeting scheduler, google calendar, telegram mini app, admin panel, team scheduling, appointment booking, lead cat",
     ogLocale: "en_US",
   },
   lang: {
@@ -19,6 +19,7 @@ export const en = {
     features: "Features",
     howItWorks: "How it works",
     miniApp: "Mini App",
+    adminPanel: "Admin panel",
     getStarted: "Get started",
   },
   hero: {
@@ -29,13 +30,15 @@ export const en = {
     ctaPrimary: "Get started — it's free",
     ctaSecondary: "See how it works",
     footnote:
-      "Works with Google Calendar & Telegram. No credit card, no claws out.",
+      "Telegram Mini App for the team · web admin panel in the browser. Google Calendar. No credit card.",
+    adminPanelLink: "Open admin panel →",
   },
   trustMarquee: {
     ariaLabel: "What Lead Cat does",
     items: [
       "Google Calendar sync",
       "Telegram Mini App",
+      "Web admin panel",
       "Zero double-bookings",
       "Round-robin hosts",
       "Gentle reminders",
@@ -63,7 +66,7 @@ export const en = {
       },
       {
         title: "Lives where you work",
-        body: "Native Google Calendar sync and a cozy Telegram Mini App. Book, reschedule and confirm without leaving chat.",
+        body: "Telegram Mini App for daily booking and a web admin panel for orgs, members, and meetings. Google Calendar sync on both.",
       },
     ],
   },

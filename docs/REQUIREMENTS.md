@@ -1,6 +1,6 @@
 # Requirements — Lead Cat
 
-Single-purpose Google Meet meetings-management **Telegram Mini App**: employees register via `/start`; inside the Mini App they create, edit, and delete meetings, receive conflict warnings, find common free time, view colleague schedules, and get Telegram reminders. Google Meet links are generated via a corporate service account.
+Google Meet meetings-management product with two front ends: a **Telegram Mini App** (employees register via `/start`, then create/edit/delete meetings, get conflict warnings, find common free time, view colleague schedules, and receive Telegram reminders) and a **web app** (admin + public booking pages). Google Meet links are generated through a Google service account configured per organization.
 
 This document covers prerequisites/dependencies (what you need to build & run) and functional requirements (what the system must do).
 
@@ -8,7 +8,9 @@ This document covers prerequisites/dependencies (what you need to build & run) a
 
 ## 1. Purpose
 
-Lead Cat is a Telegram-native meetings-management tool for a single organisation (single-tenant deployment). All Google Calendar events are created under one corporate service account. User identity is bound to a Telegram ID + corporate email pair, established automatically when an employee sends `/start` to the bot.
+Lead Cat is a **multi-tenant** meetings-management tool. The **web app** supports multiple organizations (tenants) with cookie-session auth via SSO (Google/Microsoft) and magic link (`/api/auth/web/*` → `/api/orgs/*`). The **Telegram Mini App** operates within an organization — identity is bound to a Telegram ID + corporate email pair, established automatically on `/start`; the TMA interim runs against one default org (operator setup via `/api/miniapp/admin/*`). Each organization configures its own Google service account for Calendar/Meet operations; individual users can additionally connect their own Google or Microsoft calendar (OAuth) so their busy time is honored in availability checks.
+
+> Direction note: this is a multi-tenant SaaS product. The Telegram-only / single-organisation framing of the original ТЗ is preserved in the feature descriptions below (§3.1–3.13) because those meeting features are unchanged, but the product is no longer single-tenant. See [MEETINGS.md](MEETINGS.md) and [AUTH.md](AUTH.md) for the current multi-org model.
 
 ---
 
@@ -132,7 +134,7 @@ Access matrix summary (from ТЗ §2):
 | ------------------ | -------------------------- |
 | Timezone           | UTC+5 (Almaty)             |
 | Reminder intervals | Off                        |
-| Interface language | Russian and Kazakh |
+| Interface language | Russian (default); English and Kazakh also supported |
 
 ### 3.13 Commands and navigation (§8)
 
@@ -152,26 +154,50 @@ Access matrix summary (from ТЗ §2):
 
 **Main menu buttons:** Create meeting, My meetings, Colleague schedule, Free-time checker, Settings, Help, Admin panel (admins only).
 
+### 3.14 Web app & organizations (post-ТЗ)
+
+Beyond the Telegram Mini App, Lead Cat ships a **web app** (`apps/admin`) and a marketing/landing site (`apps/landing`):
+
+- **Auth:** cookie sessions via SSO (Google/Microsoft) and email magic link (`/api/auth/web/*`). Legacy platform bootstrap (OTP/passkey/`/api/auth/oauth`, `/api/workspaces/*`) is retired and returns 410.
+- **Organizations (tenants):** the web app supports multiple organizations — org creation, membership, role management, **invites** and **join-requests** (`/api/orgs/*`). The TMA interim operates one default org.
+- **Admin dashboard:** activation checklist, meetings management, settings — see [MEETINGS.md](MEETINGS.md) "SaaS Phase 0".
+
+### 3.15 Per-user calendar connections
+
+- A user can connect their own **Google** or **Microsoft** calendar via OAuth (`/api/calendar/connect/:provider/start` → `…/callback`).
+- Connected calendars are read for **free/busy** so a user's external commitments are honored in conflict detection and availability. Meeting/Meet **creation** still goes through the organization's Google service account.
+
+### 3.16 Public booking pages
+
+- Each organization can expose public booking pages at `/book/:slug` backed by configurable **event types** (`/api/booking/*`, public submit `POST /api/book/:slug`).
+- An external visitor picks an available slot (validated against the host's busy time); on submit a Google Calendar + Meet event is created for the host with the visitor as attendee. Public endpoints are rate-limited.
+
+### 3.17 Natural-language scheduling (Telegram)
+
+- The bot includes an NL scheduling agent (Claude tool-loop) that handles free-form private messages — read queries and booking with confirmation. Requires a real bot token and an Anthropic API key in production.
+
 ---
 
 ## 4. Prerequisites / stack
 
 | Tool / Service   | Version | Notes                                                               |
 | ---------------- | ------- | ------------------------------------------------------------------- |
-| Go               | 1.26.x  | `backend/go.mod` pins `go 1.26.3`; toolchain auto-fetches if newer. |
-| Node.js          | 22.x    | Frontend build (Vite). Dockerfile uses `node:22-alpine`.            |
-| pnpm             | 9.x     | Frontend package manager (`frontend/pnpm-lock.yaml`).               |
+| Go               | 1.26.x  | `apps/backend/go.mod` pins `go 1.26.3`; toolchain auto-fetches if newer. |
+| Node.js          | 24.x    | Frontend build (Vite). CI uses `node-version: 24`.                  |
+| pnpm             | 11.x    | Monorepo package manager (`pnpm@11.8.0`, root `pnpm-lock.yaml`).    |
 | Docker + Compose | recent  | Local Postgres + Redis via `deploy/docker-compose.yml`.             |
 | PostgreSQL       | 18      | `postgres:18-alpine` in local compose and CI smoke.                 |
 | Redis            | 8       | `redis:8-alpine`; asynq queues and scheduler leader-lock.           |
 | golangci-lint    | 2.x     | `make lint` / `make fmt` (config in `apps/backend/.golangci.yml`).  |
 | air (optional)   | latest  | `make backend-watch` hot reload.                                    |
 
+**Monorepo:** pnpm + turbo workspace — `apps/backend` (Go), `apps/admin` (web app), `apps/mini-app` (Telegram Mini App), `apps/landing` (marketing site), and shared `packages/*` (ui, types, api-client, brand, config). There is no top-level `frontend/` directory.
+
 **Backend:** Go, Fiber (`gofiber/fiber/v2`), asynq, pgx, goose migrations. Clean architecture — `domain` ← `application` ← `infrastructure` / `delivery` / `platform`.
 
-**Frontend:** React 19, Vite 6, TypeScript 5, TanStack Router + Query, shadcn/ui + Tailwind CSS v4, lite Feature-Sliced Design. Telegram Mini App SDK for auth (no separate login screen — identity comes from Telegram `initData`).
+**Frontend:** React 19, Vite 8, TypeScript 6, React Router 8 + TanStack Query 5, shadcn/ui + Tailwind CSS v4, lite Feature-Sliced Design. The Mini App authenticates via the Telegram Mini App SDK (no login screen — identity comes from Telegram `initData`); the web app (`apps/admin`) uses SSO (Google/Microsoft) and email magic-link login.
 
-**Integrations:** Google Calendar API v3 via a single corporate service account (domain-wide delegation); Google Meet links generated by setting `conferenceData` on Calendar events.
+**Integrations:** Google Calendar API v3 via a Google service account configured per organization (domain-wide delegation); Google Meet links generated by setting `conferenceData` on Calendar events. Users may additionally connect their own Google or Microsoft calendar via OAuth for free/busy in availability checks.
 
 > **Note:** The ТЗ §9 mentions a tentative Python/Node stack; the actual implementation is Go + React.
 
@@ -194,9 +220,9 @@ Default ports: API `:8080`, frontend `:3000`, Postgres `5432`, Redis `6379`.
 | `AUTO_MIGRATE`                       | no       | `true` → run migrations on boot.                                |
 | `CALENDAR_STUB`                      | dev/CI   | `true` → use Google Calendar stub (no real credentials needed). |
 
-**Google service-account credentials** are configured per workspace via `PATCH /api/workspaces/:id/integrations` (no env var). Without credentials, meeting creation returns 400.
+**Google service-account credentials** are configured per organization through the org/admin integration APIs (`/api/orgs/*` for web, `/api/miniapp/admin/*` for the TMA default org) — no env var. The legacy `/api/workspaces/*` endpoints are retired (410). Without credentials, meeting creation returns 400.
 
-**Employee directory** is an embedded CSV (`backend/internal/platform/employeedir/employees.csv`), full-synced into Google-configured workspaces on boot. To update the directory, edit the CSV and redeploy — there is no in-app management UI for this.
+**Employee directory** is an embedded CSV (`apps/backend/internal/platform/employeedir/employees.csv`), full-synced into Google-configured organizations on boot. To update the directory, edit the CSV and redeploy — there is no in-app management UI for this.
 
 ---
 
@@ -207,9 +233,8 @@ The following are explicitly excluded (ТЗ §11) or removed from the product:
 - **Meeting transcription** — handled by an external service connected to the service-account mailbox.
 - **Transcript export to third-party systems** — responsibility of a separate script/bot.
 - **CSV employee directory management via the bot UI** — list is updated manually (edit CSV + redeploy).
-- **Per-user Google OAuth** — a single corporate service account is used for all Calendar operations.
+- **Per-user calendar event creation** — meeting/Meet creation always uses the organization's Google service account; connected personal calendars (§3.15) are read for free/busy only, not used to create events.
 - **Video recording management** — not controlled by this bot.
-- **Multi-tenant SaaS model** — removed from the product; single-organisation deployment only.
 - **Scenario / automation engine** — n8n-like scenario builder removed from the product.
 - **VCS integration** — GitHub/GitLab commit reporting removed from the product.
 

@@ -4,9 +4,9 @@ export const ru: LandingDict = {
   meta: {
     title: "Lead Cat — встречи, которые команда полюбит",
     description:
-      "Lead Cat находит идеальное время во всех календарях. Синхронизация с Google Calendar и уютный Telegram Mini App.",
+      "Lead Cat находит идеальное время во всех календарях. Telegram Mini App для команды и веб-панель администратора для организаций.",
     keywords:
-      "планировщик встреч, google calendar, telegram mini app, командное расписание, бронирование встреч, lead cat",
+      "планировщик встреч, google calendar, telegram mini app, панель администратора, командное расписание, lead cat",
     ogLocale: "ru_RU",
   },
   lang: {
@@ -19,6 +19,7 @@ export const ru: LandingDict = {
     features: "Возможности",
     howItWorks: "Как это работает",
     miniApp: "Mini App",
+    adminPanel: "Панель администратора",
     getStarted: "Начать",
   },
   hero: {
@@ -29,13 +30,15 @@ export const ru: LandingDict = {
     ctaPrimary: "Начать — бесплатно",
     ctaSecondary: "Как это работает",
     footnote:
-      "Работает с Google Calendar и Telegram. Без карты и без лишней суеты.",
+      "Telegram Mini App для команды · веб-панель администратора в браузере. Google Calendar, без карты.",
+    adminPanelLink: "Открыть панель администратора →",
   },
   trustMarquee: {
     ariaLabel: "Что умеет Lead Cat",
     items: [
       "Синхронизация с Google Calendar",
       "Telegram Mini App",
+      "Веб-панель администратора",
       "Ноль двойных броней",
       "Round-robin хосты",
       "Мягкие напоминания",
@@ -63,7 +66,7 @@ export const ru: LandingDict = {
       },
       {
         title: "Там, где вы работаете",
-        body: "Синхронизация с Google Calendar и уютный Telegram Mini App. Бронируйте и переносите, не выходя из чата.",
+        body: "Mini App в Telegram для ежедневного планирования и веб-панель для организаций, участников и встреч. Google Calendar на обоих.",
       },
     ],
   },
