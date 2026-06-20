@@ -77,7 +77,7 @@ func (s *Scheduler) tick(ctx context.Context) {
 
 				if _, err := s.bot.SendMessage(ctx, &bot.SendMessageParams{
 					ChatID: t.TelegramID,
-					Text:   message(m.Name, m.MeetLink, off),
+					Text:   message(m.Name, m.MeetLink, off, t.Language),
 				}); err != nil {
 					s.log.Warn("send reminder",
 						zap.Int64("telegram_id", t.TelegramID),

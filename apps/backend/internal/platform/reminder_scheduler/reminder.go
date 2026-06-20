@@ -2,8 +2,9 @@ package reminder_scheduler
 
 import (
 	"fmt"
-	"strconv"
 	"time"
+
+	"github.com/luckyrogue/lead-cat/internal/platform/boti18n"
 )
 
 func dueOffsets(now, startsAt time.Time, offsets []int) []int {
@@ -17,27 +18,27 @@ func dueOffsets(now, startsAt time.Time, offsets []int) []int {
 	return due
 }
 
-func offsetLabel(min int) string {
+func offsetLabel(min int, lang string) string {
 	switch min {
 	case 10:
-		return "10 минут"
+		return boti18n.T(lang, "reminder.offset.10m")
 	case 15:
-		return "15 минут"
+		return boti18n.T(lang, "reminder.offset.15m")
 	case 30:
-		return "30 минут"
+		return boti18n.T(lang, "reminder.offset.30m")
 	case 60:
-		return "1 час"
+		return boti18n.T(lang, "reminder.offset.1h")
 	case 120:
-		return "2 часа"
+		return boti18n.T(lang, "reminder.offset.2h")
 	case 1440:
-		return "1 день"
+		return boti18n.T(lang, "reminder.offset.1d")
 	default:
-		return strconv.Itoa(min) + " минут"
+		return boti18n.T(lang, "reminder.offset.n_min", min)
 	}
 }
 
-func message(name, meetLink string, offset int) string {
-	m := fmt.Sprintf("⏰ Напоминание: встреча через %s!\n«%s»", offsetLabel(offset), name)
+func message(name, meetLink string, offset int, lang string) string {
+	m := fmt.Sprintf("%s\n«%s»", boti18n.T(lang, "reminder.telegram", offsetLabel(offset, lang)), name)
 	if meetLink != "" {
 		m += "\n🔗 " + meetLink
 	}
