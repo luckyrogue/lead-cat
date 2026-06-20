@@ -13,9 +13,10 @@ import (
 func (a *API) PublicBookingSubmit(c *fiber.Ctx) error {
 	slug := c.Params("slug")
 	var body struct {
-		Name  string `json:"name"`
-		Email string `json:"email"`
-		Start string `json:"start"`
+		Name     string `json:"name"`
+		Email    string `json:"email"`
+		Start    string `json:"start"`
+		Language string `json:"language"`
 	}
 	if err := c.BodyParser(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "bad_request")
@@ -24,7 +25,7 @@ func (a *API) PublicBookingSubmit(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "bad_start")
 	}
-	conf, err := a.App.SubmitBooking(c.UserContext(), slug, application.BookingRequest{Name: body.Name, Email: body.Email, Start: start})
+	conf, err := a.App.SubmitBooking(c.UserContext(), slug, application.BookingRequest{Name: body.Name, Email: body.Email, Start: start, Language: body.Language})
 	if err != nil {
 		switch {
 		case model.IsNotFound(err):

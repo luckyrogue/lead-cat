@@ -77,6 +77,10 @@ export function BookingForm({
           name: name.trim(),
           email: email.trim(),
           start: selectedSlot.start,
+          language:
+            typeof navigator !== "undefined"
+              ? navigator.language.split("-")[0]
+              : "",
         }),
       })
 
