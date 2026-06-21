@@ -2,7 +2,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import {
   Button,
   Input,
-  Label,
   Loader2,
   Select,
   SelectContent,
@@ -14,6 +13,11 @@ import {
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 
+import {
+  InlineFormAction,
+  InlineFormField,
+  InlineFormRow,
+} from "~/components/inline-form-row"
 import type { OrgRole } from "~/entities/org/types"
 import { useT } from "~/shared/i18n/context"
 
@@ -48,50 +52,59 @@ export function InviteForm({ pending, onSubmit }: InviteFormProps) {
         onSubmit(values)
         reset({ email: "", role: values.role })
       })}
-      className="flex items-end justify-end gap-3"
     >
-      <div className="min-w-0 flex-1 space-y-2">
-        <Label htmlFor="invite-email">{t("invites.form.emailLabel")}</Label>
-        <Input
-          id="invite-email"
-          type="email"
-          placeholder={t("invites.form.emailPlaceholder")}
-          {...register("email")}
-        />
-        {errors.email ? (
-          <p className="text-sm text-destructive" role="alert">
-            {errors.email.message}
-          </p>
-        ) : null}
-      </div>
-      <div className="shrink-0 space-y-2">
-        <Label htmlFor="invite-role">{t("invites.form.roleLabel")}</Label>
-        <Controller
-          control={control}
-          name="role"
-          render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger id="invite-role" className="w-36">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="member">
-                  {t("members.role.member")}
-                </SelectItem>
-                <SelectItem value="admin">{t("members.role.admin")}</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-        />
-      </div>
-      <Button type="submit" disabled={pending} className="shrink-0">
-        {pending ? (
-          <Loader2 className="size-4 animate-spin" />
-        ) : (
-          <UserPlus className="size-4" />
-        )}
-        {t("invites.form.submitButton")}
-      </Button>
+      <InlineFormRow>
+        <InlineFormField
+          col={1}
+          htmlFor="invite-email"
+          label={t("invites.form.emailLabel")}
+          error={errors.email?.message}
+        >
+          <Input
+            id="invite-email"
+            type="email"
+            placeholder={t("invites.form.emailPlaceholder")}
+            {...register("email")}
+          />
+        </InlineFormField>
+
+        <InlineFormField
+          col={2}
+          htmlFor="invite-role"
+          label={t("invites.form.roleLabel")}
+        >
+          <Controller
+            control={control}
+            name="role"
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger id="invite-role" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="member">
+                    {t("members.role.member")}
+                  </SelectItem>
+                  <SelectItem value="admin">
+                    {t("members.role.admin")}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </InlineFormField>
+
+        <InlineFormAction>
+          <Button type="submit" disabled={pending} className="w-full sm:w-auto">
+            {pending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <UserPlus className="size-4" />
+            )}
+            {t("invites.form.submitButton")}
+          </Button>
+        </InlineFormAction>
+      </InlineFormRow>
     </form>
   )
 }
