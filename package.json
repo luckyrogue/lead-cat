@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "packageManager": "pnpm@11.8.0",
   "scripts": {
-    "prepare": "bash scripts/install-git-hooks.sh",
+    "prepare": "sh scripts/install-git-hooks.sh",
     "openapi:generate": "pnpm --filter @leadcat/api-client generate",
     "brand:sync": "pnpm --filter @leadcat/brand sync",
     "brand:generate": "pnpm --filter @leadcat/brand generate",
