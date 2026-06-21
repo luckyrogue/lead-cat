@@ -12,17 +12,24 @@ import (
 )
 
 type eventTypeBody struct {
-	Title            string `json:"title"`
-	Description      string `json:"description"`
-	DurationMins     int    `json:"duration_mins"`
-	Timezone         string `json:"timezone"`
-	AvailWeekdays    []int  `json:"avail_weekdays"`
-	AvailStartMinute int    `json:"avail_start_minute"`
-	AvailEndMinute   int    `json:"avail_end_minute"`
-	Active           bool   `json:"active"`
+	Title            string  `json:"title"`
+	Description      string  `json:"description"`
+	DurationMins     int     `json:"duration_mins"`
+	Timezone         string  `json:"timezone"`
+	AvailWeekdays    []int   `json:"avail_weekdays"`
+	AvailStartMinute int     `json:"avail_start_minute"`
+	AvailEndMinute   int     `json:"avail_end_minute"`
+	Active           bool    `json:"active"`
+	SurveyID         *string `json:"survey_id"`
 }
 
 func (b eventTypeBody) toInput() application.EventTypeInput {
+	var surveyID *uuid.UUID
+	if b.SurveyID != nil && *b.SurveyID != "" {
+		if id, err := uuid.Parse(*b.SurveyID); err == nil {
+			surveyID = &id
+		}
+	}
 	return application.EventTypeInput{
 		Title:            b.Title,
 		Description:      b.Description,
@@ -32,6 +39,7 @@ func (b eventTypeBody) toInput() application.EventTypeInput {
 		AvailStartMinute: b.AvailStartMinute,
 		AvailEndMinute:   b.AvailEndMinute,
 		Active:           b.Active,
+		SurveyID:         surveyID,
 	}
 }
 

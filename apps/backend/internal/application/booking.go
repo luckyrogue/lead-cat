@@ -57,6 +57,7 @@ type EventTypeInput struct {
 	AvailStartMinute int
 	AvailEndMinute   int
 	Active           bool
+	SurveyID         *uuid.UUID
 }
 
 var ErrInvalidEventType = errors.New("invalid event type")
@@ -150,6 +151,7 @@ func (s *Services) UpdateEventType(ctx context.Context, hostUserID, id uuid.UUID
 	et.AvailWeekdays = in.AvailWeekdays
 	et.AvailStartMinute = in.AvailStartMinute
 	et.AvailEndMinute = in.AvailEndMinute
+	et.SurveyID = in.SurveyID
 	return s.Store.UpdateBookingEventType(ctx, et)
 }
 

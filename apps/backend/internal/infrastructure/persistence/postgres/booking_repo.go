@@ -9,14 +9,14 @@ import (
 )
 
 const bookingCols = `id, host_user_id, organization_id, slug, title, description, duration_mins,
-	active, timezone, avail_weekdays, avail_start_minute, avail_end_minute, created_at, updated_at`
+	active, timezone, avail_weekdays, avail_start_minute, avail_end_minute, survey_id, created_at, updated_at`
 
 func scanBookingRow(row rowScanner) (model.BookingEventType, error) {
 	var et model.BookingEventType
 	var weekdays []int32
 	if err := row.Scan(&et.ID, &et.HostUserID, &et.OrganizationID, &et.Slug, &et.Title,
 		&et.Description, &et.DurationMins, &et.Active, &et.Timezone, &weekdays,
-		&et.AvailStartMinute, &et.AvailEndMinute, &et.CreatedAt, &et.UpdatedAt); err != nil {
+		&et.AvailStartMinute, &et.AvailEndMinute, &et.SurveyID, &et.CreatedAt, &et.UpdatedAt); err != nil {
 		return model.BookingEventType{}, err
 	}
 	et.AvailWeekdays = make([]int, len(weekdays))
@@ -68,10 +68,10 @@ func (s *Store) UpdateBookingEventType(ctx context.Context, et model.BookingEven
 	_, err := s.pool.Exec(ctx, `
 		UPDATE booking_event_types SET
 			title=$2, description=$3, duration_mins=$4, active=$5, timezone=$6,
-			avail_weekdays=$7, avail_start_minute=$8, avail_end_minute=$9, updated_at=now()
+			avail_weekdays=$7, avail_start_minute=$8, avail_end_minute=$9, survey_id=$10, updated_at=now()
 		WHERE id=$1`,
 		et.ID, et.Title, et.Description, et.DurationMins, et.Active, et.Timezone,
-		et.AvailWeekdays, et.AvailStartMinute, et.AvailEndMinute)
+		et.AvailWeekdays, et.AvailStartMinute, et.AvailEndMinute, et.SurveyID)
 	return err
 }
 
