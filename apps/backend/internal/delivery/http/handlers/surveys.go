@@ -69,7 +69,8 @@ func (a *API) SurveyList(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "missing_or_invalid_org_id")
 	}
-	list, err := a.App.ListSurveys(c.UserContext(), orgID)
+	user := c.Locals("web_user").(model.PlatformUser)
+	list, err := a.App.ListSurveys(c.UserContext(), orgID, user.ID)
 	if err != nil {
 		return surveyErr(a.Log, err)
 	}
@@ -81,11 +82,12 @@ func (a *API) SurveyCreate(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "missing_or_invalid_org_id")
 	}
+	user := c.Locals("web_user").(model.PlatformUser)
 	var body surveyBody
 	if err := c.BodyParser(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid_body")
 	}
-	sv, err := a.App.CreateSurvey(c.UserContext(), orgID, body.toModel())
+	sv, err := a.App.CreateSurvey(c.UserContext(), orgID, user.ID, body.toModel())
 	if err != nil {
 		return surveyErr(a.Log, err)
 	}
@@ -97,11 +99,12 @@ func (a *API) SurveyGet(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "missing_or_invalid_org_id")
 	}
+	user := c.Locals("web_user").(model.PlatformUser)
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid_id")
 	}
-	sv, err := a.App.GetSurvey(c.UserContext(), orgID, id)
+	sv, err := a.App.GetSurvey(c.UserContext(), orgID, user.ID, id)
 	if err != nil {
 		return surveyErr(a.Log, err)
 	}
@@ -113,6 +116,7 @@ func (a *API) SurveyUpdate(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "missing_or_invalid_org_id")
 	}
+	user := c.Locals("web_user").(model.PlatformUser)
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid_id")
@@ -121,7 +125,7 @@ func (a *API) SurveyUpdate(c *fiber.Ctx) error {
 	if err := c.BodyParser(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid_body")
 	}
-	sv, err := a.App.UpdateSurvey(c.UserContext(), orgID, id, body.toModel())
+	sv, err := a.App.UpdateSurvey(c.UserContext(), orgID, user.ID, id, body.toModel())
 	if err != nil {
 		return surveyErr(a.Log, err)
 	}
@@ -133,11 +137,12 @@ func (a *API) SurveyDelete(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "missing_or_invalid_org_id")
 	}
+	user := c.Locals("web_user").(model.PlatformUser)
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid_id")
 	}
-	if err := a.App.DeleteSurvey(c.UserContext(), orgID, id); err != nil {
+	if err := a.App.DeleteSurvey(c.UserContext(), orgID, user.ID, id); err != nil {
 		return surveyErr(a.Log, err)
 	}
 	return c.SendStatus(fiber.StatusNoContent)
@@ -164,11 +169,12 @@ func (a *API) SurveyResponses(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "missing_or_invalid_org_id")
 	}
+	user := c.Locals("web_user").(model.PlatformUser)
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid_id")
 	}
-	sv, rs, err := a.App.ListResponses(c.UserContext(), orgID, id, parseResponseFilter(c))
+	sv, rs, err := a.App.ListResponses(c.UserContext(), orgID, user.ID, id, parseResponseFilter(c))
 	if err != nil {
 		return surveyErr(a.Log, err)
 	}
@@ -180,11 +186,12 @@ func (a *API) SurveyResponsesCSV(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "missing_or_invalid_org_id")
 	}
+	user := c.Locals("web_user").(model.PlatformUser)
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid_id")
 	}
-	sv, rs, err := a.App.ListResponses(c.UserContext(), orgID, id, parseResponseFilter(c))
+	sv, rs, err := a.App.ListResponses(c.UserContext(), orgID, user.ID, id, parseResponseFilter(c))
 	if err != nil {
 		return surveyErr(a.Log, err)
 	}

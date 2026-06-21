@@ -44,7 +44,10 @@ export function SurveysPage() {
       onSuccess: () => toastSuccess(t("surveys.toast.deleted")),
       onError: (err) => {
         const apiErr = toApiError(err)
-        if (apiErr.code === "survey_has_responses") {
+        if (
+          apiErr.code === "survey_has_responses" ||
+          apiErr.message === "survey_has_responses"
+        ) {
           toastError(err, t, "surveys.deactivateInstead")
         } else {
           toastError(err, t, "surveys.toast.deleteFailed")
