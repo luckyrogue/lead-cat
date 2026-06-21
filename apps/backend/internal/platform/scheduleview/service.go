@@ -37,7 +37,7 @@ func (s *Service) Start(ctx context.Context, telegramID int64, lang string) Repl
 	return Reply{Text: boti18n.T(lang, "sched.start")}
 }
 
-func (s *Service) OnCallback(ctx context.Context, telegramID int64, data, lang string) (Reply, bool) {
+func (s *Service) OnCallback(ctx context.Context, telegramID int64, data, lang string, loc *time.Location) (Reply, bool) {
 	switch {
 	case strings.HasPrefix(data, "sched:pick:"):
 		return s.pick(ctx, telegramID, strings.TrimPrefix(data, "sched:pick:"), lang), true
@@ -46,12 +46,12 @@ func (s *Service) OnCallback(ctx context.Context, telegramID int64, data, lang s
 	case data == "sched:back":
 		return s.Start(ctx, telegramID, lang), true
 	case strings.HasPrefix(data, "sched:d:"):
-		return s.period(ctx, telegramID, strings.TrimPrefix(data, "sched:d:"), lang), true
+		return s.period(ctx, telegramID, strings.TrimPrefix(data, "sched:d:"), lang, loc), true
 	}
 	return Reply{}, false
 }
 
-func (s *Service) OnText(ctx context.Context, telegramID int64, text, lang string) (Reply, bool) {
+func (s *Service) OnText(ctx context.Context, telegramID int64, text, lang string, loc *time.Location) (Reply, bool) {
 	st, err := s.sessions.Get(ctx, telegramID)
 	if err != nil || st == nil || st.Step != stepAwait {
 		return Reply{}, false
@@ -61,17 +61,17 @@ func (s *Service) OnText(ctx context.Context, telegramID int64, text, lang strin
 	case awaitSearch:
 		return s.search(ctx, telegramID, st, text, lang), true
 	case awaitDate:
-		d, perr := parseDate(text, almaty())
+		d, perr := parseDate(text, loc)
 		if perr != nil {
 			return Reply{Text: boti18n.T(lang, "sched.bad_date")}, true
 		}
-		return s.list(ctx, st, d, d.AddDate(0, 0, 1), text, false, lang), true
+		return s.list(ctx, st, d, d.AddDate(0, 0, 1), text, false, lang, loc), true
 	case awaitRange:
-		from, to, perr := parseRange(text, almaty())
+		from, to, perr := parseRange(text, loc)
 		if perr != nil {
 			return Reply{Text: boti18n.T(lang, "sched.bad_range")}, true
 		}
-		return s.list(ctx, st, from, to, text, false, lang), true
+		return s.list(ctx, st, from, to, text, false, lang, loc), true
 	}
 	return Reply{}, false
 }
@@ -132,7 +132,7 @@ func (s *Service) periods(ctx context.Context, telegramID int64, lang string) Re
 	return periodReply(st.EmployeeEmail, true, lang)
 }
 
-func (s *Service) period(ctx context.Context, telegramID int64, kind, lang string) Reply {
+func (s *Service) period(ctx context.Context, telegramID int64, kind, lang string, loc *time.Location) Reply {
 	st, err := s.sessions.Get(ctx, telegramID)
 	if err != nil || st == nil || st.EmployeeEmail == "" {
 		return Reply{Text: boti18n.T(lang, "sched.session_expired")}
@@ -147,19 +147,19 @@ func (s *Service) period(ctx context.Context, telegramID int64, kind, lang strin
 		_ = s.sessions.Set(ctx, telegramID, *st)
 		return Reply{Text: boti18n.T(lang, "sched.enter_range")}
 	}
-	from, to, ok := dayWindow(time.Now(), kind, almaty())
+	from, to, ok := dayWindow(time.Now(), kind, loc)
 	if !ok {
 		return Reply{}
 	}
-	return s.list(ctx, st, from, to, periodLabel(kind, lang), true, lang)
+	return s.list(ctx, st, from, to, periodLabel(kind, lang), true, lang, loc)
 }
 
-func (s *Service) list(ctx context.Context, st *State, from, to time.Time, period string, edit bool, lang string) Reply {
+func (s *Service) list(ctx context.Context, st *State, from, to time.Time, period string, edit bool, lang string, loc *time.Location) Reply {
 	ms, err := s.backend.EmployeeSchedule(ctx, st.EmployeeEmail, from, to)
 	if err != nil {
 		return Reply{Text: boti18n.T(lang, "sched.get_failed")}
 	}
-	text := scheduleText(st.EmployeeEmail, period, ms, time.Now(), almaty(), lang)
+	text := scheduleText(st.EmployeeEmail, period, ms, time.Now(), loc, lang)
 	return Reply{Text: text, Keyboard: [][]Button{{{Text: boti18n.T(lang, "sched.btn.periods"), Data: "sched:periods"}}}, Edit: edit}
 }
 

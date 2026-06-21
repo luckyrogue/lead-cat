@@ -104,7 +104,7 @@ func TestOnText_Search(t *testing.T) {
 	const tid = int64(7)
 	svc.Start(context.Background(), tid, "ru")
 
-	reply, handled := svc.OnText(context.Background(), tid, "ivan", "ru")
+	reply, handled := svc.OnText(context.Background(), tid, "ivan", "ru", almaty())
 
 	if !handled {
 		t.Fatal("OnText: want handled=true")
@@ -231,7 +231,7 @@ func TestOnCallback_Back(t *testing.T) {
 
 	const tid = int64(99)
 
-	reply, handled := svc.OnCallback(context.Background(), tid, "sched:back", "ru")
+	reply, handled := svc.OnCallback(context.Background(), tid, "sched:back", "ru", almaty())
 
 	if !handled {
 		t.Fatal("OnCallback sched:back: want handled=true")
@@ -264,5 +264,30 @@ func TestSchedule_Localized(t *testing.T) {
 	}
 	if !strings.Contains(en.Text, "Whose schedule") {
 		t.Errorf("en Start = %q", en.Text)
+	}
+}
+
+func TestSchedule_DayWindow_UsesLoc(t *testing.T) {
+	london, _ := time.LoadLocation("Europe/London")
+	almatyLoc, _ := time.LoadLocation("Asia/Almaty")
+	now := time.Date(2026, 6, 15, 2, 0, 0, 0, time.UTC) // 07:00 Almaty, 03:00 London
+	fL, _, ok := dayWindow(now, "today", london)
+	if !ok {
+		t.Fatal("today window")
+	}
+	fA, _, _ := dayWindow(now, "today", almatyLoc)
+	if fL.Equal(fA) {
+		t.Fatal("today start should differ between London and Almaty for the same instant")
+	}
+}
+
+func TestSchedule_ParseDate_UsesLoc(t *testing.T) {
+	london, _ := time.LoadLocation("Europe/London")
+	d, err := parseDate("2026-06-15", london)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d.UTC().Hour() != 23 {
+		t.Errorf("London 2026-06-15 midnight should be 23:00 prev-day UTC, got %v", d.UTC())
 	}
 }

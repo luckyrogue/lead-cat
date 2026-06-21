@@ -87,11 +87,11 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 				h.sendEditorReply(ctx, b, chatID, 0, reply)
 				return
 			}
-			if reply, handled := h.schedule.OnText(ctx, from.ID, text, h.resolveLang(ctx, from)); handled {
+			lang, loc := h.resolveLangLoc(ctx, from)
+			if reply, handled := h.schedule.OnText(ctx, from.ID, text, lang, loc); handled {
 				h.sendSchedReply(ctx, b, chatID, 0, reply)
 				return
 			}
-			lang, loc := h.resolveLangLoc(ctx, from)
 			if reply, handled := h.checker.OnText(ctx, from.ID, text, lang, loc); handled {
 				h.sendCheckerReply(ctx, b, chatID, 0, reply)
 				return
@@ -202,7 +202,8 @@ func (h *MultiHandler) handleCallback(ctx context.Context, b *bot.Bot, cq *model
 		}
 	}
 	if strings.HasPrefix(cq.Data, "sched:") {
-		if reply, handled := h.schedule.OnCallback(ctx, cq.From.ID, cq.Data, h.resolveLang(ctx, &cq.From)); handled && cq.Message.Message != nil {
+		lang, loc := h.resolveLangLoc(ctx, &cq.From)
+		if reply, handled := h.schedule.OnCallback(ctx, cq.From.ID, cq.Data, lang, loc); handled && cq.Message.Message != nil {
 			h.sendSchedReply(ctx, b, cq.Message.Message.Chat.ID, cq.Message.Message.ID, reply)
 		}
 	}
@@ -360,9 +361,6 @@ func (h *MultiHandler) resolveLang(ctx context.Context, from *models.User) strin
 	return boti18n.Resolve(stored, from.LanguageCode)
 }
 
-// resolveLangLoc resolves the acting user's language and display/parse location in a
-// single store lookup. The location is the user's stored timezone, falling back to
-// Asia/Almaty, then UTC on load error.
 func (h *MultiHandler) resolveLangLoc(ctx context.Context, from *models.User) (string, *time.Location) {
 	var storedLang, tz string
 	if u, err := h.store.GetBotUserByTelegramID(ctx, from.ID); err == nil {
