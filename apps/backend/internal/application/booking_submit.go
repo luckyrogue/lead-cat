@@ -66,7 +66,7 @@ func (s *Services) SubmitBooking(ctx context.Context, slug string, req BookingRe
 
 	var out BookingConfirmation
 	err = s.Store.WithHostBookingLock(ctx, et.HostUserID, start.UTC(), func(ctx context.Context) error {
-		conflicts, cerr := s.MeetingConflicts(ctx, host.Email, []string{host.Email}, start.UTC(), end.UTC(), uuid.Nil)
+		conflicts, cerr := s.conflictsFor(ctx, host.Email, []string{host.Email}, start.UTC(), end.UTC(), uuid.Nil)
 		if cerr != nil {
 			return cerr
 		}

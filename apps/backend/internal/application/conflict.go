@@ -48,6 +48,10 @@ func (s *Services) MeetingConflicts(ctx context.Context, requesterEmail string, 
 	if len(emails) == 0 {
 		return nil, nil
 	}
+	return s.conflictsFor(ctx, requesterEmail, emails, start, end, excludeMeetingID)
+}
+
+func (s *Services) conflictsFor(ctx context.Context, requesterEmail string, emails []string, start, end time.Time, excludeMeetingID uuid.UUID) ([]Conflict, error) {
 	ms, err := s.Store.ListMeetingsOverlapping(ctx, emails, start, end)
 	if err != nil {
 		return nil, err
