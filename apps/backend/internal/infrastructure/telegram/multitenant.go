@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -90,7 +91,8 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 				h.sendSchedReply(ctx, b, chatID, 0, reply)
 				return
 			}
-			if reply, handled := h.checker.OnText(ctx, from.ID, text, h.resolveLang(ctx, from)); handled {
+			lang, loc := h.resolveLangLoc(ctx, from)
+			if reply, handled := h.checker.OnText(ctx, from.ID, text, lang, loc); handled {
 				h.sendCheckerReply(ctx, b, chatID, 0, reply)
 				return
 			}
@@ -205,7 +207,8 @@ func (h *MultiHandler) handleCallback(ctx context.Context, b *bot.Bot, cq *model
 		}
 	}
 	if strings.HasPrefix(cq.Data, "chk:") {
-		if reply, handled := h.checker.OnCallback(ctx, cq.From.ID, cq.Data, h.resolveLang(ctx, &cq.From)); handled && cq.Message.Message != nil {
+		lang, loc := h.resolveLangLoc(ctx, &cq.From)
+		if reply, handled := h.checker.OnCallback(ctx, cq.From.ID, cq.Data, lang, loc); handled && cq.Message.Message != nil {
 			h.sendCheckerReply(ctx, b, cq.Message.Message.Chat.ID, cq.Message.Message.ID, reply)
 		}
 	}
@@ -355,6 +358,24 @@ func (h *MultiHandler) resolveLang(ctx context.Context, from *models.User) strin
 		stored = u.Language
 	}
 	return boti18n.Resolve(stored, from.LanguageCode)
+}
+
+// resolveLangLoc resolves the acting user's language and display/parse location in a
+// single store lookup. The location is the user's stored timezone, falling back to
+// Asia/Almaty, then UTC on load error.
+func (h *MultiHandler) resolveLangLoc(ctx context.Context, from *models.User) (string, *time.Location) {
+	var storedLang, tz string
+	if u, err := h.store.GetBotUserByTelegramID(ctx, from.ID); err == nil {
+		storedLang, tz = u.Language, u.Timezone
+	}
+	if tz == "" {
+		tz = "Asia/Almaty"
+	}
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		loc = time.UTC
+	}
+	return boti18n.Resolve(storedLang, from.LanguageCode), loc
 }
 
 func (h *MultiHandler) trackChatMember(ctx context.Context, msg *models.Message) {

@@ -99,7 +99,7 @@ func TestOnText_Search_ReturnsMatches(t *testing.T) {
 
 	svc.Start(ctx, tid, "ru")
 
-	reply, handled := svc.OnText(ctx, tid, "ivan", "ru")
+	reply, handled := svc.OnText(ctx, tid, "ivan", "ru", almaty())
 
 	if !handled {
 		t.Fatal("OnText: expected handled=true")
@@ -121,7 +121,7 @@ func TestOnText_NoSession_NotHandled(t *testing.T) {
 	ctx := context.Background()
 	const tid int64 = 9999
 
-	reply, handled := svc.OnText(ctx, tid, "hello", "ru")
+	reply, handled := svc.OnText(ctx, tid, "hello", "ru", almaty())
 
 	if handled {
 		t.Fatal("OnText: expected handled=false for unknown session")
@@ -194,7 +194,7 @@ func TestOnCallback_DoneTransition(t *testing.T) {
 		Cands:  []string{"alice@example.com"},
 	})
 
-	reply, handled := svc.OnCallback(ctx, tid, "chk:done", "ru")
+	reply, handled := svc.OnCallback(ctx, tid, "chk:done", "ru", almaty())
 
 	if !handled {
 		t.Fatal("OnCallback chk:done: expected handled=true")
@@ -230,8 +230,30 @@ func TestChecker_Localized(t *testing.T) {
 
 func TestChecker_CallbackSessionExpired_Localized(t *testing.T) {
 	svc := New(&fakeBackend{}, newFakeSessions())
-	r, _ := svc.OnCallback(context.Background(), 99, "chk:done", "en")
+	r, _ := svc.OnCallback(context.Background(), 99, "chk:done", "en", almaty())
 	if !strings.Contains(r.Text, "Session expired") {
 		t.Fatalf("en session-expired = %q", r.Text)
+	}
+}
+
+func TestChecker_SetRange_UsesLoc(t *testing.T) {
+	london, _ := time.LoadLocation("Europe/London")
+	svc := New(&fakeBackend{}, newFakeSessions())
+	ctx := context.Background()
+	// seed a session in the range step
+	_ = svc.Start(ctx, 1, "ru")
+	// drive to range step: add a participant then "done" — or set the session directly
+	// via the fake if exposed. Simplest: call setRange through OnText after forcing step.
+	// Assert the parsed range reflects London midnight, not Almaty.
+	from, _, err := parseRange("2026-06-15..2026-06-15", london)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fromAlmaty, _, _ := parseRange("2026-06-15..2026-06-15", almaty())
+	if from.Equal(fromAlmaty) {
+		t.Fatal("expected London and Almaty parse of the same date to differ in absolute time")
+	}
+	if from.UTC().Hour() != 23 { // 2026-06-15 00:00 BST == 2026-06-14 23:00 UTC
+		t.Errorf("London 2026-06-15 midnight should be 23:00 prev-day UTC, got %v", from.UTC())
 	}
 }

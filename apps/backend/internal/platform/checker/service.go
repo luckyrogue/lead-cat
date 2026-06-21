@@ -37,7 +37,7 @@ func (s *Service) Start(ctx context.Context, telegramID int64, lang string) Repl
 	return Reply{Text: boti18n.T(lang, "checker.start")}
 }
 
-func (s *Service) OnText(ctx context.Context, telegramID int64, text, lang string) (Reply, bool) {
+func (s *Service) OnText(ctx context.Context, telegramID int64, text, lang string, loc *time.Location) (Reply, bool) {
 	st, err := s.sessions.Get(ctx, telegramID)
 	if err != nil || st == nil {
 		return Reply{}, false
@@ -47,12 +47,12 @@ func (s *Service) OnText(ctx context.Context, telegramID int64, text, lang strin
 	case stepParticipants:
 		return s.search(ctx, telegramID, st, text, lang), true
 	case stepRange:
-		return s.setRange(ctx, telegramID, st, text, lang), true
+		return s.setRange(ctx, telegramID, st, text, lang, loc), true
 	}
 	return Reply{}, false
 }
 
-func (s *Service) OnCallback(ctx context.Context, telegramID int64, data, lang string) (Reply, bool) {
+func (s *Service) OnCallback(ctx context.Context, telegramID int64, data, lang string, loc *time.Location) (Reply, bool) {
 	if !strings.HasPrefix(data, "chk:") {
 		return Reply{}, false
 	}
@@ -66,7 +66,7 @@ func (s *Service) OnCallback(ctx context.Context, telegramID int64, data, lang s
 	case data == "chk:done":
 		return s.done(ctx, telegramID, st, lang), true
 	case strings.HasPrefix(data, "chk:dur:"):
-		return s.duration(ctx, telegramID, st, strings.TrimPrefix(data, "chk:dur:"), lang), true
+		return s.duration(ctx, telegramID, st, strings.TrimPrefix(data, "chk:dur:"), lang, loc), true
 	}
 	return Reply{}, true
 }
@@ -127,8 +127,8 @@ func (s *Service) done(ctx context.Context, telegramID int64, st *State, lang st
 	return Reply{Text: boti18n.T(lang, "checker.enter_range")}
 }
 
-func (s *Service) setRange(ctx context.Context, telegramID int64, st *State, text, lang string) Reply {
-	from, to, err := parseRange(text, almaty())
+func (s *Service) setRange(ctx context.Context, telegramID int64, st *State, text, lang string, loc *time.Location) Reply {
+	from, to, err := parseRange(text, loc)
 	if err != nil {
 		return Reply{Text: boti18n.T(lang, "checker.bad_range")}
 	}
@@ -139,12 +139,11 @@ func (s *Service) setRange(ctx context.Context, telegramID int64, st *State, tex
 	return Reply{Text: boti18n.T(lang, "checker.pick_duration"), Keyboard: durationKeyboard(lang)}
 }
 
-func (s *Service) duration(ctx context.Context, telegramID int64, st *State, durStr, lang string) Reply {
+func (s *Service) duration(ctx context.Context, telegramID int64, st *State, durStr, lang string, loc *time.Location) Reply {
 	durMins, err := strconv.Atoi(durStr)
 	if err != nil || durMins <= 0 {
 		return Reply{Text: boti18n.T(lang, "checker.bad_duration")}
 	}
-	loc := almaty()
 	from, _ := time.ParseInLocation("2006-01-02", st.From, loc)
 	toIncl, _ := time.ParseInLocation("2006-01-02", st.To, loc)
 	slots, err := s.backend.FreeSlots(ctx, "", st.Emails, from, toIncl.AddDate(0, 0, 1), durMins)
