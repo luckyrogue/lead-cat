@@ -58,7 +58,6 @@ export function EventTypeDialog({
   const timezoneOptions = getTimezoneOptions(t)
   const { data: surveys } = useSurveys(orgId)
 
-  // Show active surveys plus currently-assigned one (even if inactive)
   const currentSurveyId = editing?.survey_id ?? null
   const surveyOptions = (surveys ?? []).filter(
     (s) => s.is_active || s.id === currentSurveyId

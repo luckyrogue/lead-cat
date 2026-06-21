@@ -15,7 +15,6 @@ export function useMeSettings() {
   })
 }
 
-// Merge the just-saved prefs into the cached settings read model.
 export function patchMeSettings(
   current: MeSettings | undefined,
   prefs: Partial<MeSettings>
@@ -26,9 +25,6 @@ export function patchMeSettings(
   }
 }
 
-// Mirror the just-saved prefs onto the cached `me` user without a refetch, so
-// the locale/timezone the app reads from `me` flips instantly. Only the fields
-// actually present in `prefs` are touched; all other user fields are preserved.
 export function patchMeUser(
   current: Me | null | undefined,
   prefs: Partial<MeSettings>

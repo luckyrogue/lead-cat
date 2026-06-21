@@ -7,9 +7,8 @@ alwaysApply: true
 
 - Single-purpose **Google Meet meetings-management Telegram Mini App**. Employees schedule, edit, and cancel meetings inside Telegram; the system creates Google Calendar events and sends notifications via a Telegram bot.
 - One Postgres workspace + one Google service-account organizer (no multi-tenancy).
-- Deploy: Dokploy with Postgres + Redis + app container — see `docs/DEPLOY-DOKPLOY.md`.
-- Auth: TMA JWT primary — see `lead-cat-auth.mdc` and `docs/AUTH.md`.
-- Product behavior source of truth: `docs/NEW-FEATURES.md` (ТЗ). Engineering summary: `docs/MEETINGS.md`.
+- Deploy: Dokploy — see `deploy/README.md`.
+- Auth: TMA JWT primary — see `lead-cat-auth.mdc`.
 - UI: cat design mandatory — see `cat-design.mdc`.
-- KISS / DRY / SOLID; Clean Architecture in Go (`backend/`) — see `docs/ARCHITECTURE.md`; lite FSD in `frontend/` — see `frontend-fsd.mdc`.
-- Update `docs/*` when changing API, env, auth, or deploy.
+- KISS / DRY / SOLID; Clean Architecture in Go (`apps/backend/`) — see `AGENTS.md`; lite FSD in frontends — see `frontend-fsd.mdc`.
+- Update `AGENTS.md`, `deploy/README.md`, or `deploy/.env.example` when changing API, env, auth, or deploy.

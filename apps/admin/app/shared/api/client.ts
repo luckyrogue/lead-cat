@@ -43,7 +43,6 @@ export function prepareMutationCsrf(
   if (csrf) {
     return { header: csrf }
   }
-  // Only unauthenticated magic-link bootstrap endpoints have no session CSRF cookie yet — allow them.
   if (isCsrfExemptPath(url)) {
     return {}
   }

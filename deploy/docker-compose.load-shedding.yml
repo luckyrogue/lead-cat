@@ -1,7 +1,0 @@
-# Load-test shedding override: exposes backend on :8081 with rate limits ON.
-# k6 hits the backend directly to avoid nginx ephemeral-port exhaustion,
-# while the rate limiter in the backend sheds excess requests as 429.
-services:
-  backend:
-    ports:
-      - "8081:8080"

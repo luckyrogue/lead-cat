@@ -106,8 +106,6 @@ func (s Survey) Validate() error {
 	return nil
 }
 
-// ValidateAnswers checks submitted answers against the survey's questions and
-// returns normalized snapshot answers (prompt+type filled from the question).
 func ValidateAnswers(questions []SurveyQuestion, answers []Answer) ([]Answer, error) {
 	given := map[uuid.UUID]Answer{}
 	for _, a := range answers {

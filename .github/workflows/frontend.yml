@@ -1,30 +1,71 @@
-name: _docker
+name: Frontend
 
 on:
-  workflow_call:
-    inputs:
-      push:
-        type: boolean
-        required: true
-    secrets:
-      DOKPLOY_WEBHOOK_BACKEND:
-        required: false
-      DOKPLOY_WEBHOOK_LANDING:
-        required: false
-      DOKPLOY_WEBHOOK_ADMIN:
-        required: false
-      DOKPLOY_WEBHOOK_MINI_APP:
-        required: false
+  push:
+    branches: [main]
+    tags:
+      - "v*.*.*"
+  pull_request:
+
+concurrency:
+  group: frontend-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/') }}
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
-  frontend-deps:
-    name: frontend-deps / build
+  frontend:
+    name: frontend
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --audit-level=high
+
+      - name: Cache turbo
+        uses: actions/cache@v5
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
+      - run: pnpm turbo run format:check typecheck lint --filter=./apps/* --filter=@leadcat/ui
+
+      - name: OpenAPI
+        run: |
+          pnpm openapi:generate
+          git diff --exit-code -- \
+            apps/backend/openapi/openapi.json \
+            packages/api-client/src/generated/schema.ts
+
+      - run: pnpm turbo run build --filter=admin --filter=mini-app --filter=landing --filter=@leadcat/brand
+
+  deploy-deps:
+    name: deploy / frontend-deps
+    needs: frontend
+    if: |
+      success() &&
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v6
         with:
@@ -47,36 +88,35 @@ jobs:
           OWNER_LC=$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')
           echo "image=ghcr.io/${OWNER_LC}/lead-cat-frontend-deps" >> "$GITHUB_OUTPUT"
 
-      - name: Login to GHCR
-        if: inputs.push
-        uses: docker/login-action@v4
+      - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      - name: Build
-        uses: docker/build-push-action@v7
+      - uses: docker/build-push-action@v7
         with:
           context: .
           file: deploy/docker/Dockerfile.frontend-deps
-          push: ${{ inputs.push }}
-          load: ${{ !inputs.push }}
+          push: true
           tags: |
             ${{ steps.img.outputs.image }}:${{ steps.meta.outputs.tag }}
             ${{ steps.img.outputs.image }}:latest
           cache-from: type=gha,scope=frontend-deps
           cache-to: type=gha,mode=max,scope=frontend-deps
 
-  release:
-    name: ${{ matrix.service }} / build
-    needs: frontend-deps
+  deploy:
+    name: deploy / ${{ matrix.service }}
+    needs: deploy-deps
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
     strategy:
       fail-fast: false
       matrix:
-        service: [backend, landing, admin, mini-app]
+        service: [admin, mini-app, landing]
     steps:
       - uses: actions/checkout@v6
         with:
@@ -93,30 +133,27 @@ jobs:
 
       - uses: docker/setup-buildx-action@v4
 
-      - name: Name
+      - name: Image
         id: img
         run: |
           OWNER_LC=$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')
           echo "image=ghcr.io/${OWNER_LC}/lead-cat-${{ matrix.service }}" >> "$GITHUB_OUTPUT"
-          echo "deps_image=ghcr.io/${OWNER_LC}/lead-cat-frontend-deps:${{ steps.meta.outputs.tag }}" >> "$GITHUB_OUTPUT"
 
-      - name: Login to GHCR
-        if: inputs.push
-        uses: docker/login-action@v4
+      - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      - name: Args
+      - name: Build args
         id: buildargs
         env:
           SERVICE: ${{ matrix.service }}
-          DEPS_IMAGE: ghcr.io/${{ github.repository_owner }}/lead-cat-frontend-deps:${{ steps.meta.outputs.tag }}
           VITE_API_URL: ${{ vars.VITE_API_URL }}
           VITE_BOT_USERNAME: ${{ vars.VITE_BOT_USERNAME }}
           VITE_TMA_DEV_TG_ID: ${{ vars.VITE_TMA_DEV_TG_ID }}
           VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}
+          VITE_ADMIN_URL: ${{ vars.VITE_ADMIN_URL }}
         run: |
           OWNER_LC=$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')
           DEPS_IMAGE="ghcr.io/${OWNER_LC}/lead-cat-frontend-deps:${{ steps.meta.outputs.tag }}"
@@ -124,9 +161,6 @@ jobs:
           VITE_SITE_URL="${VITE_SITE_URL:-https://lead-cat.space}"
 
           case "$SERVICE" in
-            backend)
-              echo "build_args=" >> "$GITHUB_OUTPUT"
-              ;;
             mini-app)
               if [ -n "${VITE_TMA_DEV_TG_ID}" ]; then
                 echo "::error::VITE_TMA_DEV_TG_ID must not be set for production mini-app builds"
@@ -154,20 +188,18 @@ jobs:
                 echo 'build_args<<EOF'
                 echo "FRONTEND_DEPS_IMAGE=${DEPS_IMAGE}"
                 echo "VITE_SITE_URL=${VITE_SITE_URL}"
-                echo "VITE_BOT_USERNAME=${VITE_BOT_USERNAME:-lead_cat_bot}"
+                echo "VITE_BOT_USERNAME=${VITE_BOT_USERNAME}"
                 echo "VITE_ADMIN_URL=${VITE_ADMIN_URL:-}"
                 echo 'EOF'
               } >> "$GITHUB_OUTPUT"
               ;;
           esac
 
-      - name: Build
-        uses: docker/build-push-action@v7
+      - uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/${{ matrix.service }}/Dockerfile
-          push: ${{ inputs.push }}
-          load: ${{ !inputs.push }}
+          push: true
           build-args: ${{ steps.buildargs.outputs.build_args }}
           tags: |
             ${{ steps.img.outputs.image }}:${{ steps.meta.outputs.tag }}
@@ -175,33 +207,25 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 
-      - name: Deploy
-        if: inputs.push
+      - name: Dokploy
         env:
           SERVICE: ${{ matrix.service }}
           IMAGE: ${{ steps.img.outputs.image }}:${{ steps.meta.outputs.tag }}
-          WEBHOOK_BACKEND: ${{ secrets.DOKPLOY_WEBHOOK_BACKEND }}
-          WEBHOOK_LANDING: ${{ secrets.DOKPLOY_WEBHOOK_LANDING }}
           WEBHOOK_ADMIN: ${{ secrets.DOKPLOY_WEBHOOK_ADMIN }}
           WEBHOOK_MINI_APP: ${{ secrets.DOKPLOY_WEBHOOK_MINI_APP }}
+          WEBHOOK_LANDING: ${{ secrets.DOKPLOY_WEBHOOK_LANDING }}
         run: |
           case "$SERVICE" in
-            backend) WEBHOOK="$WEBHOOK_BACKEND" ;;
-            landing) WEBHOOK="$WEBHOOK_LANDING" ;;
             admin) WEBHOOK="$WEBHOOK_ADMIN" ;;
             mini-app) WEBHOOK="$WEBHOOK_MINI_APP" ;;
-            *)
-              echo "::error::Unknown service: $SERVICE"
-              exit 1
-              ;;
+            landing) WEBHOOK="$WEBHOOK_LANDING" ;;
           esac
 
           if [ -z "$WEBHOOK" ]; then
-            echo "::error::DOKPLOY webhook for $SERVICE is not configured"
+            echo "::error::Dokploy webhook for $SERVICE is not configured"
             exit 1
           fi
 
-          echo "Deploying $IMAGE via Dokploy"
           curl -fsSL -X POST "$WEBHOOK" \
             -H "Content-Type: application/json" \
             -d "{\"image\":\"${IMAGE}\"}"

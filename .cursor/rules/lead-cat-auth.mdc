@@ -12,8 +12,6 @@ alwaysApply: false
 
 # Auth
 
-See `docs/AUTH.md` for the full reference.
-
 ## TMA JWT (primary — the product flow)
 
 - Issued by `POST /api/auth/tma` after validating Telegram `initData` (HMAC-SHA256 with `BOT_TOKEN`).

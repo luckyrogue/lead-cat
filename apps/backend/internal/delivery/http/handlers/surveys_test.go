@@ -114,7 +114,6 @@ func buildSurveyApp(t *testing.T, repo *surveyFakeRepo) *fiber.App {
 	return app
 }
 
-// TestPublicSurveyGet_UnknownToken asserts that a GET for a non-existent token
 // returns 404.
 func TestPublicSurveyGet_UnknownToken(t *testing.T) {
 	app := buildSurveyApp(t, newSurveyFakeRepo())
@@ -267,7 +266,6 @@ func TestDeclineBookingWithActiveSurvey(t *testing.T) {
 		t.Fatalf("expected 409, got %d: %s", resp.StatusCode, b)
 	}
 
-	// Body must have the standard decline shape plus a non-empty survey_token.
 	var result map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		t.Fatalf("decode body: %v", err)

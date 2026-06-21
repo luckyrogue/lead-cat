@@ -48,7 +48,6 @@ func TestSecurityHeaders_AuthNoStore(t *testing.T) {
 	if got := resp.Header.Get("Cache-Control"); got != "no-store" {
 		t.Errorf("auth Cache-Control = %q, want no-store", got)
 	}
-	// non-auth path should NOT be forced no-store
 	resp2, _ := appWithSec(false).Test(httptest.NewRequest("GET", "/api/x", nil))
 	if resp2.Header.Get("Cache-Control") == "no-store" {
 		t.Error("non-auth path should not be no-store")

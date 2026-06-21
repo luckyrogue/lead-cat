@@ -4,43 +4,29 @@ Thanks for helping improve Lead Cat — a Google Meet meetings-management Telegr
 
 ## Before you start
 
-- Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for backend layering and [AGENTS.md](AGENTS.md) for engineering conventions.
-- Product behavior: [docs/NEW-FEATURES.md](docs/NEW-FEATURES.md) (spec) and [docs/MEETINGS.md](docs/MEETINGS.md).
-- Local setup: [docs/LOCAL_DEV.md](docs/LOCAL_DEV.md) or `make setup && make migrate && make dev`.
+- Read [AGENTS.md](AGENTS.md) for stack, architecture, and conventions.
+- Local setup: `make setup && make migrate && make dev` (see [README.md](README.md)).
 
 ## Development workflow
 
 1. Fork or branch from `main` (`feat/…`, `fix/…`, `docs/…`).
 2. Keep changes focused — smallest diff that solves the task.
-3. Run checks before opening a PR:
-
-```bash
-make ci    # fmt-check, lint, test, typecheck, build
-```
-
-After `pnpm install` or `make setup`, a **pre-commit hook** auto-formats staged
-Go and frontend files (`gofmt` / Prettier) so CI format gates rarely fail. To
-install manually: `make hooks`. To format everything: `make fmt`.
-
-Backend tests only:
-
-```bash
-cd apps/backend && env -u GOROOT go test ./...
-```
-
-4. Update `docs/*` when you change API, auth, env vars, or deploy behavior.
+3. Push and open a PR — GitHub Actions runs lint, format, and build checks.
+4. Update `AGENTS.md`, `deploy/README.md`, or `deploy/.env.example` when you change API, auth, env, or deploy.
 5. Do not commit secrets (`.env`, tokens, credentials JSON).
+
+Format locally: `make fmt`.
 
 ## Pull requests
 
 - Link the issue or describe the user-visible change.
-- Ensure CI is green (`make ci` locally when possible).
+- Ensure GitHub Actions is green on your branch.
 
 ## Code style
 
-- **Go:** Clean Architecture under `apps/backend/internal/` — see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-- **Frontend:** lite FSD in `apps/mini-app`, `apps/admin`, `apps/landing` — see `frontend/README.md` and `.cursor/rules/frontend-fsd.mdc`.
-- **UI:** cat design tokens — see [docs/DESIGN-CATS.md](docs/DESIGN-CATS.md).
+- **Go:** Clean Architecture under `apps/backend/internal/` — see [AGENTS.md](AGENTS.md).
+- **Frontend:** lite FSD in `apps/mini-app`, `apps/admin`, `apps/landing` — see `.cursor/rules/frontend-fsd.mdc`.
+- **UI:** cat design — see `.cursor/rules/cat-design.mdc`.
 
 ## Questions
 

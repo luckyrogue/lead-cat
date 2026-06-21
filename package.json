@@ -4,7 +4,6 @@
   "version": "0.0.0",
   "packageManager": "pnpm@11.8.0",
   "scripts": {
-    "prepare": "sh scripts/install-git-hooks.sh",
     "openapi:generate": "pnpm --filter @leadcat/api-client generate",
     "brand:sync": "pnpm --filter @leadcat/brand sync",
     "brand:generate": "pnpm --filter @leadcat/brand generate",
@@ -13,8 +12,7 @@
     "lint": "turbo run lint",
     "format": "turbo run format",
     "format:check": "turbo run format:check --filter=./apps/*",
-    "test": "turbo run test --filter=./apps/* --filter=@leadcat/ui --filter=@leadcat/api-client",
-    "e2e": "bash e2e/run.sh"
+    "test": "turbo run test --filter=./apps/* --filter=@leadcat/ui --filter=@leadcat/api-client"
   },
   "devDependencies": {
     "prettier": "^3.8.4",

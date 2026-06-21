@@ -173,7 +173,6 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	app.Get("/api/book/:slug", rateLimit(60, time.Minute, "book_get"), api.PublicBooking)
 	app.Post("/api/book/:slug", rateLimit(10, time.Hour, "book_post"), api.PublicBookingSubmit)
 
-	// Public survey delivery (unauthenticated, token-based, rate-limited).
 	app.Get("/api/survey/:token", api.PublicSurveyGet)
 	app.Post("/api/survey/:token", rateLimit(20, time.Minute, "survey_submit"), api.PublicSurveySubmit)
 

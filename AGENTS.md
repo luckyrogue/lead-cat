@@ -4,14 +4,14 @@ Single-purpose **Google Meet meetings-management Telegram Mini App**: **frontend
 
 ## Stack
 
-- **Auth:** TMA JWT via `POST /api/auth/miniapp` + web cookie sessions via `/api/auth/web/*` and `/api/orgs/*`; legacy platform OTP/passkey/OAuth and `/api/workspaces/*` return 410. TMA operator setup via `/api/miniapp/admin/*` (see `docs/AUTH.md`).
+- **Auth:** TMA JWT via `POST /api/auth/miniapp` + web cookie sessions via `/api/auth/web/*` and `/api/orgs/*`; legacy platform OTP/passkey/OAuth and `/api/workspaces/*` return 410. TMA operator setup via `/api/miniapp/admin/*` — see `.cursor/rules/lead-cat-auth.mdc`.
 - **Data:** Postgres (SoT), Redis (asynq job queues + scheduler leader lock)
-- **Deploy:** Dokploy — see `docs/DEPLOY-DOKPLOY.md`
-- **Product overview:** `docs/MEETINGS.md`; full spec (ТЗ): `docs/NEW-FEATURES.md`; frontend structure: `frontend/README.md`.
+- **Deploy:** Dokploy — see `deploy/README.md`
+- **Frontends:** `apps/mini-app`, `apps/admin`, `apps/landing` — lite FSD per `.cursor/rules/frontend-fsd.mdc`
 
 ## Before refactoring
 
-Read `docs/ARCHITECTURE.md`. Layers: `domain` ← `application` ← `infrastructure` / `delivery` / `platform` (under `backend/internal/`).
+Clean Architecture under `apps/backend/internal/`: `domain` ← `application` ← `infrastructure` / `delivery` / `platform`.
 
 ## Engineering principles
 
@@ -28,7 +28,7 @@ Apply everywhere unless a rule below says otherwise.
 
 - **Commands** change state (create/update/delete, enqueue notifications, link Telegram). Return error or IDs — not full read models.
 - **Queries** read state only. No side effects, no publishing jobs from query handlers.
-- Place handlers under `backend/internal/application/command/` and `.../query/` (or `services.go` until split). HTTP handlers in `delivery/http` only map request/response and call one application entry point.
+- Place handlers under `apps/backend/internal/application/command/` and `.../query/` (or `services.go` until split). HTTP handlers in `delivery/http` only map request/response and call one application entry point.
 - Shared validation/business rules live in `domain` or small `application` helpers — not duplicated in both command and query.
 - Do not merge read and write paths "for convenience" (e.g. GET that inserts audit rows). Use an explicit command if a write is required.
 
@@ -47,8 +47,8 @@ Apply everywhere unless a rule below says otherwise.
 | Rule                | Scope             |
 | ------------------- | ----------------- |
 | `lead-cat-core.mdc` | always            |
-| `go-backend.mdc`    | `backend/**/*.go` |
-| `frontend-fsd.mdc`  | `frontend/**`     |
+| `go-backend.mdc`    | `apps/backend/**/*.go` |
+| `frontend-fsd.mdc`  | `apps/**`              |
 | `redis-asynq.mdc`   | queue             |
 | `lead-cat-auth.mdc` | auth              |
 | `cat-design.mdc`    | UI                |

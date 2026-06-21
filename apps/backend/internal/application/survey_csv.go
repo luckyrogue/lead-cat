@@ -9,9 +9,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
-// sanitizeCSVCell prefixes values that start with formula-injection characters
-// (=, +, -, @, tab, CR) with a single quote so spreadsheet apps treat them as
-// plain text instead of executing them as formulas.
 func sanitizeCSVCell(s string) string {
 	if len(s) == 0 {
 		return s

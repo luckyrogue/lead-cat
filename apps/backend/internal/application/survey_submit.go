@@ -56,9 +56,6 @@ func (s *Services) SubmitSurvey(ctx context.Context, token string, answers []mod
 	return s.Store.CompleteSurveyResponse(ctx, resp.ID, normalized)
 }
 
-// CreatePendingResponse issues a survey token for a declined booking when the
-// event-type has an assigned, active survey. Returns "" when there is nothing
-// to send. This is a command; it is called from the booking command path.
 func (s *Services) CreatePendingResponse(ctx context.Context, et model.BookingEventType, reason string, req BookingRequest) (string, error) {
 	if et.SurveyID == nil {
 		return "", nil

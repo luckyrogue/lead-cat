@@ -1,19 +1,19 @@
 ---
 description: Cat UI theme (mandatory)
-globs: "frontend/**"
+globs: "apps/**"
 alwaysApply: false
 ---
 
 # Cat design
 
-Use cat tokens from `frontend/src/shared/theme/cat-tokens.css`. Evil cats are part of the product identity — see `docs/DESIGN-CATS.md`.
+TMA palette: `apps/mini-app/app/shared/tma/palette.ts` + `apply-cat-palette.ts` (maps to shadcn CSS vars on `.tma-frame`).
 
 ## Styling convention (Tailwind-first)
 
 - **Layout / spacing / typography** → Tailwind classes + `cn()` from `@/lib/utils`.
-- **TMA runtime colors** (accent, dark/light) → `bg-tma-*`, `text-tma-*`, `border-tma-*` via CSS vars set on `.tma-frame` (`paletteCssVars` in `shared/tma/palette-to-css-vars.ts`).
-- **Static screens** (outside TMA shell) → shadcn tokens (`bg-primary`, `text-cat-secondary`) or `bg-cat-bg`.
-- **`useTmaApp()`** → `t()`, `lang`, accent logic — not `p.bg` / `p.accent` on every leaf `div`.
-- **Inline `style`** only when truly dynamic: drag `translateY`, pointer-driven transforms, or values not yet mapped to a CSS var.
+- **TMA runtime colors** (accent, dark/light) → `bg-tma-*`, `text-tma-*`, `border-tma-*` via CSS vars on `.tma-frame`.
+- **Static screens** (outside TMA shell) → shadcn tokens (`bg-primary`, `text-cat-secondary`) or cat palette vars.
+- **`useTmaApp()`** → `t()`, `lang`, accent logic — not inline palette on every leaf `div`.
+- **Inline `style`** only when truly dynamic: drag transforms, pointer-driven values, or unmapped CSS vars.
 
-Shared utilities: `frontend/src/shared/theme/tma-tailwind.css` (`.font-display`, `.tma-heading`, `.tma-label`, `.tg-icon-btn`).
+Shared brand assets: `packages/brand/`. 3D cats: `packages/ui/src/3d/`, `packages/ui/src/components/cat/`.

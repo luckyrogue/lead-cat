@@ -1,6 +1,6 @@
 # Lead Cat
 
-Google Meet meeting-management Mini App — Telegram-delivered notifications, employee scheduling, and conflict detection (in development — see [docs/MEETINGS.md](docs/MEETINGS.md)).
+Google Meet meeting-management Telegram Mini App — schedule, edit, and cancel meetings in Telegram with Google Calendar sync.
 
 **Repository:** [github.com/luckyrogue/lead-cat](https://github.com/luckyrogue/lead-cat)
 
@@ -10,27 +10,24 @@ Google Meet meeting-management Mini App — Telegram-delivered notifications, em
 make setup          # .env, docker compose, pnpm install
 # edit .env — BOT_TOKEN, MASTER_ENCRYPTION_KEY
 make migrate
-make dev            # backend :8080 + frontend :3000
+make dev            # backend :8080 + mini-app dev server
 ```
 
 Or step by step: `make help`
 
 ## Docs
 
-| Doc                                              | Topic                               |
-| ------------------------------------------------ | ----------------------------------- |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)     | System design                       |
-| [docs/DEPLOY-DOKPLOY.md](docs/DEPLOY-DOKPLOY.md) | Dokploy                             |
-| [docs/AUTH.md](docs/AUTH.md)                     | Mini App auth (Telegram `initData` → JWT) |
-| [docs/SETUP.md](docs/SETUP.md)                   | Local dev & environment setup       |
-| [docs/MEETINGS.md](docs/MEETINGS.md)             | Google Meet meetings (in dev)       |
-| [docs/NEW-FEATURES.md](docs/NEW-FEATURES.md)     | Meetings spec (ТЗ)                  |
-| [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md)     | Backend/frontend requirements       |
-| [docs/DESIGN-CATS.md](docs/DESIGN-CATS.md)       | Cat UI                              |
+| Doc | Topic |
+| --- | ----- |
+| [AGENTS.md](AGENTS.md) | Stack, architecture, conventions |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Workflow, PR checks via GitHub Actions |
+| [docs/README.md](docs/README.md) | Doc index |
+| [deploy/README.md](deploy/README.md) | Dokploy deploy, env, CI |
+| [deploy/.env.example](deploy/.env.example) | Local env template |
 
 ## Repo layout
 
 - `apps/backend/` — Go monolith (`cmd/server`, `cmd/migrate`, `internal/`, `migrations/`)
 - `apps/mini-app/`, `apps/admin/`, `apps/landing/` — React frontends
-- `deploy/` — `Dockerfile`, `docker-compose.yml` (local Postgres + Redis), `.env.example`
-- `packages/` — shared UI, brand, config
+- `deploy/` — Docker, compose, env examples
+- `packages/` — shared UI, brand, api-client, config

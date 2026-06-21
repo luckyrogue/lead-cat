@@ -16,9 +16,6 @@ export function mapApiErrorMessage(
         return mapped
       }
     }
-    // Only surface the raw backend message for client (4xx) errors, which are
-    // user-facing validation messages — and only when it's human text rather
-    // than a bare machine code. Never leak internal 5xx error strings.
     if (error.status < 500 && error.message && error.message !== code) {
       return error.message
     }

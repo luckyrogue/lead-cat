@@ -9,7 +9,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
-//go:embed employees.csv
 var csvData []byte
 
 func Seed(ctx context.Context, store *postgres.Store, log *zap.Logger) {

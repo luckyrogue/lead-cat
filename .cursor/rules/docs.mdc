@@ -1,10 +1,11 @@
 ---
 description: Documentation sync
-globs: "{docs/**,*.md,PLAN.md}"
+globs: "{docs/**,*.md,deploy/**}"
 alwaysApply: false
 ---
 
 # Docs
 
-When changing API, env, auth, or deploy — update the matching file under `docs/`.
-Keep `PLAN.md` checkboxes in sync for completed phases.
+When changing API, env, auth, or deploy — update `AGENTS.md`, `deploy/README.md`, or `deploy/.env.example`.
+
+Index: `docs/README.md`.

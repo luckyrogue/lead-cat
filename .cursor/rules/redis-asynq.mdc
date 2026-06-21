@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Redis / asynq
 
-See `docs/REDIS.md` for configuration and key-space conventions.
+Env: `REDIS_URL` (default `redis://localhost:6379/0`; must not be localhost in production).
 
 ## Job queues
 
@@ -17,7 +17,7 @@ See `docs/REDIS.md` for configuration and key-space conventions.
 ## Reminder scheduler
 
 - `platform/reminder_scheduler` runs a **Redis-leader-locked tick loop** so only one replica fires reminders when the binary is scaled horizontally.
-- Lock key and TTL configured via env — see `docs/REDIS.md`.
+- Lock key and TTL configured via env in `reminder_scheduler`.
 
 ## Rules
 

@@ -137,16 +137,23 @@ to the backend's internal service URL on the Dokploy network.
 Domain example: `https://app.your-domain.example.com` → port 80. Configure this URL as
 the Telegram Mini App URL in BotFather.
 
-## Local full-stack run
+
+## Local development
+
+Default: infra in Docker, apps on the host.
 
 ```bash
-cp deploy/.env.example deploy/.env   # fill secrets
-docker compose -f deploy/docker-compose.full.yml up --build
+cp deploy/.env.example .env
+make up
+make migrate && make dev
 ```
 
-Brings up Postgres, Redis, mailpit, and all four services wired together
-(backend :8080, landing :3000, admin :3001, mini-app :3002). `deploy/docker-compose.yml`
-remains the lightweight infra-only stack used by `make up` for local development.
+Optional — full stack in Docker:
+
+```bash
+docker build -f deploy/docker/Dockerfile.frontend-deps -t leadcat-frontend-deps:local .
+docker compose -f deploy/docker-compose.yml --profile stack --env-file .env up -d --build
+```
 
 ## Google Calendar / Meet integration
 
@@ -168,12 +175,14 @@ test on staging before promoting.
 
 ## GitHub Actions (build → GHCR → Dokploy)
 
+Workflows: `.github/workflows/backend.yml` and `.github/workflows/frontend.yml`.
+
 On push to `main` or tag `v*.*.*`:
 
-1. **build** — Go vet + build + frontend `pnpm build` (also on PRs).
-2. **docker** — per service: build image, push to `ghcr.io/<owner>/lead-cat-<service>`, trigger Dokploy webhook.
+1. **backend** — go vet, build, lint, fmt, govulncheck; push `lead-cat-backend` + Dokploy webhook.
+2. **frontend** — format, lint, typecheck, build; push `frontend-deps` then admin/mini-app/landing + webhooks.
 
-Images are tagged with commit SHA on `main`, or the git tag on releases (`:latest` is updated too).
+PRs run checks only (no deploy).
 
 ### Repository secrets (Dokploy deploy webhooks)
 
@@ -194,9 +203,9 @@ CI builds and pushes **four images**, then calls **one webhook per service**. Ea
 | `DOKPLOY_WEBHOOK_ADMIN` | admin | `lead-cat-admin` | `purr.lead-cat.space` |
 | `DOKPLOY_WEBHOOK_MINI_APP` | mini-app | `lead-cat-mini-app` | `meow.lead-cat.space` |
 
-Template: `deploy/github.secrets.example`.
+Template: see Dokploy webhook URL per app in the deploy UI.
 
-If a secret is **missing**, CI still pushes the image but logs `DOKPLOY webhook for <service> is not configured, skipping deploy` and does not trigger that app. Configure all four secrets for full auto-deploy on `main`.
+If a secret is **missing**, CI still pushes the image but fails the deploy step for that service.
 
 `API_UPSTREAM` on admin/mini-app must point at the **internal** backend URL (e.g. `http://production-backend-inwyf2:8080`), not the public API domain.
 
@@ -211,7 +220,7 @@ Frontend images are built in GitHub Actions. Set **Settings → Secrets and vari
 | `VITE_TMA_DEV_TG_ID` | `mini-app` | empty |
 | `VITE_SITE_URL` | `landing` | `https://lead-cat.space` |
 
-Template: `deploy/github.variables.example`. Unset vars fall back to Dockerfile defaults (`lead_cat_bot`, `https://lead-cat.space`). After changing a variable, push to `main` to rebuild images.
+Unset vars fall back to Dockerfile defaults (`lead_cat_bot`, `https://lead-cat.space`). After changing a variable, push to `main` to rebuild images.
 
 Runtime env (`API_UPSTREAM`, `BOT_TOKEN`, …) stays in **Dokploy**, not GitHub.
 

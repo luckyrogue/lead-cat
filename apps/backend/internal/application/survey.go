@@ -9,8 +9,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
-// requireOrgMember verifies that userID is an active member of orgID.
-// It mirrors the booking.go pattern (GetOrgMember → ErrForbidden on miss).
 func (s *Services) requireOrgMember(ctx context.Context, orgID, userID uuid.UUID) error {
 	if _, ok, err := s.Store.GetOrgMember(ctx, orgID, userID); err != nil {
 		return err

@@ -17,6 +17,8 @@ agent-transcripts
 .agents
 .claude
 deploy
+!deploy/docker
+!deploy/docker/**
 !deploy/nginx
-!deploy/nginx/spa.conf
+!deploy/nginx/**
 docs

@@ -33,9 +33,3 @@ node_modules/
 
 .agents/
 .claude/
-
-e2e/playwright-report/
-e2e/test-results/
-e2e/node_modules/
-
-security/report/
