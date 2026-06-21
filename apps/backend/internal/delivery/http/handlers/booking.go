@@ -93,6 +93,11 @@ func (a *API) BookingUpdateEventType(c *fiber.Ctx) error {
 	if err := c.BodyParser(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid_body")
 	}
+	if body.SurveyID != nil && *body.SurveyID != "" {
+		if _, err := uuid.Parse(*body.SurveyID); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, "invalid_survey_id")
+		}
+	}
 	if err := a.App.UpdateEventType(c.UserContext(), user.ID, id, body.toInput()); err != nil {
 		return bookingErr(a.Log, err)
 	}

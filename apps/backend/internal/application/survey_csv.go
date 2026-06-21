@@ -9,6 +9,20 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
+// sanitizeCSVCell prefixes values that start with formula-injection characters
+// (=, +, -, @, tab, CR) with a single quote so spreadsheet apps treat them as
+// plain text instead of executing them as formulas.
+func sanitizeCSVCell(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	switch s[0] {
+	case '=', '+', '-', '@', '\t', '\r':
+		return "'" + s
+	}
+	return s
+}
+
 func ResponsesCSV(sv model.Survey, responses []model.SurveyResponse) []byte {
 	var buf bytes.Buffer
 	w := csv.NewWriter(&buf)
@@ -22,11 +36,14 @@ func ResponsesCSV(sv model.Survey, responses []model.SurveyResponse) []byte {
 	for _, r := range responses {
 		byQ := map[string]string{}
 		for _, a := range r.Answers {
-			byQ[a.QuestionID.String()] = answerToString(a.Value)
+			byQ[a.QuestionID.String()] = sanitizeCSVCell(answerToString(a.Value))
 		}
 		row := []string{
 			r.CreatedAt.Format("2006-01-02 15:04"),
-			r.BookerName, r.BookerEmail, r.DeclineReason, r.Status,
+			sanitizeCSVCell(r.BookerName),
+			sanitizeCSVCell(r.BookerEmail),
+			sanitizeCSVCell(r.DeclineReason),
+			r.Status,
 		}
 		for _, q := range sv.Questions {
 			row = append(row, byQ[q.ID.String()])

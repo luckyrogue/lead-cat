@@ -109,10 +109,6 @@ func (s Survey) Validate() error {
 // ValidateAnswers checks submitted answers against the survey's questions and
 // returns normalized snapshot answers (prompt+type filled from the question).
 func ValidateAnswers(questions []SurveyQuestion, answers []Answer) ([]Answer, error) {
-	byID := map[uuid.UUID]SurveyQuestion{}
-	for _, q := range questions {
-		byID[q.ID] = q
-	}
 	given := map[uuid.UUID]Answer{}
 	for _, a := range answers {
 		given[a.QuestionID] = a

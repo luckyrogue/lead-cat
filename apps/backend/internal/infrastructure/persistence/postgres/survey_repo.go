@@ -13,7 +13,7 @@ func (s *Store) CreateSurvey(ctx context.Context, sv model.Survey) (model.Survey
 	if err != nil {
 		return model.Survey{}, err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	if err := tx.QueryRow(ctx,
 		`INSERT INTO surveys (organization_id, name, is_active) VALUES ($1,$2,$3)
@@ -45,7 +45,7 @@ func (s *Store) UpdateSurvey(ctx context.Context, sv model.Survey) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	if _, err := tx.Exec(ctx,
 		`UPDATE surveys SET name=$2, is_active=$3, updated_at=now() WHERE id=$1`,
