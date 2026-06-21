@@ -22,24 +22,6 @@ export function formatMeetingDate(
   })
 }
 
-export function formatDateTime(
-  value: string,
-  { timeZone, locale }: FormatOptions = {}
-): string {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return "—"
-  }
-  return date.toLocaleString(locale, {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    ...(timeZone ? { timeZone } : {}),
-  })
-}
-
 export function formatTimeRange(
   meeting: Meeting,
   { timeZone, locale }: FormatOptions = {}

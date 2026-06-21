@@ -78,6 +78,8 @@ export { Paw } from "./components/cat/paw"
 export { CatFace } from "./components/cat/cat-face"
 export { CatHead } from "./components/cat/cat-head"
 
+export { HtmlLangSync } from "./components/html-lang-sync"
+
 export { cn } from "./lib/cn"
 export type { ClassValue } from "./lib/cn"
 export {

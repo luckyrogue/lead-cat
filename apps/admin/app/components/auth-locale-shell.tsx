@@ -1,6 +1,6 @@
+import { HtmlLangSync } from "@leadcat/ui"
 import { useState, type ReactNode } from "react"
 
-import { HtmlLangSync } from "~/components/html-lang-sync"
 import { LanguageSelector } from "~/components/language-selector"
 import { LocaleProvider } from "~/shared/i18n/context"
 import {
@@ -29,7 +29,7 @@ export function AuthLocaleShell({ children }: AuthLocaleShellProps) {
 
   return (
     <LocaleProvider locale={locale}>
-      <HtmlLangSync />
+      <HtmlLangSync lang={locale} />
       <div className="relative min-h-svh">
         <div className="absolute top-4 right-4 z-20 sm:top-6 sm:right-6">
           <LanguageSelector value={locale} onChange={handleLocaleChange} />

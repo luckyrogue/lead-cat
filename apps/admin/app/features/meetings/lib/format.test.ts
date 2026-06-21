@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { formatMeetingDate, formatDateTime, meetingTitle } from "./format"
+import { formatMeetingDate, meetingTitle } from "./format"
 import type { Meeting } from "~/entities/meeting/types"
 
 const mk = (partial: Partial<Meeting>) => partial as unknown as Meeting
@@ -15,28 +15,6 @@ describe("formatMeetingDate", () => {
   })
   it("returns the em dash for an invalid date", () => {
     expect(formatMeetingDate("not-a-date")).toBe("—")
-  })
-})
-
-describe("formatDateTime", () => {
-  it("formats a valid date with explicit locale + timeZone", () => {
-    const out = formatDateTime("2026-06-20T09:00:00Z", {
-      locale: "en-US",
-      timeZone: "UTC",
-    })
-    expect(out).toContain("Jun")
-    expect(out).toContain("20")
-    expect(out).toContain("09:00")
-  })
-  it("respects the given locale", () => {
-    const out = formatDateTime("2026-06-20T09:00:00Z", {
-      locale: "ru-RU",
-      timeZone: "UTC",
-    })
-    expect(out).toContain("июн")
-  })
-  it("returns the em dash for an invalid date", () => {
-    expect(formatDateTime("not-a-date")).toBe("—")
   })
 })
 
