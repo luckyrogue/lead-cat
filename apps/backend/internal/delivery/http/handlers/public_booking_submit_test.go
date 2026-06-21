@@ -144,6 +144,13 @@ func TestPublicBookingSubmit_Conflict_Returns409(t *testing.T) {
 		b, _ := io.ReadAll(resp.Body)
 		t.Fatalf("expected 409, got %d: %s", resp.StatusCode, b)
 	}
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+	if result["message"] != "slot_taken" {
+		t.Errorf("expected message=slot_taken in decline body, got: %+v", result)
+	}
 }
 
 func TestPublicBookingSubmit_BadEmail_Returns400(t *testing.T) {
@@ -154,6 +161,13 @@ func TestPublicBookingSubmit_BadEmail_Returns400(t *testing.T) {
 	if resp.StatusCode != http.StatusBadRequest {
 		b, _ := io.ReadAll(resp.Body)
 		t.Fatalf("expected 400 for bad email, got %d: %s", resp.StatusCode, b)
+	}
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+	if result["message"] != "invalid_booking" {
+		t.Errorf("expected message=invalid_booking in decline body, got: %+v", result)
 	}
 }
 

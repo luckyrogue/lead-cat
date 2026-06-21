@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
 	"github.com/luckyrogue/lead-cat/internal/application/model"
@@ -46,8 +47,12 @@ func (a *API) PublicBookingSubmit(c *fiber.Ctx) error {
 func (a *API) declineWithSurvey(c *fiber.Ctx, slug, reason string, status int, req application.BookingRequest) error {
 	body := fiber.Map{"error": "error", "message": reason}
 	et, err := a.App.GetBookingEventTypeBySlugPublic(c.UserContext(), slug)
-	if err == nil {
-		if token, terr := a.App.CreatePendingResponse(c.UserContext(), et, reason, req); terr == nil && token != "" {
+	if err != nil {
+		a.Log.Warn("survey_token_skipped", zap.String("slug", slug), zap.Error(err))
+	} else {
+		if token, terr := a.App.CreatePendingResponse(c.UserContext(), et, reason, req); terr != nil {
+			a.Log.Warn("survey_token_skipped", zap.String("slug", slug), zap.Error(terr))
+		} else if token != "" {
 			body["survey_token"] = token
 		}
 	}

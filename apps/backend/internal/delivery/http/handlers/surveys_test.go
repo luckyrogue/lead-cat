@@ -267,10 +267,13 @@ func TestDeclineBookingWithActiveSurvey(t *testing.T) {
 		t.Fatalf("expected 409, got %d: %s", resp.StatusCode, b)
 	}
 
-	// Body must contain a non-empty survey_token.
+	// Body must have the standard decline shape plus a non-empty survey_token.
 	var result map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		t.Fatalf("decode body: %v", err)
+	}
+	if result["message"] != "slot_taken" {
+		t.Errorf("expected message=slot_taken in decline body, got: %+v", result)
 	}
 	tok, ok := result["survey_token"]
 	if !ok {
@@ -340,6 +343,9 @@ func TestDeclineBookingNoSurvey(t *testing.T) {
 	var result map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		t.Fatalf("decode body: %v", err)
+	}
+	if result["message"] != "slot_taken" {
+		t.Errorf("expected message=slot_taken in decline body, got: %+v", result)
 	}
 	if _, ok := result["survey_token"]; ok {
 		t.Errorf("expected no survey_token in body when no survey assigned, got: %+v", result)
