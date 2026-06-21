@@ -530,6 +530,7 @@ export const en = {
     noSlots: "No available times in the next two weeks.",
     selectDay: "Select a day",
     continue: "Continue",
+    surveyCta: "Couldn't find a good time? Take a short survey →",
     confirmed: {
       title: "You're booked!",
       joinMeet: "Join Google Meet",
@@ -550,5 +551,12 @@ export const en = {
       badInput: "Please check your name and email.",
       conflict: "That time was just taken — please pick another.",
     },
+  },
+  publicSurvey: {
+    unavailable: "This survey is no longer available.",
+    thanks: "Thank you! Your answers were submitted.",
+    submit: "Submit",
+    submitting: "Submitting…",
+    requiredError: "This question is required.",
   },
 } satisfies Dict

@@ -540,6 +540,7 @@ export const ru: typeof en = {
     noSlots: "Нет свободного времени в ближайшие две недели.",
     selectDay: "Выберите день",
     continue: "Продолжить",
+    surveyCta: "Не нашли удобное время? Пройдите короткий опрос →",
     confirmed: {
       title: "Вы записаны!",
       joinMeet: "Присоединиться к Google Meet",
@@ -560,5 +561,12 @@ export const ru: typeof en = {
       badInput: "Проверьте имя и email.",
       conflict: "Это время только что заняли — выберите другое.",
     },
+  },
+  publicSurvey: {
+    unavailable: "Этот опрос больше недоступен.",
+    thanks: "Спасибо! Ваши ответы отправлены.",
+    submit: "Отправить",
+    submitting: "Отправка…",
+    requiredError: "Этот вопрос обязателен.",
   },
 }

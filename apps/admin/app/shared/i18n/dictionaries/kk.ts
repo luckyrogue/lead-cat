@@ -533,6 +533,7 @@ export const kk: typeof en = {
     noSlots: "Екі апта ішінде бос уақыт жоқ.",
     selectDay: "Күнді таңдаңыз",
     continue: "Жалғастыру",
+    surveyCta: "Қолайлы уақыт таппадыңыз ба? Қысқа сауалнамадан өтіңіз →",
     confirmed: {
       title: "Сіз жазылдыңыз!",
       joinMeet: "Google Meet-ке қосылу",
@@ -553,5 +554,12 @@ export const kk: typeof en = {
       badInput: "Аты мен email-ді тексеріңіз.",
       conflict: "Бұл уақыт жаңа ғана алынды — басқасын таңдаңыз.",
     },
+  },
+  publicSurvey: {
+    unavailable: "Бұл сауалнама енді қолжетімді емес.",
+    thanks: "Рахмет! Жауаптарыңыз жіберілді.",
+    submit: "Жіберу",
+    submitting: "Жіберілуде…",
+    requiredError: "Бұл сұрақ міндетті.",
   },
 }
