@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 
 import { recurrenceLabel } from "./recurrence-label"
 
-// translate() returns the key itself when no translation exists.
 const t = (key: string) => (key === "create.recurrence.weekly" ? "Weekly" : key)
 
 describe("recurrenceLabel", () => {

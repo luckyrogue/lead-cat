@@ -240,11 +240,7 @@ func TestChecker_SetRange_UsesLoc(t *testing.T) {
 	london, _ := time.LoadLocation("Europe/London")
 	svc := New(&fakeBackend{}, newFakeSessions())
 	ctx := context.Background()
-	// seed a session in the range step
 	_ = svc.Start(ctx, 1, "ru")
-	// drive to range step: add a participant then "done" — or set the session directly
-	// via the fake if exposed. Simplest: call setRange through OnText after forcing step.
-	// Assert the parsed range reflects London midnight, not Almaty.
 	from, _, err := parseRange("2026-06-15..2026-06-15", london)
 	if err != nil {
 		t.Fatal(err)

@@ -367,9 +367,6 @@ func (h *MultiHandler) resolveLang(ctx context.Context, from *models.User) strin
 	return boti18n.Resolve(stored, from.LanguageCode)
 }
 
-// resolveLangLoc resolves the acting user's language and display/parse location in a
-// single store lookup. The location is the user's stored timezone, falling back to
-// Asia/Almaty, then UTC on load error.
 func (h *MultiHandler) resolveLangLoc(ctx context.Context, from *models.User) (string, *time.Location) {
 	var storedLang, tz string
 	if u, err := h.store.GetBotUserByTelegramID(ctx, from.ID); err == nil {

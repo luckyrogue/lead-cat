@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest"
 import { ApiError } from "./errors"
 import { mapApiErrorMessage } from "./map-api-error"
 
-// translate() returns the key itself when no translation exists.
 const t = (key: string) => {
   if (key === "errors.codes.RATE_LIMITED") return "Too many requests"
   if (key === "common.errors.generic") return "Something went wrong"

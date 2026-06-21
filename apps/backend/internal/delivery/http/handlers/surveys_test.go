@@ -22,8 +22,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/calendar/stub"
 )
 
-// surveyFakeRepo extends the shared stubRepo with overrideable survey + booking
-// slug lookup functions so each test can inject failure scenarios.
 type surveyFakeRepo struct {
 	publicBookingFakeRepo
 	getSurveyResponseByTokenFn func(ctx context.Context, token string) (model.SurveyResponse, error)
@@ -61,8 +59,6 @@ func (r *surveyFakeRepo) CompleteSurveyResponse(ctx context.Context, id uuid.UUI
 	return nil
 }
 
-// newSurveyFakeRepo returns a repo with safe defaults: unknown token → not found,
-// unknown slug → not found.
 func newSurveyFakeRepo() *surveyFakeRepo {
 	repo := &surveyFakeRepo{
 		publicBookingFakeRepo: publicBookingFakeRepo{
@@ -114,7 +110,6 @@ func buildSurveyApp(t *testing.T, repo *surveyFakeRepo) *fiber.App {
 	return app
 }
 
-// returns 404.
 func TestPublicSurveyGet_UnknownToken(t *testing.T) {
 	app := buildSurveyApp(t, newSurveyFakeRepo())
 
@@ -131,8 +126,6 @@ func TestPublicSurveyGet_UnknownToken(t *testing.T) {
 	}
 }
 
-// TestPublicSurveySubmit_AlreadyCompleted asserts that POSTing to a completed
-// token returns 409 with "already_completed".
 func TestPublicSurveySubmit_AlreadyCompleted(t *testing.T) {
 	repo := newSurveyFakeRepo()
 	completedAt := time.Now()
@@ -160,8 +153,6 @@ func TestPublicSurveySubmit_AlreadyCompleted(t *testing.T) {
 	}
 }
 
-// TestPublicSurveyGet_AlreadyCompleted asserts that GETting a completed token
-// also returns 409.
 func TestPublicSurveyGet_AlreadyCompleted(t *testing.T) {
 	repo := newSurveyFakeRepo()
 	completedAt := time.Now()
@@ -187,16 +178,12 @@ func TestPublicSurveyGet_AlreadyCompleted(t *testing.T) {
 	}
 }
 
-// TestDeclineBookingWithActiveSurvey asserts that when a booking is declined
-// (ErrSlotTaken) and the event type has an assigned active survey, the response
-// body contains a "survey_token" field.
 func TestDeclineBookingWithActiveSurvey(t *testing.T) {
 	repo := newSurveyFakeRepo()
 
 	surveyID := uuid.MustParse("dddddddd-0000-0000-0000-000000000004")
 	etID := uuid.MustParse("eeeeeeee-0000-0000-0000-000000000005")
 
-	// Slug lookup succeeds and returns an event type with an assigned survey.
 	repo.getBySlugFn = func(_ context.Context, _ string) (model.BookingEventType, error) {
 		return model.BookingEventType{
 			ID:               etID,
@@ -214,8 +201,6 @@ func TestDeclineBookingWithActiveSurvey(t *testing.T) {
 		}, nil
 	}
 
-	// The slot is already taken — SubmitBooking will return ErrSlotTaken.
-	// The meeting must overlap with the booking in UTC (10:00 Almaty = 05:00 UTC).
 	repo.listOverlappingFn = func(_ context.Context, _ []string, _, _ time.Time) ([]model.Meeting, error) {
 		loc, _ := time.LoadLocation("Asia/Almaty")
 		slotStart := time.Date(2099, 6, 22, 10, 0, 0, 0, loc).UTC()
@@ -228,7 +213,6 @@ func TestDeclineBookingWithActiveSurvey(t *testing.T) {
 		}}, nil
 	}
 
-	// The survey for the event type is active.
 	repo.getSurveyFn = func(_ context.Context, _ uuid.UUID) (model.Survey, error) {
 		return model.Survey{
 			ID:       surveyID,
@@ -260,7 +244,6 @@ func TestDeclineBookingWithActiveSurvey(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	// Status must be 409 (slot_taken).
 	if resp.StatusCode != http.StatusConflict {
 		b, _ := io.ReadAll(resp.Body)
 		t.Fatalf("expected 409, got %d: %s", resp.StatusCode, b)
@@ -282,12 +265,9 @@ func TestDeclineBookingWithActiveSurvey(t *testing.T) {
 	}
 }
 
-// TestDeclineBookingNoSurvey asserts that when a booking is declined but the
-// event type has no assigned survey, the response has no survey_token.
 func TestDeclineBookingNoSurvey(t *testing.T) {
 	repo := newSurveyFakeRepo()
 
-	// Slug lookup succeeds but no SurveyID assigned.
 	repo.getBySlugFn = func(_ context.Context, _ string) (model.BookingEventType, error) {
 		return model.BookingEventType{
 			ID:               uuid.New(),
@@ -305,7 +285,6 @@ func TestDeclineBookingNoSurvey(t *testing.T) {
 		}, nil
 	}
 
-	// Slot is taken. Match UTC (10:00 Almaty = 05:00 UTC) to ensure overlap.
 	repo.listOverlappingFn = func(_ context.Context, _ []string, _, _ time.Time) ([]model.Meeting, error) {
 		loc, _ := time.LoadLocation("Asia/Almaty")
 		slotStart := time.Date(2099, 6, 22, 10, 0, 0, 0, loc).UTC()

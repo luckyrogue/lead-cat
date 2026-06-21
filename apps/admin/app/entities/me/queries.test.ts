@@ -57,7 +57,6 @@ describe("patchMeUser", () => {
   })
 
   it("writes the explicit empty-string 'default language' choice (not skipped)", () => {
-    // The 'Default' option sends language: "" — distinct from undefined.
     const next = patchMeUser(me, { language: "" })
     expect(next?.user.language).toBe("")
   })

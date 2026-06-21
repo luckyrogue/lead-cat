@@ -6,8 +6,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// SecurityHeaders sets baseline security response headers on every API response.
-// HSTS is emitted only in production (it requires TLS to be meaningful); auth
 func SecurityHeaders(prod bool) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		c.Set("X-Content-Type-Options", "nosniff")

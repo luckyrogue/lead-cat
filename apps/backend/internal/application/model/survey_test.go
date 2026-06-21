@@ -52,15 +52,12 @@ func TestValidateAnswers(t *testing.T) {
 		t.Fatalf("expected snapshotted answers, got %+v", got)
 	}
 
-	// required text missing
 	if _, err := ValidateAnswers(qs, []Answer{{QuestionID: sq.ID, Value: "a"}}); err == nil {
 		t.Fatal("expected error: required text unanswered")
 	}
-	// single value not in options
 	if _, err := ValidateAnswers(qs, []Answer{{QuestionID: tq.ID, Value: "x"}, {QuestionID: sq.ID, Value: "z"}}); err == nil {
 		t.Fatal("expected error: option not allowed")
 	}
-	// rating out of range
 	if _, err := ValidateAnswers(qs, []Answer{{QuestionID: tq.ID, Value: "x"}, {QuestionID: sq.ID, Value: "a"}, {QuestionID: rq.ID, Value: 9}}); err == nil {
 		t.Fatal("expected error: rating out of range")
 	}

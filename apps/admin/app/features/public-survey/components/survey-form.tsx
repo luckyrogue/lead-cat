@@ -38,7 +38,6 @@ export function SurveyForm({
     try {
       onResult(await submitPublicSurvey(token, answers))
     } catch {
-      // Network failure — keep form open so user can retry
       onResult("invalid")
     } finally {
       setSubmitting(false)

@@ -87,7 +87,6 @@ func (q SurveyQuestion) validate() error {
 			return ErrInvalidSurvey
 		}
 	case QuestionText:
-		// no extra fields required
 	default:
 		return ErrInvalidSurvey
 	}

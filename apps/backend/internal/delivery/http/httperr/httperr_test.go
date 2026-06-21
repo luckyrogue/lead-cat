@@ -29,4 +29,3 @@ func TestPublicMessage_Unknown(t *testing.T) {
 	}
 }
 
-// Handlers must return stable 500 codes (e.g. "internal"), not err.Error(), so PublicMessage can mask details.

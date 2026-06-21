@@ -17,7 +17,6 @@ type surveyFakeStore struct {
 	created   model.Survey
 	respCount int
 	deleted   bool
-	// isMember controls whether GetOrgMember reports membership (default true).
 	isMember bool
 }
 
@@ -46,7 +45,6 @@ func newSurveySvc(store Repository) *Services {
 	return &Services{Store: store, Log: zap.NewNop()}
 }
 
-// memberStore is a surveyFakeStore that reports the caller as a member.
 func memberStore(base *surveyFakeStore) *surveyFakeStore {
 	base.isMember = true
 	return base
@@ -78,15 +76,12 @@ func TestDeleteSurveyBlockedWhenResponsesExist(t *testing.T) {
 func TestSurveyOrgScoping(t *testing.T) {
 	store := memberStore(&surveyFakeStore{survey: model.Survey{ID: uuid.New(), OrganizationID: uuid.New()}})
 	svc := newSurveySvc(store)
-	_, err := svc.GetSurvey(context.Background(), uuid.New() /* different org */, uuid.New(), store.survey.ID)
+	_, err := svc.GetSurvey(context.Background(), uuid.New(), uuid.New(), store.survey.ID)
 	if !errors.Is(err, model.ErrForbidden) {
 		t.Fatalf("expected ErrForbidden, got %v", err)
 	}
 }
 
-// TestSurveyRejectsNonMember verifies that all admin survey methods return
-// ErrForbidden when the caller is not a member of the org, regardless of
-// whether they supply a valid org ID in the header.
 func TestSurveyRejectsNonMember(t *testing.T) {
 	org := uuid.New()
 	surveyID := uuid.New()
