@@ -113,4 +113,15 @@ type Repository interface {
 	DeleteBookingEventType(ctx context.Context, id uuid.UUID) error
 
 	WithHostBookingLock(ctx context.Context, hostUserID uuid.UUID, start time.Time, fn func(ctx context.Context) error) error
+
+	CreateSurvey(ctx context.Context, s model.Survey) (model.Survey, error)
+	UpdateSurvey(ctx context.Context, s model.Survey) error
+	GetSurvey(ctx context.Context, id uuid.UUID) (model.Survey, error)
+	ListSurveys(ctx context.Context, orgID uuid.UUID) ([]model.Survey, error)
+	DeleteSurvey(ctx context.Context, id uuid.UUID) error
+	CountResponses(ctx context.Context, surveyID uuid.UUID) (int, error)
+	CreateSurveyResponse(ctx context.Context, r model.SurveyResponse) (model.SurveyResponse, error)
+	GetSurveyResponseByToken(ctx context.Context, token string) (model.SurveyResponse, error)
+	CompleteSurveyResponse(ctx context.Context, id uuid.UUID, answers []model.Answer) error
+	ListSurveyResponses(ctx context.Context, surveyID uuid.UUID, f model.ResponseFilter) ([]model.SurveyResponse, error)
 }

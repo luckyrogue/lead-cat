@@ -307,6 +307,31 @@ func (s *stubRepo) WithHostBookingLock(ctx context.Context, _ uuid.UUID, _ time.
 	return fn(ctx)
 }
 
+func (s *stubRepo) CreateSurvey(_ context.Context, sv model.Survey) (model.Survey, error) {
+	return sv, nil
+}
+func (s *stubRepo) UpdateSurvey(_ context.Context, _ model.Survey) error { return nil }
+func (s *stubRepo) GetSurvey(_ context.Context, _ uuid.UUID) (model.Survey, error) {
+	return model.Survey{}, nil
+}
+func (s *stubRepo) ListSurveys(_ context.Context, _ uuid.UUID) ([]model.Survey, error) {
+	return nil, nil
+}
+func (s *stubRepo) DeleteSurvey(_ context.Context, _ uuid.UUID) error          { return nil }
+func (s *stubRepo) CountResponses(_ context.Context, _ uuid.UUID) (int, error) { return 0, nil }
+func (s *stubRepo) CreateSurveyResponse(_ context.Context, r model.SurveyResponse) (model.SurveyResponse, error) {
+	return r, nil
+}
+func (s *stubRepo) GetSurveyResponseByToken(_ context.Context, _ string) (model.SurveyResponse, error) {
+	return model.SurveyResponse{}, nil
+}
+func (s *stubRepo) CompleteSurveyResponse(_ context.Context, _ uuid.UUID, _ []model.Answer) error {
+	return nil
+}
+func (s *stubRepo) ListSurveyResponses(_ context.Context, _ uuid.UUID, _ model.ResponseFilter) ([]model.SurveyResponse, error) {
+	return nil, nil
+}
+
 func buildFakeServices(t *testing.T, repo *stubRepo, connector *fakeCalendarConnector) *application.Services {
 	t.Helper()
 	svc := &application.Services{

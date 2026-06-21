@@ -66,6 +66,13 @@ type SurveyResponse struct {
 	CompletedAt        *time.Time `json:"completed_at"`
 }
 
+type ResponseFilter struct {
+	Status string
+	Reason string
+	From   *time.Time
+	To     *time.Time
+}
+
 func (q SurveyQuestion) validate() error {
 	if q.Prompt == "" {
 		return ErrInvalidSurvey
