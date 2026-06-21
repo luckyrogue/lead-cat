@@ -31,3 +31,23 @@ func TestResponsesCSV(t *testing.T) {
 		t.Fatalf("expected meta columns, got:\n%s", out)
 	}
 }
+
+func TestResponsesCSVSanitizesFormulae(t *testing.T) {
+	q1 := model.SurveyQuestion{ID: uuid.New(), Prompt: "Score", Type: model.QuestionText}
+	sv := model.Survey{Questions: []model.SurveyQuestion{q1}}
+	resp := model.SurveyResponse{
+		BookerName:  "=cmd()",
+		BookerEmail: "user@example.com",
+		Status:      "completed",
+		Answers: []model.Answer{
+			{QuestionID: q1.ID, Value: "+1"},
+		},
+	}
+	out := string(ResponsesCSV(sv, []model.SurveyResponse{resp}))
+	if !strings.Contains(out, "'=cmd()") {
+		t.Fatalf("expected booker name to be sanitized to '=cmd(), got:\n%s", out)
+	}
+	if !strings.Contains(out, "'+1") {
+		t.Fatalf("expected answer value to be sanitized to '+1, got:\n%s", out)
+	}
+}

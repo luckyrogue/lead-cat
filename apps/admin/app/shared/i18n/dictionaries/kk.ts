@@ -454,7 +454,7 @@ export const kk: typeof en = {
     assignLabel: "Бас тартқан кездегі сауалнама",
     assignNone: "Жоқ",
     empty: "Сауалнамалар әлі жоқ.",
-    questionsCount: "{count} сұрақ",
+    questionsCount: "Сұрақтар: {count}",
     dialog: {
       createTitle: "Жаңа сауалнама",
       editTitle: "Сауалнаманы өңдеу",

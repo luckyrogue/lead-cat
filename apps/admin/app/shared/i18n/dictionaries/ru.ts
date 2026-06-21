@@ -460,7 +460,7 @@ export const ru: typeof en = {
     assignLabel: "Опрос при отказе",
     assignNone: "Нет",
     empty: "Опросов пока нет.",
-    questionsCount: "{count} вопросов",
+    questionsCount: "Вопросов: {count}",
     dialog: {
       createTitle: "Новый опрос",
       editTitle: "Редактировать опрос",

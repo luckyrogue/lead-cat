@@ -451,7 +451,7 @@ export const en = {
     assignLabel: "Survey on decline",
     assignNone: "None",
     empty: "No surveys yet.",
-    questionsCount: "{count} questions",
+    questionsCount: "Questions: {count}",
     dialog: {
       createTitle: "New survey",
       editTitle: "Edit survey",
