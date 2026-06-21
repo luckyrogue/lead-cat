@@ -90,7 +90,7 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 				h.sendSchedReply(ctx, b, chatID, 0, reply)
 				return
 			}
-			if reply, handled := h.checker.OnText(ctx, from.ID, text); handled {
+			if reply, handled := h.checker.OnText(ctx, from.ID, text, h.resolveLang(ctx, from)); handled {
 				h.sendCheckerReply(ctx, b, chatID, 0, reply)
 				return
 			}
@@ -143,7 +143,7 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 				h.reply(ctx, b, update.Message, "Сначала зарегистрируйся: /start")
 				return
 			}
-			h.sendCheckerReply(ctx, b, chatID, 0, h.checker.Start(ctx, from.ID))
+			h.sendCheckerReply(ctx, b, chatID, 0, h.checker.Start(ctx, from.ID, h.resolveLang(ctx, from)))
 		}
 	case "/menu":
 		if isPrivate {
@@ -205,7 +205,7 @@ func (h *MultiHandler) handleCallback(ctx context.Context, b *bot.Bot, cq *model
 		}
 	}
 	if strings.HasPrefix(cq.Data, "chk:") {
-		if reply, handled := h.checker.OnCallback(ctx, cq.From.ID, cq.Data); handled && cq.Message.Message != nil {
+		if reply, handled := h.checker.OnCallback(ctx, cq.From.ID, cq.Data, h.resolveLang(ctx, &cq.From)); handled && cq.Message.Message != nil {
 			h.sendCheckerReply(ctx, b, cq.Message.Message.Chat.ID, cq.Message.Message.ID, reply)
 		}
 	}

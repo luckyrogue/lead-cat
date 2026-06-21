@@ -78,7 +78,7 @@ func TestStart_SetsParticipantsStep(t *testing.T) {
 	ctx := context.Background()
 	const tid int64 = 1001
 
-	reply := svc.Start(ctx, tid)
+	reply := svc.Start(ctx, tid, "ru")
 
 	if reply.Text == "" {
 		t.Fatal("Start: expected non-empty Reply.Text")
@@ -110,9 +110,9 @@ func TestOnText_Search_ReturnsMatches(t *testing.T) {
 	const tid int64 = 1002
 
 	// Seed session via Start (as a real flow would do)
-	svc.Start(ctx, tid)
+	svc.Start(ctx, tid, "ru")
 
-	reply, handled := svc.OnText(ctx, tid, "ivan")
+	reply, handled := svc.OnText(ctx, tid, "ivan", "ru")
 
 	if !handled {
 		t.Fatal("OnText: expected handled=true")
@@ -136,7 +136,7 @@ func TestOnText_NoSession_NotHandled(t *testing.T) {
 	ctx := context.Background()
 	const tid int64 = 9999
 
-	reply, handled := svc.OnText(ctx, tid, "hello")
+	reply, handled := svc.OnText(ctx, tid, "hello", "ru")
 
 	if handled {
 		t.Fatal("OnText: expected handled=false for unknown session")
@@ -221,7 +221,7 @@ func TestOnCallback_DoneTransition(t *testing.T) {
 		Cands:  []string{"alice@example.com"},
 	})
 
-	reply, handled := svc.OnCallback(ctx, tid, "chk:done")
+	reply, handled := svc.OnCallback(ctx, tid, "chk:done", "ru")
 
 	if !handled {
 		t.Fatal("OnCallback chk:done: expected handled=true")
@@ -239,6 +239,32 @@ func TestOnCallback_DoneTransition(t *testing.T) {
 	}
 	if st.Step != stepRange {
 		t.Fatalf("OnCallback chk:done: expected step %q, got %q", stepRange, st.Step)
+	}
+}
+
+// ── TestChecker_Localized ─────────────────────────────────────────────────────
+
+func TestChecker_Localized(t *testing.T) {
+	be := &fakeBackend{}
+	svc := New(be, newFakeSessions())
+	ctx := context.Background()
+	ru := svc.Start(ctx, 1, "ru")
+	en := svc.Start(ctx, 2, "en")
+	if ru.Text == en.Text {
+		t.Fatalf("Start must differ by language; both = %q", ru.Text)
+	}
+	if !strings.Contains(en.Text, "Enter a participant") {
+		t.Errorf("en Start = %q", en.Text)
+	}
+}
+
+// ── TestChecker_CallbackSessionExpired_Localized ──────────────────────────────
+
+func TestChecker_CallbackSessionExpired_Localized(t *testing.T) {
+	svc := New(&fakeBackend{}, newFakeSessions())
+	r, _ := svc.OnCallback(context.Background(), 99, "chk:done", "en")
+	if !strings.Contains(r.Text, "Session expired") {
+		t.Fatalf("en session-expired = %q", r.Text)
 	}
 }
 
