@@ -277,6 +277,18 @@ func TestPick_OpensEditMenu(t *testing.T) {
 // Test: lang threading — ru vs en output differs
 // ---------------------------------------------------------------------------
 
+func TestRecLabel_Localized(t *testing.T) {
+	if recLabel("weekly", "en") != "Weekly" {
+		t.Errorf("en weekly = %q", recLabel("weekly", "en"))
+	}
+	if recLabel("weekly", "ru") != "Еженедельно" {
+		t.Errorf("ru weekly = %q", recLabel("weekly", "ru"))
+	}
+	if recLabel("once", "en") != "Once" {
+		t.Errorf("en once = %q", recLabel("once", "en"))
+	}
+}
+
 func TestMeetingEdit_Localized(t *testing.T) {
 	id := uuid.New()
 	m := makeMeetingWithTZ(id, "Meeting Alpha")

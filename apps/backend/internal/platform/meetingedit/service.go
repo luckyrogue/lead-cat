@@ -652,10 +652,20 @@ func menuText(st State, lang string) string {
 }
 
 func recLabel(v, lang string) string {
-	if v == "once" || v == "" {
+	switch v {
+	case "", "once":
 		return boti18n.T(lang, "medit.rec.once")
+	case "daily":
+		return boti18n.T(lang, "medit.rec.daily")
+	case "weekly":
+		return boti18n.T(lang, "medit.rec.weekly")
+	case "biweekly":
+		return boti18n.T(lang, "medit.rec.biweekly")
+	case "monthly":
+		return boti18n.T(lang, "medit.rec.monthly")
+	default:
+		return meeting.Recurrence(v).Label()
 	}
-	return meeting.Recurrence(v).Label()
 }
 
 func snapshot(m postgres.Meeting, loc *time.Location) map[string]string {
