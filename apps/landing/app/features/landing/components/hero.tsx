@@ -133,7 +133,7 @@ export function Hero() {
           >
             {t("hero.footnote")}
           </p>
-          <p data-hero-copy className="mt-2 text-sm text-kitty-500">
+          <p data-hero-copy className="text-kitty-500 mt-2 text-sm">
             <AdminPanelLink className="font-semibold text-coral-500 underline-offset-4 hover:underline">
               {t("hero.adminPanelLink")}
             </AdminPanelLink>

@@ -5,8 +5,8 @@ import "testing"
 // fixture keys registered for tests (all three languages present).
 func init() {
 	register(map[string]map[string]string{
-		"test.hi":    {"ru": "Привет", "en": "Hi", "kk": "Сәлем"},
-		"test.greet": {"ru": "Привет, %[1]s", "en": "Hi, %[1]s", "kk": "Сәлем, %[1]s"},
+		"test.hi":     {"ru": "Привет", "en": "Hi", "kk": "Сәлем"},
+		"test.greet":  {"ru": "Привет, %[1]s", "en": "Hi, %[1]s", "kk": "Сәлем, %[1]s"},
 		"test.ruonly": {"ru": "ТолькоRU"}, // intentionally missing en/kk for fallback test
 	})
 }

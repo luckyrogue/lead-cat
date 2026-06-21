@@ -13,8 +13,8 @@ import (
 
 	"github.com/luckyrogue/lead-cat/internal/application"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
-	"github.com/luckyrogue/lead-cat/internal/platform/botreg"
 	"github.com/luckyrogue/lead-cat/internal/platform/boti18n"
+	"github.com/luckyrogue/lead-cat/internal/platform/botreg"
 	"github.com/luckyrogue/lead-cat/internal/platform/botsettings"
 	"github.com/luckyrogue/lead-cat/internal/platform/checker"
 	"github.com/luckyrogue/lead-cat/internal/platform/meetingedit"

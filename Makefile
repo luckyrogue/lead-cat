@@ -1,5 +1,5 @@
 .PHONY: help setup deps up down ps migrate migrate-down migrate-status \
-	backend backend-watch miniapp admin landing frontend dev lint fmt fmt-check typecheck openapi-generate brand-sync build clean \
+	backend backend-watch miniapp admin landing frontend dev lint fmt fmt-check hooks typecheck openapi-generate brand-sync build clean \
 	test ci
 
 ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
@@ -22,6 +22,7 @@ setup:
 	@$(PNPM) install
 	@$(MAKE) brand-sync
 	@$(MAKE) openapi-generate
+	@$(MAKE) hooks
 
 deps: up
 	@$(PNPM) install
@@ -98,6 +99,10 @@ fmt: ## format frontend + go (golangci fmt)
 fmt-check: ## check formatting (prettier + golangci fmt diff)
 	@$(PNPM) turbo run format:check --filter=./apps/*
 	@command -v golangci-lint >/dev/null && (cd $(BACKEND) && golangci-lint fmt --diff) || (echo "install: brew install golangci-lint" && exit 1)
+
+hooks: ## install git pre-commit hook (auto-format staged files)
+	@chmod +x scripts/format-staged.sh scripts/install-git-hooks.sh .githooks/pre-commit
+	@bash scripts/install-git-hooks.sh
 
 typecheck: ## tsc + react-router typegen (apps)
 	@$(PNPM) turbo run typecheck --filter=./apps/*

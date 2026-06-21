@@ -18,6 +18,10 @@ Thanks for helping improve Lead Cat — a Google Meet meetings-management Telegr
 make ci    # fmt-check, lint, test, typecheck, build
 ```
 
+After `pnpm install` or `make setup`, a **pre-commit hook** auto-formats staged
+Go and frontend files (`gofmt` / Prettier) so CI format gates rarely fail. To
+install manually: `make hooks`. To format everything: `make fmt`.
+
 Backend tests only:
 
 ```bash
