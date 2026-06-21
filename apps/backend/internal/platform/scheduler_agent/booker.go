@@ -9,7 +9,7 @@ import (
 )
 
 type Booker interface {
-	Book(ctx context.Context, telegramID int64, b PendingBooking) (string, error)
+	Book(ctx context.Context, telegramID int64, b PendingBooking, lang string) (string, error)
 }
 
 func describeBooking(b PendingBooking, lang string) string {

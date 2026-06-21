@@ -10,6 +10,7 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application"
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/platform/boti18n"
 	"github.com/luckyrogue/lead-cat/internal/platform/scheduler_agent"
 )
 
@@ -20,7 +21,7 @@ type agentBooker struct {
 
 var _ scheduler_agent.Booker = (*agentBooker)(nil)
 
-func (b *agentBooker) Book(ctx context.Context, telegramID int64, pb scheduler_agent.PendingBooking) (string, error) {
+func (b *agentBooker) Book(ctx context.Context, telegramID int64, pb scheduler_agent.PendingBooking, lang string) (string, error) {
 	fail := func(cause error, userMsg string) (string, error) {
 		if b.services.Log != nil {
 			b.services.Log.Warn("agent_book_failed", zap.Int64("telegram_id", telegramID), zap.Error(cause))
@@ -30,21 +31,21 @@ func (b *agentBooker) Book(ctx context.Context, telegramID int64, pb scheduler_a
 
 	bu, err := b.store.GetBotUserByTelegramID(ctx, telegramID)
 	if err != nil {
-		return fail(err, "Сначала зарегистрируйся: /start")
+		return fail(err, boti18n.T(lang, "agentbook.register_first"))
 	}
 	organizationID, err := b.services.ResolveMiniAppOrganization(ctx)
 	if err != nil {
 		if errors.Is(err, application.ErrGoogleNotConfigured) {
-			return fail(err, "Google-календарь не подключён — обратись к администратору.")
+			return fail(err, boti18n.T(lang, "agentbook.google_not_configured"))
 		}
-		return fail(err, "Не удалось создать встречу, попробуй позже 🐾")
+		return fail(err, boti18n.T(lang, "agentbook.create_failed"))
 	}
 	organizerID, err := b.services.EnsureMiniAppOrganizer(ctx, bu.Email, bu.TelegramID)
 	if err != nil {
 		if errors.Is(err, application.ErrTelegramLinkedToOtherAccount) {
-			return fail(err, "Этот Telegram привязан к другому аккаунту.")
+			return fail(err, boti18n.T(lang, "agentbook.telegram_linked_elsewhere"))
 		}
-		return fail(err, "Не удалось создать встречу, попробуй позже 🐾")
+		return fail(err, boti18n.T(lang, "agentbook.create_failed"))
 	}
 	parts := make([]model.MeetingParticipant, 0, len(pb.Emails))
 	for _, e := range pb.Emails {
@@ -59,12 +60,12 @@ func (b *agentBooker) Book(ctx context.Context, telegramID int64, pb scheduler_a
 	m, err := b.services.CreateMeeting(ctx, organizationID, organizerID, in)
 	if err != nil {
 		if errors.Is(err, application.ErrInvalidInput) {
-			return fail(err, "Проверь данные встречи — что-то не так с датой или временем.")
+			return fail(err, boti18n.T(lang, "agentbook.bad_input"))
 		}
-		return fail(err, "Не удалось создать встречу, попробуй позже 🐾")
+		return fail(err, boti18n.T(lang, "agentbook.create_failed"))
 	}
 	if m.MeetLink != "" {
-		return "Встреча создана ✅\n" + m.MeetLink, nil
+		return boti18n.T(lang, "agentbook.created") + "\n" + m.MeetLink, nil
 	}
-	return "Встреча создана ✅", nil
+	return boti18n.T(lang, "agentbook.created"), nil
 }

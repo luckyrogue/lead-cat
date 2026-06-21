@@ -148,7 +148,7 @@ func (s *Service) OnCallback(ctx context.Context, telegramID int64, data, lang s
 		if s.booker == nil {
 			return Reply{Text: boti18n.T(lang, "agent.booking_unavailable"), Edit: true}, true
 		}
-		msg, berr := s.booker.Book(ctx, telegramID, pb)
+		msg, berr := s.booker.Book(ctx, telegramID, pb, lang)
 		if berr != nil {
 			return Reply{Text: berr.Error(), Edit: true}, true
 		}

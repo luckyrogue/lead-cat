@@ -57,7 +57,7 @@ type fakeBooker struct {
 	err     error
 }
 
-func (b *fakeBooker) Book(_ context.Context, telegramID int64, pb PendingBooking) (string, error) {
+func (b *fakeBooker) Book(_ context.Context, telegramID int64, pb PendingBooking, _ string) (string, error) {
 	b.called = true
 	b.gotTgID = telegramID
 	b.got = pb
