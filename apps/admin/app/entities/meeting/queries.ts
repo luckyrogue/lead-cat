@@ -4,11 +4,12 @@ import { getMeeting, listMeetings } from "~/entities/meeting/api"
 import type { MeetingListFilter } from "~/entities/meeting/types"
 
 export const meetingKeys = {
-  list: (orgId: string) => ["orgs", orgId, "meetings"] as const,
+  all: (orgId: string) => ["orgs", orgId, "meetings"] as const,
+  lists: (orgId: string) => ["orgs", orgId, "meetings", "list"] as const,
   listFiltered: (orgId: string, filter: MeetingListFilter) =>
-    ["orgs", orgId, "meetings", filter] as const,
+    ["orgs", orgId, "meetings", "list", filter] as const,
   detail: (orgId: string, meetingId: string) =>
-    ["orgs", orgId, "meetings", meetingId] as const,
+    ["orgs", orgId, "meetings", "detail", meetingId] as const,
 }
 
 export function useMeetings(

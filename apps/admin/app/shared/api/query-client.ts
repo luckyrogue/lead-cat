@@ -9,6 +9,7 @@ export function getQueryClient() {
         queries: {
           staleTime: 30_000,
           retry: 1,
+          refetchOnWindowFocus: false,
         },
       },
     })

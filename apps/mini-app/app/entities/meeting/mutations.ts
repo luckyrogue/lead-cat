@@ -15,13 +15,22 @@ import type {
 } from "~/entities/meeting/types"
 import { meetingKeys } from "~/shared/api/query-keys"
 
+function invalidateMeetingLists(qc: ReturnType<typeof useQueryClient>) {
+  void qc.invalidateQueries({ queryKey: meetingKeys.lists() })
+}
+
+function invalidateMeetingDetail(
+  qc: ReturnType<typeof useQueryClient>,
+  id: string
+) {
+  void qc.invalidateQueries({ queryKey: meetingKeys.detail(id), exact: true })
+}
+
 export function useCreateMeeting() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (input: CreateMeetingInput) => createMeeting(input),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: meetingKeys.all })
-    },
+    onSuccess: () => invalidateMeetingLists(qc),
   })
 }
 
@@ -37,8 +46,9 @@ export function useUpdateMeeting() {
       input: UpdateMeetingInput
       scope?: MeetingMutationScope
     }) => updateMeeting(id, input, scope),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: meetingKeys.all })
+    onSuccess: (_data, { id }) => {
+      invalidateMeetingDetail(qc, id)
+      invalidateMeetingLists(qc)
     },
   })
 }
@@ -48,9 +58,7 @@ export function useDeleteMeeting() {
   return useMutation({
     mutationFn: ({ id, scope }: { id: string; scope?: MeetingMutationScope }) =>
       deleteMeeting(id, scope),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: meetingKeys.all })
-    },
+    onSuccess: () => invalidateMeetingLists(qc),
   })
 }
 
@@ -59,8 +67,9 @@ export function useChangeSeriesEnd() {
   return useMutation({
     mutationFn: ({ id, until }: { id: string; until: string }) =>
       changeSeriesEnd(id, until),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: meetingKeys.all })
+    onSuccess: (_data, { id }) => {
+      invalidateMeetingDetail(qc, id)
+      invalidateMeetingLists(qc)
     },
   })
 }
@@ -70,8 +79,9 @@ export function useAddParticipant() {
   return useMutation({
     mutationFn: ({ id, email }: { id: string; email: string }) =>
       addParticipant(id, email),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: meetingKeys.all })
+    onSuccess: (_data, { id }) => {
+      invalidateMeetingDetail(qc, id)
+      invalidateMeetingLists(qc)
     },
   })
 }
@@ -81,8 +91,9 @@ export function useRemoveParticipant() {
   return useMutation({
     mutationFn: ({ id, email }: { id: string; email: string }) =>
       removeParticipant(id, email),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: meetingKeys.all })
+    onSuccess: (_data, { id }) => {
+      invalidateMeetingDetail(qc, id)
+      invalidateMeetingLists(qc)
     },
   })
 }

@@ -10,7 +10,7 @@ import {
   updateMemberRole,
 } from "~/entities/org/api"
 import type { OrgRole } from "~/entities/org/types"
-import { meQueryKey } from "~/shared/auth/use-me"
+import { invalidateMeExact } from "~/shared/api/query-utils"
 
 export const orgKeys = {
   members: (orgId: string) => ["orgs", orgId, "members"] as const,
@@ -38,7 +38,7 @@ export function useCreateOrg() {
   return useMutation({
     mutationFn: (name: string) => createOrg(name),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: meQueryKey })
+      invalidateMeExact(queryClient)
     },
   })
 }

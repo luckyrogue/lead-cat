@@ -25,8 +25,9 @@ function useParticipantMutation(
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: meetingKeys.detail(orgId, variables.meetingId),
+        exact: true,
       })
-      queryClient.invalidateQueries({ queryKey: meetingKeys.list(orgId) })
+      queryClient.invalidateQueries({ queryKey: meetingKeys.lists(orgId) })
     },
   })
 }
@@ -48,7 +49,7 @@ export function useCreateMeeting(orgId: string) {
   return useMutation({
     mutationFn: (input: CreateMeetingInput) => createMeeting(orgId, input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: meetingKeys.list(orgId) })
+      queryClient.invalidateQueries({ queryKey: meetingKeys.lists(orgId) })
     },
   })
 }
@@ -62,7 +63,7 @@ export function useUpdateMeeting(orgId: string) {
       scope: MeetingScope
     }) => updateMeeting(orgId, input.meetingId, input.values, input.scope),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: meetingKeys.list(orgId) })
+      queryClient.invalidateQueries({ queryKey: meetingKeys.lists(orgId) })
     },
   })
 }
@@ -73,7 +74,7 @@ export function useDeleteMeeting(orgId: string) {
     mutationFn: (input: { meetingId: string; scope: MeetingScope }) =>
       deleteMeeting(orgId, input.meetingId, input.scope),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: meetingKeys.list(orgId) })
+      queryClient.invalidateQueries({ queryKey: meetingKeys.lists(orgId) })
     },
   })
 }
@@ -84,7 +85,7 @@ export function useChangeSeriesEnd(orgId: string) {
     mutationFn: (input: { meetingId: string; until: string }) =>
       changeSeriesEnd(orgId, input.meetingId, input.until),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: meetingKeys.list(orgId) })
+      queryClient.invalidateQueries({ queryKey: meetingKeys.lists(orgId) })
     },
   })
 }

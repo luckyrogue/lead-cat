@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { acceptInvite, declineInvite, listMyInvites } from "./api"
-import { meQueryKey } from "~/shared/auth/use-me"
+import { invalidateMeExact } from "~/shared/api/query-utils"
 
 export const myInvitesKey = ["invites", "mine"] as const
 
@@ -17,7 +17,7 @@ export function useAcceptInvite() {
   return useMutation({
     mutationFn: acceptInvite,
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: meQueryKey })
+      void invalidateMeExact(qc)
       void qc.invalidateQueries({ queryKey: myInvitesKey })
     },
   })
