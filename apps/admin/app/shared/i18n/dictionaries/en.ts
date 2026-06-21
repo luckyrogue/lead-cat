@@ -455,11 +455,14 @@ export const en = {
       create: "Create survey",
       save: "Save changes",
     },
+    inactive: "Inactive",
     toast: {
       created: "Survey created.",
       updated: "Survey updated.",
+      deleted: "Survey deleted.",
       createFailed: "Could not create the survey.",
       updateFailed: "Could not update the survey.",
+      deleteFailed: "Could not delete the survey.",
     },
   },
   errors: {

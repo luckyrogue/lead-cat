@@ -464,11 +464,14 @@ export const ru: typeof en = {
       create: "Создать опрос",
       save: "Сохранить изменения",
     },
+    inactive: "Неактивен",
     toast: {
       created: "Опрос создан.",
       updated: "Опрос обновлён.",
+      deleted: "Опрос удалён.",
       createFailed: "Не удалось создать опрос.",
       updateFailed: "Не удалось обновить опрос.",
+      deleteFailed: "Не удалось удалить опрос.",
     },
   },
   errors: {

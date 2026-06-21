@@ -96,6 +96,7 @@ export {
   Bell,
   Building2,
   CalendarClock,
+  ClipboardList,
   CalendarDays,
   CalendarPlus,
   Check,
