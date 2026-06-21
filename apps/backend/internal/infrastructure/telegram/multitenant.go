@@ -82,7 +82,7 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 				h.reply(ctx, b, update.Message, reply)
 				return
 			}
-			if reply, handled := h.editor.OnText(ctx, from.ID, text); handled {
+			if reply, handled := h.editor.OnText(ctx, from.ID, text, h.resolveLang(ctx, from)); handled {
 				h.sendEditorReply(ctx, b, chatID, 0, reply)
 				return
 			}
@@ -127,7 +127,7 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 		}
 	case "/edit":
 		if isPrivate {
-			h.sendEditorReply(ctx, b, chatID, 0, h.editor.Start(ctx, from.ID))
+			h.sendEditorReply(ctx, b, chatID, 0, h.editor.Start(ctx, from.ID, h.resolveLang(ctx, from)))
 		}
 	case "/schedule":
 		if isPrivate {
@@ -195,7 +195,7 @@ func (h *MultiHandler) handleCallback(ctx context.Context, b *bot.Bot, cq *model
 		}
 	}
 	if strings.HasPrefix(cq.Data, "medit:") {
-		if reply, handled := h.editor.OnCallback(ctx, cq.From.ID, cq.Data); handled && cq.Message.Message != nil {
+		if reply, handled := h.editor.OnCallback(ctx, cq.From.ID, cq.Data, h.resolveLang(ctx, &cq.From)); handled && cq.Message.Message != nil {
 			h.sendEditorReply(ctx, b, cq.Message.Message.Chat.ID, cq.Message.Message.ID, reply)
 		}
 	}

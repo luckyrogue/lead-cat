@@ -155,7 +155,7 @@ func TestStart_ListsEditableMeetings(t *testing.T) {
 	}
 	svc := New(fb, newFakeSessions())
 
-	reply := svc.Start(context.Background(), 12345)
+	reply := svc.Start(context.Background(), 12345, "ru")
 
 	if reply.Text == "" {
 		t.Fatal("expected non-empty Text")
@@ -193,7 +193,7 @@ func TestStart_Empty(t *testing.T) {
 	fb := &fakeBackend{meetings: nil}
 	svc := New(fb, newFakeSessions())
 
-	reply := svc.Start(context.Background(), 99)
+	reply := svc.Start(context.Background(), 99, "ru")
 
 	if reply.Text == "" {
 		t.Fatal("expected non-empty Text for empty meetings list")
@@ -207,7 +207,7 @@ func TestStart_BackendError(t *testing.T) {
 	fb := &fakeBackend{listErr: errors.New("db down")}
 	svc := New(fb, newFakeSessions())
 
-	reply := svc.Start(context.Background(), 77)
+	reply := svc.Start(context.Background(), 77, "ru")
 
 	if reply.Text == "" {
 		t.Fatal("expected non-empty error Text")
@@ -230,7 +230,7 @@ func TestPick_OpensEditMenu(t *testing.T) {
 	sess := newFakeSessions()
 	svc := New(fb, sess)
 
-	reply, handled := svc.OnCallback(context.Background(), 42, "medit:pick:"+id.String())
+	reply, handled := svc.OnCallback(context.Background(), 42, "medit:pick:"+id.String(), "ru")
 
 	if !handled {
 		t.Fatal("expected OnCallback to handle medit:pick:*")
@@ -272,3 +272,25 @@ func TestPick_OpensEditMenu(t *testing.T) {
 // The pick→apply chain requires a fully-seeded State.Cur map (snapshot of a real Meeting)
 // and the UpdateMeeting/UpdateSeries fakes to return shaped postgres.Meeting values.
 // Drive those tests once the fake's UpdateMeeting is extended to return a canned meeting.
+
+// ---------------------------------------------------------------------------
+// Test: lang threading — ru vs en output differs
+// ---------------------------------------------------------------------------
+
+func TestMeetingEdit_Localized(t *testing.T) {
+	id := uuid.New()
+	m := makeMeetingWithTZ(id, "Meeting Alpha")
+
+	newSvc := func() *Service {
+		return New(&fakeBackend{meetings: []postgres.MeetingWithTZ{m}}, newFakeSessions())
+	}
+
+	ru := newSvc().Start(context.Background(), 1, "ru")
+	en := newSvc().Start(context.Background(), 1, "en")
+	if ru.Text == en.Text {
+		t.Fatalf("Start must differ by language; both = %q", ru.Text)
+	}
+	if !strings.Contains(en.Text, "Pick a meeting") && !strings.Contains(en.Text, "No upcoming") {
+		t.Errorf("en Start = %q", en.Text)
+	}
+}
