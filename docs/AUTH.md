@@ -111,7 +111,10 @@ Active routes under `/api/auth/web/*` (registered **before** the legacy 410 catc
 | `GET` | `/api/auth/web/:provider/start` | OAuth/SSO redirect (Google, Microsoft) |
 | `GET` | `/api/auth/web/:provider/callback` | OAuth callback; sets `lc_session` cookie |
 | `POST` | `/api/auth/web/magic/request` | Email magic-link request |
-| `GET` | `/api/auth/web/magic/verify` | Consume magic link; sets session cookie |
+| `GET` | `/api/auth/web/magic/verify` | Legacy: consume magic link from query; sets session cookie |
+| `POST` | `/api/auth/web/magic/verify` | Preferred: `{ "token": "..." }` in body; sets session cookie; returns `{ "redirect": "/..." }` |
+
+Magic-link emails point to the admin SPA at `/auth/magic?token=…`, which POSTs the token to the verify endpoint (token is not sent to the API in the email URL path).
 | `POST` | `/api/auth/web/logout` | Revoke session (requires session) |
 | `GET` | `/api/auth/web/me` | Current `platform_users` profile (requires session) |
 

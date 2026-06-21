@@ -23,6 +23,8 @@ type Config struct {
 
 	AuthDevMode       bool
 	TrustProxyHeaders bool
+	AppEnv            string
+	MetricsToken      string
 
 	JWTSecret string
 	JWTIssuer string
@@ -84,6 +86,9 @@ func Load() (Config, error) {
 		cfg.CORSAllowedOrigins = cfg.WebappURL
 	}
 	if cfg.CORSAllowedOrigins == "" {
+		if cfg.IsProduction() {
+			return cfg, fmt.Errorf("CORS_ALLOWED_ORIGINS is required when APP_ENV=production")
+		}
 		cfg.CORSAllowedOrigins = "http://localhost:3000,http://localhost:8080"
 	}
 	cfg.AutoMigrate = strings.EqualFold(os.Getenv("AUTO_MIGRATE"), "true")
@@ -100,6 +105,8 @@ func Load() (Config, error) {
 	}
 	cfg.AuthDevMode = strings.EqualFold(os.Getenv("AUTH_DEV_MODE"), "true")
 	cfg.TrustProxyHeaders = strings.EqualFold(os.Getenv("TRUST_PROXY_HEADERS"), "true")
+	cfg.AppEnv = envOr("APP_ENV", "development")
+	cfg.MetricsToken = strings.TrimSpace(os.Getenv("METRICS_TOKEN"))
 
 	ttlHours := 168
 	if v := strings.TrimSpace(os.Getenv("JWT_TTL_HOURS")); v != "" {
@@ -125,6 +132,9 @@ func Load() (Config, error) {
 	}
 	cfg.MagicLinkTTL = time.Duration(magicMinutes) * time.Minute
 
+	if cfg.IsProduction() && strings.Contains(cfg.RedisURL, "localhost") {
+		return cfg, fmt.Errorf("REDIS_URL must not point to localhost when APP_ENV=production")
+	}
 	if cfg.BotToken == "" {
 		if cfg.AuthDevMode {
 			cfg.BotToken = fakeDevBotToken
@@ -138,13 +148,25 @@ func Load() (Config, error) {
 	if len(cfg.MasterEncryptionKey) < 16 {
 		return cfg, fmt.Errorf("MASTER_ENCRYPTION_KEY must be at least 16 characters")
 	}
-	if !cfg.AuthDevMode && len(cfg.JWTSecret) < 16 {
-		return cfg, fmt.Errorf("JWT_SECRET must be at least 16 characters unless AUTH_DEV_MODE=true")
-	}
 	if cfg.JWTSecret == "" {
-		cfg.JWTSecret = cfg.MasterEncryptionKey
+		return cfg, fmt.Errorf("JWT_SECRET is required")
+	}
+	if len(cfg.JWTSecret) < 16 {
+		return cfg, fmt.Errorf("JWT_SECRET must be at least 16 characters")
+	}
+	if cfg.IsProduction() {
+		if cfg.AuthDevMode {
+			return cfg, fmt.Errorf("AUTH_DEV_MODE must not be set when APP_ENV=production")
+		}
+		if cfg.MetricsToken == "" {
+			return cfg, fmt.Errorf("METRICS_TOKEN is required when APP_ENV=production")
+		}
 	}
 	return cfg, nil
+}
+
+func (c Config) IsProduction() bool {
+	return strings.EqualFold(c.AppEnv, "production")
 }
 
 const fakeDevBotToken = "000000000:AAFakeDevTokenForLocalOnly"

@@ -300,6 +300,10 @@ func (s *stubRepo) UpdateBookingEventType(_ context.Context, _ model.BookingEven
 }
 func (s *stubRepo) DeleteBookingEventType(_ context.Context, _ uuid.UUID) error { return nil }
 
+func (s *stubRepo) WithHostBookingLock(ctx context.Context, _ uuid.UUID, _ time.Time, fn func(ctx context.Context) error) error {
+	return fn(ctx)
+}
+
 func buildFakeServices(t *testing.T, repo *stubRepo, connector *fakeCalendarConnector) *application.Services {
 	t.Helper()
 	svc := &application.Services{

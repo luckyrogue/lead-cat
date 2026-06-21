@@ -1,6 +1,6 @@
 .PHONY: help setup deps up down ps migrate migrate-down migrate-status \
 	backend backend-watch miniapp admin landing frontend dev lint fmt fmt-check hooks typecheck openapi-generate brand-sync build clean \
-	test ci
+	test ci ci-full govulncheck
 
 ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 BACKEND := $(ROOT)apps/backend
@@ -112,8 +112,18 @@ build: ## go binaries + openapi + frontend production build
 	@$(MAKE) openapi-generate
 	@$(PNPM) turbo run build --filter=./apps/*
 
-ci: fmt-check lint test typecheck build ## local CI gate (matches GitHub _build.yml)
+ci: fmt-check lint test typecheck build ## local CI gate (core _build.yml checks)
+	@cd $(BACKEND) && $(GO) vet ./...
 	@echo "ci: all gates passed"
+
+ci-full: ci ## full gate incl. OpenAPI drift + govulncheck + e2e
+	@$(PNPM) openapi:generate
+	@git diff --exit-code -- apps/backend/openapi/openapi.json packages/api-client/src/generated/schema.ts
+	@cd $(BACKEND) && go install golang.org/x/vuln/cmd/govulncheck@v1.1.4 && govulncheck -scan module ./...
+	@bash e2e/run.sh
+
+govulncheck:
+	@cd $(BACKEND) && go install golang.org/x/vuln/cmd/govulncheck@v1.1.4 && govulncheck -scan module ./...
 
 clean:
 	rm -rf $(BACKEND)/bin $(MINIAPP)/build $(MINIAPP)/dist $(ADMIN)/build $(ADMIN)/dist $(LANDING)/build $(LANDING)/dist .turbo

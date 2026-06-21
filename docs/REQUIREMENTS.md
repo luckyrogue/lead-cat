@@ -214,7 +214,7 @@ Default ports: API `:8080`, frontend `:3000`, Postgres `5432`, Redis `6379`.
 | `MASTER_ENCRYPTION_KEY`              | yes      | ≥32 chars; encrypts service-account JSON at rest.               |
 | `JWT_SECRET`                         | yes      | ≥16 chars; signs session JWTs.                                  |
 | `JWT_ISSUER`, `JWT_TTL_HOURS`        | no       | JWT issuer / lifetime (defaults: `lead-cat`, 168 h).            |
-| `AUTH_DEV_MODE`                      | dev      | `true` → any bearer token maps to a dev user.                   |
+| `AUTH_DEV_MODE`                      | dev      | `true` → raw `telegram_id` accepted as mini-app `init_data` when it lacks `hash=`/`auth_date=` (never in production). |
 | `WEBAPP_URL`, `CORS_ALLOWED_ORIGINS` | yes      | Frontend origin(s) for links & CORS.                            |
 | `LOG_LEVEL`, `LOG_FORMAT`            | no       | Structured logging (zap).                                       |
 | `AUTO_MIGRATE`                       | no       | `true` → run migrations on boot.                                |

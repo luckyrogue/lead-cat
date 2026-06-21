@@ -110,4 +110,6 @@ type Repository interface {
 	ListBookingEventTypesForUser(ctx context.Context, hostUserID uuid.UUID) ([]model.BookingEventType, error)
 	UpdateBookingEventType(ctx context.Context, et model.BookingEventType) error
 	DeleteBookingEventType(ctx context.Context, id uuid.UUID) error
+
+	WithHostBookingLock(ctx context.Context, hostUserID uuid.UUID, start time.Time, fn func(ctx context.Context) error) error
 }

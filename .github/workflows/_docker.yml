@@ -73,11 +73,15 @@ jobs:
 
           case "$SERVICE" in
             mini-app)
+              if [ -n "${VITE_TMA_DEV_TG_ID}" ]; then
+                echo "::error::VITE_TMA_DEV_TG_ID must not be set for production mini-app builds"
+                exit 1
+              fi
               {
                 echo 'build_args<<EOF'
                 echo "VITE_API_URL=${VITE_API_URL}"
                 echo "VITE_BOT_USERNAME=${VITE_BOT_USERNAME}"
-                echo "VITE_TMA_DEV_TG_ID=${VITE_TMA_DEV_TG_ID}"
+                echo "VITE_TMA_DEV_TG_ID="
                 echo 'EOF'
               } >> "$GITHUB_OUTPUT"
               ;;
@@ -135,8 +139,8 @@ jobs:
           esac
 
           if [ -z "$WEBHOOK" ]; then
-            echo "::warning::DOKPLOY webhook for $SERVICE is not configured, skipping deploy"
-            exit 0
+            echo "::error::DOKPLOY webhook for $SERVICE is not configured"
+            exit 1
           fi
 
           echo "Deploying $IMAGE via Dokploy"

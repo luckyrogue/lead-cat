@@ -8,6 +8,7 @@ import {
 } from "~/entities/calendar-connection/queries"
 import type { CalendarProvider } from "~/entities/calendar-connection/types"
 import { useT } from "~/shared/i18n/context"
+import { assertAllowedOAuthUrl } from "~/shared/lib/oauth-url"
 import { getWebApp } from "~/shared/tma/telegram-env"
 
 export function CalendarConnectionRow() {
@@ -27,7 +28,8 @@ export function CalendarConnectionRow() {
 
   const connect = async (provider: CalendarProvider) => {
     const res = await start.mutateAsync(provider)
-    getWebApp()?.openLink?.(res.auth_url)
+    const authUrl = assertAllowedOAuthUrl(res.auth_url)
+    getWebApp()?.openLink?.(authUrl)
   }
 
   return (

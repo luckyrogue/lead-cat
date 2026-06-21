@@ -7,6 +7,14 @@ export async function requestMagicLink(
   await api.post("/api/auth/web/magic/request", { email, language })
 }
 
+export async function verifyMagicLink(token: string): Promise<string> {
+  const { data } = await api.post<{ redirect: string }>(
+    "/api/auth/web/magic/verify",
+    { token }
+  )
+  return data.redirect || "/"
+}
+
 export async function logout(): Promise<void> {
   await api.post("/api/auth/web/logout")
 }

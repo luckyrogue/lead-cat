@@ -1,6 +1,6 @@
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /repo
-RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
+RUN corepack enable && corepack prepare pnpm@11.8.0 --activate
 ARG VITE_SITE_URL=https://lead-cat.space
 ARG VITE_BOT_USERNAME=lead_cat_bot
 ARG VITE_ADMIN_URL=
@@ -12,13 +12,14 @@ RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @leadcat/brand generate && pnpm --filter @leadcat/brand sync
 RUN pnpm --filter landing build
 
-FROM node:22-alpine AS runtime
+FROM node:24-alpine AS runtime
 RUN apk add --no-cache nginx wget
 WORKDIR /repo
-RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
+RUN corepack enable && corepack prepare pnpm@11.8.0 --activate
 ENV NODE_ENV=production
 ENV PORT=3001
 COPY --from=build /repo .
+COPY deploy/nginx/security-headers.conf /etc/nginx/security-headers.conf
 COPY deploy/nginx/ackee-location.conf /etc/nginx/ackee-location.conf
 COPY deploy/nginx/landing-ssr.conf /etc/nginx/http.d/default.conf
 EXPOSE 3000

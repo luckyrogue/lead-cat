@@ -49,10 +49,6 @@ func main() {
 		logger.Fatal("config", zap.Error(err))
 	}
 
-	if os.Getenv("METRICS_TOKEN") == "" && !cfg.AuthDevMode {
-		logger.Warn("metrics_endpoint_unprotected", zap.String("hint", "set METRICS_TOKEN to require a bearer token on /metrics"))
-	}
-
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 

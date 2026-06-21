@@ -72,6 +72,10 @@ func (f *submitFakeStore) SearchEmployeesGlobal(_ context.Context, _ string) ([]
 	return nil, nil
 }
 
+func (f *submitFakeStore) WithHostBookingLock(ctx context.Context, _ uuid.UUID, _ time.Time, fn func(ctx context.Context) error) error {
+	return fn(ctx)
+}
+
 type submitFakeCalProvider struct{ svc *submitFakeCalService }
 
 func (p *submitFakeCalProvider) For(_ context.Context, _ uuid.UUID, _ string) (docalendar.Service, error) {

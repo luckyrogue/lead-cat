@@ -15,6 +15,7 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application"
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/platform/authweb"
+	"github.com/luckyrogue/lead-cat/internal/platform/httpclient"
 )
 
 func (a *API) cookieSecure() bool {
@@ -23,7 +24,7 @@ func (a *API) cookieSecure() bool {
 
 func (a *API) setSessionCookies(c *fiber.Ctx, session, csrf string) {
 	secure := a.cookieSecure()
-	exp := time.Now().Add(30 * 24 * time.Hour)
+	exp := time.Now().Add(a.WebSessionTTL)
 	c.Cookie(&fiber.Cookie{
 		Name:     "lc_session",
 		Value:    session,
@@ -133,7 +134,7 @@ func (a *API) WebAuthCallback(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "upsert_failed")
 	}
 
-	raw, err := a.App.CreateWebSession(ctx, user.ID, c.Get("User-Agent"), c.IP())
+	raw, err := a.App.CreateWebSession(ctx, user.ID, c.Get("User-Agent"), httpclient.ClientIP(c, a.TrustProxyHeaders))
 	if err != nil {
 		a.Log.Error("web_create_session_failed", zap.Error(err))
 		return fiber.NewError(fiber.StatusInternalServerError, "session_failed")
@@ -171,28 +172,53 @@ func (a *API) WebMagicRequest(c *fiber.Ctx) error {
 }
 
 func (a *API) WebMagicVerify(c *fiber.Ctx) error {
-	ctx := c.UserContext()
 	token := c.Query("token")
-	email, err := a.App.VerifyMagicLink(ctx, token)
+	if token == "" {
+		return c.Redirect(a.App.AppBaseURL()+"/login?error=invalid_link", fiber.StatusFound)
+	}
+	dest, err := a.finishMagicLogin(c, token)
 	if err != nil {
 		return c.Redirect(a.App.AppBaseURL()+"/login?error=invalid_link", fiber.StatusFound)
+	}
+	return c.Redirect(a.App.AppBaseURL()+dest, fiber.StatusFound)
+}
+
+func (a *API) WebMagicVerifyPOST(c *fiber.Ctx) error {
+	var body struct {
+		Token string `json:"token"`
+	}
+	if err := c.BodyParser(&body); err != nil || strings.TrimSpace(body.Token) == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid_body")
+	}
+	dest, err := a.finishMagicLogin(c, body.Token)
+	if err != nil {
+		return fiber.NewError(fiber.StatusUnauthorized, "invalid_link")
+	}
+	return c.JSON(fiber.Map{"redirect": dest})
+}
+
+func (a *API) finishMagicLogin(c *fiber.Ctx, token string) (string, error) {
+	ctx := c.UserContext()
+	email, err := a.App.VerifyMagicLink(ctx, token)
+	if err != nil {
+		return "", err
 	}
 	user, err := a.App.UpsertWebIdentity(ctx, email, "", "", application.AuthMethodMagicLink)
 	if err != nil {
 		a.Log.Error("web_upsert_identity_failed", zap.Error(err))
-		return fiber.NewError(fiber.StatusInternalServerError, "upsert_failed")
+		return "", err
 	}
-	raw, err := a.App.CreateWebSession(ctx, user.ID, c.Get("User-Agent"), c.IP())
+	raw, err := a.App.CreateWebSession(ctx, user.ID, c.Get("User-Agent"), httpclient.ClientIP(c, a.TrustProxyHeaders))
 	if err != nil {
 		a.Log.Error("web_create_session_failed", zap.Error(err))
-		return fiber.NewError(fiber.StatusInternalServerError, "session_failed")
+		return "", err
 	}
 	csrf, err := authweb.NewState(nil)
 	if err != nil {
-		return err
+		return "", err
 	}
 	a.setSessionCookies(c, raw, csrf)
-	return c.Redirect(a.App.AppBaseURL()+a.postLoginDest(ctx, user.ID), fiber.StatusFound)
+	return a.postLoginDest(ctx, user.ID), nil
 }
 
 func (a *API) WebLogout(c *fiber.Ctx) error {

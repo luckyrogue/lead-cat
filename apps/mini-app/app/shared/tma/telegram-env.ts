@@ -41,7 +41,11 @@ export function getInitData(): string {
     return fromTelegram
   }
   const devTgId = import.meta.env.VITE_TMA_DEV_TG_ID
-  if (typeof devTgId === "string" && devTgId.length > 0) {
+  if (
+    import.meta.env.DEV &&
+    typeof devTgId === "string" &&
+    devTgId.length > 0
+  ) {
     return devTgId
   }
   return ""

@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { Suspense, useEffect } from "react"
 import { Navigate, Outlet, useLocation } from "react-router"
 
 import { AppSidebar } from "~/components/app-sidebar"
@@ -41,7 +41,9 @@ export default function AppLayout() {
             <AppSidebar me={me} />
             <main className="min-w-0 xl:h-full xl:min-h-0">
               <div className="surface-card min-h-full rounded-[calc(var(--radius)*1.75)] px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-                <Outlet />
+                <Suspense fallback={<PageLoading>Loading…</PageLoading>}>
+                  <Outlet />
+                </Suspense>
               </div>
             </main>
           </div>

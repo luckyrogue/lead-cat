@@ -29,12 +29,12 @@ func (a *API) MiniAppAuth(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
 	}
 	var tgID int64
-	if a.AuthDevMode && !looksLikeTelegramInitData(req.InitData) {
-
+	if a.AuthDevMode && !strings.EqualFold(a.AppEnv, "production") && !looksLikeTelegramInitData(req.InitData) {
 		id, err := strconv.ParseInt(strings.TrimSpace(req.InitData), 10, 64)
 		if err != nil || id == 0 {
 			return fiber.NewError(fiber.StatusBadRequest, "dev init_data must be a telegram id")
 		}
+		a.Log.Warn("auth_dev_bypass_used", zap.Int64("telegram_id", id))
 		tgID = id
 	} else {
 		u, err := a.InitData.Validate(req.InitData)

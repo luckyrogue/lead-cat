@@ -37,6 +37,7 @@ services:
       context: ..
       dockerfile: apps/backend/Dockerfile
     environment:
+      APP_ENV: development
       AUTH_DEV_MODE: "true"
       AUTO_MIGRATE: "true"
       MASTER_ENCRYPTION_KEY: e2e-master-encryption-key-please-32b
@@ -72,6 +73,32 @@ services:
       API_UPSTREAM: http://backend:8080
     ports:
       - "8090:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - e2e
+
+  mini-app:
+    build:
+      context: ..
+      dockerfile: apps/mini-app/Dockerfile
+    environment:
+      API_UPSTREAM: http://backend:8080
+    ports:
+      - "8092:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - e2e
+
+  landing:
+    build:
+      context: ..
+      dockerfile: apps/landing/Dockerfile
+    ports:
+      - "8091:3000"
     depends_on:
       backend:
         condition: service_healthy

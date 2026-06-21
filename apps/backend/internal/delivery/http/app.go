@@ -16,6 +16,7 @@ import (
 
 	"github.com/luckyrogue/lead-cat/internal/application"
 	"github.com/luckyrogue/lead-cat/internal/delivery/http/handlers"
+	"github.com/luckyrogue/lead-cat/internal/delivery/http/httperr"
 	"github.com/luckyrogue/lead-cat/internal/delivery/http/middleware"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/crypto"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/telegram"
@@ -26,12 +27,14 @@ import (
 func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypto.TokenCipher, rdb *redis.Client, tg *bot.Bot, log *zap.Logger, services *application.Services) (*fiber.App, error) {
 	_ = cipher
 	app := fiber.New(fiber.Config{
+		EnableTrustedProxyCheck: cfg.TrustProxyHeaders,
+		ProxyHeader:             "X-Real-IP",
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			code := fiber.StatusInternalServerError
 			if e, ok := err.(*fiber.Error); ok {
 				code = e.Code
 			}
-			return c.Status(code).JSON(fiber.Map{"error": "error", "message": err.Error()})
+			return c.Status(code).JSON(fiber.Map{"error": "error", "message": httperr.PublicMessage(err)})
 		},
 	})
 	app.Use(recover.New())
@@ -53,20 +56,24 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 		AllowCredentials: true,
 	}))
 
-	miniappToken, err := platformauth.NewMiniAppToken(cfg.JWTSecret, cfg.JWTIssuer, 24*time.Hour)
+	miniappToken, err := platformauth.NewMiniAppToken(cfg.JWTSecret, cfg.JWTIssuer, cfg.JWTTTL)
 	if err != nil {
 		return nil, err
 	}
 
 	api := &handlers.API{
-		App:          services,
-		Bot:          tg,
-		RDB:          rdb,
-		Log:          log,
-		InitData:     telegram.NewInitDataValidator(cfg.BotToken),
-		Version:      os.Getenv("APP_VERSION"),
-		MiniAppToken: miniappToken,
-		AuthDevMode:  cfg.AuthDevMode,
+		App:               services,
+		Bot:               tg,
+		RDB:               rdb,
+		Log:               log,
+		InitData:          telegram.NewInitDataValidator(cfg.BotToken),
+		Version:           os.Getenv("APP_VERSION"),
+		MiniAppToken:      miniappToken,
+		AuthDevMode:       cfg.AuthDevMode,
+		AppEnv:            cfg.AppEnv,
+		MetricsToken:      cfg.MetricsToken,
+		TrustProxyHeaders: cfg.TrustProxyHeaders,
+		WebSessionTTL:     cfg.WebSessionTTL,
 
 		WebCookieDomain: cfg.WebCookieDomain,
 	}
@@ -75,14 +82,15 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	app.Get("/openapi.json", handlers.OpenAPI)
 	app.Get("/metrics", api.Metrics)
 
-	app.Post("/api/auth/miniapp", api.MiniAppAuth)
+	app.Post("/api/auth/miniapp", middleware.RateLimit(rdb, log, 10, time.Minute, "miniapp_auth", cfg.TrustProxyHeaders, cfg.AuthDevMode), api.MiniAppAuth)
 
 	webAuth := middleware.NewWebAuth(services)
 	web := app.Group("/api/auth/web")
 	web.Get("/:provider/start", api.WebAuthStart)
 	web.Get("/:provider/callback", api.WebAuthCallback)
-	web.Post("/magic/request", middleware.RateLimit(rdb, log, 5, 15*time.Minute, "magic", cfg.TrustProxyHeaders), api.WebMagicRequest)
+	web.Post("/magic/request", middleware.RateLimit(rdb, log, 5, 15*time.Minute, "magic", cfg.TrustProxyHeaders, cfg.AuthDevMode), api.WebMagicRequest)
 	web.Get("/magic/verify", api.WebMagicVerify)
+	web.Post("/magic/verify", middleware.RateLimit(rdb, log, 10, time.Minute, "magic_verify", cfg.TrustProxyHeaders, cfg.AuthDevMode), api.WebMagicVerifyPOST)
 	web.Post("/logout", webAuth.Middleware, api.WebLogout)
 	web.Get("/me", webAuth.Middleware, api.WebMe)
 	web.Get("/me/settings", webAuth.Middleware, api.WebGetMeSettings)
@@ -144,8 +152,8 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	booking.Patch("/event-types/:id", api.BookingUpdateEventType)
 	booking.Delete("/event-types/:id", api.BookingDeleteEventType)
 
-	app.Get("/api/book/:slug", middleware.RateLimit(rdb, log, 60, time.Minute, "book_get", cfg.TrustProxyHeaders), api.PublicBooking)
-	app.Post("/api/book/:slug", middleware.RateLimit(rdb, log, 10, time.Hour, "book_post", cfg.TrustProxyHeaders), api.PublicBookingSubmit)
+	app.Get("/api/book/:slug", middleware.RateLimit(rdb, log, 60, time.Minute, "book_get", cfg.TrustProxyHeaders, cfg.AuthDevMode), api.PublicBooking)
+	app.Post("/api/book/:slug", middleware.RateLimit(rdb, log, 10, time.Hour, "book_post", cfg.TrustProxyHeaders, cfg.AuthDevMode), api.PublicBookingSubmit)
 
 	app.Get("/api/calendar/connect/:provider/callback", api.CalendarConnectCallback)
 
@@ -158,7 +166,7 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	miniapp.Get("/calendar/connections", api.CalendarConnectionsList)
 	miniapp.Delete("/calendar/connections/:provider", api.CalendarDisconnect)
 
-	miniappAdmin := miniapp.Group("/admin", middleware.RequireBotAdmin)
+	miniappAdmin := miniapp.Group("/admin", middleware.RequireBotAdmin(cfg.BotAdminTelegramIDs))
 	miniappAdmin.Get("/organization", api.MiniAppAdminGetWorkspace)
 	miniappAdmin.Post("/organization", api.MiniAppAdminCreateWorkspace)
 	miniappAdmin.Get("/workspace", handlers.DeprecatedAdminWorkspace(api.MiniAppAdminGetWorkspace))

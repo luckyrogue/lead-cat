@@ -46,7 +46,7 @@ func (s *Services) ConfigureWebAuth(sso map[string]SSOProvider, email EmailSende
 	s.email = email
 	s.appBaseURL = appBaseURL
 	s.webappURL = webappURL
-	s.magic = newMagicLinkService(s.Store, email, appBaseURL, magicTTL, time.Now)
+	s.magic = newMagicLinkService(s.Store, email, appBaseURL, webappURL, magicTTL, time.Now)
 	s.sessions = newWebSessionService(s.Store, sessionTTL, time.Now)
 }
 

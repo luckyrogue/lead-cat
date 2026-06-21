@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/luckyrogue/lead-cat/internal/platform/authweb"
@@ -18,18 +19,27 @@ type magicLinkRepo interface {
 }
 
 type magicLinkService struct {
-	repo    magicLinkRepo
-	mailer  EmailSender
-	baseURL string
-	ttl     time.Duration
-	clock   func() time.Time
+	repo       magicLinkRepo
+	mailer     EmailSender
+	appBaseURL string
+	webappURL  string
+	ttl        time.Duration
+	clock      func() time.Time
 }
 
-func newMagicLinkService(repo magicLinkRepo, mailer EmailSender, baseURL string, ttl time.Duration, clock func() time.Time) *magicLinkService {
+func newMagicLinkService(repo magicLinkRepo, mailer EmailSender, appBaseURL, webappURL string, ttl time.Duration, clock func() time.Time) *magicLinkService {
 	if clock == nil {
 		clock = time.Now
 	}
-	return &magicLinkService{repo: repo, mailer: mailer, baseURL: baseURL, ttl: ttl, clock: clock}
+	return &magicLinkService{repo: repo, mailer: mailer, appBaseURL: appBaseURL, webappURL: webappURL, ttl: ttl, clock: clock}
+}
+
+func (s *magicLinkService) magicLinkURL(raw string) string {
+	base := strings.TrimRight(s.webappURL, "/")
+	if base == "" {
+		base = strings.TrimRight(s.appBaseURL, "/")
+	}
+	return fmt.Sprintf("%s/auth/magic?token=%s", base, raw)
 }
 
 func (s *magicLinkService) RequestMagicLink(ctx context.Context, email, language string) error {
@@ -40,7 +50,7 @@ func (s *magicLinkService) RequestMagicLink(ctx context.Context, email, language
 	if err := s.repo.InsertMagicLink(ctx, email, authweb.HashToken(raw), s.clock().Add(s.ttl)); err != nil {
 		return err
 	}
-	link := fmt.Sprintf("%s/api/auth/web/magic/verify?token=%s", s.baseURL, raw)
+	link := s.magicLinkURL(raw)
 	subject, text, html, err := emailtemplates.RenderMagicLink(emailtemplates.MagicLinkData{
 		Language:       language,
 		SignInURL:      link,

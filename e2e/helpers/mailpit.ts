@@ -11,7 +11,9 @@ export async function getLatestMagicLink(email: string): Promise<string> {
         const body = (await msg.json()) as { Text?: string; HTML?: string }
         const combined = (body.Text ?? "") + (body.HTML ?? "")
         const decoded = combined.replace(/&amp;/g, "&")
-        const m = decoded.match(/https?:\/\/[^\s"'<>]*\/api\/auth\/web\/magic\/verify[^\s"'<>]*/)
+        const m =
+          decoded.match(/https?:\/\/[^\s"'<>]*\/auth\/magic[^\s"'<>]*/) ??
+          decoded.match(/https?:\/\/[^\s"'<>]*\/api\/auth\/web\/magic\/verify[^\s"'<>]*/)
         if (m) return m[0]
       }
     }

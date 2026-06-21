@@ -63,33 +63,40 @@ func (s *Services) SubmitBooking(ctx context.Context, slug string, req BookingRe
 	if err != nil || !ok || host.Email == "" {
 		return BookingConfirmation{}, model.ErrInvalidBooking
 	}
-	conflicts, err := s.MeetingConflicts(ctx, host.Email, []string{host.Email}, start.UTC(), end.UTC(), uuid.Nil)
-	if err != nil {
-		return BookingConfirmation{}, err
-	}
-	if len(conflicts) > 0 {
-		return BookingConfirmation{}, model.ErrSlotTaken
-	}
-	m, err := s.CreateMeeting(ctx, et.OrganizationID, et.HostUserID, CreateMeetingInput{
-		Dept:         et.Title,
-		Type:         "Booking",
-		Host:         name,
-		Title:        et.Title + " — " + name,
-		Description:  "Booked via " + et.Title + " by " + name + " <" + req.Email + ">",
-		Date:         start.Format("2006-01-02"),
-		Start:        start.Format("15:04"),
-		End:          end.Format("15:04"),
-		Timezone:     et.Timezone,
-		Recurrence:   "once",
-		Participants: []model.MeetingParticipant{{Email: req.Email}},
+
+	var out BookingConfirmation
+	err = s.Store.WithHostBookingLock(ctx, et.HostUserID, start.UTC(), func(ctx context.Context) error {
+		conflicts, cerr := s.MeetingConflicts(ctx, host.Email, []string{host.Email}, start.UTC(), end.UTC(), uuid.Nil)
+		if cerr != nil {
+			return cerr
+		}
+		if len(conflicts) > 0 {
+			return model.ErrSlotTaken
+		}
+		m, cerr := s.CreateMeeting(ctx, et.OrganizationID, et.HostUserID, CreateMeetingInput{
+			Dept:         et.Title,
+			Type:         "Booking",
+			Host:         name,
+			Title:        et.Title + " — " + name,
+			Description:  "Booked via " + et.Title + " by " + name + " <" + req.Email + ">",
+			Date:         start.Format("2006-01-02"),
+			Start:        start.Format("15:04"),
+			End:          end.Format("15:04"),
+			Timezone:     et.Timezone,
+			Recurrence:   "once",
+			Participants: []model.MeetingParticipant{{Email: req.Email}},
+		})
+		if cerr != nil {
+			return cerr
+		}
+		s.sendBookingEmails(ctx, et, host, req, name, start, end, m.MeetLink)
+		out = BookingConfirmation{MeetLink: m.MeetLink, Start: start.UTC(), End: end.UTC()}
+		return nil
 	})
 	if err != nil {
 		return BookingConfirmation{}, err
 	}
-
-	s.sendBookingEmails(ctx, et, host, req, name, start, end, m.MeetLink)
-
-	return BookingConfirmation{MeetLink: m.MeetLink, Start: start.UTC(), End: end.UTC()}, nil
+	return out, nil
 }
 
 func (s *Services) sendBookingEmails(

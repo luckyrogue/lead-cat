@@ -1,5 +1,14 @@
 import { ACKEE_BASE_PATH, brandHeadLinks } from "@leadcat/brand"
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router"
+import {
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  type ErrorResponse,
+} from "react-router"
+
+import { RouteErrorPage } from "~/components/route-error-page"
 
 import "./app.css"
 
@@ -37,4 +46,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return <Outlet />
+}
+
+export function ErrorBoundary({ error }: { error: ErrorResponse | Error }) {
+  return <RouteErrorPage error={error} />
 }

@@ -31,7 +31,7 @@ jobs:
 
   docker:
     name: docker
-    needs: [build, e2e]
+    needs: [build, e2e, security]
     if: |
       success() &&
       github.event_name == 'push' &&

@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
+import { assertAllowedOAuthUrl } from "~/shared/lib/oauth-url"
+
 import { disconnect, listConnections, startConnect } from "./api"
 
 export const calendarConnectionKeys = {
@@ -17,7 +19,7 @@ export function useStartConnect() {
   return useMutation({
     mutationFn: (provider: string) => startConnect(provider),
     onSuccess: (data) => {
-      window.location.href = data.auth_url
+      window.location.href = assertAllowedOAuthUrl(data.auth_url)
     },
   })
 }

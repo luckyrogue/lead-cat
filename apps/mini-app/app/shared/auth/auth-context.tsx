@@ -8,12 +8,15 @@ import {
   useState,
 } from "react"
 
-import { setReauthHandler } from "~/shared/api/client"
+import {
+  setReauthHandler,
+  setSessionInvalidatedHandler,
+} from "~/shared/api/client"
 import { ApiError } from "~/shared/api/types"
-import { authenticate } from "~/shared/auth/tma-api"
+import { authenticate, fetchMe } from "~/shared/auth/tma-api"
 import {
   clearSession,
-  getSession,
+  getToken,
   setSession,
   type AuthUser,
 } from "~/shared/auth/session"
@@ -73,6 +76,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return inFlight.current
   }, [runAuth])
 
+  const onSessionInvalidated = useCallback(() => {
+    clearSession()
+    setUser(null)
+    setStatus("loading")
+    setError(null)
+    void authenticateOnce()
+  }, [authenticateOnce])
+
   const retry = useCallback(() => {
     setStatus("loading")
     setError(null)
@@ -81,15 +92,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setReauthHandler(authenticateOnce)
-    const existing = getSession()
-    if (existing) {
-      setUser(existing.user)
-      setStatus("authed")
-    } else {
-      void authenticateOnce()
+    setSessionInvalidatedHandler(onSessionInvalidated)
+
+    async function restoreSession() {
+      const token = getToken()
+      if (!token) {
+        await authenticateOnce()
+        return
+      }
+      try {
+        const me = await fetchMe()
+        setSession({ token, user: me })
+        setUser(me)
+        setStatus("authed")
+        setError(null)
+      } catch {
+        clearSession()
+        setUser(null)
+        await authenticateOnce()
+      }
     }
-    return () => setReauthHandler(null)
-  }, [authenticateOnce])
+
+    void restoreSession()
+
+    return () => {
+      setReauthHandler(null)
+      setSessionInvalidatedHandler(null)
+    }
+  }, [authenticateOnce, onSessionInvalidated])
 
   const value = useMemo<AuthState>(
     () => ({ status, user, error, retry }),

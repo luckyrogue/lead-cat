@@ -45,7 +45,7 @@ func reqXRI(app *fiber.App, ip string) int {
 
 func TestRateLimit_AllowsThenBlocks(t *testing.T) {
 	rdb := newRedis(t)
-	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 3, time.Minute, "t", true))
+	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 3, time.Minute, "t", true, false))
 	for i := 0; i < 3; i++ {
 		if code := reqXRI(app, "1.1.1.1"); code != 200 {
 			t.Fatalf("req %d: want 200 got %d", i, code)
@@ -58,7 +58,7 @@ func TestRateLimit_AllowsThenBlocks(t *testing.T) {
 
 func TestRateLimit_IndependentIPs(t *testing.T) {
 	rdb := newRedis(t)
-	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 1, time.Minute, "t", true))
+	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 1, time.Minute, "t", true, false))
 	if reqXRI(app, "1.1.1.1") != 200 || reqXRI(app, "2.2.2.2") != 200 {
 		t.Fatal("distinct IPs must each be allowed once")
 	}
@@ -76,15 +76,30 @@ func TestRateLimit_FailOpenOnRedisError(t *testing.T) {
 		MaxRetries:  0,
 	})
 	mr.Close()
-	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 1, time.Minute, "t", true))
+	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 1, time.Minute, "t", true, true))
 	if code := reqXRI(app, "1.1.1.1"); code != 200 {
 		t.Fatalf("fail-open: want 200 got %d", code)
 	}
 }
 
+func TestRateLimit_FailClosedOnRedisError(t *testing.T) {
+	mr, _ := miniredis.Run()
+	rdb := redis.NewClient(&redis.Options{
+		Addr:        mr.Addr(),
+		DialTimeout: 50 * time.Millisecond,
+		ReadTimeout: 50 * time.Millisecond,
+		MaxRetries:  0,
+	})
+	mr.Close()
+	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 1, time.Minute, "t", true, false))
+	if code := reqXRI(app, "1.1.1.1"); code != 503 {
+		t.Fatalf("fail-closed: want 503 got %d", code)
+	}
+}
+
 func TestRateLimit_WindowReset(t *testing.T) {
 	mr, rdb := newRedisWithMR(t)
-	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 2, time.Minute, "t", true))
+	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 2, time.Minute, "t", true, false))
 
 	if code := reqXRI(app, "3.3.3.3"); code != 200 {
 		t.Fatalf("req 1: want 200 got %d", code)
@@ -114,7 +129,7 @@ func TestRateLimit_RetryAfterHeader(t *testing.T) {
 			return c.Status(code).JSON(fiber.Map{"error": err.Error()})
 		},
 	})
-	app.Get("/x", middleware.RateLimit(rdb, zap.NewNop(), 1, time.Minute, "t", true), func(c *fiber.Ctx) error {
+	app.Get("/x", middleware.RateLimit(rdb, zap.NewNop(), 1, time.Minute, "t", true, false), func(c *fiber.Ctx) error {
 		return c.SendString("ok")
 	})
 
@@ -142,7 +157,7 @@ func TestRateLimit_RetryAfterHeader(t *testing.T) {
 
 func TestRateLimit_IgnoresSpoofedHeaderWhenUntrusted(t *testing.T) {
 	rdb := newRedis(t)
-	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 2, time.Minute, "t", false))
+	app := appWith(middleware.RateLimit(rdb, zap.NewNop(), 2, time.Minute, "t", false, false))
 
 	sendWith := func(xri, xff string) int {
 		r := httptest.NewRequest("GET", "/x", nil)

@@ -136,11 +136,14 @@ func (c *Meetings) CreateMeeting(ctx context.Context, organizationID, organizerI
 			GoogleEventID: cal.EventID, MeetLink: cal.MeetLink,
 		})
 		if err != nil {
+			c.deleteEventsBestEffort(ctx, calSvc, []string{cal.EventID})
 			return model.Meeting{}, err
 		}
 		if len(in.Participants) > 0 {
 			if err := c.Store.AddParticipants(ctx, m.ID, in.Participants); err != nil {
-				return m, err
+				c.deleteEventsBestEffort(ctx, calSvc, []string{cal.EventID})
+				_ = c.Store.CancelMeeting(ctx, organizationID, m.ID)
+				return model.Meeting{}, err
 			}
 			m.Participants = in.Participants
 		}

@@ -1,7 +1,8 @@
 package handlers
 
 import (
-	"os"
+	"crypto/subtle"
+	"time"
 
 	"github.com/go-telegram/bot"
 	"github.com/gofiber/fiber/v2"
@@ -16,14 +17,18 @@ import (
 )
 
 type API struct {
-	App          *application.Services
-	Bot          *bot.Bot
-	RDB          *redis.Client
-	Log          *zap.Logger
-	InitData     *telegram.InitDataValidator
-	MiniAppToken *platformauth.MiniAppToken
-	AuthDevMode  bool
-	Version      string
+	App               *application.Services
+	Bot               *bot.Bot
+	RDB               *redis.Client
+	Log               *zap.Logger
+	InitData          *telegram.InitDataValidator
+	MiniAppToken      *platformauth.MiniAppToken
+	AuthDevMode       bool
+	AppEnv            string
+	MetricsToken      string
+	TrustProxyHeaders bool
+	WebSessionTTL     time.Duration
+	Version           string
 
 	WebCookieDomain string
 }
@@ -55,8 +60,12 @@ func (a *API) Health(c *fiber.Ctx) error {
 }
 
 func (a *API) Metrics(c *fiber.Ctx) error {
-	if tok := os.Getenv("METRICS_TOKEN"); tok != "" && c.Get("Authorization") != "Bearer "+tok {
-		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
+	if a.MetricsToken != "" {
+		auth := c.Get("Authorization")
+		want := "Bearer " + a.MetricsToken
+		if subtle.ConstantTimeCompare([]byte(auth), []byte(want)) != 1 {
+			return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
+		}
 	}
 	fasthttpadaptor.NewFastHTTPHandler(promhttp.Handler())(c.Context())
 	return nil

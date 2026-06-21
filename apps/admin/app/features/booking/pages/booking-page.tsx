@@ -23,14 +23,18 @@ import type {
 import { EventTypeDialog } from "~/features/booking/components/event-type-dialog"
 import { ListPageShell } from "~/components/list-page-shell"
 import { toastError, toastSuccess } from "~/shared/lib/toast"
+import { useActiveOrg } from "~/shared/auth/use-active-org"
+import { useMe } from "~/shared/auth/use-me"
 import { useT } from "~/shared/i18n/context"
 
 export function BookingPage() {
   const t = useT()
-  const { data: eventTypes, isPending, error } = useMyEventTypes()
-  const createEventType = useCreateEventType()
-  const updateEventType = useUpdateEventType()
-  const deleteEventType = useDeleteEventType()
+  const { data: me } = useMe()
+  const { activeOrgId } = useActiveOrg(me?.organizations ?? [])
+  const { data: eventTypes, isPending, error } = useMyEventTypes(activeOrgId)
+  const createEventType = useCreateEventType(activeOrgId ?? "")
+  const updateEventType = useUpdateEventType(activeOrgId ?? "")
+  const deleteEventType = useDeleteEventType(activeOrgId ?? "")
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<BookingEventType | null>(null)
