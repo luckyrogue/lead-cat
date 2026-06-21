@@ -61,6 +61,13 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 		return nil, err
 	}
 
+	rateLimit := func(max int, window time.Duration, prefix string) fiber.Handler {
+		if cfg.RateLimitDisabled {
+			return func(c *fiber.Ctx) error { return c.Next() }
+		}
+		return middleware.RateLimit(rdb, log, max, window, prefix, cfg.TrustProxyHeaders, cfg.AuthDevMode)
+	}
+
 	api := &handlers.API{
 		App:               services,
 		Bot:               tg,
@@ -82,15 +89,15 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	app.Get("/openapi.json", handlers.OpenAPI)
 	app.Get("/metrics", api.Metrics)
 
-	app.Post("/api/auth/miniapp", middleware.RateLimit(rdb, log, 10, time.Minute, "miniapp_auth", cfg.TrustProxyHeaders, cfg.AuthDevMode), api.MiniAppAuth)
+	app.Post("/api/auth/miniapp", rateLimit(10, time.Minute, "miniapp_auth"), api.MiniAppAuth)
 
 	webAuth := middleware.NewWebAuth(services)
 	web := app.Group("/api/auth/web")
 	web.Get("/:provider/start", api.WebAuthStart)
 	web.Get("/:provider/callback", api.WebAuthCallback)
-	web.Post("/magic/request", middleware.RateLimit(rdb, log, 5, 15*time.Minute, "magic", cfg.TrustProxyHeaders, cfg.AuthDevMode), api.WebMagicRequest)
+	web.Post("/magic/request", rateLimit(5, 15*time.Minute, "magic"), api.WebMagicRequest)
 	web.Get("/magic/verify", api.WebMagicVerify)
-	web.Post("/magic/verify", middleware.RateLimit(rdb, log, 10, time.Minute, "magic_verify", cfg.TrustProxyHeaders, cfg.AuthDevMode), api.WebMagicVerifyPOST)
+	web.Post("/magic/verify", rateLimit(10, time.Minute, "magic_verify"), api.WebMagicVerifyPOST)
 	web.Post("/logout", webAuth.Middleware, api.WebLogout)
 	web.Get("/me", webAuth.Middleware, api.WebMe)
 	web.Get("/me/settings", webAuth.Middleware, api.WebGetMeSettings)
@@ -153,8 +160,8 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	booking.Patch("/event-types/:id", api.BookingUpdateEventType)
 	booking.Delete("/event-types/:id", api.BookingDeleteEventType)
 
-	app.Get("/api/book/:slug", middleware.RateLimit(rdb, log, 60, time.Minute, "book_get", cfg.TrustProxyHeaders, cfg.AuthDevMode), api.PublicBooking)
-	app.Post("/api/book/:slug", middleware.RateLimit(rdb, log, 10, time.Hour, "book_post", cfg.TrustProxyHeaders, cfg.AuthDevMode), api.PublicBookingSubmit)
+	app.Get("/api/book/:slug", rateLimit(60, time.Minute, "book_get"), api.PublicBooking)
+	app.Post("/api/book/:slug", rateLimit(10, time.Hour, "book_post"), api.PublicBookingSubmit)
 
 	app.Get("/api/calendar/connect/:provider/callback", api.CalendarConnectCallback)
 

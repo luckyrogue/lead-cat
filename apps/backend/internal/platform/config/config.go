@@ -23,6 +23,7 @@ type Config struct {
 
 	AuthDevMode       bool
 	TrustProxyHeaders bool
+	RateLimitDisabled bool
 	AppEnv            string
 	MetricsToken      string
 
@@ -104,6 +105,7 @@ func Load() (Config, error) {
 		}
 	}
 	cfg.AuthDevMode = strings.EqualFold(os.Getenv("AUTH_DEV_MODE"), "true")
+	cfg.RateLimitDisabled = strings.EqualFold(os.Getenv("RATE_LIMIT_DISABLED"), "true")
 	cfg.TrustProxyHeaders = strings.EqualFold(os.Getenv("TRUST_PROXY_HEADERS"), "true")
 	cfg.AppEnv = envOr("APP_ENV", "development")
 	cfg.MetricsToken = strings.TrimSpace(os.Getenv("METRICS_TOKEN"))
@@ -157,6 +159,9 @@ func Load() (Config, error) {
 	if cfg.IsProduction() {
 		if cfg.AuthDevMode {
 			return cfg, fmt.Errorf("AUTH_DEV_MODE must not be set when APP_ENV=production")
+		}
+		if cfg.RateLimitDisabled {
+			return cfg, fmt.Errorf("RATE_LIMIT_DISABLED must not be set when APP_ENV=production")
 		}
 		if cfg.MetricsToken == "" {
 			return cfg, fmt.Errorf("METRICS_TOKEN is required when APP_ENV=production")

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -120,5 +121,21 @@ func TestIsDevelopment(t *testing.T) {
 	}
 	if (Config{AppEnv: "staging"}).IsDevelopment() {
 		t.Fatal("staging is not development")
+	}
+}
+
+func TestRateLimitDisabled_BlockedInProduction(t *testing.T) {
+	clearConfigEnv(t)
+	baseEnv(t)
+	t.Setenv("APP_ENV", "production")
+	t.Setenv("RATE_LIMIT_DISABLED", "true")
+	t.Setenv("METRICS_TOKEN", "prod-metrics-token")
+	t.Setenv("BOT_TOKEN", "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11")
+	t.Setenv("REDIS_URL", "redis://redis.prod.example:6379/0")
+	t.Setenv("CORS_ALLOWED_ORIGINS", "https://admin.example.com")
+
+	_, err := Load()
+	if err == nil || !strings.Contains(err.Error(), "RATE_LIMIT_DISABLED") {
+		t.Fatalf("expected RATE_LIMIT_DISABLED prod guard error, got %v", err)
 	}
 }
