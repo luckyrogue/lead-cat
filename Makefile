@@ -122,6 +122,9 @@ ci-full: ci ## full gate incl. OpenAPI drift + govulncheck + e2e
 	@cd $(BACKEND) && go install golang.org/x/vuln/cmd/govulncheck@v1.1.4 && govulncheck ./...
 	@bash e2e/run.sh
 
+load: ## run the k6 load harness (capacity + shedding) — on-demand, not a CI gate
+	bash load/run.sh all
+
 govulncheck:
 	@cd $(BACKEND) && go install golang.org/x/vuln/cmd/govulncheck@v1.1.4 && govulncheck ./...
 
