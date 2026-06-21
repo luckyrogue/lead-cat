@@ -3,9 +3,41 @@
 @import "@fontsource-variable/inter";
 @import "@leadcat/config/theme.css";
 
-.tma-frame[data-tma-theme] {
+@utility bg-tma-pattern {
+  background-image: radial-gradient(
+    var(--miniapp-pattern, rgba(232, 123, 53, 0.07)) 1.4px,
+    transparent 1.4px
+  );
+  background-size: 22px 22px;
+}
+
+.tma-frame {
   background-color: var(--tma-bg, var(--background));
   color: var(--tma-text, var(--foreground));
+}
+
+body.tma-mode {
+  background: #e8e2da;
+  background-image: radial-gradient(circle at 30% 20%, #efe9e0, #ded6cb);
+}
+
+.dark body.tma-mode {
+  background: #0b0f14;
+  background-image: radial-gradient(circle at 30% 20%, #141a21, #0a0d11);
+}
+
+.tma-frame [data-slot="button"][data-variant="default"] {
+  background: linear-gradient(
+    135deg,
+    var(--primary),
+    color-mix(in srgb, var(--primary) 88%, black)
+  );
+  color: var(--primary-foreground);
+  box-shadow: 0 18px 40px -22px var(--miniapp-accent-glow, rgba(232, 123, 53, 0.45));
+}
+
+.tma-frame [data-slot="button"][data-variant="default"]:hover {
+  box-shadow: 0 24px 48px -22px var(--miniapp-accent-glow, rgba(232, 123, 53, 0.4));
 }
 
 @source "../../../packages/ui/src/**/*.{ts,tsx}";

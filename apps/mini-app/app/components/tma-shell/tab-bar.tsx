@@ -30,7 +30,7 @@ export function TabBar() {
   return (
     <nav
       aria-label={t("nav.mainAriaLabel")}
-      className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md border-t border-border/60 bg-background/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+      className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md border-t border-border/60 bg-[var(--tab-bar-bg,var(--background))]/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
       <ul className="flex items-stretch justify-around">
         {TAB_DEFS.map((tab) => {

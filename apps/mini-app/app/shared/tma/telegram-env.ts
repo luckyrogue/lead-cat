@@ -1,3 +1,6 @@
+import { applyCatPalette, resolveTmaPalette } from "./apply-cat-palette"
+import { DEFAULT_ACCENT } from "./palette"
+
 type TelegramWebAppUser = {
   id?: number
   first_name?: string
@@ -25,6 +28,8 @@ type TelegramWebApp = {
   colorScheme?: "light" | "dark"
   themeParams?: TelegramThemeParams
   openLink?: (url: string) => void
+  onEvent?: (event: string, cb: () => void) => void
+  offEvent?: (event: string, cb: () => void) => void
 }
 
 type TelegramGlobal = {
@@ -93,6 +98,44 @@ export function waitForInitData(
   })
 }
 
+let themeListenerAttached = false
+
+function resolveAccentFromTelegram(): string {
+  return DEFAULT_ACCENT
+}
+
+export function syncTmaTheme(frame?: HTMLElement | null): void {
+  if (typeof document === "undefined") {
+    return
+  }
+  const target = frame ?? document.querySelector<HTMLElement>(".tma-frame")
+  if (!target) {
+    return
+  }
+
+  const webApp = getWebApp()
+  const dark = webApp?.colorScheme === "dark"
+  const palette = resolveTmaPalette({
+    dark,
+    accent: resolveAccentFromTelegram(),
+  })
+  applyCatPalette(target, palette)
+}
+
+function attachThemeListener(): void {
+  if (themeListenerAttached) {
+    return
+  }
+  const webApp = getWebApp()
+  if (!webApp?.onEvent) {
+    return
+  }
+  themeListenerAttached = true
+  webApp.onEvent("themeChanged", () => {
+    syncTmaTheme()
+  })
+}
+
 export function initTelegramViewport(): void {
   const webApp = getWebApp()
   if (!webApp) {
@@ -101,46 +144,11 @@ export function initTelegramViewport(): void {
   try {
     webApp.ready?.()
     webApp.expand?.()
-    applyTelegramTheme()
+    syncTmaTheme()
+    attachThemeListener()
   } catch {
     return
   }
-}
-
-function hexColor(value: string | undefined): string | undefined {
-  if (!value) {
-    return undefined
-  }
-  return value.startsWith("#") ? value : `#${value}`
-}
-
-export function applyTelegramTheme(): void {
-  if (typeof document === "undefined") {
-    return
-  }
-  const webApp = getWebApp()
-  const frame = document.querySelector<HTMLElement>(".tma-frame")
-  if (!webApp || !frame) {
-    return
-  }
-  const params = webApp.themeParams
-  if (!params) {
-    return
-  }
-  const set = (name: string, value: string | undefined) => {
-    const color = hexColor(value)
-    if (color) {
-      frame.style.setProperty(name, color)
-    }
-  }
-  set("--tma-bg", params.bg_color)
-  set("--tma-text", params.text_color)
-  set("--tma-hint", params.hint_color)
-  set("--tma-link", params.link_color)
-  set("--tma-button", params.button_color)
-  set("--tma-button-text", params.button_text_color)
-  set("--tma-secondary-bg", params.secondary_bg_color)
-  frame.dataset.tmaTheme = webApp.colorScheme ?? "light"
 }
 
 export function getBotStartUrl(): string | null {
