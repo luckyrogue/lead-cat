@@ -652,6 +652,95 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/surveys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List surveys for the organization */
+        get: operations["surveysList"];
+        put?: never;
+        /** Create a survey */
+        post: operations["surveysCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/surveys/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a survey by ID */
+        get: operations["surveysGet"];
+        put?: never;
+        post?: never;
+        /** Delete a survey */
+        delete: operations["surveysDelete"];
+        options?: never;
+        head?: never;
+        /** Update a survey */
+        patch: operations["surveysUpdate"];
+        trace?: never;
+    };
+    "/api/surveys/{id}/responses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List responses for a survey */
+        get: operations["surveysResponsesList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/surveys/{id}/responses.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export survey responses as CSV */
+        get: operations["surveysResponsesCsv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/survey/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get public survey by token */
+        get: operations["publicSurveyGet"];
+        put?: never;
+        /** Submit answers for a public survey */
+        post: operations["publicSurveySubmit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/booking/event-types": {
         parameters: {
             query?: never;
@@ -1267,6 +1356,8 @@ export interface components {
             avail_weekdays: number[];
             avail_start_minute: number;
             avail_end_minute: number;
+            /** Format: uuid */
+            survey_id?: string | null;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -1281,6 +1372,8 @@ export interface components {
             avail_start_minute: number;
             avail_end_minute: number;
             active: boolean;
+            /** Format: uuid */
+            survey_id?: string | null;
         };
         BookingEventTypesResponse: {
             event_types: components["schemas"]["BookingEventType"][];
@@ -1355,6 +1448,105 @@ export interface components {
             status?: string;
             /** Format: uuid */
             organization_id: string;
+        };
+        SurveyQuestion: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            survey_id: string;
+            order_index: number;
+            prompt: string;
+            /** @enum {string} */
+            type: "single" | "multi" | "rating" | "text";
+            options: string[];
+            rating_max: number;
+            required: boolean;
+        };
+        Survey: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            organization_id: string;
+            name: string;
+            is_active: boolean;
+            questions: components["schemas"]["SurveyQuestion"][];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        SurveyQuestionInput: {
+            prompt: string;
+            /** @enum {string} */
+            type: "single" | "multi" | "rating" | "text";
+            options?: string[];
+            rating_max?: number;
+            required?: boolean;
+        };
+        SurveyInput: {
+            name: string;
+            is_active?: boolean;
+            questions?: components["schemas"]["SurveyQuestionInput"][];
+        };
+        SurveyAnswerValue: {
+            /** Format: uuid */
+            question_id: string;
+            prompt: string;
+            /** @enum {string} */
+            type: "single" | "multi" | "rating" | "text";
+            value: string;
+        };
+        SurveyResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            survey_id: string;
+            /** Format: uuid */
+            organization_id: string;
+            /** Format: uuid */
+            booking_event_type_id?: string | null;
+            /** Format: email */
+            booker_email: string;
+            booker_name: string;
+            decline_reason: string;
+            /** @enum {string} */
+            status: "sent" | "completed";
+            answers: components["schemas"]["SurveyAnswerValue"][];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            completed_at?: string | null;
+        };
+        SurveysListResponse: {
+            surveys: components["schemas"]["Survey"][];
+        };
+        SurveyResponsesListResponse: {
+            survey: components["schemas"]["Survey"];
+            responses: components["schemas"]["SurveyResponse"][];
+        };
+        PublicSurveyQuestion: {
+            /** Format: uuid */
+            id: string;
+            order_index: number;
+            prompt: string;
+            /** @enum {string} */
+            type: "single" | "multi" | "rating" | "text";
+            options: string[];
+            rating_max: number;
+            required: boolean;
+        };
+        PublicSurveyView: {
+            survey_name: string;
+            questions: components["schemas"]["PublicSurveyQuestion"][];
+            booker_name: string;
+        };
+        PublicSurveyAnswerInput: {
+            /** Format: uuid */
+            question_id: string;
+            value: string;
+        };
+        PublicSurveySubmitRequest: {
+            answers: components["schemas"]["PublicSurveyAnswerInput"][];
         };
     };
     responses: never;
@@ -3784,6 +3976,452 @@ export interface operations {
             };
             /** @description Invite not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    surveysList: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Org-Id": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Surveys list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveysListResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    surveysCreate: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Org-Id": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SurveyInput"];
+            };
+        };
+        responses: {
+            /** @description Created survey */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Survey"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    surveysGet: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Org-Id": string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Survey */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Survey"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    surveysDelete: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Org-Id": string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    surveysUpdate: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Org-Id": string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SurveyInput"];
+            };
+        };
+        responses: {
+            /** @description Updated survey */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Survey"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    surveysResponsesList: {
+        parameters: {
+            query?: {
+                status?: "sent" | "completed";
+                reason?: string;
+                from?: string;
+                to?: string;
+            };
+            header: {
+                "X-Org-Id": string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Survey responses */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyResponsesListResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    surveysResponsesCsv: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Org-Id": string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description CSV file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    publicSurveyGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public survey view */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicSurveyView"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    publicSurveySubmit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicSurveySubmitRequest"];
+            };
+        };
+        responses: {
+            /** @description Submitted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Already submitted */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
