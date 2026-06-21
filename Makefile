@@ -119,11 +119,11 @@ ci: fmt-check lint test typecheck build ## local CI gate (core _build.yml checks
 ci-full: ci ## full gate incl. OpenAPI drift + govulncheck + e2e
 	@$(PNPM) openapi:generate
 	@git diff --exit-code -- apps/backend/openapi/openapi.json packages/api-client/src/generated/schema.ts
-	@cd $(BACKEND) && go install golang.org/x/vuln/cmd/govulncheck@v1.1.4 && govulncheck -scan module ./...
+	@cd $(BACKEND) && go install golang.org/x/vuln/cmd/govulncheck@v1.1.4 && govulncheck ./...
 	@bash e2e/run.sh
 
 govulncheck:
-	@cd $(BACKEND) && go install golang.org/x/vuln/cmd/govulncheck@v1.1.4 && govulncheck -scan module ./...
+	@cd $(BACKEND) && go install golang.org/x/vuln/cmd/govulncheck@v1.1.4 && govulncheck ./...
 
 clean:
 	rm -rf $(BACKEND)/bin $(MINIAPP)/build $(MINIAPP)/dist $(ADMIN)/build $(ADMIN)/dist $(LANDING)/build $(LANDING)/dist .turbo
