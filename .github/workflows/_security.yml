@@ -36,3 +36,28 @@ jobs:
       - name: Audit
         working-directory: e2e
         run: pnpm audit --audit-level=high
+
+  go-vuln:
+    name: govulncheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: apps/backend/go.mod
+          cache-dependency-path: apps/backend/go.sum
+
+      - run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      # Module-level scan: the default symbol-level analysis panics on Go 1.26
+      # (govulncheck/x-tools not yet compatible); module mode reads go.mod and
+      # checks the whole dependency graph + stdlib. Run from a buildable package
+      # dir — module mode rejects "./..." patterns and needs Go files present.
+      # Switch back to `-scan symbol ./...` once govulncheck supports Go 1.26.
+      - name: govulncheck
+        working-directory: apps/backend/cmd/server
+        run: govulncheck -scan module
