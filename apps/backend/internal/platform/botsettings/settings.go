@@ -4,6 +4,8 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/luckyrogue/lead-cat/internal/platform/boti18n"
 )
 
 type Button struct {
@@ -61,15 +63,33 @@ func toggle(cur []int, v int) []int {
 	return append(append([]int(nil), cur...), v)
 }
 
-func render(mins []int) (string, [][]Button) {
-	text := "⏰ Напоминания о встречах. Выбери, за сколько предупреждать (можно несколько):"
+func intervalLabelKey(min int) string {
+	switch min {
+	case 10:
+		return "botset.iv.10m"
+	case 15:
+		return "botset.iv.15m"
+	case 30:
+		return "botset.iv.30m"
+	case 60:
+		return "botset.iv.1h"
+	case 120:
+		return "botset.iv.2h"
+	case 1440:
+		return "botset.iv.1d"
+	}
+	return "botset.iv.10m"
+}
+
+func render(mins []int, lang string) (string, [][]Button) {
+	text := boti18n.T(lang, "botset.title")
 	if len(mins) == 0 {
-		text += "\nСейчас напоминания выключены."
+		text += "\n" + boti18n.T(lang, "botset.off")
 	}
 	var rows [][]Button
 	var row []Button
 	for _, iv := range Intervals {
-		label := iv.Label
+		label := boti18n.T(lang, intervalLabelKey(iv.Minutes))
 		if slices.Contains(mins, iv.Minutes) {
 			label = "✓ " + label
 		}

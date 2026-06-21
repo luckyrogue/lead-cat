@@ -3,6 +3,7 @@ package botsettings
 import (
 	"context"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
@@ -58,7 +59,7 @@ var _ store = (*fakeStore)(nil)
 func TestService_Toggle_Persists(t *testing.T) {
 	fs := &fakeStore{user: postgres.BotUser{ReminderMinutes: "15"}}
 	s := New(fs)
-	text, kb, err := s.Toggle(context.Background(), 1, 60)
+	text, kb, err := s.Toggle(context.Background(), 1, 60, "ru")
 	if err != nil {
 		t.Fatalf("toggle: %v", err)
 	}
@@ -72,8 +73,24 @@ func TestService_Toggle_Persists(t *testing.T) {
 
 func TestService_Settings_RendersCurrent(t *testing.T) {
 	fs := &fakeStore{user: postgres.BotUser{ReminderMinutes: "30"}}
-	text, kb, err := New(fs).Settings(context.Background(), 1)
+	text, kb, err := New(fs).Settings(context.Background(), 1, "ru")
 	if err != nil || text == "" || len(kb) == 0 {
 		t.Fatalf("settings: %v text=%q kb=%d", err, text, len(kb))
+	}
+}
+
+func TestRender_Localized(t *testing.T) {
+	ru, _ := render([]int{}, "ru")
+	en, _ := render([]int{}, "en")
+	if ru == en {
+		t.Fatalf("render must differ by language; both = %q", ru)
+	}
+	if !strings.Contains(en, "Meeting reminders") || !strings.Contains(en, "currently off") {
+		t.Errorf("en render = %q", en)
+	}
+	// interval label localized in the keyboard
+	_, kb := render([]int{}, "en")
+	if kb[0][0].Text != "10m" {
+		t.Errorf("en first interval label = %q", kb[0][0].Text)
 	}
 }

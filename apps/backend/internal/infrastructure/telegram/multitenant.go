@@ -116,7 +116,7 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 				h.reply(ctx, b, update.Message, "Сначала зарегистрируйся: /start")
 				return
 			}
-			text, kb, serr := h.settings.Settings(ctx, from.ID)
+			text, kb, serr := h.settings.Settings(ctx, from.ID, h.resolveLang(ctx, from))
 			if serr == nil {
 				_, _ = b.SendMessage(ctx, &bot.SendMessageParams{
 					ChatID:      chatID,
@@ -183,7 +183,7 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 func (h *MultiHandler) handleCallback(ctx context.Context, b *bot.Bot, cq *models.CallbackQuery) {
 	if strings.HasPrefix(cq.Data, "rem:") {
 		if v, err := strconv.Atoi(strings.TrimPrefix(cq.Data, "rem:")); err == nil {
-			text, kb, serr := h.settings.Toggle(ctx, cq.From.ID, v)
+			text, kb, serr := h.settings.Toggle(ctx, cq.From.ID, v, h.resolveLang(ctx, &cq.From))
 			if serr == nil && cq.Message.Message != nil {
 				_, _ = b.EditMessageText(ctx, &bot.EditMessageTextParams{
 					ChatID:      cq.Message.Message.Chat.ID,

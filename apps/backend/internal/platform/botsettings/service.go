@@ -15,16 +15,16 @@ type Service struct{ store store }
 
 func New(s store) *Service { return &Service{store: s} }
 
-func (s *Service) Settings(ctx context.Context, telegramID int64) (string, [][]Button, error) {
+func (s *Service) Settings(ctx context.Context, telegramID int64, lang string) (string, [][]Button, error) {
 	u, err := s.store.GetBotUserByTelegramID(ctx, telegramID)
 	if err != nil {
 		return "", nil, err
 	}
-	text, kb := render(parse(u.ReminderMinutes))
+	text, kb := render(parse(u.ReminderMinutes), lang)
 	return text, kb, nil
 }
 
-func (s *Service) Toggle(ctx context.Context, telegramID int64, minutes int) (string, [][]Button, error) {
+func (s *Service) Toggle(ctx context.Context, telegramID int64, minutes int, lang string) (string, [][]Button, error) {
 	u, err := s.store.GetBotUserByTelegramID(ctx, telegramID)
 	if err != nil {
 		return "", nil, err
@@ -33,6 +33,6 @@ func (s *Service) Toggle(ctx context.Context, telegramID int64, minutes int) (st
 	if err := s.store.SetReminderMinutes(ctx, telegramID, format(next)); err != nil {
 		return "", nil, err
 	}
-	text, kb := render(next)
+	text, kb := render(next, lang)
 	return text, kb, nil
 }
