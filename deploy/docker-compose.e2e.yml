@@ -39,6 +39,7 @@ services:
     environment:
       APP_ENV: development
       AUTH_DEV_MODE: "true"
+      RATE_LIMIT_DISABLED: "true"
       AUTO_MIGRATE: "true"
       MASTER_ENCRYPTION_KEY: e2e-master-encryption-key-please-32b
       DATABASE_URL: postgres://notify:notify@postgres:5432/notify?sslmode=disable
