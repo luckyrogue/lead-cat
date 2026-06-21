@@ -48,7 +48,16 @@ The handler is in `backend/internal/delivery/http/handlers/miniapp_auth.go`.
 
 **Dev-mode bypass** (`AUTH_DEV_MODE=true`)
 
-When `AUTH_DEV_MODE` is set and `init_data` does not look like a real Telegram `initData` string (no `hash=` or `auth_date=`), the value is treated as a raw `telegram_id` integer. This allows browser-only development without a running Telegram client. The frontend counterpart is `VITE_MINIAPP_DEV_TG_ID`.
+When **all** of the following hold:
+
+- `APP_ENV=development` (not `staging`, `preview`, or `production`)
+- `AUTH_DEV_MODE=true`
+- Request client IP is loopback (`127.0.0.1` or `::1`)
+- `init_data` does not look like a real Telegram `initData` string (no `hash=` or `auth_date=`)
+
+…the value is treated as a raw `telegram_id` integer. This allows browser-only local development without a running Telegram client. The frontend counterpart is `VITE_TMA_DEV_TG_ID` (dev build only).
+
+On staging/preview or from non-loopback IPs, raw telegram IDs are rejected and normal `initData` HMAC validation applies.
 
 **Success response**
 
@@ -161,8 +170,8 @@ Org-scoped API: `/api/orgs/*` — see `docs/API.md`.
 | `JWT_TTL_HOURS`            | Mini App token lifetime in hours (default `24`)                                               |
 | `BOT_TOKEN`                | Telegram bot token — used for `initData` HMAC validation and bot polling                      |
 | `BOT_ADMIN_TELEGRAM_IDS`   | Comma-separated Telegram IDs to bootstrap as `role="admin"`                                   |
-| `AUTH_DEV_MODE`            | Enable dev bypass: raw telegram_id accepted as `init_data` when it lacks `hash=`/`auth_date=` |
-| `VITE_MINIAPP_DEV_TG_ID`   | Frontend: telegram_id sent as `init_data` in browser-only dev mode                            |
+| `AUTH_DEV_MODE`            | Local dev only (`APP_ENV=development` + loopback IP): raw telegram_id as `init_data` when it lacks `hash=`/`auth_date=` |
+| `VITE_TMA_DEV_TG_ID`       | Frontend (dev build): telegram_id sent as `init_data` in browser-only mode                            |
 | `WEB_SESSION_TTL`          | Web session lifetime (see `docs/DEPLOY-DOKPLOY.md`)                                           |
 | `WEB_COOKIE_DOMAIN`        | Optional cookie domain for cross-subdomain sessions                                           |
 | OAuth client IDs/secrets     | Google/Microsoft web SSO (see deploy docs)                                                    |

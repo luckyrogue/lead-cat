@@ -1,4 +1,5 @@
 export * from "./meeting/weekdays";
+export * from "./meeting/group-series";
 
 export type Surface = "telegram" | "web";
 

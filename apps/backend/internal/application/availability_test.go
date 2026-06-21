@@ -54,8 +54,9 @@ func TestGatherExternalBusy_NilResolver(t *testing.T) {
 
 type fakeRepo struct {
 	Repository
-	overlapping  []model.Meeting
-	participants map[uuid.UUID][]model.MeetingParticipant
+	overlapping   []model.Meeting
+	participants  map[uuid.UUID][]model.MeetingParticipant
+	filterKnownFn func(context.Context, []string) ([]string, error)
 }
 
 func (r *fakeRepo) ListMeetingsOverlapping(_ context.Context, _ []string, _, _ time.Time) ([]model.Meeting, error) {
@@ -72,6 +73,13 @@ func (r *fakeRepo) GetUserByID(_ context.Context, _ uuid.UUID) (model.User, erro
 
 func (r *fakeRepo) SearchEmployeesGlobal(_ context.Context, _ string) ([]model.Employee, error) {
 	return nil, nil
+}
+
+func (r *fakeRepo) FilterKnownEmployeeEmails(ctx context.Context, emails []string) ([]string, error) {
+	if r.filterKnownFn != nil {
+		return r.filterKnownFn(ctx, emails)
+	}
+	return emails, nil
 }
 
 func TestMeetingConflicts_ExternalBusy(t *testing.T) {
@@ -108,6 +116,26 @@ func TestMeetingConflicts_NilBusyNoPanic(t *testing.T) {
 	}
 	if len(got) != 0 {
 		t.Fatalf("expected no conflicts with nil Busy, got %v", got)
+	}
+}
+
+func TestMeetingConflicts_UnknownParticipantRejected(t *testing.T) {
+	start := time.Date(2026, 6, 22, 10, 0, 0, 0, time.UTC)
+	end := start.Add(time.Hour)
+	repo := &fakeRepo{}
+	repo.filterKnownFn = func(_ context.Context, emails []string) ([]string, error) {
+		out := make([]string, 0, len(emails))
+		for _, e := range emails {
+			if e == "a@x.com" {
+				out = append(out, e)
+			}
+		}
+		return out, nil
+	}
+	s := &Services{Store: repo}
+	_, err := s.MeetingConflicts(context.Background(), "", []string{"a@x.com", "stranger@evil.com"}, start, end, uuid.Nil)
+	if !errors.Is(err, ErrUnknownParticipant) {
+		t.Fatalf("expected ErrUnknownParticipant, got %v", err)
 	}
 }
 

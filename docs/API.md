@@ -90,11 +90,12 @@ All routes require `Authorization: Bearer <miniapp_jwt>`.
 | `POST`   | `/api/miniapp/meetings`                           | Create a meeting (recurring supported via `recurrence_until` + `recurrence_days`) |
 | `PATCH`  | `/api/miniapp/meetings/:id?scope=this\|whole`     | Edit a meeting (organizer-only, 403); `scope` default `this`          |
 | `DELETE` | `/api/miniapp/meetings/:id?scope=this\|whole`     | Cancel a meeting (organizer-only, 403); `scope` default `this`        |
-| `POST`   | `/api/miniapp/conflicts`                          | Conflict check (single or expanded series); response: `occurrences[]` |
+| `POST`   | `/api/miniapp/conflicts`                          | Conflict check (single or expanded series); `participants` must be org employee emails — unknown emails → `400 unknown_participant`; response: `occurrences[]` |
+| `GET`    | `/api/miniapp/meetings/:id`                       | Single meeting detail (JWT)                                                                   |
 
 Recurrence kinds: `once`, `daily`, `weekly`, `custom` (with `recurrence_days: [1..7]`, Mon=1..Sun=7), `monthly`. Non-once requires `recurrence_until` (YYYY-MM-DD).
 
-Write-path error codes: `meetings_not_configured` (Google integration missing), `forbidden` (not the organizer / not admin), `validation_failed` (bad input, incl. bad recurrence / scope).
+Write-path error codes: `meetings_not_configured` (Google integration missing), `forbidden` (not organizer / org owner), `unknown_participant` (conflicts/free-slots with non-employee email), `validation_failed` (bad input, incl. bad recurrence / scope).
 
 ---
 

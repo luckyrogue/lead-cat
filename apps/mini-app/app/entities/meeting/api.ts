@@ -38,6 +38,13 @@ export async function fetchMyMeetings(scope: MeetingScope): Promise<Meeting[]> {
   return res.meetings ?? []
 }
 
+export async function fetchMeetingById(id: string): Promise<Meeting> {
+  const res = await apiFetch<{ meeting: Meeting }>(
+    `/api/miniapp/meetings/${id}`
+  )
+  return res.meeting
+}
+
 export async function fetchSchedule(
   email: string,
   scope: MeetingScope

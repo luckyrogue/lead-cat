@@ -16,7 +16,8 @@ import { useNavigate, useParams } from "react-router"
 import { EmptyState, ErrorState, LoadingState } from "~/components/states"
 import { MeetingCancelDialog } from "~/features/meetings/components/meeting-cancel-dialog"
 import { MeetingEditDialog } from "~/features/meetings/components/meeting-edit-dialog"
-import { myMeetingsQuery } from "~/entities/meeting/queries"
+import { canManageMeeting } from "~/entities/meeting/lib/can-manage"
+import { meetingDetailQuery } from "~/entities/meeting/queries"
 import type { Meeting } from "~/entities/meeting/types"
 import { useAuth } from "~/shared/auth/auth-context"
 import { useLocale, useT } from "~/shared/i18n/context"
@@ -27,12 +28,12 @@ export function MeetingDetailPage() {
   const navigate = useNavigate()
   const t = useT()
   const { user } = useAuth()
-  const meetings = useQuery(myMeetingsQuery("all"))
+  const meetingQuery = useQuery(meetingDetailQuery(meetingId))
   const [editing, setEditing] = useState(false)
   const [cancelling, setCancelling] = useState(false)
 
-  const meeting = (meetings.data ?? []).find((m) => m.id === meetingId)
-  const canManage = Boolean(meeting && user && meeting.organizer === user.email)
+  const meeting = meetingQuery.data
+  const canManage = canManageMeeting(meeting, user)
 
   return (
     <div className="flex flex-col gap-4">
@@ -45,12 +46,12 @@ export function MeetingDetailPage() {
         {t("common.back")}
       </button>
 
-      {meetings.isLoading ? (
+      {meetingQuery.isLoading ? (
         <LoadingState />
-      ) : meetings.isError ? (
+      ) : meetingQuery.isError ? (
         <ErrorState
           title={t("meetings.detail.errorLoad")}
-          onRetry={() => meetings.refetch()}
+          onRetry={() => meetingQuery.refetch()}
         />
       ) : !meeting ? (
         <EmptyState title={t("meetings.detail.notFound")} />

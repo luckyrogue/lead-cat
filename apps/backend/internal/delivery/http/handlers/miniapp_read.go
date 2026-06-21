@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/application/query"
@@ -105,6 +106,29 @@ func (a *API) MiniAppMyMeetings(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"meetings": a.toMeetingDTOs(c.Context(), ms, loc)})
 }
 
+func (a *API) MiniAppGetMeeting(c *fiber.Ctx) error {
+	bu, ok := botUser(c)
+	if !ok {
+		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
+	}
+	meetingID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid meeting id")
+	}
+	orgID, err := a.App.ResolveMiniAppOrganization(c.Context())
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	m, err := a.App.GetMeeting(c.Context(), orgID, meetingID)
+	if err != nil {
+		if model.IsNotFound(err) {
+			return fiber.NewError(fiber.StatusNotFound, "not_found")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+	}
+	return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m, resolveLoc(bu.Timezone))})
+}
+
 func (a *API) MiniAppSchedule(c *fiber.Ctx) error {
 	bu, ok := botUser(c)
 	if !ok {
@@ -168,7 +192,7 @@ func (a *API) MiniAppFreeSlots(c *fiber.Ctx) error {
 	}
 	slots, err := a.App.FreeSlots(c.Context(), bu.Email, req.Participants, from, toIncl.AddDate(0, 0, 1), req.DurationMins)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "internal")
+		return mapAvailabilityError(err)
 	}
 	out := make([]miniappFreeSlotDTO, 0, len(slots))
 	for _, sl := range slots {

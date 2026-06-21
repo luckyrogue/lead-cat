@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -121,4 +122,47 @@ func (s *Store) SyncEmployees(ctx context.Context, organizationID uuid.UUID, see
 		return 0, 0, 0, err
 	}
 	return added, updated, deleted, nil
+}
+
+func (s *Store) FilterKnownEmployeeEmails(ctx context.Context, emails []string) ([]string, error) {
+	if len(emails) == 0 {
+		return nil, nil
+	}
+	seen := make(map[string]bool, len(emails))
+	unique := make([]string, 0, len(emails))
+	for _, e := range emails {
+		e = strings.TrimSpace(strings.ToLower(e))
+		if e == "" || seen[e] {
+			continue
+		}
+		seen[e] = true
+		unique = append(unique, e)
+	}
+	if len(unique) == 0 {
+		return nil, nil
+	}
+	rows, err := s.pool.Query(ctx, `
+		SELECT email FROM employees WHERE lower(email) = ANY($1)`, unique)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	knownLower := make(map[string]string, len(unique))
+	for rows.Next() {
+		var email string
+		if err := rows.Scan(&email); err != nil {
+			return nil, err
+		}
+		knownLower[strings.ToLower(email)] = email
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	out := make([]string, 0, len(unique))
+	for _, e := range unique {
+		if canon, ok := knownLower[e]; ok {
+			out = append(out, canon)
+		}
+	}
+	return out, nil
 }

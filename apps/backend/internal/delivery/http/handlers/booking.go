@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
 	"github.com/luckyrogue/lead-cat/internal/application/model"
@@ -34,7 +35,7 @@ func (b eventTypeBody) toInput() application.EventTypeInput {
 	}
 }
 
-func bookingErr(err error) error {
+func bookingErr(log *zap.Logger, err error) error {
 	if errors.Is(err, application.ErrInvalidEventType) {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
@@ -44,14 +45,14 @@ func bookingErr(err error) error {
 	if model.IsNotFound(err) {
 		return fiber.NewError(fiber.StatusNotFound, "not_found")
 	}
-	return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	return internalAPIError(log, "booking_failed", err)
 }
 
 func (a *API) BookingListEventTypes(c *fiber.Ctx) error {
 	user := c.Locals("web_user").(model.PlatformUser)
 	list, err := a.App.ListMyEventTypes(c.UserContext(), user.ID)
 	if err != nil {
-		return bookingErr(err)
+		return bookingErr(a.Log, err)
 	}
 	return c.JSON(list)
 }
@@ -69,7 +70,7 @@ func (a *API) BookingCreateEventType(c *fiber.Ctx) error {
 	}
 	et, err := a.App.CreateEventType(c.UserContext(), user.ID, orgID, body.toInput())
 	if err != nil {
-		return bookingErr(err)
+		return bookingErr(a.Log, err)
 	}
 	return c.Status(fiber.StatusCreated).JSON(et)
 }
@@ -85,7 +86,7 @@ func (a *API) BookingUpdateEventType(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid_body")
 	}
 	if err := a.App.UpdateEventType(c.UserContext(), user.ID, id, body.toInput()); err != nil {
-		return bookingErr(err)
+		return bookingErr(a.Log, err)
 	}
 	return c.SendStatus(fiber.StatusOK)
 }
@@ -97,7 +98,7 @@ func (a *API) BookingDeleteEventType(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "bad_id")
 	}
 	if err := a.App.DeleteEventType(c.UserContext(), user.ID, id); err != nil {
-		return bookingErr(err)
+		return bookingErr(a.Log, err)
 	}
 	return c.SendStatus(fiber.StatusNoContent)
 }

@@ -189,6 +189,9 @@ func (s *stubRepo) ListEmployees(_ context.Context, _ uuid.UUID) ([]model.Employ
 func (s *stubRepo) SearchEmployeesGlobal(_ context.Context, _ string) ([]model.Employee, error) {
 	return nil, nil
 }
+func (s *stubRepo) FilterKnownEmployeeEmails(_ context.Context, emails []string) ([]string, error) {
+	return emails, nil
+}
 func (s *stubRepo) GetMeeting(_ context.Context, _, _ uuid.UUID) (model.Meeting, error) {
 	return model.Meeting{}, nil
 }

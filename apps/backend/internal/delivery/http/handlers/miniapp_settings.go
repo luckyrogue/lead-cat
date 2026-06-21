@@ -21,7 +21,7 @@ func (a *API) MiniAppGetSettings(c *fiber.Ctx) error {
 	}
 	s, err := a.App.GetUserSettings(c.Context(), bu.TelegramID)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return internalAPIError(a.Log, "miniapp_get_settings_failed", err)
 	}
 	return c.JSON(s)
 }
@@ -44,13 +44,13 @@ func (a *API) MiniAppPatchSettings(c *fiber.Ctx) error {
 			if errors.Is(err, application.ErrInvalidReminderMinute) {
 				return fiber.NewError(fiber.StatusBadRequest, "validation_failed")
 			}
-			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+			return internalAPIError(a.Log, "miniapp_set_reminder_failed", err)
 		}
 	}
 	if body.Timezone != nil || body.Language != nil {
 		cur, err := a.App.GetUserSettings(c.Context(), bu.TelegramID)
 		if err != nil {
-			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+			return internalAPIError(a.Log, "miniapp_get_settings_failed", err)
 		}
 		tz := cur.Timezone
 		if body.Timezone != nil {
@@ -64,7 +64,7 @@ func (a *API) MiniAppPatchSettings(c *fiber.Ctx) error {
 			if errors.Is(err, application.ErrInvalidInput) {
 				return fiber.NewError(fiber.StatusBadRequest, "validation_failed")
 			}
-			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+			return internalAPIError(a.Log, "miniapp_set_prefs_failed", err)
 		}
 	}
 	return c.SendStatus(fiber.StatusNoContent)

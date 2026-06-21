@@ -1,6 +1,10 @@
 import { queryOptions } from "@tanstack/react-query"
 
-import { fetchMyMeetings, fetchSchedule } from "~/entities/meeting/api"
+import {
+  fetchMeetingById,
+  fetchMyMeetings,
+  fetchSchedule,
+} from "~/entities/meeting/api"
 import {
   meetingKeys,
   scheduleKeys,
@@ -11,6 +15,14 @@ export function myMeetingsQuery(scope: MeetingScope) {
   return queryOptions({
     queryKey: meetingKeys.list(scope),
     queryFn: () => fetchMyMeetings(scope),
+  })
+}
+
+export function meetingDetailQuery(id: string) {
+  return queryOptions({
+    queryKey: meetingKeys.detail(id),
+    queryFn: () => fetchMeetingById(id),
+    enabled: id.length > 0,
   })
 }
 

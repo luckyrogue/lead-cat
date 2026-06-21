@@ -10,6 +10,7 @@ import (
 
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/telegram"
+	"github.com/luckyrogue/lead-cat/internal/platform/httpclient"
 )
 
 type miniappAuthRequest struct {
@@ -29,7 +30,7 @@ func (a *API) MiniAppAuth(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
 	}
 	var tgID int64
-	if a.AuthDevMode && !strings.EqualFold(a.AppEnv, "production") && !looksLikeTelegramInitData(req.InitData) {
+	if a.authDevBypassAllowed(c) && !looksLikeTelegramInitData(req.InitData) {
 		id, err := strconv.ParseInt(strings.TrimSpace(req.InitData), 10, 64)
 		if err != nil || id == 0 {
 			return fiber.NewError(fiber.StatusBadRequest, "dev init_data must be a telegram id")
@@ -69,4 +70,11 @@ func (a *API) MiniAppAuth(c *fiber.Ctx) error {
 
 func looksLikeTelegramInitData(initData string) bool {
 	return strings.Contains(initData, "hash=") || strings.Contains(initData, "auth_date=")
+}
+
+func (a *API) authDevBypassAllowed(c *fiber.Ctx) bool {
+	if !a.AuthDevMode || !strings.EqualFold(a.AppEnv, "development") {
+		return false
+	}
+	return httpclient.IsLoopback(httpclient.ClientIP(c, a.TrustProxyHeaders))
 }

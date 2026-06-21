@@ -5,6 +5,16 @@ type TelegramWebAppUser = {
   username?: string
 }
 
+type TelegramThemeParams = {
+  bg_color?: string
+  text_color?: string
+  hint_color?: string
+  link_color?: string
+  button_color?: string
+  button_text_color?: string
+  secondary_bg_color?: string
+}
+
 type TelegramWebApp = {
   initData?: string
   initDataUnsafe?: {
@@ -13,6 +23,7 @@ type TelegramWebApp = {
   ready?: () => void
   expand?: () => void
   colorScheme?: "light" | "dark"
+  themeParams?: TelegramThemeParams
   openLink?: (url: string) => void
 }
 
@@ -90,9 +101,46 @@ export function initTelegramViewport(): void {
   try {
     webApp.ready?.()
     webApp.expand?.()
+    applyTelegramTheme()
   } catch {
     return
   }
+}
+
+function hexColor(value: string | undefined): string | undefined {
+  if (!value) {
+    return undefined
+  }
+  return value.startsWith("#") ? value : `#${value}`
+}
+
+export function applyTelegramTheme(): void {
+  if (typeof document === "undefined") {
+    return
+  }
+  const webApp = getWebApp()
+  const frame = document.querySelector<HTMLElement>(".tma-frame")
+  if (!webApp || !frame) {
+    return
+  }
+  const params = webApp.themeParams
+  if (!params) {
+    return
+  }
+  const set = (name: string, value: string | undefined) => {
+    const color = hexColor(value)
+    if (color) {
+      frame.style.setProperty(name, color)
+    }
+  }
+  set("--tma-bg", params.bg_color)
+  set("--tma-text", params.text_color)
+  set("--tma-hint", params.hint_color)
+  set("--tma-link", params.link_color)
+  set("--tma-button", params.button_color)
+  set("--tma-button-text", params.button_text_color)
+  set("--tma-secondary-bg", params.secondary_bg_color)
+  frame.dataset.tmaTheme = webApp.colorScheme ?? "light"
 }
 
 export function getBotStartUrl(): string | null {

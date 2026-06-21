@@ -42,3 +42,15 @@ func TestClientIP_UntrustedIgnoresHeader(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestIsLoopback(t *testing.T) {
+	if !IsLoopback("127.0.0.1") {
+		t.Fatal("127.0.0.1")
+	}
+	if !IsLoopback("::1") {
+		t.Fatal("::1")
+	}
+	if IsLoopback("203.0.113.1") {
+		t.Fatal("public IP")
+	}
+}

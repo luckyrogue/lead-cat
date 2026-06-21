@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"fmt"
+	"net/mail"
 	"strings"
 	"time"
 
@@ -92,6 +93,10 @@ func (c *Meetings) CreateMeeting(ctx context.Context, organizationID, organizerI
 	}
 	if err := dom.Validate(); err != nil {
 		return model.Meeting{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+	}
+	in.Participants, err = normalizeParticipants(in.Participants)
+	if err != nil {
+		return model.Meeting{}, fmt.Errorf("%w: invalid participant email", ErrInvalidInput)
 	}
 
 	var until time.Time
@@ -207,6 +212,9 @@ func (c *Meetings) UpdateMeeting(ctx context.Context, organizationID, userID, me
 		return model.Meeting{}, err
 	}
 
+	if err := c.Store.UpdateMeeting(ctx, organizationID, meetingID, updated); err != nil {
+		return model.Meeting{}, err
+	}
 	if updated.GoogleEventID != "" {
 		calSvc, err := c.Calendar.For(ctx, organizationID, c.organizerEmail(ctx, cur.OrganizerUserID))
 		if err != nil {
@@ -218,9 +226,6 @@ func (c *Meetings) UpdateMeeting(ctx context.Context, organizationID, userID, me
 		}); err != nil {
 			return model.Meeting{}, fmt.Errorf("calendar: %w", err)
 		}
-	}
-	if err := c.Store.UpdateMeeting(ctx, organizationID, meetingID, updated); err != nil {
-		return model.Meeting{}, err
 	}
 	if c.Queue != nil {
 		if err := c.Queue.EnqueueMeetingUpdated(ctx, organizationID, meetingID); err != nil && c.Log != nil {
@@ -393,4 +398,20 @@ func orStr(p *string, def string) string {
 		return *p
 	}
 	return def
+}
+
+func normalizeParticipants(parts []model.MeetingParticipant) ([]model.MeetingParticipant, error) {
+	if len(parts) == 0 {
+		return parts, nil
+	}
+	out := make([]model.MeetingParticipant, len(parts))
+	for i, p := range parts {
+		addr, err := mail.ParseAddress(strings.TrimSpace(p.Email))
+		if err != nil {
+			return nil, err
+		}
+		out[i] = p
+		out[i].Email = addr.Address
+	}
+	return out, nil
 }

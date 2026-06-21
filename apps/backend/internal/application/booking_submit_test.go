@@ -72,6 +72,10 @@ func (f *submitFakeStore) SearchEmployeesGlobal(_ context.Context, _ string) ([]
 	return nil, nil
 }
 
+func (f *submitFakeStore) FilterKnownEmployeeEmails(_ context.Context, emails []string) ([]string, error) {
+	return emails, nil
+}
+
 func (f *submitFakeStore) WithHostBookingLock(ctx context.Context, _ uuid.UUID, _ time.Time, fn func(ctx context.Context) error) error {
 	return fn(ctx)
 }

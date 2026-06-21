@@ -54,6 +54,7 @@ type Repository interface {
 
 	ListEmployees(ctx context.Context, organizationID uuid.UUID) ([]model.Employee, error)
 	SearchEmployeesGlobal(ctx context.Context, query string) ([]model.Employee, error)
+	FilterKnownEmployeeEmails(ctx context.Context, emails []string) ([]string, error)
 
 	GetMeeting(ctx context.Context, organizationID, id uuid.UUID) (model.Meeting, error)
 	CreateMeeting(ctx context.Context, m model.Meeting) (model.Meeting, error)

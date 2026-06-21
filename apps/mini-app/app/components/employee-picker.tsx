@@ -1,4 +1,11 @@
-import { Badge, Input, Loader2, Search, X } from "@leadcat/ui"
+import {
+  Badge,
+  Input,
+  Loader2,
+  Search,
+  useDebouncedValue,
+  X,
+} from "@leadcat/ui"
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 
@@ -14,8 +21,8 @@ type EmployeePickerProps = {
 export function EmployeePicker({ selected, onChange }: EmployeePickerProps) {
   const t = useT()
   const [query, setQuery] = useState("")
-  const trimmed = query.trim()
-  const search = useQuery(employeeSearchQuery(trimmed))
+  const debouncedQuery = useDebouncedValue(query.trim(), 300)
+  const search = useQuery(employeeSearchQuery(debouncedQuery))
 
   const selectedEmails = new Set(selected.map((e) => e.email))
   const results = (search.data ?? []).filter(
@@ -66,7 +73,7 @@ export function EmployeePicker({ selected, onChange }: EmployeePickerProps) {
         ) : null}
       </div>
 
-      {trimmed.length > 0 ? (
+      {debouncedQuery.length > 0 ? (
         <div className="overflow-hidden rounded-[calc(var(--radius)*0.7)] border border-border/70">
           {results.length === 0 && !search.isFetching ? (
             <p className="px-3 py-2.5 text-sm text-muted-foreground">

@@ -8,7 +8,7 @@ import { PageHeader } from "~/components/page-header"
 import { EmptyState, ErrorState, LoadingState } from "~/components/states"
 import type { Meeting } from "~/entities/meeting/types"
 import { myMeetingsQuery } from "~/entities/meeting/queries"
-import { groupBySeries } from "~/features/meetings/lib/group-series"
+import { groupBySeries } from "@leadcat/types"
 import { useLocale, useT } from "~/shared/i18n/context"
 import { formatDate } from "~/shared/lib/format"
 
@@ -49,6 +49,7 @@ function MeetingsList({ meetings }: { meetings: Meeting[] }) {
             <button
               type="button"
               onClick={() => toggleSeries(seriesId)}
+              aria-expanded={isOpen}
               className="flex w-full items-center gap-2 rounded-xl bg-muted/60 px-3 py-2.5 text-left transition-colors active:bg-muted"
             >
               {isOpen ? (

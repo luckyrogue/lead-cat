@@ -135,6 +135,7 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	miniapp.Get("/settings", api.MiniAppGetSettings)
 	miniapp.Patch("/settings", api.MiniAppPatchSettings)
 	miniapp.Get("/meetings", api.MiniAppMyMeetings)
+	miniapp.Get("/meetings/:id", api.MiniAppGetMeeting)
 	miniapp.Get("/schedule", api.MiniAppSchedule)
 	miniapp.Get("/employees", api.MiniAppEmployees)
 	miniapp.Post("/free-slots", api.MiniAppFreeSlots)

@@ -21,7 +21,7 @@ import {
   formatTimeRange,
   meetingTitle,
 } from "~/features/meetings/lib/format"
-import { groupBySeries } from "~/features/meetings/lib/group-series"
+import { groupBySeries } from "@leadcat/types"
 import { useLocale, useT } from "~/shared/i18n/context"
 
 type MeetingsTableProps = {

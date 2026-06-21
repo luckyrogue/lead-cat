@@ -163,6 +163,8 @@ func (s *Services) MiniAppMeetingDTO(ctx context.Context, m model.Meeting, loc *
 
 var ErrTelegramLinkedToOtherAccount = errors.New("telegram already linked to another account")
 
+var ErrUnknownParticipant = errors.New("unknown participant email")
+
 func (s *Services) linkTelegram(ctx context.Context, userID uuid.UUID, telegramID int64, username string) error {
 	if existing, ok, err := s.Store.GetUserTelegramID(ctx, userID); err != nil {
 		return err

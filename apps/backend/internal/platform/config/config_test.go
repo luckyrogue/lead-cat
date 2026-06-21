@@ -113,3 +113,12 @@ func TestIsProduction(t *testing.T) {
 		t.Fatal("development")
 	}
 }
+
+func TestIsDevelopment(t *testing.T) {
+	if !(Config{AppEnv: "development"}).IsDevelopment() {
+		t.Fatal("development")
+	}
+	if (Config{AppEnv: "staging"}).IsDevelopment() {
+		t.Fatal("staging is not development")
+	}
+}

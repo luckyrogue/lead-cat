@@ -66,5 +66,8 @@ func (t *MiniAppToken) Parse(token string) (*MiniAppClaims, error) {
 	if claims.TokenType != miniappTokenType {
 		return nil, fmt.Errorf("not a miniapp token")
 	}
+	if claims.Issuer != t.issuer {
+		return nil, fmt.Errorf("invalid issuer")
+	}
 	return claims, nil
 }

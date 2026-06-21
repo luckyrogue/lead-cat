@@ -1,6 +1,8 @@
 # Cat design system
 
-## Tokens (`frontend/src/shared/theme/cat-tokens.css`)
+## Tokens (`packages/config/theme.css` + `apps/mini-app/app/app.css`)
+
+Telegram `themeParams` are applied on `.tma-frame` as CSS variables (`--tma-bg`, `--tma-text`, …) when the WebApp SDK is available.
 
 | Token             | Value     |
 | ----------------- | --------- |
@@ -57,4 +59,4 @@ The SPA is Mini App-only at `/`. Operator setup uses `/api/miniapp/admin/*` insi
 - [x] Tab bar + create FAB
 - [x] Frontend structure aligned with sadu/admin patterns
 - [x] Meetings/checker wired to backend API
-- [ ] Mini App header colors match Telegram theme params
+- [x] Mini App shell syncs Telegram `themeParams` on `.tma-frame` when available

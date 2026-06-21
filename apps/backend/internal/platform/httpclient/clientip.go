@@ -14,3 +14,8 @@ func ClientIP(c *fiber.Ctx, trustProxy bool) string {
 	}
 	return c.IP()
 }
+
+func IsLoopback(ip string) bool {
+	ip = strings.TrimSpace(ip)
+	return ip == "127.0.0.1" || ip == "::1" || ip == "0:0:0:0:0:0:0:1"
+}

@@ -15,6 +15,7 @@ export const ru: typeof en = {
     meetings: "Встречи",
     checker: "Чекер",
     profile: "Профиль",
+    mainAriaLabel: "Основная навигация",
   },
   home: {
     appSubtitle: "Lead Cat",

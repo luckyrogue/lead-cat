@@ -119,3 +119,18 @@ func TestCreateMeeting_CalendarFailure(t *testing.T) {
 		t.Fatalf("nothing should persist/enqueue when calendar fails")
 	}
 }
+
+func TestCreateMeeting_InvalidParticipantEmail(t *testing.T) {
+	fs := newFakeStore()
+	org, owner := ownerOrg()
+	fs.org = org
+	c := newMeetingsCmd(fs, &fakeCalProvider{svc: &fakeCalService{}}, &fakeQueue{})
+	_, err := c.CreateMeeting(context.Background(), uuid.New(), owner, CreateInput{
+		Dept: "Eng", Type: "Sync", Host: "Mia",
+		Date: "2026-06-01", Start: "10:00", End: "10:30", Recurrence: "once",
+		Participants: []model.MeetingParticipant{{Email: "not-an-email"}},
+	})
+	if err == nil || !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("want ErrInvalidInput, got %v", err)
+	}
+}

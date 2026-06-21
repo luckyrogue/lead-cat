@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -37,6 +38,13 @@ type FreeSlot struct {
 }
 
 func (s *Services) MeetingConflicts(ctx context.Context, requesterEmail string, emails []string, start, end time.Time, excludeMeetingID uuid.UUID) ([]Conflict, error) {
+	if len(emails) == 0 {
+		return nil, nil
+	}
+	emails, err := s.filterEmployeeEmails(ctx, emails)
+	if err != nil {
+		return nil, err
+	}
 	if len(emails) == 0 {
 		return nil, nil
 	}
@@ -175,6 +183,14 @@ func (s *Services) FreeSlots(ctx context.Context, requesterEmail string, emails 
 	if len(emails) == 0 || durMins <= 0 {
 		return nil, nil
 	}
+	var err error
+	emails, err = s.filterEmployeeEmails(ctx, emails)
+	if err != nil {
+		return nil, err
+	}
+	if len(emails) == 0 {
+		return nil, nil
+	}
 	ms, err := s.Store.ListMeetingsOverlapping(ctx, emails, from, to)
 	if err != nil {
 		return nil, err
@@ -208,4 +224,28 @@ func (s *Services) FreeSlots(ctx context.Context, requesterEmail string, emails 
 		}
 	}
 	return out, nil
+}
+
+func (s *Services) filterEmployeeEmails(ctx context.Context, emails []string) ([]string, error) {
+	seen := make(map[string]bool, len(emails))
+	unique := make([]string, 0, len(emails))
+	for _, e := range emails {
+		e = strings.TrimSpace(e)
+		if e == "" || seen[strings.ToLower(e)] {
+			continue
+		}
+		seen[strings.ToLower(e)] = true
+		unique = append(unique, e)
+	}
+	if len(unique) == 0 {
+		return nil, nil
+	}
+	known, err := s.Store.FilterKnownEmployeeEmails(ctx, unique)
+	if err != nil {
+		return nil, err
+	}
+	if len(known) != len(unique) {
+		return nil, ErrUnknownParticipant
+	}
+	return known, nil
 }

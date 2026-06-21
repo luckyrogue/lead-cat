@@ -169,6 +169,10 @@ func (c Config) IsProduction() bool {
 	return strings.EqualFold(c.AppEnv, "production")
 }
 
+func (c Config) IsDevelopment() bool {
+	return strings.EqualFold(c.AppEnv, "development")
+}
+
 const fakeDevBotToken = "000000000:AAFakeDevTokenForLocalOnly"
 
 func (c Config) RealBotToken() bool {

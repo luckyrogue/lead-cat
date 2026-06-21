@@ -58,9 +58,18 @@ Create meeting (fields, meeting types, recurrence, naming standard), view meetin
 | `PATCH /api/miniapp/meetings/:id?scope=whole`    | Done (organizer-only, 403) — entire series              |
 | `DELETE /api/miniapp/meetings/:id?scope=this`    | Done (organizer-only, 403) — single occurrence          |
 | `DELETE /api/miniapp/meetings/:id?scope=whole`   | Done (organizer-only, 403) — entire series              |
-| `POST /api/miniapp/conflicts`                    | Done (occurrence-grouped response; series-aware)        |
+| `POST /api/miniapp/conflicts`                    | Done (org employee emails only; `unknown_participant` on foreign emails) |
+| `GET /api/miniapp/meetings/:id`                  | Done (single meeting detail)                                            |
 
 Recurrence kinds: `once`, `daily`, `weekly`, `custom` (with `recurrence_days: [1..7]`, Mon=1..Sun=7), `monthly`. Non-once requires `recurrence_until` (YYYY-MM-DD).
+
+### Authorization (mini-app write paths)
+
+Edit/cancel/participant mutations use the same rules as the web dashboard: **meeting organizer** or **organization owner** (`command` layer `ownerOrOrganizer`). Mini-app handlers resolve the default organization and meeting id, then delegate authz to commands (no separate “editable meetings” pre-filter).
+
+### Calendar vs Postgres on update
+
+`UpdateMeeting` persists to Postgres first, then updates Google Calendar. If the calendar API fails after a successful DB write, the API returns an error but the meeting row remains updated — prefer a stale calendar event over a stale DB row. Operators can retry edit or fix the calendar manually.
 
 ### Admin setup
 

@@ -3,5 +3,10 @@
 @import "@fontsource-variable/inter";
 @import "@leadcat/config/theme.css";
 
+.tma-frame[data-tma-theme] {
+  background-color: var(--tma-bg, var(--background));
+  color: var(--tma-text, var(--foreground));
+}
+
 @source "../../../packages/ui/src/**/*.{ts,tsx}";
 @source "../../../packages/brand/src/**/*.{ts,tsx}";

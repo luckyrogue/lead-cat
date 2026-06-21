@@ -15,6 +15,7 @@ export const kk: typeof en = {
     meetings: "Кездесулер",
     checker: "Тексергіш",
     profile: "Профиль",
+    mainAriaLabel: "Негізгі навигация",
   },
   home: {
     appSubtitle: "Lead Cat",

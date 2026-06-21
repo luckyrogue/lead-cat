@@ -44,11 +44,11 @@ func (a *API) MiniAppAdminGetWorkspace(c *fiber.Ctx) error {
 	}
 	w, err := a.App.GetOrganization(c.Context(), id)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return internalAPIError(a.Log, "miniapp_admin_get_workspace_failed", err)
 	}
 	view, err := a.App.GetIntegrations(c.Context(), id)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return internalAPIError(a.Log, "miniapp_admin_get_integrations_failed", err)
 	}
 	var chatID int64
 	if w.NotifyChatID != nil {
@@ -84,7 +84,7 @@ func (a *API) MiniAppAdminGetIntegrations(c *fiber.Ctx) error {
 	}
 	view, err := a.App.GetIntegrations(c.Context(), id)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return internalAPIError(a.Log, "miniapp_admin_get_integrations_failed", err)
 	}
 	return c.JSON(fiber.Map{
 		"has_google":         view.HasGoogle,
@@ -113,7 +113,7 @@ func (a *API) MiniAppAdminPatchIntegrations(c *fiber.Ctx) error {
 	}
 	if body.GoogleSAJSON != "" || body.GoogleSubject != "" || body.GoogleCalendarID != "" {
 		if err := a.App.SetGoogleConfig(c.Context(), id, body.GoogleSAJSON, body.GoogleSubject, body.GoogleCalendarID); err != nil {
-			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+			return internalAPIError(a.Log, "miniapp_admin_set_google_config_failed", err)
 		}
 		a.App.Audit(c.UserContext(), "google_config_updated", "organization", id.String(), map[string]any{
 			"subject":         body.GoogleSubject,
@@ -123,7 +123,7 @@ func (a *API) MiniAppAdminPatchIntegrations(c *fiber.Ctx) error {
 	}
 	if body.MeetLink != "" || body.TZ != "" {
 		if err := a.App.PatchIntegrations(c.Context(), id, body.MeetLink, body.TZ); err != nil {
-			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+			return internalAPIError(a.Log, "miniapp_admin_patch_integrations_failed", err)
 		}
 	}
 	return c.SendStatus(fiber.StatusNoContent)
@@ -177,7 +177,7 @@ func (a *API) MiniAppAdminChatStatus(c *fiber.Ctx) error {
 	}
 	w, err := a.App.GetOrganization(c.Context(), id)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return internalAPIError(a.Log, "miniapp_admin_chat_status_failed", err)
 	}
 	var chatID int64
 	if w.NotifyChatID != nil {
@@ -203,7 +203,7 @@ func (a *API) MiniAppAdminChatLink(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "validation_failed")
 	}
 	if err := a.App.LinkChat(c.Context(), id, body.ChatID); err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return internalAPIError(a.Log, "miniapp_admin_chat_link_failed", err)
 	}
 	a.App.Audit(c.UserContext(), "chat_linked", "organization", id.String(), map[string]any{
 		"chat_id":    body.ChatID,
@@ -220,7 +220,7 @@ func (a *API) MiniAppAdminListMembers(c *fiber.Ctx) error {
 	}
 	members, err := a.App.ListMembers(c.Context(), id)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return internalAPIError(a.Log, "miniapp_admin_list_members_failed", err)
 	}
 	return c.JSON(fiber.Map{"members": members})
 }
@@ -233,7 +233,7 @@ func (a *API) MiniAppAdminMembersSyncChat(c *fiber.Ctx) error {
 	}
 	n, err := a.App.SyncChatMembers(c.Context(), id)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return internalAPIError(a.Log, "miniapp_admin_sync_members_failed", err)
 	}
 	a.App.Audit(c.UserContext(), "members_synced", "organization", id.String(), map[string]any{
 		"added": n,
@@ -249,7 +249,7 @@ func (a *API) MiniAppAdminListAudit(c *fiber.Ctx) error {
 		Limit:      c.QueryInt("limit", 50),
 	})
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return internalAPIError(a.Log, "miniapp_admin_list_audit_failed", err)
 	}
 	return c.JSON(fiber.Map{"entries": entries})
 }

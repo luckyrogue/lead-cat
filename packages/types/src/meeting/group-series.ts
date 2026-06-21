@@ -1,13 +1,13 @@
-import type { Meeting } from "~/entities/meeting/types"
+export type MeetingGroup<T extends { series_id?: string | null }> =
+  | { kind: "single"; meeting: T }
+  | { kind: "series"; seriesId: string; meetings: T[] }
 
-export type MeetingGroup =
-  | { kind: "single"; meeting: Meeting }
-  | { kind: "series"; seriesId: string; meetings: Meeting[] }
-
-export function groupBySeries(meetings: Meeting[]): MeetingGroup[] {
+export function groupBySeries<T extends { series_id?: string | null }>(
+  meetings: T[]
+): MeetingGroup<T>[] {
   const order: string[] = []
-  const bySeries = new Map<string, Meeting[]>()
-  const singles: MeetingGroup[] = []
+  const bySeries = new Map<string, T[]>()
+  const singles: MeetingGroup<T>[] = []
   for (const m of meetings) {
     const sid = m.series_id ?? ""
     if (!sid) {
@@ -22,7 +22,7 @@ export function groupBySeries(meetings: Meeting[]): MeetingGroup[] {
   }
   return [
     ...order.map(
-      (sid): MeetingGroup => ({
+      (sid): MeetingGroup<T> => ({
         kind: "series",
         seriesId: sid,
         meetings: bySeries.get(sid)!,

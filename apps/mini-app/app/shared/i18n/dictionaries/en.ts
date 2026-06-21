@@ -15,6 +15,7 @@ export const en = {
     meetings: "Meetings",
     checker: "Checker",
     profile: "Profile",
+    mainAriaLabel: "Main navigation",
   },
   home: {
     appSubtitle: "Lead Cat",
