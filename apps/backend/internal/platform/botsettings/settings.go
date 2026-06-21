@@ -15,11 +15,10 @@ type Button struct {
 
 type Interval struct {
 	Minutes int
-	Label   string
 }
 
 var Intervals = []Interval{
-	{10, "10м"}, {15, "15м"}, {30, "30м"}, {60, "1ч"}, {120, "2ч"}, {1440, "1день"},
+	{10}, {15}, {30}, {60}, {120}, {1440},
 }
 
 func Parse(csv string) []int { return parse(csv) }
