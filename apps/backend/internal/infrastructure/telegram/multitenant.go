@@ -2,7 +2,6 @@ package telegram
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -111,14 +110,16 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 		}
 	case "/chatid":
 		_ = h.store.UpsertPendingChat(ctx, from.ID, chatID, update.Message.Chat.Title)
-		h.reply(ctx, b, update.Message, fmt.Sprintf("Логово id: %d — скопируй в админку 🐾", chatID))
+		lang := h.resolveLang(ctx, from)
+		h.reply(ctx, b, update.Message, boti18n.T(lang, "cmd.chatid", chatID))
 	case "/settings":
 		if isPrivate {
+			lang := h.resolveLang(ctx, from)
 			if _, err := h.store.GetBotUserByTelegramID(ctx, from.ID); err != nil {
-				h.reply(ctx, b, update.Message, "Сначала зарегистрируйся: /start")
+				h.reply(ctx, b, update.Message, boti18n.T(lang, "cmd.register_first"))
 				return
 			}
-			text, kb, serr := h.settings.Settings(ctx, from.ID, h.resolveLang(ctx, from))
+			text, kb, serr := h.settings.Settings(ctx, from.ID, lang)
 			if serr == nil {
 				_, _ = b.SendMessage(ctx, &bot.SendMessageParams{
 					ChatID:      chatID,
@@ -133,34 +134,38 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 		}
 	case "/schedule":
 		if isPrivate {
+			lang := h.resolveLang(ctx, from)
 			if _, err := h.store.GetBotUserByTelegramID(ctx, from.ID); err != nil {
-				h.reply(ctx, b, update.Message, "Сначала зарегистрируйся: /start")
+				h.reply(ctx, b, update.Message, boti18n.T(lang, "cmd.register_first"))
 				return
 			}
-			h.sendSchedReply(ctx, b, chatID, 0, h.schedule.Start(ctx, from.ID, h.resolveLang(ctx, from)))
+			h.sendSchedReply(ctx, b, chatID, 0, h.schedule.Start(ctx, from.ID, lang))
 		}
 	case "/checker":
 		if isPrivate {
+			lang := h.resolveLang(ctx, from)
 			if _, err := h.store.GetBotUserByTelegramID(ctx, from.ID); err != nil {
-				h.reply(ctx, b, update.Message, "Сначала зарегистрируйся: /start")
+				h.reply(ctx, b, update.Message, boti18n.T(lang, "cmd.register_first"))
 				return
 			}
-			h.sendCheckerReply(ctx, b, chatID, 0, h.checker.Start(ctx, from.ID, h.resolveLang(ctx, from)))
+			h.sendCheckerReply(ctx, b, chatID, 0, h.checker.Start(ctx, from.ID, lang))
 		}
 	case "/menu":
 		if isPrivate {
+			lang := h.resolveLang(ctx, from)
 			_, _ = b.SendMessage(ctx, &bot.SendMessageParams{
 				ChatID:      chatID,
-				Text:        "Открой Lead Cat 🐾",
-				ReplyMarkup: webAppMarkup("Открыть приложение", h.webappURL),
+				Text:        boti18n.T(lang, "cmd.menu_open"),
+				ReplyMarkup: webAppMarkup(boti18n.T(lang, "cmd.menu"), h.webappURL),
 			})
 		}
 	case "/new":
 		if isPrivate {
+			lang := h.resolveLang(ctx, from)
 			_, _ = b.SendMessage(ctx, &bot.SendMessageParams{
 				ChatID:      chatID,
-				Text:        "Запланируй встречу 🐾",
-				ReplyMarkup: webAppMarkup("Новая встреча", joinURL(h.webappURL, "meetings/create")),
+				Text:        boti18n.T(lang, "cmd.new_prompt"),
+				ReplyMarkup: webAppMarkup(boti18n.T(lang, "cmd.btn_new_meeting"), joinURL(h.webappURL, "meetings/create")),
 			})
 		}
 	case "/help":
@@ -169,14 +174,15 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 		}
 	case "/admin":
 		if isPrivate {
+			lang := h.resolveLang(ctx, from)
 			if h.admins[from.ID] {
 				_, _ = b.SendMessage(ctx, &bot.SendMessageParams{
 					ChatID:      chatID,
-					Text:        "Ты администратор 🐾 Настройки — в приложении.",
-					ReplyMarkup: webAppMarkup("Открыть приложение", h.webappURL),
+					Text:        boti18n.T(lang, "cmd.admin_yes"),
+					ReplyMarkup: webAppMarkup(boti18n.T(lang, "cmd.menu"), h.webappURL),
 				})
 			} else {
-				h.reply(ctx, b, update.Message, "Ты не администратор 🐾")
+				h.reply(ctx, b, update.Message, boti18n.T(lang, "cmd.admin_no"))
 			}
 		}
 	}
