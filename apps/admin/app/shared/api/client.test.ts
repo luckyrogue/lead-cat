@@ -25,10 +25,16 @@ describe("prepareMutationCsrf", () => {
     ).toThrow("missing_csrf_token")
   })
 
-  it("allows auth-path mutations without csrf (login bootstrap)", () => {
+  it("allows magic-link bootstrap mutations without csrf", () => {
     expect(
       prepareMutationCsrf("post", null, "/api/auth/web/magic/request", false)
     ).toEqual({})
+  })
+
+  it("still requires csrf for post-auth /me mutations in prod", () => {
+    expect(() =>
+      prepareMutationCsrf("patch", null, "/api/auth/web/me/settings", false)
+    ).toThrow("missing_csrf_token")
   })
 
   it("treats method case-insensitively", () => {

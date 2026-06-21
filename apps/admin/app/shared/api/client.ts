@@ -27,6 +27,10 @@ function isAuthPath(url: string | undefined): boolean {
   return typeof url === "string" && url.includes("/api/auth/")
 }
 
+function isCsrfExemptPath(url: string | undefined): boolean {
+  return typeof url === "string" && url.includes("/api/auth/web/magic/")
+}
+
 export function prepareMutationCsrf(
   method: string,
   csrf: string | null,
@@ -39,8 +43,8 @@ export function prepareMutationCsrf(
   if (csrf) {
     return { header: csrf }
   }
-  // Pre-auth/login endpoints (/api/auth/*) have no session CSRF cookie yet — allow them.
-  if (isAuthPath(url)) {
+  // Only unauthenticated magic-link bootstrap endpoints have no session CSRF cookie yet — allow them.
+  if (isCsrfExemptPath(url)) {
     return {}
   }
   if (dev) {
