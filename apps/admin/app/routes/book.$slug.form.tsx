@@ -25,8 +25,8 @@ type FormState =
   | { status: "idle" }
   | { status: "submitting" }
   | { status: "confirmed"; result: BookingResult }
-  | { status: "conflict" }
-  | { status: "badInput" }
+  | { status: "conflict"; surveyToken?: string }
+  | { status: "badInput"; surveyToken?: string }
   | { status: "error" }
 
 function formatDateTime(iso: string, timezone: string, locale: string): string {
@@ -99,13 +99,15 @@ export function BookingForm({
       }
 
       if (res.status === 409) {
-        setFormState({ status: "conflict" })
+        const body = await res.json().catch(() => ({}))
+        setFormState({ status: "conflict", surveyToken: body.survey_token })
         onConflict()
         return
       }
 
       if (res.status === 400) {
-        setFormState({ status: "badInput" })
+        const body = await res.json().catch(() => ({}))
+        setFormState({ status: "badInput", surveyToken: body.survey_token })
         return
       }
 
@@ -207,6 +209,17 @@ export function BookingForm({
             <p className="text-sm text-destructive">
               {t("publicBooking.errors.conflict")}
             </p>
+          ) : null}
+
+          {(formState.status === "conflict" ||
+            formState.status === "badInput") &&
+          formState.surveyToken ? (
+            <a
+              href={`/survey/${formState.surveyToken}`}
+              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              {t("publicBooking.surveyCta")}
+            </a>
           ) : null}
 
           <Button
