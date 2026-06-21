@@ -165,3 +165,10 @@ func (s *Services) DeleteEventType(ctx context.Context, hostUserID, id uuid.UUID
 	}
 	return s.Store.DeleteBookingEventType(ctx, id)
 }
+
+// GetBookingEventTypeBySlugPublic is a thin read-only query that returns the
+// event type for a given slug. It is used by the public booking handler to
+// look up event type config without bypassing the application layer.
+func (s *Services) GetBookingEventTypeBySlugPublic(ctx context.Context, slug string) (model.BookingEventType, error) {
+	return s.Store.GetBookingEventTypeBySlug(ctx, slug)
+}

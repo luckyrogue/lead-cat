@@ -161,8 +161,21 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	booking.Patch("/event-types/:id", api.BookingUpdateEventType)
 	booking.Delete("/event-types/:id", api.BookingDeleteEventType)
 
+	surveys := app.Group("/api/surveys", webAuth.Middleware)
+	surveys.Get("", api.SurveyList)
+	surveys.Post("", api.SurveyCreate)
+	surveys.Get("/:id", api.SurveyGet)
+	surveys.Patch("/:id", api.SurveyUpdate)
+	surveys.Delete("/:id", api.SurveyDelete)
+	surveys.Get("/:id/responses", api.SurveyResponses)
+	surveys.Get("/:id/responses.csv", api.SurveyResponsesCSV)
+
 	app.Get("/api/book/:slug", rateLimit(60, time.Minute, "book_get"), api.PublicBooking)
 	app.Post("/api/book/:slug", rateLimit(10, time.Hour, "book_post"), api.PublicBookingSubmit)
+
+	// Public survey delivery (unauthenticated, token-based, rate-limited).
+	app.Get("/api/survey/:token", api.PublicSurveyGet)
+	app.Post("/api/survey/:token", rateLimit(20, time.Minute, "survey_submit"), api.PublicSurveySubmit)
 
 	app.Get("/api/calendar/connect/:provider/callback", api.CalendarConnectCallback)
 
