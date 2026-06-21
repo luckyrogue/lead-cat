@@ -1,6 +1,6 @@
 .PHONY: help setup deps up down ps migrate migrate-down migrate-status \
 	backend backend-watch miniapp admin landing frontend dev lint fmt fmt-check hooks typecheck openapi-generate brand-sync build clean \
-	test ci ci-full govulncheck
+	test ci ci-full govulncheck dast
 
 ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 BACKEND := $(ROOT)apps/backend
@@ -124,6 +124,9 @@ ci-full: ci ## full gate incl. OpenAPI drift + govulncheck + e2e
 
 load: ## run the k6 load harness (capacity + shedding) — on-demand, not a CI gate
 	bash load/run.sh all
+
+dast: ## run the OWASP ZAP baseline scan over the app stack
+	bash security/run.sh
 
 govulncheck:
 	@cd $(BACKEND) && go install golang.org/x/vuln/cmd/govulncheck@v1.1.4 && govulncheck ./...
