@@ -59,7 +59,6 @@ func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Re
 			ThinkingSignature: turn.ThinkingSignature,
 			ToolCalls:         turn.ToolCalls,
 		})
-		// Build one tool_result user message covering every tool_use in the turn.
 		var pending *PendingBooking
 		results := make([]application.AgentToolResult, 0, len(turn.ToolCalls))
 		for _, call := range turn.ToolCalls {
@@ -93,7 +92,6 @@ func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Re
 				}},
 			}, true
 		}
-		// no proposal: continue the loop to re-plan with the tool results
 	}
 
 	_ = s.sessions.Set(ctx, telegramID, *st)
@@ -133,8 +131,6 @@ func parsePending(args []byte) (PendingBooking, error) {
 	return PendingBooking{Dept: in.Dept, Type: in.Type, Date: in.Date, Start: in.Start, End: in.End, Emails: in.Emails, Desc: in.Desc}, nil
 }
 
-// OnCallback handles confirm/cancel taps. Returns handled=false for callbacks
-// that aren't ours so the dispatcher can fall through.
 func (s *Service) OnCallback(ctx context.Context, telegramID int64, data string) (Reply, bool) {
 	switch data {
 	case "agent:book:yes":

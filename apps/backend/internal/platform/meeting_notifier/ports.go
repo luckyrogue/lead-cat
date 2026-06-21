@@ -10,13 +10,10 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
-// sender is the subset of *bot.Bot the notifier needs.
 type sender interface {
 	SendMessage(ctx context.Context, params *bot.SendMessageParams) (*models.Message, error)
 }
 
-// store is the subset of *postgres.Store the notifier needs. It is a superset
-// of meetingrecipients.Store, so it can be passed to meetingrecipients.Resolve.
 type store interface {
 	GetMeeting(ctx context.Context, organizationID, id uuid.UUID) (postgres.Meeting, error)
 	GetOrganization(ctx context.Context, id uuid.UUID) (postgres.Organization, error)

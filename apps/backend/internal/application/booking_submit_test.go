@@ -145,7 +145,6 @@ func newSubmitServices(store *submitFakeStore) (*Services, *submitFakeCalService
 	return s, cal, mailer
 }
 
-// freeMondaySlot returns 2026-06-22 (Monday) 10:00 Asia/Almaty as a future UTC instant.
 func freeMondaySlot(t *testing.T) time.Time {
 	t.Helper()
 	loc, err := time.LoadLocation("Asia/Almaty")
@@ -193,7 +192,6 @@ func TestSubmitBooking_HappyPath(t *testing.T) {
 	if !foundVisitor {
 		t.Errorf("expected visitor email among attendees, got %v", ev.AttendeeEmails)
 	}
-	// Event built in the event timezone: 10:00 Almaty.
 	loc, _ := time.LoadLocation("Asia/Almaty")
 	if got := ev.Start.In(loc); got.Hour() != 10 || got.Minute() != 0 {
 		t.Errorf("expected event start 10:00 Almaty, got %v", got)
@@ -228,7 +226,6 @@ func TestSubmitBooking_OutsideWindow(t *testing.T) {
 	store := &submitFakeStore{et: submitEvent(), host: model.PlatformUser{Email: "host@example.com"}, hostOK: true}
 	s, _, _ := newSubmitServices(store)
 	loc, _ := time.LoadLocation("Asia/Almaty")
-	// 07:00 Almaty is before the 09:00 window start.
 	early := time.Date(2099, 6, 22, 7, 0, 0, 0, loc).UTC()
 	_, err := s.SubmitBooking(context.Background(), "intro-call-abc123", BookingRequest{
 		Name: "V", Email: "visitor@example.com", Start: early,
@@ -242,7 +239,6 @@ func TestSubmitBooking_WrongWeekday(t *testing.T) {
 	store := &submitFakeStore{et: submitEvent(), host: model.PlatformUser{Email: "host@example.com"}, hostOK: true}
 	s, _, _ := newSubmitServices(store)
 	loc, _ := time.LoadLocation("Asia/Almaty")
-	// 2099-06-20 is a Saturday — not in Mon-Fri.
 	sat := time.Date(2099, 6, 20, 10, 0, 0, 0, loc).UTC()
 	_, err := s.SubmitBooking(context.Background(), "intro-call-abc123", BookingRequest{
 		Name: "V", Email: "visitor@example.com", Start: sat,

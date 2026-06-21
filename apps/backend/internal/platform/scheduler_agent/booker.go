@@ -6,15 +6,10 @@ import (
 	"strings"
 )
 
-// Booker creates a meeting on behalf of the authenticated Telegram user. The
-// implementation resolves org + organizer from the user's account — the agent
-// never supplies identity. Book returns a short user-facing confirmation line.
 type Booker interface {
 	Book(ctx context.Context, telegramID int64, b PendingBooking) (string, error)
 }
 
-// describeBooking renders the confirm-card body for a proposed meeting (Russian,
-// cozy tone to match the bot).
 func describeBooking(b PendingBooking) string {
 	var sb strings.Builder
 	title := b.Type

@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import { groupBySeries } from "./group-series"
 import type { Meeting } from "~/entities/meeting/types"
 
-// Minimal factory — only the fields groupBySeries reads matter.
 const mk = (id: string, series_id?: string) =>
   ({ id, series_id }) as unknown as Meeting
 

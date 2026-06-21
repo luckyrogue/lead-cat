@@ -7,7 +7,6 @@ import (
 	texttemplate "text/template"
 )
 
-// ReminderData — Go port of docs/email-templates/meeting-reminder.{html,txt}.
 type ReminderData struct {
 	Language       string
 	Name           string
@@ -124,7 +123,6 @@ var reminderTextTemplate = texttemplate.Must(texttemplate.New("reminder.txt").Pa
 {{.L.Unsub}}: {{.UnsubscribeURL}}
 `))
 
-// RenderReminder returns localized subject, plain text, and HTML bodies.
 func RenderReminder(d ReminderData) (subject, text, html string, err error) {
 	rd := applyReminderDefaults(reminderRenderData{
 		Lang:           NormalizeLang(d.Language),

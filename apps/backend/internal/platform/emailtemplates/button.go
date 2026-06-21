@@ -2,7 +2,6 @@ package emailtemplates
 
 import "html/template"
 
-// BulletproofButton renders an Outlook-hardened CTA: VML roundrect plus a styled anchor.
 func BulletproofButton(href, label string) template.HTML {
 	h := template.HTMLEscapeString(href)
 	l := template.HTMLEscapeString(label)

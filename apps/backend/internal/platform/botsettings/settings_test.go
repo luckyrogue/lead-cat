@@ -88,7 +88,6 @@ func TestRender_Localized(t *testing.T) {
 	if !strings.Contains(en, "Meeting reminders") || !strings.Contains(en, "currently off") {
 		t.Errorf("en render = %q", en)
 	}
-	// interval label localized in the keyboard
 	_, kb := render([]int{}, "en")
 	if kb[0][0].Text != "10m" {
 		t.Errorf("en first interval label = %q", kb[0][0].Text)

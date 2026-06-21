@@ -55,7 +55,6 @@ func TestBuildMessage_Multipart(t *testing.T) {
 		t.Fatalf("parse: %v", err)
 	}
 
-	// Subject is RFC 2047 encoded on the wire but decodes back to the original.
 	subj, err := (&mime.WordDecoder{}).DecodeHeader(m.Header.Get("Subject"))
 	if err != nil {
 		t.Fatalf("decode subject: %v", err)
@@ -92,7 +91,6 @@ func TestBuildMessage_Multipart(t *testing.T) {
 		b, _ := io.ReadAll(p)
 		bodies = append(bodies, string(b))
 	}
-	// text/plain MUST come before text/html in multipart/alternative.
 	if len(types) != 2 || types[0] != "text/plain" || types[1] != "text/html" {
 		t.Fatalf("parts = %v, want [text/plain text/html]", types)
 	}

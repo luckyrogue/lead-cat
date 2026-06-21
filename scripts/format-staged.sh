@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Format only staged files so commits match CI (golangci fmt + prettier).
 set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"

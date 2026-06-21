@@ -14,10 +14,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
-// ---------------------------------------------------------------------------
-// fakeBackend
-// ---------------------------------------------------------------------------
-
 type fakeBackend struct {
 	mu       sync.Mutex
 	meetings []postgres.MeetingWithTZ
@@ -83,10 +79,6 @@ func (f *fakeBackend) MeetingUpdateConflicts(_ context.Context, _, _ uuid.UUID, 
 	return nil, nil
 }
 
-// ---------------------------------------------------------------------------
-// fakeSessions
-// ---------------------------------------------------------------------------
-
 type fakeSessions struct {
 	mu   sync.Mutex
 	data map[int64]*State
@@ -119,10 +111,6 @@ func (f *fakeSessions) Del(_ context.Context, telegramID int64) error {
 	return nil
 }
 
-// ---------------------------------------------------------------------------
-// helpers
-// ---------------------------------------------------------------------------
-
 func makeMeetingWithTZ(id uuid.UUID, name string) postgres.MeetingWithTZ {
 	orgID := uuid.New()
 	userID := uuid.New()
@@ -139,10 +127,6 @@ func makeMeetingWithTZ(id uuid.UUID, name string) postgres.MeetingWithTZ {
 		TZ: "Asia/Almaty",
 	}
 }
-
-// ---------------------------------------------------------------------------
-// Tests: Start
-// ---------------------------------------------------------------------------
 
 func TestStart_ListsEditableMeetings(t *testing.T) {
 	id1 := uuid.New()
@@ -217,14 +201,9 @@ func TestStart_BackendError(t *testing.T) {
 	}
 }
 
-// ---------------------------------------------------------------------------
-// Test: pick → edit menu (medit:pick:<id>)
-// ---------------------------------------------------------------------------
-
 func TestPick_OpensEditMenu(t *testing.T) {
 	id := uuid.New()
 	m := makeMeetingWithTZ(id, "Stand-up Daily")
-	// Non-series meeting: no SeriesID set, so scope is auto-set to "one".
 
 	fb := &fakeBackend{meetings: []postgres.MeetingWithTZ{m}}
 	sess := newFakeSessions()
@@ -239,7 +218,6 @@ func TestPick_OpensEditMenu(t *testing.T) {
 		t.Fatal("expected non-empty menu Text after pick")
 	}
 
-	// The reply should contain the menu keyboard (apply / cancel buttons are canonical).
 	found := false
 	for _, row := range reply.Keyboard {
 		for _, btn := range row {
@@ -252,7 +230,6 @@ func TestPick_OpensEditMenu(t *testing.T) {
 		t.Error("expected medit:apply button in edit menu keyboard")
 	}
 
-	// Session should be persisted with the meeting ID and scope "one".
 	st, err := sess.Get(context.Background(), 42)
 	if err != nil {
 		t.Fatalf("session Get error: %v", err)
@@ -267,15 +244,6 @@ func TestPick_OpensEditMenu(t *testing.T) {
 		t.Errorf("session Scope = %q; want \"one\"", st.Scope)
 	}
 }
-
-// TODO(WS2c): deeper medit:* flow (field → apply → confirm → series scope) not covered here.
-// The pick→apply chain requires a fully-seeded State.Cur map (snapshot of a real Meeting)
-// and the UpdateMeeting/UpdateSeries fakes to return shaped postgres.Meeting values.
-// Drive those tests once the fake's UpdateMeeting is extended to return a canned meeting.
-
-// ---------------------------------------------------------------------------
-// Test: lang threading — ru vs en output differs
-// ---------------------------------------------------------------------------
 
 func TestRecLabel_Localized(t *testing.T) {
 	if recLabel("weekly", "en") != "Weekly" {

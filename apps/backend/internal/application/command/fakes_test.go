@@ -11,7 +11,6 @@ import (
 	docalendar "github.com/luckyrogue/lead-cat/internal/domain/calendar"
 )
 
-// Compile-time proof the fakes satisfy the real ports.
 var (
 	_ Store              = (*fakeStore)(nil)
 	_ CalendarProvider   = (*fakeCalProvider)(nil)
@@ -104,8 +103,6 @@ func (p *fakeCalProvider) For(_ context.Context, _ uuid.UUID, _ string) (docalen
 	return p.svc, nil
 }
 
-// fakeCalService is concurrency-safe: the real series path fans out CreateEvent
-// across goroutines (fanio.All), so the recording slices are guarded by a mutex.
 type fakeCalService struct {
 	failCreate bool
 

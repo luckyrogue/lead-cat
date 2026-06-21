@@ -6,8 +6,6 @@ import (
 	texttemplate "text/template"
 )
 
-// ----- Booker confirmation -----
-
 type BookingConfirmationData struct {
 	Language   string
 	BookerName string
@@ -41,8 +39,6 @@ func bookingConfirmLabels(lang string) bookingConfirmL {
 		return bookingConfirmL{Hi: "Привет", Intro: "Ваша встреча забронирована. Детали:", EventLbl: "Встреча", WhenLbl: "Когда", Cta: "Подключиться к Google Meet", Foot: "Вы получили это письмо, потому что забронировали встречу через Lead Cat.", DefaultName: "друг"}
 	}
 }
-
-// ----- Host notification -----
 
 type BookingHostNotificationData struct {
 	Language    string
@@ -78,8 +74,6 @@ func bookingHostLabels(lang string) bookingHostL {
 		return bookingHostL{Hi: "Привет", Intro: "У вас новая бронь.", EventLbl: "Встреча", WhoLbl: "Забронировал", WhenLbl: "Когда", Cta: "Подключиться к Google Meet", Foot: "Вы получили это письмо, потому что кто-то забронировал время через Lead Cat."}
 	}
 }
-
-// ----- Shared render scaffolding -----
 
 type bookingRow struct{ Label, Value string }
 
@@ -122,7 +116,6 @@ var bookingTextTemplate = texttemplate.Must(texttemplate.New("booking.txt").Pars
 {{.Foot}}
 `))
 
-// textRenderData wraps bookingRenderData for the text template (which needs the raw meet link).
 type textRenderData struct {
 	bookingRenderData
 	MeetLine string
@@ -144,7 +137,6 @@ func renderBooking(rd bookingRenderData, meetLink, cta string) (text, htmlOut st
 	return tb.String(), hb.String(), nil
 }
 
-// RenderBookingConfirmation renders the booker-facing confirmation email.
 func RenderBookingConfirmation(d BookingConfirmationData) (subject, text, html string, err error) {
 	lang := NormalizeLang(d.Language)
 	l := bookingConfirmLabels(lang)
@@ -170,7 +162,6 @@ func RenderBookingConfirmation(d BookingConfirmationData) (subject, text, html s
 	return bookingConfirmSubject(lang), text, html, nil
 }
 
-// RenderBookingHostNotification renders the host-facing new-booking email.
 func RenderBookingHostNotification(d BookingHostNotificationData) (subject, text, html string, err error) {
 	lang := NormalizeLang(d.Language)
 	l := bookingHostLabels(lang)

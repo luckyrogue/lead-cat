@@ -1,6 +1,3 @@
-// Package pgtest provides an ephemeral Postgres for repository tests.
-// It boots a throwaway container, applies the goose migrations once, and
-// hands back a pgx pool. One container per test package (via TestMain).
 package pgtest
 
 import (
@@ -24,13 +21,11 @@ import (
 	pg "github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
-// DB is a ready, migrated ephemeral Postgres.
 type DB struct {
 	Pool      *pgxpool.Pool
 	container testcontainers.Container
 }
 
-// DockerAvailable reports whether a usable Docker endpoint exists.
 func DockerAvailable() bool {
 	p, err := testcontainers.NewDockerProvider()
 	if err != nil {
@@ -40,7 +35,6 @@ func DockerAvailable() bool {
 	return p.Health(context.Background()) == nil
 }
 
-// Start boots Postgres, applies migrations, and returns a connected DB.
 func Start(ctx context.Context) (*DB, error) {
 	ctr, err := postgres.Run(ctx, "postgres:16-alpine",
 		postgres.WithDatabase("leadcat_test"),
@@ -83,14 +77,11 @@ func migrate(dsn string) error {
 	return nil
 }
 
-// migrationsDir resolves apps/backend/migrations from this file's location.
 func migrationsDir() string {
 	_, thisFile, _, _ := runtime.Caller(0)
-	// pgtest.go -> pgtest -> testsupport -> internal -> backend
 	return filepath.Join(filepath.Dir(thisFile), "..", "..", "..", "migrations")
 }
 
-// Store returns a repository bound to the pool.
 func (d *DB) Store(log *zap.Logger) *pg.Store {
 	cipher, err := crypto.NewTokenCipher("pgtest-fixed-32-byte-key-for-tests!")
 	if err != nil {
@@ -99,7 +90,6 @@ func (d *DB) Store(log *zap.Logger) *pg.Store {
 	return pg.New(d.Pool, log, cipher)
 }
 
-// Truncate wipes every application table so each test starts clean.
 func (d *DB) Truncate(t *testing.T) {
 	t.Helper()
 	ctx := context.Background()
@@ -135,7 +125,6 @@ func (d *DB) Truncate(t *testing.T) {
 	}
 }
 
-// Close terminates the container.
 func (d *DB) Close() {
 	if d.Pool != nil {
 		d.Pool.Close()

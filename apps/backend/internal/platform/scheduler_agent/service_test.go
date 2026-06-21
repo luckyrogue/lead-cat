@@ -12,8 +12,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
-// --- self-contained test doubles ---
-
 type stubBackend struct{}
 
 func (stubBackend) SearchEmployeesGlobal(context.Context, string) ([]model.Employee, error) {
@@ -68,8 +66,6 @@ func (b *fakeBooker) Book(_ context.Context, telegramID int64, pb PendingBooking
 	}
 	return b.result, nil
 }
-
-// --- tests ---
 
 func TestService_ProposeMeeting_ShowsConfirmCard(t *testing.T) {
 	planner := &scriptPlanner{turns: []application.AgentTurn{
@@ -165,7 +161,6 @@ func TestService_AfterPropose_NoDanglingToolUse(t *testing.T) {
 	if _, handled := svc.OnText(context.Background(), 5, "book it"); !handled {
 		t.Fatal("first OnText not handled")
 	}
-	// Every assistant tool_use in history must have a following user tool_result with the same ID.
 	st, _ := sess.Get(context.Background(), 5)
 	resultIDs := map[string]bool{}
 	for _, m := range st.History {
@@ -180,7 +175,6 @@ func TestService_AfterPropose_NoDanglingToolUse(t *testing.T) {
 			}
 		}
 	}
-	// A follow-up turn must work (user types after the card).
 	reply, handled := svc.OnText(context.Background(), 5, "ага")
 	if !handled || reply.Text != "Ок!" {
 		t.Fatalf("follow-up OnText failed: handled=%v text=%q", handled, reply.Text)
@@ -190,10 +184,8 @@ func TestService_AfterPropose_NoDanglingToolUse(t *testing.T) {
 func TestService_BadArgPropose_RePlans(t *testing.T) {
 	booker := &fakeBooker{}
 	planner := &scriptPlanner{turns: []application.AgentTurn{
-		// First turn: propose with bad date "tomorrow" (not YYYY-MM-DD).
 		{ToolCalls: []application.AgentToolCall{{ID: "p2", Name: "propose_meeting",
 			Input: []byte(`{"type":"Sync","date":"tomorrow","start":"10:00","end":"10:30","emails":["mia@co.com"]}`)}}},
-		// Second turn: model re-plans and replies with text.
 		{Text: "Уточни дату в формате ГГГГ-ММ-ДД."},
 	}}
 	sess := newMemSessions()

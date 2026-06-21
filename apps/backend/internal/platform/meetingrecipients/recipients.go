@@ -20,11 +20,10 @@ type Recipient struct {
 	TelegramID      int64
 	ReminderMinutes string
 	IsOrganizer     bool
-	// Contact details for email delivery (empty when the user has no email).
-	FullName string
-	Email    string
-	Language string
-	Timezone string
+	FullName        string
+	Email           string
+	Language        string
+	Timezone        string
 }
 
 func Resolve(ctx context.Context, store Store, m postgres.Meeting) ([]Recipient, error) {

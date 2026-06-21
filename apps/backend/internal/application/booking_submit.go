@@ -92,9 +92,6 @@ func (s *Services) SubmitBooking(ctx context.Context, slug string, req BookingRe
 	return BookingConfirmation{MeetLink: m.MeetLink, Start: start.UTC(), End: end.UTC()}, nil
 }
 
-// sendBookingEmails sends the booker confirmation and the host notification.
-// Best-effort: a nil mailer is a no-op; render/send errors are logged and swallowed
-// so a created booking never becomes an error response.
 func (s *Services) sendBookingEmails(
 	ctx context.Context,
 	et model.BookingEventType,
@@ -108,7 +105,6 @@ func (s *Services) sendBookingEmails(
 		return
 	}
 
-	// Booker email — times in the event-type timezone, page/browser language.
 	bookerDate := start.Format("Mon, 02 Jan 2006")
 	bookerTime := start.Format("15:04") + " – " + end.Format("15:04")
 	if subject, text, htmlBody, rerr := emailtemplates.RenderBookingConfirmation(emailtemplates.BookingConfirmationData{
@@ -125,7 +121,6 @@ func (s *Services) sendBookingEmails(
 		s.Log.Warn("booking_confirmation_send_failed", zap.Error(serr))
 	}
 
-	// Host email — times in the host timezone (fallback event-type tz), host language.
 	hostTz := host.Timezone
 	if hostTz == "" {
 		hostTz = et.Timezone

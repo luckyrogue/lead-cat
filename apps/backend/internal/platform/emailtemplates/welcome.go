@@ -6,7 +6,6 @@ import (
 	texttemplate "text/template"
 )
 
-// WelcomeData — Go port of docs/email-templates/welcome.{html,txt}.
 type WelcomeData struct {
 	Language       string
 	FirstName      string
@@ -121,7 +120,6 @@ var welcomeTextTemplate = texttemplate.Must(texttemplate.New("welcome.txt").Pars
 {{.L.Unsub}}: {{.UnsubscribeURL}}
 `))
 
-// RenderWelcome returns localized subject, plain text, and HTML bodies.
 func RenderWelcome(d WelcomeData) (subject, text, html string, err error) {
 	lang := NormalizeLang(d.Language)
 	l := welcomeLabels(lang)
@@ -157,7 +155,6 @@ func RenderWelcome(d WelcomeData) (subject, text, html string, err error) {
 	return subject, tb.String(), hb.String(), nil
 }
 
-// FirstNameFromDisplay extracts a greeting name from display name or email local-part.
 func FirstNameFromDisplay(displayName, email string) string {
 	if displayName != "" {
 		if i := indexSpace(displayName); i > 0 {

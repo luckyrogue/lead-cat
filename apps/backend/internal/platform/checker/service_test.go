@@ -10,12 +10,8 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
-// ── compile-time interface assertions ────────────────────────────────────────
-
 var _ Backend = (*fakeBackend)(nil)
 var _ sessions = (*fakeSessions)(nil)
-
-// ── fakeBackend ───────────────────────────────────────────────────────────────
 
 type fakeBackend struct {
 	employees    []postgres.Employee
@@ -33,8 +29,6 @@ func (f *fakeBackend) FreeSlots(_ context.Context, _ string, _ []string, _, _ ti
 	f.slotsCalled = true
 	return f.freeSlots, nil
 }
-
-// ── fakeSessions ──────────────────────────────────────────────────────────────
 
 type fakeSessions struct {
 	store map[int64]State
@@ -63,13 +57,9 @@ func (f *fakeSessions) Del(_ context.Context, telegramID int64) error {
 	return nil
 }
 
-// ── helpers ───────────────────────────────────────────────────────────────────
-
 func newService(b *fakeBackend, sess *fakeSessions) *Service {
 	return New(b, sess)
 }
-
-// ── TestStart_SetsParticipantsStep ────────────────────────────────────────────
 
 func TestStart_SetsParticipantsStep(t *testing.T) {
 	t.Parallel()
@@ -95,8 +85,6 @@ func TestStart_SetsParticipantsStep(t *testing.T) {
 	}
 }
 
-// ── TestOnText_Search_ReturnsMatches ──────────────────────────────────────────
-
 func TestOnText_Search_ReturnsMatches(t *testing.T) {
 	t.Parallel()
 	fb := &fakeBackend{
@@ -109,7 +97,6 @@ func TestOnText_Search_ReturnsMatches(t *testing.T) {
 	ctx := context.Background()
 	const tid int64 = 1002
 
-	// Seed session via Start (as a real flow would do)
 	svc.Start(ctx, tid, "ru")
 
 	reply, handled := svc.OnText(ctx, tid, "ivan", "ru")
@@ -128,8 +115,6 @@ func TestOnText_Search_ReturnsMatches(t *testing.T) {
 	}
 }
 
-// ── TestOnText_NoSession_NotHandled ───────────────────────────────────────────
-
 func TestOnText_NoSession_NotHandled(t *testing.T) {
 	t.Parallel()
 	svc := newService(&fakeBackend{}, newFakeSessions())
@@ -145,8 +130,6 @@ func TestOnText_NoSession_NotHandled(t *testing.T) {
 		t.Fatalf("OnText: expected zero Reply, got %+v", reply)
 	}
 }
-
-// ── TestParseRange_ValidAndErrors ─────────────────────────────────────────────
 
 func TestParseRange_ValidAndErrors(t *testing.T) {
 	t.Parallel()
@@ -184,16 +167,12 @@ func TestParseRange_ValidAndErrors(t *testing.T) {
 	})
 }
 
-// ── TestDayLabel ──────────────────────────────────────────────────────────────
-
 func TestDayLabel(t *testing.T) {
 	t.Parallel()
 	loc := time.UTC
-	// 2026-06-01 is a Monday → "Пн"
 	day := time.Date(2026, 6, 1, 0, 0, 0, 0, loc)
 	label := dayLabel(day, loc)
 
-	// The format is "%s, %02d.%02d" → "Пн, 01.06"
 	if !strings.Contains(label, "01.06") {
 		t.Fatalf("dayLabel: expected date part '01.06' in %q", label)
 	}
@@ -202,11 +181,6 @@ func TestDayLabel(t *testing.T) {
 	}
 }
 
-// ── TestOnCallback_DoneTransition ─────────────────────────────────────────────
-//
-// Drive the "chk:done" callback from a session that already has emails set
-// at stepParticipants. This verifies the done() path that advances to stepRange.
-
 func TestOnCallback_DoneTransition(t *testing.T) {
 	t.Parallel()
 	sess := newFakeSessions()
@@ -214,7 +188,6 @@ func TestOnCallback_DoneTransition(t *testing.T) {
 	ctx := context.Background()
 	const tid int64 = 1003
 
-	// Manually seed a session with an email already added (simulates after add)
 	_ = sess.Set(ctx, tid, State{
 		Step:   stepParticipants,
 		Emails: []string{"alice@example.com"},
@@ -229,7 +202,6 @@ func TestOnCallback_DoneTransition(t *testing.T) {
 	if reply.Text == "" {
 		t.Fatal("OnCallback chk:done: expected non-empty Reply.Text")
 	}
-	// Session should now be at stepRange
 	st, err := sess.Get(ctx, tid)
 	if err != nil {
 		t.Fatalf("sess.Get error: %v", err)
@@ -241,8 +213,6 @@ func TestOnCallback_DoneTransition(t *testing.T) {
 		t.Fatalf("OnCallback chk:done: expected step %q, got %q", stepRange, st.Step)
 	}
 }
-
-// ── TestChecker_Localized ─────────────────────────────────────────────────────
 
 func TestChecker_Localized(t *testing.T) {
 	be := &fakeBackend{}
@@ -258,8 +228,6 @@ func TestChecker_Localized(t *testing.T) {
 	}
 }
 
-// ── TestChecker_CallbackSessionExpired_Localized ──────────────────────────────
-
 func TestChecker_CallbackSessionExpired_Localized(t *testing.T) {
 	svc := New(&fakeBackend{}, newFakeSessions())
 	r, _ := svc.OnCallback(context.Background(), 99, "chk:done", "en")
@@ -267,8 +235,3 @@ func TestChecker_CallbackSessionExpired_Localized(t *testing.T) {
 		t.Fatalf("en session-expired = %q", r.Text)
 	}
 }
-
-// TODO(WS2c): deeper chk: callback branches
-// The chk:add: and chk:dur: paths require careful coordination between Cands
-// index state and callback data. Cover them in a follow-up with table-driven
-// tests seeding State.Cands/Emails directly.

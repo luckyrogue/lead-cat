@@ -53,7 +53,6 @@ func TestBuildMessage_Localized(t *testing.T) {
 	if !strings.Contains(en, "📅 New meeting") || strings.Contains(en, "Новая встреча") {
 		t.Fatalf("expected English header, got:\n%s", en)
 	}
-	// Non-header content stays neutral.
 	if !strings.Contains(en, "«Sync»") || !strings.Contains(en, "01.06.2026") {
 		t.Fatalf("neutral content missing:\n%s", en)
 	}

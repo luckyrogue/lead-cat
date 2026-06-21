@@ -27,10 +27,6 @@ func envelopeFrom(from string) string {
 	return strings.TrimSpace(from)
 }
 
-// SendMultipart delivers a multipart/alternative email (text + HTML). When
-// listUnsubscribe is non-empty it is advertised via the List-Unsubscribe and
-// List-Unsubscribe-Post headers (RFC 8058 one-click). A missing textBody falls
-// back to HTML-only.
 func (s *Sender) SendMultipart(_ context.Context, to, subject, textBody, htmlBody, listUnsubscribe string) error {
 	return s.send(to, subject, textBody, htmlBody, listUnsubscribe)
 }
@@ -47,8 +43,6 @@ func (s *Sender) send(to, subject, textBody, htmlBody, listUnsubscribe string) e
 	return smtp.SendMail(s.host+":"+s.port, auth, envelopeFrom(s.from), []string{to}, msg)
 }
 
-// buildMessage assembles the RFC 5322 message. With a textBody it produces a
-// multipart/alternative (text first, HTML last); without one, an HTML-only body.
 func (s *Sender) buildMessage(to, subject, textBody, htmlBody, listUnsubscribe string) ([]byte, error) {
 	var msg bytes.Buffer
 	header := func(k, v string) { fmt.Fprintf(&msg, "%s: %s\r\n", k, v) }
@@ -68,7 +62,6 @@ func (s *Sender) buildMessage(to, subject, textBody, htmlBody, listUnsubscribe s
 		return msg.Bytes(), nil
 	}
 
-	// multipart/alternative: least-preferred (text) first, most-preferred (HTML) last.
 	mw := multipart.NewWriter(&msg)
 	header("Content-Type", `multipart/alternative; boundary="`+mw.Boundary()+`"`)
 	msg.WriteString("\r\n")

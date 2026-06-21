@@ -7,7 +7,6 @@ import (
 	texttemplate "text/template"
 )
 
-// InviteData — Go port of docs/email-templates/org-invite.{html,txt}.
 type InviteData struct {
 	Language    string
 	OrgName     string
@@ -104,7 +103,6 @@ var inviteTextTemplate = texttemplate.Must(texttemplate.New("invite.txt").Parse(
 {{.L.Foot}}
 `))
 
-// RoleLabelLocal returns a localized role label for admin/member.
 func RoleLabelLocal(lang, role string) string {
 	switch NormalizeLang(lang) {
 	case "en":
@@ -125,7 +123,6 @@ func RoleLabelLocal(lang, role string) string {
 	}
 }
 
-// RenderOrgInvite returns localized subject, plain text, and HTML bodies.
 func RenderOrgInvite(d InviteData) (subject, text, html string, err error) {
 	lang := NormalizeLang(d.Language)
 	l := inviteLabels(lang)

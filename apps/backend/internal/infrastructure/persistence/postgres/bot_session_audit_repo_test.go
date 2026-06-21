@@ -63,8 +63,6 @@ func TestAudit_InsertAndList(t *testing.T) {
 	testDB.Truncate(t)
 	s := newStore()
 	ctx := context.Background()
-	// admin_audit_log.actor_user_id is NOT NULL REFERENCES bot_users(id),
-	// so seed a bot_user and use its id as the actor.
 	actor, err := s.CreateBotUser(ctx, 777, "Admin", "admin@x.io", "admin")
 	if err != nil {
 		t.Fatalf("seed actor: %v", err)

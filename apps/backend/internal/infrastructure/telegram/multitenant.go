@@ -349,8 +349,6 @@ func (h *MultiHandler) reply(ctx context.Context, b *bot.Bot, msg *models.Messag
 	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: msg.Chat.ID, Text: text})
 }
 
-// resolveLang returns the acting user's language: their stored bot_users.language
-// if registered, else their Telegram client language_code, else ru.
 func (h *MultiHandler) resolveLang(ctx context.Context, from *models.User) string {
 	var stored string
 	if u, err := h.store.GetBotUserByTelegramID(ctx, from.ID); err == nil {

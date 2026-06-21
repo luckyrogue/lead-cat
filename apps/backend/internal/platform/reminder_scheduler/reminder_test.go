@@ -15,7 +15,6 @@ func TestOffsetLabel_Localized(t *testing.T) {
 	if got := offsetLabel(1440, "kk"); got != "1 күн" {
 		t.Errorf("kk 1440 = %q", got)
 	}
-	// off-list value uses the n_min default
 	if got := offsetLabel(7, "en"); got != "7 min" {
 		t.Errorf("en 7 = %q", got)
 	}

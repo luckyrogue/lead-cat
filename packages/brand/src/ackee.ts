@@ -1,4 +1,3 @@
-/** Same-origin path; nginx proxies to the Ackee instance. */
 export const ACKEE_BASE_PATH = "/ackee" as const
 
 export const ACKEE_UPSTREAM_URL = "https://analytics.rysdavletov.org"

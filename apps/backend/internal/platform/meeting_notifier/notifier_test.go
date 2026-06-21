@@ -206,7 +206,6 @@ func TestHandleUpdated_TZFallback(t *testing.T) {
 
 func TestHandleCreated_PerRecipientLangAndTZ(t *testing.T) {
 	fs := baseStore()
-	// Two participants in different languages and timezones.
 	fs.participants = []postgres.MeetingParticipant{{Email: "ru@x.io"}, {Email: "en@x.io"}}
 	fs.byEmail = map[string]postgres.BotUser{
 		"ru@x.io": {TelegramID: 601, Email: "ru@x.io", Language: "ru", Timezone: "Asia/Almaty"},
@@ -225,7 +224,6 @@ func TestHandleCreated_PerRecipientLangAndTZ(t *testing.T) {
 	for _, m := range snd.sent {
 		byChat[m.ChatID] = m.Text
 	}
-	// 10:00 Almaty (UTC+5) for ru; 06:00 London (UTC+1, BST) for en.
 	if !strings.Contains(byChat[601], "📅 Новая встреча") || !strings.Contains(byChat[601], "10:00") {
 		t.Fatalf("ru recipient text wrong: %q", byChat[601])
 	}

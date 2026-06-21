@@ -20,7 +20,6 @@ const lockKey = "leadcat:reminders:leader"
 
 var defaultOrganizerOffsets = []int{15}
 
-// Scheduler sends meeting reminders via Telegram and optionally email.
 type Scheduler struct {
 	store          *postgres.Store
 	bot            *bot.Bot
@@ -126,9 +125,6 @@ func (s *Scheduler) recipients(ctx context.Context, m postgres.Meeting) []remind
 	return out
 }
 
-// sendReminderEmail renders and sends the HTML reminder in the recipient's
-// timezone and language. Best-effort: failures are logged, not retried (the
-// reminder claim already covers this recipient+offset).
 func (s *Scheduler) sendReminderEmail(ctx context.Context, m postgres.Meeting, t reminderTarget) {
 	loc, err := time.LoadLocation(t.Timezone)
 	if t.Timezone == "" || err != nil {

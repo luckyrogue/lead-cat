@@ -7,7 +7,6 @@ import (
 	texttemplate "text/template"
 )
 
-// MagicLinkData — Go port of docs/email-templates/magic-link.{html,txt}.
 type MagicLinkData struct {
 	Language       string
 	SignInURL      string
@@ -96,7 +95,6 @@ var magicTextTemplate = texttemplate.Must(texttemplate.New("magic.txt").Parse(
 {{.L.Foot}}
 `))
 
-// RenderMagicLink returns localized subject, plain text, and HTML bodies.
 func RenderMagicLink(d MagicLinkData) (subject, text, html string, err error) {
 	lang := NormalizeLang(d.Language)
 	l := magicLabels(lang)

@@ -25,8 +25,6 @@ func New(st store, b sender, log *zap.Logger) *Notifier {
 	return &Notifier{store: st, bot: b, log: log}
 }
 
-// recipientLoc resolves a recipient's display timezone, falling back to the
-// organization TZ then Asia/Almaty; on a load error it warns and uses UTC.
 func (n *Notifier) recipientLoc(recipientTZ, orgTZ string) *time.Location {
 	tz := cmp.Or(recipientTZ, orgTZ, "Asia/Almaty")
 	loc, err := time.LoadLocation(tz)

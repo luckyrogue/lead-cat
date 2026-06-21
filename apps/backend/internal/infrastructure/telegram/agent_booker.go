@@ -13,10 +13,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/platform/scheduler_agent"
 )
 
-// agentBooker creates a one-off meeting for the authenticated Telegram user.
-// Org + organizer are resolved from the user's account here — never from the
-// model. The returned error carries a user-facing message (the agent Service
-// surfaces err.Error() to the user); the real cause is logged.
 type agentBooker struct {
 	store    *postgres.Store
 	services *application.Services

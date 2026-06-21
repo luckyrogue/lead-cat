@@ -14,8 +14,6 @@ import (
 
 func strPtr(s string) *string { return &s }
 
-// seedStored puts a scheduled meeting (with a calendar event id) in the fake
-// store, organized by organizerID, and sets the org owner.
 func seedStored(fs *fakeStore, organizerID uuid.UUID) (uuid.UUID, model.Organization) {
 	owner := uuid.New()
 	org := model.Organization{TZ: "Asia/Almaty", OwnerUserID: &owner}

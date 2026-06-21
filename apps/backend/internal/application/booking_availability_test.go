@@ -51,7 +51,6 @@ func hostStore() *bookingFakeStore {
 func TestBookingAvailability_WeekdayHasSlots(t *testing.T) {
 	s := &Services{Store: hostStore()}
 	et := monFriEvent()
-	// Monday 2026-06-22 00:00 Almaty = 2026-06-21 19:00 UTC
 	from := time.Date(2026, 6, 22, 0, 0, 0, 0, almatyLoc)
 	to := from.AddDate(0, 0, 1)
 
@@ -59,7 +58,6 @@ func TestBookingAvailability_WeekdayHasSlots(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	// 09:00–17:00 window, 30-min slots → 16 discrete slots
 	if len(slots) != 16 {
 		t.Fatalf("expected 16 slots for 09:00–17:00/30min day, got %d", len(slots))
 	}
@@ -92,7 +90,6 @@ func TestBookingAvailability_BusyMeetingExcludesSlot(t *testing.T) {
 			t.Errorf("slot overlaps busy block: %v – %v", sl.Start, sl.End)
 		}
 	}
-	// busy 09:00–09:30 removes 1 slot → 15 remain; first at 09:30
 	if len(slots) != 15 {
 		t.Fatalf("expected 15 slots after busy 09:00–09:30, got %d", len(slots))
 	}
@@ -106,7 +103,6 @@ func TestBookingAvailability_NonAllowedWeekdayYieldsNone(t *testing.T) {
 	s := &Services{Store: hostStore()}
 	et := monFriEvent()
 	et.AvailWeekdays = []int{6, 7} // Sat, Sun only
-	// Monday 2026-06-22
 	from := time.Date(2026, 6, 22, 0, 0, 0, 0, almatyLoc)
 	to := from.AddDate(0, 0, 1)
 
@@ -123,7 +119,6 @@ func TestBookingAvailability_PastSlotsDropped(t *testing.T) {
 	almaty, _ := time.LoadLocation("Asia/Almaty")
 	s := &Services{Store: hostStore()}
 	et := monFriEvent()
-	// from is set to 09:45 on a Monday — so the 09:00 and 09:30 slots are in the past
 	from := time.Date(2026, 6, 22, 9, 45, 0, 0, almaty)
 	to := time.Date(2026, 6, 22, 23, 59, 0, 0, almaty)
 

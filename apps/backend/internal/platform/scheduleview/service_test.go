@@ -9,10 +9,6 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 )
 
-// ---------------------------------------------------------------------------
-// fakes
-// ---------------------------------------------------------------------------
-
 type fakeSessions struct {
 	m map[int64]*State
 }
@@ -66,17 +62,9 @@ func (f *fakeBackend) EmployeeSchedule(_ context.Context, email string, from, to
 	return f.meetings, nil
 }
 
-// ---------------------------------------------------------------------------
-// helpers
-// ---------------------------------------------------------------------------
-
 func newService(be *fakeBackend, sess *fakeSessions) *Service {
 	return New(be, sess)
 }
-
-// ---------------------------------------------------------------------------
-// TestStart_SetsAwaitSearch
-// ---------------------------------------------------------------------------
 
 func TestStart_SetsAwaitSearch(t *testing.T) {
 	sess := newFakeSessions()
@@ -104,10 +92,6 @@ func TestStart_SetsAwaitSearch(t *testing.T) {
 	}
 }
 
-// ---------------------------------------------------------------------------
-// TestOnText_Search
-// ---------------------------------------------------------------------------
-
 func TestOnText_Search(t *testing.T) {
 	sess := newFakeSessions()
 	be := &fakeBackend{
@@ -131,7 +115,6 @@ func TestOnText_Search(t *testing.T) {
 	if len(be.searchCalls) != 1 || be.searchCalls[0] != "ivan" {
 		t.Errorf("SearchEmployeesGlobal call: want [\"ivan\"], got %v", be.searchCalls)
 	}
-	// Reply should contain at least one keyboard row with sched:pick: data.
 	found := false
 	for _, row := range reply.Keyboard {
 		for _, btn := range row {
@@ -144,10 +127,6 @@ func TestOnText_Search(t *testing.T) {
 		t.Errorf("OnText search: expected a sched:pick: keyboard button, keyboard=%v", reply.Keyboard)
 	}
 }
-
-// ---------------------------------------------------------------------------
-// TestParseDate_ValidAndError
-// ---------------------------------------------------------------------------
 
 func TestParseDate_ValidAndError(t *testing.T) {
 	loc := time.UTC
@@ -166,10 +145,6 @@ func TestParseDate_ValidAndError(t *testing.T) {
 	}
 }
 
-// ---------------------------------------------------------------------------
-// TestParseRange_EndExclusive
-// ---------------------------------------------------------------------------
-
 func TestParseRange_EndExclusive(t *testing.T) {
 	loc := time.UTC
 
@@ -186,23 +161,17 @@ func TestParseRange_EndExclusive(t *testing.T) {
 		t.Errorf("parseRange to (end-exclusive): want %v, got %v", wantTo, to)
 	}
 
-	// Reversed range must error.
 	_, _, err = parseRange("2026-06-03..2026-06-01", loc)
 	if err == nil {
 		t.Fatal("parseRange reversed: expected error, got nil")
 	}
 }
 
-// ---------------------------------------------------------------------------
-// TestDayWindow
-// ---------------------------------------------------------------------------
-
 func TestDayWindow(t *testing.T) {
 	loc := time.UTC
 	now := time.Date(2026, 6, 10, 14, 30, 0, 0, loc)
 	sod := time.Date(2026, 6, 10, 0, 0, 0, 0, loc)
 
-	// today: [sod, sod+1d)
 	from, to, ok := dayWindow(now, "today", loc)
 	if !ok {
 		t.Fatal("dayWindow today: ok=false")
@@ -214,7 +183,6 @@ func TestDayWindow(t *testing.T) {
 		t.Errorf("today to: want %v, got %v", sod.AddDate(0, 0, 1), to)
 	}
 
-	// tomorrow: [sod+1d, sod+2d)
 	from, to, ok = dayWindow(now, "tomorrow", loc)
 	if !ok {
 		t.Fatal("dayWindow tomorrow: ok=false")
@@ -226,7 +194,6 @@ func TestDayWindow(t *testing.T) {
 		t.Errorf("tomorrow to: want %v, got %v", sod.AddDate(0, 0, 2), to)
 	}
 
-	// upcoming: [now, now+1y)
 	from, to, ok = dayWindow(now, "upcoming", loc)
 	if !ok {
 		t.Fatal("dayWindow upcoming: ok=false")
@@ -238,16 +205,11 @@ func TestDayWindow(t *testing.T) {
 		t.Errorf("upcoming to: want %v, got %v", now.AddDate(1, 0, 0), to)
 	}
 
-	// unknown kind → ok=false
 	_, _, ok = dayWindow(now, "week", loc)
 	if ok {
 		t.Fatal("dayWindow unknown kind: expected ok=false, got true")
 	}
 }
-
-// ---------------------------------------------------------------------------
-// TestStatusEmoji
-// ---------------------------------------------------------------------------
 
 func TestStatusEmoji(t *testing.T) {
 	now := time.Date(2026, 6, 10, 12, 0, 0, 0, time.UTC)
@@ -263,17 +225,12 @@ func TestStatusEmoji(t *testing.T) {
 	}
 }
 
-// ---------------------------------------------------------------------------
-// TestOnCallback_Back
-// ---------------------------------------------------------------------------
-
 func TestOnCallback_Back(t *testing.T) {
 	sess := newFakeSessions()
 	svc := newService(&fakeBackend{}, sess)
 
 	const tid = int64(99)
 
-	// sched:back must call Start and return ok=true.
 	reply, handled := svc.OnCallback(context.Background(), tid, "sched:back", "ru")
 
 	if !handled {
@@ -283,7 +240,6 @@ func TestOnCallback_Back(t *testing.T) {
 		t.Fatal("OnCallback sched:back: want non-empty reply text")
 	}
 
-	// Session must be reset to stepAwait/awaitSearch (same as Start).
 	st, err := sess.Get(context.Background(), tid)
 	if err != nil {
 		t.Fatalf("sessions.Get error: %v", err)
@@ -298,16 +254,6 @@ func TestOnCallback_Back(t *testing.T) {
 		t.Errorf("sched:back AwaitingKind: want %q, got %q", awaitSearch, st.AwaitingKind)
 	}
 }
-
-// TODO(WS2c): OnCallback sched:pick: — requires seeding a candidate list in the session
-//             (set st.Cands) and then firing sched:pick:0; add once indexInto path is
-//             exercised end-to-end.
-// TODO(WS2c): OnCallback sched:periods — similar: needs st.EmployeeEmail in session.
-// TODO(WS2c): OnCallback sched:d:<kind> — period branches (today/tomorrow/upcoming/date/range).
-
-// ---------------------------------------------------------------------------
-// TestSchedule_Localized
-// ---------------------------------------------------------------------------
 
 func TestSchedule_Localized(t *testing.T) {
 	svc := newService(&fakeBackend{}, newFakeSessions())
