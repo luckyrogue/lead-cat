@@ -6967,7 +6967,11 @@
             ]
           },
           "value": {
-            "type": "string"
+            "oneOf": [
+              {"type": "string"},
+              {"type": "number"},
+              {"type": "array", "items": {"type": "string"}}
+            ]
           }
         }
       },
@@ -7072,7 +7076,6 @@
         "type": "object",
         "required": [
           "id",
-          "order_index",
           "prompt",
           "type",
           "options",
@@ -7083,9 +7086,6 @@
           "id": {
             "type": "string",
             "format": "uuid"
-          },
-          "order_index": {
-            "type": "integer"
           },
           "prompt": {
             "type": "string"
@@ -7147,7 +7147,11 @@
             "format": "uuid"
           },
           "value": {
-            "type": "string"
+            "oneOf": [
+              {"type": "string"},
+              {"type": "number"},
+              {"type": "array", "items": {"type": "string"}}
+            ]
           }
         }
       },

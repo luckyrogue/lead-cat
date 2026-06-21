@@ -1494,7 +1494,7 @@ export interface components {
             prompt: string;
             /** @enum {string} */
             type: "single" | "multi" | "rating" | "text";
-            value: string;
+            value: string | number | string[];
         };
         SurveyResponse: {
             /** Format: uuid */
@@ -1527,7 +1527,6 @@ export interface components {
         PublicSurveyQuestion: {
             /** Format: uuid */
             id: string;
-            order_index: number;
             prompt: string;
             /** @enum {string} */
             type: "single" | "multi" | "rating" | "text";
@@ -1543,7 +1542,7 @@ export interface components {
         PublicSurveyAnswerInput: {
             /** Format: uuid */
             question_id: string;
-            value: string;
+            value: string | number | string[];
         };
         PublicSurveySubmitRequest: {
             answers: components["schemas"]["PublicSurveyAnswerInput"][];
