@@ -50,6 +50,7 @@ export const schema = z
     avail_start_time: z.string().min(1, "booking.errors.startRequired"),
     avail_end_time: z.string().min(1, "booking.errors.endRequired"),
     active: z.boolean(),
+    survey_id: z.string().nullable(),
   })
   .refine((v) => v.avail_end_time > v.avail_start_time, {
     path: ["avail_end_time"],
@@ -68,6 +69,7 @@ export function toFormValues(et: BookingEventType): FormValues {
     avail_start_time: minutesToTime(et.avail_start_minute),
     avail_end_time: minutesToTime(et.avail_end_minute),
     active: et.active,
+    survey_id: et.survey_id ?? null,
   }
 }
 
@@ -81,6 +83,7 @@ export function toInput(values: FormValues): EventTypeInput {
     avail_start_minute: timeToMinutes(values.avail_start_time),
     avail_end_minute: timeToMinutes(values.avail_end_time),
     active: values.active,
+    survey_id: values.survey_id ?? null,
   }
 }
 

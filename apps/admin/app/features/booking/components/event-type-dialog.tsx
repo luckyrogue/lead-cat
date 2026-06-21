@@ -21,6 +21,7 @@ import type {
   BookingEventType,
   EventTypeInput,
 } from "~/entities/booking-event-type/types"
+import { useSurveys } from "~/entities/survey/queries"
 import { useT } from "~/shared/i18n/context"
 import { getTimezoneOptions } from "~/shared/lib/timezone-options"
 
@@ -42,6 +43,7 @@ type Props = {
   pending: boolean
   editing: BookingEventType | null
   onSubmit: (input: EventTypeInput) => void
+  orgId: string | null
 }
 
 export function EventTypeDialog({
@@ -50,9 +52,17 @@ export function EventTypeDialog({
   pending,
   editing,
   onSubmit,
+  orgId,
 }: Props) {
   const t = useT()
   const timezoneOptions = getTimezoneOptions(t)
+  const { data: surveys } = useSurveys(orgId)
+
+  // Show active surveys plus currently-assigned one (even if inactive)
+  const currentSurveyId = editing?.survey_id ?? null
+  const surveyOptions = (surveys ?? []).filter(
+    (s) => s.is_active || s.id === currentSurveyId
+  )
 
   const defaultValues: FormValues = editing
     ? toFormValues(editing)
@@ -65,6 +75,7 @@ export function EventTypeDialog({
         avail_start_time: "09:00",
         avail_end_time: "18:00",
         active: true,
+        survey_id: null,
       }
 
   const {
@@ -253,6 +264,31 @@ export function EventTypeDialog({
                     }
                   />
                 </button>
+              )}
+            />
+          </Field>
+
+          <Field label={t("surveys.assignLabel")}>
+            <Controller
+              control={control}
+              name="survey_id"
+              render={({ field }) => (
+                <Select
+                  value={field.value ?? ""}
+                  onValueChange={(v) => field.onChange(v === "" ? null : v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("surveys.assignNone")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">{t("surveys.assignNone")}</SelectItem>
+                    {surveyOptions.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
             />
           </Field>

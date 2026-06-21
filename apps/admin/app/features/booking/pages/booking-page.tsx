@@ -198,6 +198,7 @@ export function BookingPage() {
         pending={createEventType.isPending || updateEventType.isPending}
         editing={editing}
         onSubmit={handleSubmit}
+        orgId={activeOrgId}
       />
     </>
   )
