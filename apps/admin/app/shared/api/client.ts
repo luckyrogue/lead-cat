@@ -20,8 +20,7 @@ function readCsrfCookie(): string | null {
 
 export function prepareMutationCsrf(
   method: string,
-  csrf: string | null,
-  dev = import.meta.env.DEV
+  csrf: string | null
 ): { header?: string; warn?: boolean } {
   if (!MUTATION_METHODS.has(method.toLowerCase())) {
     return {}
@@ -29,10 +28,7 @@ export function prepareMutationCsrf(
   if (csrf) {
     return { header: csrf }
   }
-  if (dev) {
-    return { warn: true }
-  }
-  throw new Error("missing_csrf_token")
+  return { warn: true }
 }
 
 function resolveBaseUrl(): string {

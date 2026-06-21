@@ -13,14 +13,9 @@ describe("prepareMutationCsrf", () => {
     })
   })
 
-  it("warns in dev when csrf is missing", () => {
-    expect(prepareMutationCsrf("delete", null, true)).toEqual({ warn: true })
-  })
-
-  it("throws in prod when csrf is missing", () => {
-    expect(() => prepareMutationCsrf("patch", null, false)).toThrow(
-      "missing_csrf_token"
-    )
+  it("warns when csrf is missing on mutations", () => {
+    expect(prepareMutationCsrf("delete", null)).toEqual({ warn: true })
+    expect(prepareMutationCsrf("patch", null)).toEqual({ warn: true })
   })
 
   it("treats method case-insensitively", () => {

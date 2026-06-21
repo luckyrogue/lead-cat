@@ -191,7 +191,7 @@ export default function BookSlugPage() {
                       className={[
                         "rounded-md border px-3 py-1.5 text-sm transition-colors",
                         day === selectedDay
-                          ? "border-primary bg-primary text-primary-foreground"
+                          ? "border-kitty-800 bg-kitty-800 text-cream-50"
                           : "border-border bg-background hover:bg-accent",
                       ].join(" ")}
                     >
@@ -228,7 +228,7 @@ export default function BookSlugPage() {
                           className={[
                             "rounded-md border px-3 py-1.5 text-sm transition-colors",
                             isSelected
-                              ? "border-primary bg-primary text-primary-foreground"
+                              ? "border-kitty-800 bg-kitty-800 text-cream-50"
                               : "border-border bg-background hover:bg-accent",
                           ].join(" ")}
                         >
