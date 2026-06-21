@@ -181,6 +181,27 @@ func TestService_AfterPropose_NoDanglingToolUse(t *testing.T) {
 	}
 }
 
+func TestAgent_Start_Localized(t *testing.T) {
+	svc := New(&scriptPlanner{}, stubBackend{}, newMemSessions())
+	ru := svc.Start(context.Background(), 1, "ru")
+	en := svc.Start(context.Background(), 1, "en")
+	if ru.Text == en.Text {
+		t.Fatalf("Start must differ by language; both = %q", ru.Text)
+	}
+	if !strings.Contains(en.Text, "Ask me about schedules") {
+		t.Errorf("en Start = %q", en.Text)
+	}
+}
+
+func TestSystemPrompt_NamesLanguage(t *testing.T) {
+	if systemPrompt("ru") == systemPrompt("en") {
+		t.Fatal("system prompt must differ by language")
+	}
+	if !strings.Contains(systemPrompt("en"), "English") {
+		t.Errorf("en prompt missing English directive: %q", systemPrompt("en"))
+	}
+}
+
 func TestService_BadArgPropose_RePlans(t *testing.T) {
 	booker := &fakeBooker{}
 	planner := &scriptPlanner{turns: []application.AgentTurn{

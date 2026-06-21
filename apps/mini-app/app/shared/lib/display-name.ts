@@ -1,4 +1,3 @@
-/** Greeting name: Telegram first_name, else given name from bot FIO (Фамилия Имя …). */
 export function getGreetingName(
   fullName: string | undefined,
   telegramFirstName?: string

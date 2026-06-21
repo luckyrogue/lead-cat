@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
+	"github.com/luckyrogue/lead-cat/internal/platform/boti18n"
 )
 
 const maxIterations = 6
@@ -35,7 +36,7 @@ func NewWithBooker(planner application.Planner, backend Backend, booker Booker, 
 	return &Service{planner: planner, backend: backend, booker: booker, sessions: sess, tools: ToolSpecs()}
 }
 
-func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Reply, bool) {
+func (s *Service) OnText(ctx context.Context, telegramID int64, text, lang string) (Reply, bool) {
 	st, err := s.sessions.Get(ctx, telegramID)
 	if err != nil || st == nil {
 		st = &State{}
@@ -43,9 +44,9 @@ func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Re
 	st.History = append(st.History, application.AgentMessage{Role: "user", Text: text})
 
 	for i := 0; i < maxIterations; i++ {
-		turn, perr := s.planner.Plan(ctx, systemPrompt, st.History, s.tools)
+		turn, perr := s.planner.Plan(ctx, systemPrompt(lang), st.History, s.tools)
 		if perr != nil {
-			return Reply{Text: "Не получилось обработать запрос, попробуй ещё раз чуть позже 🐾"}, true
+			return Reply{Text: boti18n.T(lang, "agent.plan_failed")}, true
 		}
 		if len(turn.ToolCalls) == 0 {
 			st.History = append(st.History, application.AgentMessage{Role: "assistant", Text: turn.Text})
@@ -85,22 +86,22 @@ func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Re
 			st.Pending = pending
 			_ = s.sessions.Set(ctx, telegramID, *st)
 			return Reply{
-				Text: describeBooking(*pending),
+				Text: describeBooking(*pending, lang),
 				Keyboard: [][]Button{{
-					{Text: "Подтвердить ✅", Data: "agent:book:yes"},
-					{Text: "Отмена", Data: "agent:book:no"},
+					{Text: boti18n.T(lang, "agent.btn_confirm"), Data: "agent:book:yes"},
+					{Text: boti18n.T(lang, "agent.btn_cancel"), Data: "agent:book:no"},
 				}},
 			}, true
 		}
 	}
 
 	_ = s.sessions.Set(ctx, telegramID, *st)
-	return Reply{Text: "Это оказалось сложновато 🐾 Попробуй переформулировать или уточнить участников и даты."}, true
+	return Reply{Text: boti18n.T(lang, "agent.too_hard")}, true
 }
 
-func (s *Service) Start(ctx context.Context, telegramID int64) Reply {
+func (s *Service) Start(ctx context.Context, telegramID int64, lang string) Reply {
 	_ = s.sessions.Del(ctx, telegramID)
-	return Reply{Text: "Спроси меня про расписание — например: «когда у Миа и Алекса есть общий час на следующей неделе?» 🐾"}
+	return Reply{Text: boti18n.T(lang, "agent.start")}
 }
 
 func parsePending(args []byte) (PendingBooking, error) {
@@ -131,21 +132,21 @@ func parsePending(args []byte) (PendingBooking, error) {
 	return PendingBooking{Dept: in.Dept, Type: in.Type, Date: in.Date, Start: in.Start, End: in.End, Emails: in.Emails, Desc: in.Desc}, nil
 }
 
-func (s *Service) OnCallback(ctx context.Context, telegramID int64, data string) (Reply, bool) {
+func (s *Service) OnCallback(ctx context.Context, telegramID int64, data, lang string) (Reply, bool) {
 	switch data {
 	case "agent:book:yes":
 		s.bookMu.Lock()
 		st, err := s.sessions.Get(ctx, telegramID)
 		if err != nil || st == nil || st.Pending == nil {
 			s.bookMu.Unlock()
-			return Reply{Text: "Предложение устарело 🐾 Попроси заново.", Edit: true}, true
+			return Reply{Text: boti18n.T(lang, "agent.proposal_stale"), Edit: true}, true
 		}
 		pb := *st.Pending
 		st.Pending = nil
 		_ = s.sessions.Set(ctx, telegramID, *st)
 		s.bookMu.Unlock()
 		if s.booker == nil {
-			return Reply{Text: "Бронирование сейчас недоступно.", Edit: true}, true
+			return Reply{Text: boti18n.T(lang, "agent.booking_unavailable"), Edit: true}, true
 		}
 		msg, berr := s.booker.Book(ctx, telegramID, pb)
 		if berr != nil {
@@ -158,7 +159,7 @@ func (s *Service) OnCallback(ctx context.Context, telegramID int64, data string)
 			st.Pending = nil
 			_ = s.sessions.Set(ctx, telegramID, *st)
 		}
-		return Reply{Text: "Хорошо, не бронирую 🐾", Edit: true}, true
+		return Reply{Text: boti18n.T(lang, "agent.cancelled"), Edit: true}, true
 	default:
 		return Reply{}, false
 	}
