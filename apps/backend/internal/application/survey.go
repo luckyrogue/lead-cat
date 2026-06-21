@@ -64,3 +64,15 @@ func (s *Services) DeleteSurvey(ctx context.Context, orgID, id uuid.UUID) error 
 	}
 	return s.Store.DeleteSurvey(ctx, id)
 }
+
+func (s *Services) ListResponses(ctx context.Context, orgID, surveyID uuid.UUID, f model.ResponseFilter) (model.Survey, []model.SurveyResponse, error) {
+	sv, err := s.requireSurveyOrg(ctx, orgID, surveyID)
+	if err != nil {
+		return model.Survey{}, nil, err
+	}
+	rs, err := s.Store.ListSurveyResponses(ctx, surveyID, f)
+	if err != nil {
+		return model.Survey{}, nil, err
+	}
+	return sv, rs, nil
+}

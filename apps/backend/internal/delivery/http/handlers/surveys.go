@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"errors"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
+	"github.com/luckyrogue/lead-cat/internal/application"
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
@@ -139,4 +141,54 @@ func (a *API) SurveyDelete(c *fiber.Ctx) error {
 		return surveyErr(a.Log, err)
 	}
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+func parseResponseFilter(c *fiber.Ctx) model.ResponseFilter {
+	f := model.ResponseFilter{Status: c.Query("status"), Reason: c.Query("reason")}
+	if v := c.Query("from"); v != "" {
+		if t, err := time.Parse("2006-01-02", v); err == nil {
+			f.From = &t
+		}
+	}
+	if v := c.Query("to"); v != "" {
+		if t, err := time.Parse("2006-01-02", v); err == nil {
+			end := t.Add(24 * time.Hour)
+			f.To = &end
+		}
+	}
+	return f
+}
+
+func (a *API) SurveyResponses(c *fiber.Ctx) error {
+	orgID, err := orgIDFromHeader(c)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "missing_or_invalid_org_id")
+	}
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid_id")
+	}
+	sv, rs, err := a.App.ListResponses(c.UserContext(), orgID, id, parseResponseFilter(c))
+	if err != nil {
+		return surveyErr(a.Log, err)
+	}
+	return c.JSON(fiber.Map{"survey": sv, "responses": rs})
+}
+
+func (a *API) SurveyResponsesCSV(c *fiber.Ctx) error {
+	orgID, err := orgIDFromHeader(c)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "missing_or_invalid_org_id")
+	}
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid_id")
+	}
+	sv, rs, err := a.App.ListResponses(c.UserContext(), orgID, id, parseResponseFilter(c))
+	if err != nil {
+		return surveyErr(a.Log, err)
+	}
+	c.Set("Content-Type", "text/csv; charset=utf-8")
+	c.Set("Content-Disposition", `attachment; filename="survey-responses.csv"`)
+	return c.Send(application.ResponsesCSV(sv, rs))
 }
