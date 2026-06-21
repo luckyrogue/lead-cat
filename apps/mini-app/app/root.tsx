@@ -1,4 +1,4 @@
-import { brandHeadLinks, brandMetaTags } from "@leadcat/brand"
+import { ACKEE_BASE_PATH, brandHeadLinks, brandMetaTags } from "@leadcat/brand"
 import { Toaster } from "@leadcat/ui"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { useEffect } from "react"
@@ -17,6 +17,8 @@ import { AuthProvider } from "~/shared/auth/auth-context"
 import { initTelegramViewport } from "~/shared/tma/telegram-env"
 
 import "./app.css"
+
+const ACKEE_DOMAIN_ID = "fa8b7e8a-e583-47d9-98c0-1e36486e61c4"
 
 export function links() {
   return [
@@ -47,6 +49,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <script src="https://telegram.org/js/telegram-web-app.js" />
         <Meta />
         <Links />
+        {import.meta.env.PROD ? (
+          <script
+            async
+            src={`${ACKEE_BASE_PATH}/tracker.js`}
+            data-ackee-server={ACKEE_BASE_PATH}
+            data-ackee-domain-id={ACKEE_DOMAIN_ID}
+          />
+        ) : null}
       </head>
       <body>
         {children}

@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./ackee": "./src/ackee.ts",
     "./public/*": "./public/*"
   },
   "scripts": {

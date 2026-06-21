@@ -1,3 +1,4 @@
+import { ackeeViteProxy } from "@leadcat/brand/ackee"
 import { reactRouter } from "@react-router/dev/vite"
 import tailwindcss from "@tailwindcss/vite"
 import { defineConfig } from "vite"
@@ -13,6 +14,7 @@ export default defineConfig({
         target: "http://localhost:8080",
         changeOrigin: true,
       },
+      ...ackeeViteProxy(),
     },
   },
   ssr: {

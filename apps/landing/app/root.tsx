@@ -1,7 +1,9 @@
-import { brandHeadLinks } from "@leadcat/brand"
+import { ACKEE_BASE_PATH, brandHeadLinks } from "@leadcat/brand"
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router"
 
 import "./app.css"
+
+const ACKEE_DOMAIN_ID = "9cc5108c-dac6-4a3f-9c87-ad9570eb39d4"
 
 export function links() {
   return brandHeadLinks()
@@ -15,6 +17,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        {import.meta.env.PROD ? (
+          <script
+            async
+            src={`${ACKEE_BASE_PATH}/tracker.js`}
+            data-ackee-server={ACKEE_BASE_PATH}
+            data-ackee-domain-id={ACKEE_DOMAIN_ID}
+          />
+        ) : null}
       </head>
       <body>
         {children}

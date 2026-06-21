@@ -14,6 +14,7 @@ RUN pnpm --filter mini-app build
 
 FROM nginx:alpine AS runtime
 ENV API_UPSTREAM=http://backend:8080
+COPY deploy/nginx/ackee-location.conf /etc/nginx/ackee-location.conf
 COPY deploy/nginx/spa.conf /etc/nginx/templates/default.conf.template
 COPY --from=build /repo/apps/mini-app/build/client /usr/share/nginx/html
 EXPOSE 80

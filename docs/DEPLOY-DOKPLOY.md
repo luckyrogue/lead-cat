@@ -5,9 +5,9 @@ Lead Cat deploys as **four independent services** built from one monorepo:
 | Service    | Source              | Runtime           | Port | Notes                                              |
 | ---------- | ------------------- | ----------------- | ---- | -------------------------------------------------- |
 | `backend`  | `apps/backend`      | Go binary         | 8080 | REST `/api`, Telegram bot, asynq workers, migrate. |
-| `landing`  | `apps/landing`      | Node (SSR)        | 3000 | Marketing site, `ssr: true`, `react-router-serve`. |
-| `admin`    | `apps/admin`        | nginx (static)    | 80   | SPA dashboard; nginx proxies `/api/*` → backend.   |
-| `mini-app` | `apps/mini-app`     | nginx (static)    | 80   | Telegram Mini App SPA; same `/api` proxy.          |
+| `landing`  | `apps/landing`      | nginx + Node SSR  | 3000 | nginx proxies `/ackee/*` and forwards other paths to Node on 3001. |
+| `admin`    | `apps/admin`        | nginx (static)    | 80   | SPA dashboard; nginx proxies `/api/*` → backend, `/ackee/*` → Ackee. |
+| `mini-app` | `apps/mini-app`     | nginx (static)    | 80   | Telegram Mini App SPA; same `/api` and `/ackee` proxies.          |
 
 Each app has its own `Dockerfile`. **Build context is the repository root** (the pnpm
 workspace must resolve), so in Dokploy set the build context to `.` and the Dockerfile
@@ -18,6 +18,11 @@ reverse-proxies `/api/*` to the backend. This keeps the browser same-origin, so 
 admin cookie session works with `SameSite=Lax` and no CORS is needed. The proxy target
 is the `API_UPSTREAM` env var (default `http://backend:8080`). The SPAs are built with
 `VITE_API_URL` empty so the client calls relative `/api` paths.
+
+All three frontends load Ackee from `/ackee/tracker.js` (same-origin). Container nginx
+reverse-proxies `/ackee/*` to `https://analytics.rysdavletov.org` (see
+`deploy/nginx/ackee-location.conf`), so the tracker API does not need CORS. Vite dev
+servers use the same path via `ackeeViteProxy()` from `@leadcat/brand`.
 
 ## 1. Postgres
 
@@ -92,8 +97,8 @@ The backend no longer serves the frontend; leave `STATIC_DIR` unset.
 | Item       | Value                                   |
 | ---------- | --------------------------------------- |
 | Dockerfile | `apps/landing/Dockerfile` (context `.`) |
-| Port       | `3000` (`PORT` env, default 3000)       |
-| Runtime    | Node SSR via `react-router-serve`       |
+| Port       | `3000` (`PORT` env on Node is `3001` behind nginx) |
+| Runtime    | nginx → Node SSR via `react-router-serve`            |
 | Build args | `VITE_SITE_URL`, `VITE_BOT_USERNAME` (CTA → `https://t.me/…`), optional `VITE_ADMIN_URL` (fallback login) |
 
 ```env
