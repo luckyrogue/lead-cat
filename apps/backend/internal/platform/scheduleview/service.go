@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/platform/boti18n"
 )
 
 type Backend interface {
@@ -31,26 +32,26 @@ func New(backend Backend, sess sessions) *Service {
 	return &Service{backend: backend, sessions: sess}
 }
 
-func (s *Service) Start(ctx context.Context, telegramID int64) Reply {
+func (s *Service) Start(ctx context.Context, telegramID int64, lang string) Reply {
 	_ = s.sessions.Set(ctx, telegramID, State{Step: stepAwait, AwaitingKind: awaitSearch})
-	return Reply{Text: "Чьё расписание показать? Введи email сотрудника или часть имени:"}
+	return Reply{Text: boti18n.T(lang, "sched.start")}
 }
 
-func (s *Service) OnCallback(ctx context.Context, telegramID int64, data string) (Reply, bool) {
+func (s *Service) OnCallback(ctx context.Context, telegramID int64, data, lang string) (Reply, bool) {
 	switch {
 	case strings.HasPrefix(data, "sched:pick:"):
-		return s.pick(ctx, telegramID, strings.TrimPrefix(data, "sched:pick:")), true
+		return s.pick(ctx, telegramID, strings.TrimPrefix(data, "sched:pick:"), lang), true
 	case data == "sched:periods":
-		return s.periods(ctx, telegramID), true
+		return s.periods(ctx, telegramID, lang), true
 	case data == "sched:back":
-		return s.Start(ctx, telegramID), true
+		return s.Start(ctx, telegramID, lang), true
 	case strings.HasPrefix(data, "sched:d:"):
-		return s.period(ctx, telegramID, strings.TrimPrefix(data, "sched:d:")), true
+		return s.period(ctx, telegramID, strings.TrimPrefix(data, "sched:d:"), lang), true
 	}
 	return Reply{}, false
 }
 
-func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Reply, bool) {
+func (s *Service) OnText(ctx context.Context, telegramID int64, text, lang string) (Reply, bool) {
 	st, err := s.sessions.Get(ctx, telegramID)
 	if err != nil || st == nil || st.Step != stepAwait {
 		return Reply{}, false
@@ -58,27 +59,27 @@ func (s *Service) OnText(ctx context.Context, telegramID int64, text string) (Re
 	text = strings.TrimSpace(text)
 	switch st.AwaitingKind {
 	case awaitSearch:
-		return s.search(ctx, telegramID, st, text), true
+		return s.search(ctx, telegramID, st, text, lang), true
 	case awaitDate:
 		d, perr := parseDate(text, almaty())
 		if perr != nil {
-			return Reply{Text: perr.Error() + "\nПопробуй ещё раз:"}, true
+			return Reply{Text: boti18n.T(lang, "sched.bad_date")}, true
 		}
-		return s.list(ctx, st, d, d.AddDate(0, 0, 1), text, false), true
+		return s.list(ctx, st, d, d.AddDate(0, 0, 1), text, false, lang), true
 	case awaitRange:
 		from, to, perr := parseRange(text, almaty())
 		if perr != nil {
-			return Reply{Text: perr.Error() + "\nПопробуй ещё раз:"}, true
+			return Reply{Text: boti18n.T(lang, "sched.bad_range")}, true
 		}
-		return s.list(ctx, st, from, to, text, false), true
+		return s.list(ctx, st, from, to, text, false, lang), true
 	}
 	return Reply{}, false
 }
 
-func (s *Service) search(ctx context.Context, telegramID int64, st *State, query string) Reply {
+func (s *Service) search(ctx context.Context, telegramID int64, st *State, query, lang string) Reply {
 	emps, err := s.backend.SearchEmployeesGlobal(ctx, query)
 	if err != nil {
-		return Reply{Text: "Не удалось выполнить поиск, попробуй ещё раз:"}
+		return Reply{Text: boti18n.T(lang, "sched.search_failed")}
 	}
 	var cands []string
 	var rows [][]Button
@@ -94,104 +95,104 @@ func (s *Service) search(ctx context.Context, telegramID int64, st *State, query
 	if addr, perr := mail.ParseAddress(query); perr == nil {
 		email := strings.ToLower(addr.Address)
 		if !seen[email] {
-			rows = append(rows, []Button{{Text: "Расписание " + email, Data: fmt.Sprintf("sched:pick:%d", len(cands))}})
+			rows = append(rows, []Button{{Text: boti18n.T(lang, "sched.schedule_btn", email), Data: fmt.Sprintf("sched:pick:%d", len(cands))}})
 			cands = append(cands, email)
 		}
 	}
 	if len(cands) == 0 {
-		return Reply{Text: "Ничего не найдено. Введи корректный email или часть имени:"}
+		return Reply{Text: boti18n.T(lang, "sched.none_found")}
 	}
 	st.Cands = cands
 	_ = s.sessions.Set(ctx, telegramID, *st)
-	return Reply{Text: "Выбери сотрудника:", Keyboard: rows}
+	return Reply{Text: boti18n.T(lang, "sched.pick"), Keyboard: rows}
 }
 
-func (s *Service) pick(ctx context.Context, telegramID int64, idxStr string) Reply {
+func (s *Service) pick(ctx context.Context, telegramID int64, idxStr, lang string) Reply {
 	st, err := s.sessions.Get(ctx, telegramID)
 	if err != nil || st == nil {
-		return Reply{Text: "Сессия истекла. Начни заново: /schedule"}
+		return Reply{Text: boti18n.T(lang, "sched.session_expired")}
 	}
 	email, ok := indexInto(st.Cands, idxStr)
 	if !ok {
-		return Reply{Text: "Не найдено, начни заново: /schedule"}
+		return Reply{Text: boti18n.T(lang, "sched.not_found_retry")}
 	}
 	st.EmployeeEmail = email
 	st.AwaitingKind = ""
 	_ = s.sessions.Set(ctx, telegramID, *st)
-	return periodReply(email, true)
+	return periodReply(email, true, lang)
 }
 
-func (s *Service) periods(ctx context.Context, telegramID int64) Reply {
+func (s *Service) periods(ctx context.Context, telegramID int64, lang string) Reply {
 	st, err := s.sessions.Get(ctx, telegramID)
 	if err != nil || st == nil || st.EmployeeEmail == "" {
-		return Reply{Text: "Сессия истекла. Начни заново: /schedule"}
+		return Reply{Text: boti18n.T(lang, "sched.session_expired")}
 	}
 	st.AwaitingKind = ""
 	_ = s.sessions.Set(ctx, telegramID, *st)
-	return periodReply(st.EmployeeEmail, true)
+	return periodReply(st.EmployeeEmail, true, lang)
 }
 
-func (s *Service) period(ctx context.Context, telegramID int64, kind string) Reply {
+func (s *Service) period(ctx context.Context, telegramID int64, kind, lang string) Reply {
 	st, err := s.sessions.Get(ctx, telegramID)
 	if err != nil || st == nil || st.EmployeeEmail == "" {
-		return Reply{Text: "Сессия истекла. Начни заново: /schedule"}
+		return Reply{Text: boti18n.T(lang, "sched.session_expired")}
 	}
 	switch kind {
 	case "date":
 		st.AwaitingKind = awaitDate
 		_ = s.sessions.Set(ctx, telegramID, *st)
-		return Reply{Text: "Введи дату ГГГГ-ММ-ДД:"}
+		return Reply{Text: boti18n.T(lang, "sched.enter_date")}
 	case "range":
 		st.AwaitingKind = awaitRange
 		_ = s.sessions.Set(ctx, telegramID, *st)
-		return Reply{Text: "Введи диапазон ГГГГ-ММ-ДД..ГГГГ-ММ-ДД:"}
+		return Reply{Text: boti18n.T(lang, "sched.enter_range")}
 	}
 	from, to, ok := dayWindow(time.Now(), kind, almaty())
 	if !ok {
 		return Reply{}
 	}
-	return s.list(ctx, st, from, to, periodLabel(kind), true)
+	return s.list(ctx, st, from, to, periodLabel(kind, lang), true, lang)
 }
 
-func (s *Service) list(ctx context.Context, st *State, from, to time.Time, period string, edit bool) Reply {
+func (s *Service) list(ctx context.Context, st *State, from, to time.Time, period string, edit bool, lang string) Reply {
 	ms, err := s.backend.EmployeeSchedule(ctx, st.EmployeeEmail, from, to)
 	if err != nil {
-		return Reply{Text: "Не удалось получить расписание, попробуй позже."}
+		return Reply{Text: boti18n.T(lang, "sched.get_failed")}
 	}
-	text := scheduleText(st.EmployeeEmail, period, ms, time.Now(), almaty())
-	return Reply{Text: text, Keyboard: [][]Button{{{Text: "⬅ Периоды", Data: "sched:periods"}}}, Edit: edit}
+	text := scheduleText(st.EmployeeEmail, period, ms, time.Now(), almaty(), lang)
+	return Reply{Text: text, Keyboard: [][]Button{{{Text: boti18n.T(lang, "sched.btn.periods"), Data: "sched:periods"}}}, Edit: edit}
 }
 
-func periodReply(email string, edit bool) Reply {
+func periodReply(email string, edit bool, lang string) Reply {
 	return Reply{
-		Text: "Расписание " + email + ". Выбери период:",
+		Text: boti18n.T(lang, "sched.pick_period", email),
 		Edit: edit,
 		Keyboard: [][]Button{
-			{{Text: "Сегодня", Data: "sched:d:today"}, {Text: "Завтра", Data: "sched:d:tomorrow"}},
-			{{Text: "Все предстоящие", Data: "sched:d:upcoming"}},
-			{{Text: "Конкретная дата", Data: "sched:d:date"}, {Text: "Диапазон", Data: "sched:d:range"}},
-			{{Text: "⬅ Другой сотрудник", Data: "sched:back"}},
+			{{Text: boti18n.T(lang, "sched.btn.today"), Data: "sched:d:today"}, {Text: boti18n.T(lang, "sched.btn.tomorrow"), Data: "sched:d:tomorrow"}},
+			{{Text: boti18n.T(lang, "sched.btn.upcoming"), Data: "sched:d:upcoming"}},
+			{{Text: boti18n.T(lang, "sched.btn.date"), Data: "sched:d:date"}, {Text: boti18n.T(lang, "sched.btn.range"), Data: "sched:d:range"}},
+			{{Text: boti18n.T(lang, "sched.btn.back"), Data: "sched:back"}},
 		},
 	}
 }
 
-func periodLabel(kind string) string {
+func periodLabel(kind, lang string) string {
 	switch kind {
 	case "today":
-		return "сегодня"
+		return boti18n.T(lang, "sched.period.today")
 	case "tomorrow":
-		return "завтра"
+		return boti18n.T(lang, "sched.period.tomorrow")
 	case "upcoming":
-		return "все предстоящие"
+		return boti18n.T(lang, "sched.period.upcoming")
 	}
 	return kind
 }
 
-func scheduleText(email, period string, ms []postgres.Meeting, now time.Time, loc *time.Location) string {
+func scheduleText(email, period string, ms []postgres.Meeting, now time.Time, loc *time.Location, lang string) string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "Расписание %s: %s\n", email, period)
+	b.WriteString(boti18n.T(lang, "sched.header", email, period))
 	if len(ms) == 0 {
-		b.WriteString("Встреч нет.")
+		b.WriteString(boti18n.T(lang, "sched.no_meetings"))
 		return b.String()
 	}
 	for _, m := range ms {

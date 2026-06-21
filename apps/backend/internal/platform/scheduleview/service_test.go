@@ -83,7 +83,7 @@ func TestStart_SetsAwaitSearch(t *testing.T) {
 	svc := newService(&fakeBackend{}, sess)
 
 	const tid = int64(42)
-	reply := svc.Start(context.Background(), tid)
+	reply := svc.Start(context.Background(), tid, "ru")
 
 	if reply.Text == "" {
 		t.Fatal("Start: expected non-empty reply text")
@@ -118,9 +118,9 @@ func TestOnText_Search(t *testing.T) {
 	svc := newService(be, sess)
 
 	const tid = int64(7)
-	svc.Start(context.Background(), tid)
+	svc.Start(context.Background(), tid, "ru")
 
-	reply, handled := svc.OnText(context.Background(), tid, "ivan")
+	reply, handled := svc.OnText(context.Background(), tid, "ivan", "ru")
 
 	if !handled {
 		t.Fatal("OnText: want handled=true")
@@ -274,7 +274,7 @@ func TestOnCallback_Back(t *testing.T) {
 	const tid = int64(99)
 
 	// sched:back must call Start and return ok=true.
-	reply, handled := svc.OnCallback(context.Background(), tid, "sched:back")
+	reply, handled := svc.OnCallback(context.Background(), tid, "sched:back", "ru")
 
 	if !handled {
 		t.Fatal("OnCallback sched:back: want handled=true")
@@ -304,3 +304,19 @@ func TestOnCallback_Back(t *testing.T) {
 //             exercised end-to-end.
 // TODO(WS2c): OnCallback sched:periods — similar: needs st.EmployeeEmail in session.
 // TODO(WS2c): OnCallback sched:d:<kind> — period branches (today/tomorrow/upcoming/date/range).
+
+// ---------------------------------------------------------------------------
+// TestSchedule_Localized
+// ---------------------------------------------------------------------------
+
+func TestSchedule_Localized(t *testing.T) {
+	svc := newService(&fakeBackend{}, newFakeSessions())
+	ru := svc.Start(context.Background(), 1, "ru")
+	en := svc.Start(context.Background(), 2, "en")
+	if ru.Text == en.Text {
+		t.Fatalf("Start must differ by language; both = %q", ru.Text)
+	}
+	if !strings.Contains(en.Text, "Whose schedule") {
+		t.Errorf("en Start = %q", en.Text)
+	}
+}
