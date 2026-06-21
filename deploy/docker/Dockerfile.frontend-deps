@@ -12,9 +12,4 @@ COPY packages/config/package.json packages/config/
 COPY packages/types/package.json packages/types/
 COPY packages/ui/package.json packages/ui/
 
-COPY packages/brand/scripts packages/brand/scripts
-COPY packages/brand/public packages/brand/public
-COPY packages/brand/src packages/brand/src
-
 RUN pnpm install --frozen-lockfile --ignore-scripts
-RUN pnpm --filter @leadcat/brand generate && pnpm --filter @leadcat/brand sync

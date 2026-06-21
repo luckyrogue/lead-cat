@@ -8,6 +8,7 @@ ARG VITE_ADMIN_URL=
 ENV VITE_SITE_URL=${VITE_SITE_URL}
 ENV VITE_BOT_USERNAME=${VITE_BOT_USERNAME}
 ENV VITE_ADMIN_URL=${VITE_ADMIN_URL}
+RUN pnpm --filter @leadcat/brand generate && pnpm --filter @leadcat/brand sync
 RUN pnpm --filter landing build
 
 FROM node:24-alpine AS runtime

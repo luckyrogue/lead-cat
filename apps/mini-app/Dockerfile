@@ -9,6 +9,7 @@ ENV VITE_API_URL=${VITE_API_URL}
 ENV VITE_BOT_USERNAME=${VITE_BOT_USERNAME}
 ENV VITE_TMA_DEV_TG_ID=${VITE_TMA_DEV_TG_ID}
 RUN if [ -n "$VITE_TMA_DEV_TG_ID" ]; then echo "VITE_TMA_DEV_TG_ID must be empty in production Docker builds" && exit 1; fi
+RUN pnpm --filter @leadcat/brand generate && pnpm --filter @leadcat/brand sync
 RUN pnpm --filter mini-app build
 
 FROM nginx:alpine AS runtime

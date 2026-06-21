@@ -4,6 +4,7 @@ WORKDIR /repo
 COPY . .
 ARG VITE_API_URL=""
 ENV VITE_API_URL=${VITE_API_URL}
+RUN pnpm --filter @leadcat/brand generate && pnpm --filter @leadcat/brand sync
 RUN pnpm --filter admin build
 
 FROM nginx:alpine AS runtime

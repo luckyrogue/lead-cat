@@ -2,6 +2,7 @@ ARG FRONTEND_DEPS_IMAGE=leadcat-frontend-deps:local
 FROM ${FRONTEND_DEPS_IMAGE} AS build
 WORKDIR /repo
 COPY . .
+RUN pnpm --filter @leadcat/brand generate && pnpm --filter @leadcat/brand sync
 RUN pnpm --filter landing build
 
 FROM node:24-alpine AS runtime
