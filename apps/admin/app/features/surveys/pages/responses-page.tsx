@@ -37,6 +37,7 @@ type AnswerCellProps = {
 }
 
 function AnswerCell({ response }: AnswerCellProps) {
+  const t = useT()
   const [expanded, setExpanded] = useState(false)
 
   if (response.answers.length === 0) {
@@ -69,7 +70,7 @@ function AnswerCell({ response }: AnswerCellProps) {
         onClick={() => setExpanded(false)}
       >
         <ChevronDown className="size-3 shrink-0" />
-        <span>Collapse</span>
+        <span>{t("surveys.collapse")}</span>
       </button>
       <dl className="flex flex-col gap-0.5">
         {response.answers.map((a) => {
@@ -129,7 +130,7 @@ export function ResponsesPage() {
       isEmpty={responses.length === 0}
       emptyState={
         <div className="rounded-[calc(var(--radius)*1.15)] border border-dashed border-border/80 bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
-          {t("surveys.responsesTitle")}
+          {t("surveys.responsesEmpty")}
         </div>
       }
     >
@@ -163,7 +164,7 @@ export function ResponsesPage() {
 
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-muted-foreground">
-            {t("meetings.filter.labelType") ?? "Service"}
+            {t("surveys.colReason")}
           </label>
           <Select
             value={filter.reason ?? ""}
@@ -229,15 +230,13 @@ export function ResponsesPage() {
         <TableHeader>
           <TableRow>
             <TableHead className="min-w-[9rem]">
-              {t("meetings.filter.labelFrom") === "From"
-                ? "Date"
-                : t("meetings.filter.labelFrom")}
+              {t("surveys.colDate")}
             </TableHead>
             <TableHead className="min-w-[10rem]">
               {t("members.table.colMember")}
             </TableHead>
             <TableHead className="min-w-[8rem]">
-              {t("meetings.filter.labelType") ?? "Service"}
+              {t("surveys.colReason")}
             </TableHead>
             <TableHead className="min-w-[7rem]">
               {t("meetings.filter.labelStatus")}

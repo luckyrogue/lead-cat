@@ -443,7 +443,12 @@ export const ru: typeof en = {
     },
     responses: "Ответы",
     responsesTitle: "Ответы",
+    responsesEmpty: "Пока нет ответов.",
     exportCsv: "Экспорт CSV",
+    colDate: "Дата",
+    colReason: "Услуга",
+    collapse: "Свернуть",
+    expand: "Показать ответы",
     status: { sent: "Отправлен", completed: "Пройден" },
     reason: {
       slot_taken: "Слот занят",
