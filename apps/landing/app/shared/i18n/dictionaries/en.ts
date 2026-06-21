@@ -68,6 +68,10 @@ export const en = {
         title: "Lives where you work",
         body: "Telegram Mini App for daily booking and a web admin panel for orgs, members, and meetings. Google Calendar sync on both.",
       },
+      {
+        title: "Never lose a declined lead",
+        body: "When a time doesn't fit, Lead Cat offers your visitor a short survey you built — capture the why, the feedback, and the lead, automatically.",
+      },
     ],
   },
   howItWorks: {
