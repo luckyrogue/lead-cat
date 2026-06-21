@@ -612,6 +612,10 @@ func (s *Services) RecordRSVP(ctx context.Context, meetingID uuid.UUID, telegram
 }
 
 func (s *Services) CreateMeetingDeclineResponse(ctx context.Context, meetingID, surveyID uuid.UUID, p model.MeetingParticipant, telegramID int64, orgID uuid.UUID) (uuid.UUID, error) {
+	// Dedup (spec §3c): reuse an existing unfinished response for this meeting+participant.
+	if existing, ok, err := s.Store.GetOpenMeetingResponse(ctx, meetingID, telegramID); err == nil && ok {
+		return existing.ID, nil
+	}
 	mid := meetingID
 	tid := telegramID
 	r, err := s.Store.CreateSurveyResponse(ctx, model.SurveyResponse{
@@ -677,4 +681,5 @@ git add apps/backend && git commit -m "chore(surveys): phase2a backend fmt/verif
 - **Spec coverage:** migration incl. token-nullable-but-unique (Task 1); model source/meeting/telegram + rsvp_status (Task 2); repo persistence + GetSurveyResponse + participant RSVP + decline-survey resolution + meeting info (Task 3); SubmitSurveyResponse refactor reused by web (Task 4); RecordRSVP pure command + dedup-free creation + meeting-decline response + organizer-notification data (Task 5). Bot delivery (FSM, callbacks, notifier buttons, boti18n) and admin UI (assignment selects, responses badge, HTTP endpoints, OpenAPI) are SEPARATE plans.
 - **Pure application:** `RecordRSVP` returns `RSVPResult` (telegram ids + text) and does no Telegram I/O — the bot plan sends the messages. Keeps AGENTS.md's "domain free of Telegram".
 - **Type consistency:** `SubmitSurveyResponse(uuid, []Answer)` (Task 4) consumed by the bot plan; `RecordRSVP(...) (RSVPResult, error)` and `RSVPResult` (Task 5) consumed by the bot plan; `ResolveDeclineSurvey`/`GetSurveyResponse`/`GetParticipant`/`UpdateParticipantRSVP`/`GetMeetingForRSVP` (Task 3) consumed by Task 5.
-- **Known confirmations for the implementer:** the meeting→org column name (`workspace_id` vs `organization_id`); `model.BotUser` field names (`FullName`/`TelegramID`/`Language`/`Email`); whether `GetBotUserByEmail` is already on the `Repository` interface; the dedup of a repeat decline (spec §3c) — if a repeat decline should reuse an existing unfinished `sent` response, add a `GetOpenMeetingResponse(meetingID, telegramID)` lookup in `CreateMeetingDeclineResponse` before inserting; this plan creates a fresh response each decline — **add the dedup lookup as Task 5 Step 3a if the repeat-decline path is exercised before the bot plan lands.**
+- **Repeat-decline dedup (spec §3c)** is implemented: `GetOpenMeetingResponse` (Task 3) is checked first in `CreateMeetingDeclineResponse` (Task 5), so a repeat decline reuses the open `sent` response instead of inserting a duplicate. Add a `rsvp_test.go` case asserting this (fake `GetOpenMeetingResponse` returns an existing id → `CreateSurveyResponse` is not called).
+- **Known confirmations for the implementer:** the meeting→org column name (`workspace_id` vs `organization_id`) used in `GetMeetingForRSVP`/`ResolveDeclineSurvey`; `model.BotUser` field names (`FullName`/`TelegramID`/`Language`/`Email`); whether `GetBotUserByEmail` is already on the `Repository` interface (add it if not).
