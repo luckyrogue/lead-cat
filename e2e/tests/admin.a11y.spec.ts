@@ -2,7 +2,8 @@ import { test } from "@playwright/test"
 import { loginViaMagicLink } from "../helpers/auth"
 import { expectNoA11yViolations } from "../helpers/a11y"
 
-test("admin authed pages have no critical/serious a11y violations", async ({ page }) => {
+test.describe("@a11y", () => {
+  test("admin authed pages have no critical/serious a11y violations", async ({ page }) => {
   const email = `a11y-admin-${Date.now()}@e2e.test`
 
   await loginViaMagicLink(page, email)
@@ -21,4 +22,5 @@ test("admin authed pages have no critical/serious a11y violations", async ({ pag
   // Booking config page (route that lists/creates event types).
   await page.goto("/booking")
   await expectNoA11yViolations(page, "admin /booking")
+  })
 })

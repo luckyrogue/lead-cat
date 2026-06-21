@@ -72,7 +72,8 @@ async function setupMiniAppMocks(page: Page): Promise<void> {
   })
 }
 
-test("mini-app authed pages have no critical/serious a11y violations", async ({ page }) => {
+test.describe("@a11y", () => {
+  test("mini-app authed pages have no critical/serious a11y violations", async ({ page }) => {
   const tgId = STUB_USER.telegram_id
   await stubTelegramWebApp(page, tgId)
   await setupMiniAppMocks(page)
@@ -91,4 +92,5 @@ test("mini-app authed pages have no critical/serious a11y violations", async ({ 
   await page.goto(`${MINI_APP}/profile`)
   await page.waitForLoadState("networkidle")
   await expectNoA11yViolations(page, "mini-app /profile")
+  })
 })

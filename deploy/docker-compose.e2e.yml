@@ -33,6 +33,7 @@ services:
       - e2e
 
   backend:
+    image: leadcat-e2e-backend:latest
     build:
       context: ..
       dockerfile: apps/backend/Dockerfile
@@ -67,9 +68,12 @@ services:
       - e2e
 
   admin:
+    image: leadcat-e2e-admin:latest
     build:
       context: ..
-      dockerfile: apps/admin/Dockerfile
+      dockerfile: deploy/docker/Dockerfile.e2e-spa
+      args:
+        APP: admin
     environment:
       API_UPSTREAM: http://backend:8080
     ports:
@@ -81,9 +85,12 @@ services:
       - e2e
 
   mini-app:
+    image: leadcat-e2e-mini-app:latest
     build:
       context: ..
-      dockerfile: apps/mini-app/Dockerfile
+      dockerfile: deploy/docker/Dockerfile.e2e-spa
+      args:
+        APP: mini-app
     environment:
       API_UPSTREAM: http://backend:8080
     ports:
@@ -95,9 +102,12 @@ services:
       - e2e
 
   landing:
+    image: leadcat-e2e-landing:latest
     build:
       context: ..
-      dockerfile: apps/landing/Dockerfile
+      dockerfile: deploy/docker/Dockerfile.e2e-landing
+      args:
+        FRONTEND_DEPS_IMAGE: ${FRONTEND_DEPS_IMAGE:-leadcat-frontend-deps:local}
     ports:
       - "8091:3000"
     depends_on:

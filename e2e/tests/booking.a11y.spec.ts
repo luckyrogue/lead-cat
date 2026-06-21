@@ -2,7 +2,8 @@ import { test } from "@playwright/test"
 import { loginViaMagicLink } from "../helpers/auth"
 import { expectNoA11yViolations } from "../helpers/a11y"
 
-test("public booking page has no critical/serious a11y violations", async ({ page }) => {
+test.describe("@a11y", () => {
+  test("public booking page has no critical/serious a11y violations", async ({ page }) => {
   const email = `a11y-${Date.now()}@e2e.test`
   await loginViaMagicLink(page, email)
   await page.getByLabel("Organization name").fill(`A11y Org ${Date.now()}`)
@@ -30,4 +31,5 @@ test("public booking page has no critical/serious a11y violations", async ({ pag
 
   await page.goto(`/book/${slug}`)
   await expectNoA11yViolations(page, `/book/${slug}`)
+  })
 })

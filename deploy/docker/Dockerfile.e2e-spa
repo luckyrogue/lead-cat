@@ -1,0 +1,15 @@
+FROM nginx:alpine
+ARG APP=admin
+ENV API_UPSTREAM=http://backend:8080
+
+COPY deploy/nginx/security-headers.conf /etc/nginx/security-headers.conf
+COPY deploy/nginx/ackee-location.conf /etc/nginx/ackee-location.conf
+COPY deploy/nginx/security-headers-miniapp.conf /etc/nginx/security-headers-miniapp.conf
+COPY deploy/nginx/spa.conf deploy/nginx/spa-miniapp.conf /tmp/nginx/
+COPY apps/${APP}/build/client /usr/share/nginx/html
+
+RUN if [ "$APP" = "mini-app" ]; then \
+      cp /tmp/nginx/spa-miniapp.conf /etc/nginx/templates/default.conf.template; \
+    else \
+      cp /tmp/nginx/spa.conf /etc/nginx/templates/default.conf.template; \
+    fi

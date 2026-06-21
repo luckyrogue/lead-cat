@@ -1,0 +1,16 @@
+FROM node:24-alpine
+WORKDIR /repo
+RUN corepack enable && corepack prepare pnpm@11.8.0 --activate
+
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
+COPY apps/admin/package.json apps/admin/
+COPY apps/mini-app/package.json apps/mini-app/
+COPY apps/landing/package.json apps/landing/
+COPY packages/api-client/package.json packages/api-client/
+COPY packages/brand/package.json packages/brand/
+COPY packages/config/package.json packages/config/
+COPY packages/types/package.json packages/types/
+COPY packages/ui/package.json packages/ui/
+
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @leadcat/brand generate && pnpm --filter @leadcat/brand sync

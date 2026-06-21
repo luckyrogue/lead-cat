@@ -15,23 +15,39 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: build
-    uses: ./.github/workflows/_build.yml
+  go:
+    name: build / go
+    uses: ./.github/workflows/_build-go.yml
+
+  pnpm-checks:
+    name: build / pnpm-checks
+    uses: ./.github/workflows/_build-pnpm-checks.yml
+
+  frontend-build:
+    name: build / frontend-build
+    uses: ./.github/workflows/_build-frontend.yml
 
   security:
     name: security
     uses: ./.github/workflows/_security.yml
 
-  e2e:
-    name: e2e
-    needs: build
+  e2e-smoke:
+    name: e2e / smoke
+    needs: frontend-build
     if: github.event_name == 'pull_request' || github.event_name == 'push'
-    uses: ./.github/workflows/_e2e.yml
+    uses: ./.github/workflows/_e2e-smoke.yml
+
+  e2e-full:
+    name: e2e / full
+    needs: [go, pnpm-checks, frontend-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/_e2e-full.yml
+    with:
+      suite: full
 
   docker:
     name: docker
-    needs: [build, e2e, security]
+    needs: [go, pnpm-checks, frontend-build, e2e-smoke, security]
     if: |
       success() &&
       github.event_name == 'push' &&

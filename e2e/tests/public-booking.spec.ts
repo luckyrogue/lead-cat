@@ -1,7 +1,11 @@
 import { expect, test } from "@playwright/test"
 import { loginViaMagicLink } from "../helpers/auth"
 
-test("flow 2: public /book/:slug booking -> confirmation", async ({ page, browser }) => {
+test.describe("@smoke", () => {
+  test("flow 2: public /book/:slug booking -> confirmation", async ({
+    page,
+    browser,
+  }) => {
   const email = `owner-${Date.now()}@e2e.test`
   const orgName = `E2E Org ${Date.now()}`
   let slug: string
@@ -86,4 +90,5 @@ test("flow 2: public /book/:slug booking -> confirmation", async ({ page, browse
       await ctx.close()
     }
   })
+})
 })

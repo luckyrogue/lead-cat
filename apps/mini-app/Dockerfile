@@ -1,15 +1,13 @@
-FROM node:24-alpine AS build
+ARG FRONTEND_DEPS_IMAGE=leadcat-frontend-deps:local
+FROM ${FRONTEND_DEPS_IMAGE} AS build
 WORKDIR /repo
-RUN corepack enable && corepack prepare pnpm@11.8.0 --activate
+COPY . .
 ARG VITE_API_URL=""
 ARG VITE_BOT_USERNAME=lead_cat_bot
 ARG VITE_TMA_DEV_TG_ID=""
 ENV VITE_API_URL=${VITE_API_URL}
 ENV VITE_BOT_USERNAME=${VITE_BOT_USERNAME}
 ENV VITE_TMA_DEV_TG_ID=${VITE_TMA_DEV_TG_ID}
-COPY . .
-RUN pnpm install --frozen-lockfile
-RUN pnpm --filter @leadcat/brand generate && pnpm --filter @leadcat/brand sync
 RUN if [ -n "$VITE_TMA_DEV_TG_ID" ]; then echo "VITE_TMA_DEV_TG_ID must be empty in production Docker builds" && exit 1; fi
 RUN pnpm --filter mini-app build
 

@@ -1,0 +1,26 @@
+name: Nightly E2E
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  go:
+    uses: ./.github/workflows/_build-go.yml
+
+  pnpm-checks:
+    uses: ./.github/workflows/_build-pnpm-checks.yml
+
+  frontend-build:
+    uses: ./.github/workflows/_build-frontend.yml
+
+  e2e-full:
+    name: e2e-full
+    needs: [go, pnpm-checks, frontend-build]
+    uses: ./.github/workflows/_e2e-full.yml
+    with:
+      suite: all

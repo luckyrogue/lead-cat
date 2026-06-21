@@ -2,12 +2,6 @@ ARG FRONTEND_DEPS_IMAGE=leadcat-frontend-deps:local
 FROM ${FRONTEND_DEPS_IMAGE} AS build
 WORKDIR /repo
 COPY . .
-ARG VITE_SITE_URL=https://lead-cat.space
-ARG VITE_BOT_USERNAME=lead_cat_bot
-ARG VITE_ADMIN_URL=
-ENV VITE_SITE_URL=${VITE_SITE_URL}
-ENV VITE_BOT_USERNAME=${VITE_BOT_USERNAME}
-ENV VITE_ADMIN_URL=${VITE_ADMIN_URL}
 RUN pnpm --filter landing build
 
 FROM node:24-alpine AS runtime
