@@ -1,0 +1,110 @@
+package boti18n
+
+func init() {
+	register(map[string]map[string]string{
+		// ── shared ──
+		"medit.session_expired": {"ru": "Сессия истекла. Начни заново: /edit", "en": "Session expired. Start over: /edit", "kk": "Сессия аяқталды. Қайта баста: /edit"},
+		"medit.forbidden":       {"ru": "Нет доступа к этой встрече.", "en": "You don't have access to this meeting.", "kk": "Бұл кездесуге қол жеткізу жоқ."},
+		// ── Start ──
+		"medit.list_failed":   {"ru": "Не удалось получить встречи, попробуй позже.", "en": "Couldn't load meetings, try later.", "kk": "Кездесулерді алу мүмкін болмады, кейінірек көр."},
+		"medit.none_editable": {"ru": "Нет предстоящих встреч для редактирования.\n(Убедись, что Telegram привязан в приложении.)", "en": "No upcoming meetings to edit.\n(Make sure Telegram is linked in the app.)", "kk": "Өңдеуге арналған алдағы кездесулер жоқ.\n(Telegram қосымшада байланғанына көз жеткіз.)"},
+		"medit.pick_meeting":  {"ru": "Выбери встречу для редактирования:", "en": "Pick a meeting to edit:", "kk": "Өңдейтін кездесуді таңда:"},
+		// ── OnCallback ──
+		"medit.cancelled": {"ru": "Редактирование отменено.", "en": "Editing cancelled.", "kk": "Өңдеу болдырылмады."},
+		// ── OnText ──
+		"medit.bad_time_range": {"ru": "Неверный формат времени. Введи ЧЧ:ММ–ЧЧ:ММ и попробуй ещё раз:", "en": "Invalid time format. Enter HH:MM–HH:MM and try again:", "kk": "Уақыт форматы қате. СС:ММ–СС:ММ енгізіп қайта көр:"},
+		"medit.bad_datetime":   {"ru": "Неверный формат даты и времени. Введи ГГГГ-ММ-ДД ЧЧ:ММ–ЧЧ:ММ и попробуй ещё раз:", "en": "Invalid date/time format. Enter YYYY-MM-DD HH:MM–HH:MM and try again:", "kk": "Күн/уақыт форматы қате. ЖЖЖЖ-АА-КК СС:ММ–СС:ММ енгізіп қайта көр:"},
+		"medit.empty_value":    {"ru": "Пусто. Введи значение:", "en": "Empty. Enter a value:", "kk": "Бос. Мән енгіз:"},
+		// ── pick ──
+		"medit.unknown_meeting":     {"ru": "Неизвестная встреча.", "en": "Unknown meeting.", "kk": "Белгісіз кездесу."},
+		"medit.get_meeting_failed":  {"ru": "Не удалось получить встречу.", "en": "Couldn't load the meeting.", "kk": "Кездесуді алу мүмкін болмады."},
+		"medit.not_editable":        {"ru": "Эта встреча недоступна для редактирования.", "en": "This meeting can't be edited.", "kk": "Бұл кездесуді өңдеуге болмайды."},
+		// ── field / prompts ──
+		"medit.prompt_dept":        {"ru": "Введи новый отдел:", "en": "Enter the new department:", "kk": "Жаңа бөлімді енгіз:"},
+		"medit.prompt_type":        {"ru": "Введи новый тип встречи:", "en": "Enter the new meeting type:", "kk": "Жаңа кездесу түрін енгіз:"},
+		"medit.prompt_host":        {"ru": "Введи нового ведущего:", "en": "Enter the new host:", "kk": "Жаңа жүргізушіні енгіз:"},
+		"medit.prompt_description":  {"ru": "Введи новое описание:", "en": "Enter the new description:", "kk": "Жаңа сипаттаманы енгіз:"},
+		"medit.prompt_datetime":     {"ru": "Введи дату и время: ГГГГ-ММ-ДД ЧЧ:ММ–ЧЧ:ММ\n(например: 2026-06-01 14:00–15:00)", "en": "Enter date and time: YYYY-MM-DD HH:MM–HH:MM\n(e.g. 2026-06-01 14:00–15:00)", "kk": "Күн мен уақытты енгіз: ЖЖЖЖ-АА-КК СС:ММ–СС:ММ\n(мысалы: 2026-06-01 14:00–15:00)"},
+		"medit.prompt_time_series":  {"ru": "Введи новое время ЧЧ:ММ–ЧЧ:ММ (например: 15:00–16:00):", "en": "Enter the new time HH:MM–HH:MM (e.g. 15:00–16:00):", "kk": "Жаңа уақытты енгіз СС:ММ–СС:ММ (мысалы: 15:00–16:00):"},
+		// ── apply ──
+		"medit.choose_scope_first": {"ru": "Сначала выбери: эту встречу или всю серию.", "en": "First choose: this meeting or the whole series.", "kk": "Алдымен таңда: осы кездесу немесе бүкіл серия."},
+		"medit.no_changes":         {"ru": "Нет изменений. Выбери поле или нажми «Отмена».", "en": "No changes. Pick a field or press \"Cancel\".", "kk": "Өзгерістер жоқ. Өрісті таңда немесе «Болдырмау» бас."},
+		// ── doApply ──
+		"medit.invalid_data":        {"ru": "Неверные данные. Поправь поле и попробуй снова.", "en": "Invalid data. Fix the field and try again.", "kk": "Деректер қате. Өрісті түзетіп қайта көр."},
+		"medit.series_not_editable": {"ru": "Часть серии больше недоступна для редактирования.", "en": "Part of the series is no longer editable.", "kk": "Серияның бөлігі енді өңделмейді."},
+		"medit.update_series_failed": {"ru": "Не удалось обновить серию, попробуй позже.", "en": "Couldn't update the series, try later.", "kk": "Серияны жаңарту мүмкін болмады, кейінірек көр."},
+		"medit.series_updated":      {"ru": "Готово ✏️ — обновлено встреч серии: %[1]d", "en": "Done ✏️ — series meetings updated: %[1]d", "kk": "Дайын ✏️ — серия кездесулері жаңартылды: %[1]d"},
+		"medit.meeting_not_editable": {"ru": "Встреча больше недоступна для редактирования.", "en": "The meeting is no longer editable.", "kk": "Кездесу енді өңделмейді."},
+		"medit.update_failed":       {"ru": "Не удалось обновить встречу, попробуй позже.", "en": "Couldn't update the meeting, try later.", "kk": "Кездесуді жаңарту мүмкін болмады, кейінірек көр."},
+		"medit.updated_done":        {"ru": "Готово ✏️", "en": "Done ✏️", "kk": "Дайын ✏️"},
+		// ── conflict ──
+		"medit.conflict_header":  {"ru": "⚠ Внимание! У следующих участников уже есть встречи в это время:\n", "en": "⚠ Warning! These participants already have meetings at this time:\n", "kk": "⚠ Назар аударыңыз! Мына қатысушыларда осы уақытта кездесулер бар:\n"},
+		"medit.conflict_apply_q": {"ru": "\nПрименить изменения?", "en": "\nApply the changes?", "kk": "\nӨзгерістерді қолдану керек пе?"},
+		"medit.btn_apply_yes":    {"ru": "Да, применить", "en": "Yes, apply", "kk": "Иә, қолдану"},
+		"medit.btn_change_time":  {"ru": "Изменить время", "en": "Change the time", "kk": "Уақытты өзгерту"},
+		// ── parts ──
+		"medit.get_parts_failed": {"ru": "Не удалось получить участников.", "en": "Couldn't load participants.", "kk": "Қатысушыларды алу мүмкін болмады."},
+		"medit.parts_title":      {"ru": "Участники встречи:", "en": "Meeting participants:", "kk": "Кездесу қатысушылары:"},
+		"medit.parts_empty":      {"ru": "Участников пока нет.", "en": "No participants yet.", "kk": "Әзірге қатысушылар жоқ."},
+		"medit.btn_add":          {"ru": "➕ Добавить", "en": "➕ Add", "kk": "➕ Қосу"},
+		"medit.btn_back":         {"ru": "⬅ Назад", "en": "⬅ Back", "kk": "⬅ Артқа"},
+		// ── padd / search ──
+		"medit.padd_prompt":   {"ru": "Введи email участника или часть имени для поиска:", "en": "Enter a participant email or part of a name to search:", "kk": "Іздеу үшін қатысушының email-ін немесе атының бөлігін енгіз:"},
+		"medit.search_failed": {"ru": "Не удалось выполнить поиск, попробуй ещё раз:", "en": "Search failed, try again:", "kk": "Іздеу сәтсіз, қайта көр:"},
+		"medit.btn_add_email": {"ru": "➕ Добавить %[1]s", "en": "➕ Add %[1]s", "kk": "➕ %[1]s қосу"},
+		"medit.search_none":   {"ru": "Ничего не найдено. Введи корректный email или часть имени:", "en": "Nothing found. Enter a valid email or part of a name:", "kk": "Ештеңе табылмады. Дұрыс email немесе атының бөлігін енгіз:"},
+		"medit.padd_pick":     {"ru": "Выбери, кого добавить:", "en": "Pick who to add:", "kk": "Кімді қосатыныңды таңда:"},
+		// ── paddPick ──
+		"medit.cand_not_found":      {"ru": "Кандидат не найден, начни добавление заново.", "en": "Candidate not found, start adding again.", "kk": "Үміткер табылмады, қосуды қайта баста."},
+		"medit.already_or_invalid":  {"ru": "Уже участник или неверный email.", "en": "Already a participant or invalid email.", "kk": "Қатысушы болып қойған немесе email қате."},
+		"medit.add_failed":          {"ru": "Не удалось добавить участника, попробуй позже.", "en": "Couldn't add the participant, try later.", "kk": "Қатысушыны қосу мүмкін болмады, кейінірек көр."},
+		// ── prem / premConfirm ──
+		"medit.part_not_found":     {"ru": "Участник не найден, открой список заново.", "en": "Participant not found, reopen the list.", "kk": "Қатысушы табылмады, тізімді қайта аш."},
+		"medit.remove_confirm":     {"ru": "Удалить участника %[1]s?", "en": "Remove participant %[1]s?", "kk": "%[1]s қатысушыны өшіру керек пе?"},
+		"medit.btn_yes":            {"ru": "✅ Да", "en": "✅ Yes", "kk": "✅ Иә"},
+		"medit.btn_cancel_back":    {"ru": "⬅ Отмена", "en": "⬅ Cancel", "kk": "⬅ Болдырмау"},
+		"medit.nothing_to_remove":  {"ru": "Нечего удалять, открой список заново.", "en": "Nothing to remove, reopen the list.", "kk": "Өшіретін ештеңе жоқ, тізімді қайта аш."},
+		"medit.remove_failed":      {"ru": "Не удалось удалить участника, попробуй позже.", "en": "Couldn't remove the participant, try later.", "kk": "Қатысушыны өшіру мүмкін болмады, кейінірек көр."},
+		// ── menuKeyboard ──
+		"medit.btn_time":         {"ru": "🕒 Время", "en": "🕒 Time", "kk": "🕒 Уақыт"},
+		"medit.btn_datetime":     {"ru": "📅 Дата/время", "en": "📅 Date/time", "kk": "📅 Күн/уақыт"},
+		"medit.btn_dept":         {"ru": "🏢 Отдел", "en": "🏢 Department", "kk": "🏢 Бөлім"},
+		"medit.btn_type":         {"ru": "🏷 Тип", "en": "🏷 Type", "kk": "🏷 Түрі"},
+		"medit.btn_host":         {"ru": "🎤 Ведущий", "en": "🎤 Host", "kk": "🎤 Жүргізуші"},
+		"medit.btn_description":  {"ru": "📝 Описание", "en": "📝 Description", "kk": "📝 Сипаттама"},
+		"medit.btn_recurrence":   {"ru": "🔁 Частота", "en": "🔁 Recurrence", "kk": "🔁 Жиілік"},
+		"medit.btn_participants": {"ru": "👥 Участники", "en": "👥 Participants", "kk": "👥 Қатысушылар"},
+		"medit.btn_delete":       {"ru": "🗑 Удалить", "en": "🗑 Delete", "kk": "🗑 Өшіру"},
+		"medit.btn_apply":        {"ru": "✅ Применить", "en": "✅ Apply", "kk": "✅ Қолдану"},
+		"medit.btn_cancel":       {"ru": "✖ Отмена", "en": "✖ Cancel", "kk": "✖ Болдырмау"},
+		// ── scopeReply ──
+		"medit.scope_q":          {"ru": "Эта встреча или вся серия (эта и далее)?", "en": "This meeting or the whole series (this and later)?", "kk": "Осы кездесу ме әлде бүкіл серия ма (осы және кейінгі)?"},
+		"medit.btn_scope_one":    {"ru": "📍 Эта встреча", "en": "📍 This meeting", "kk": "📍 Осы кездесу"},
+		"medit.btn_scope_series": {"ru": "🔁 Вся серия (эта и далее)", "en": "🔁 Whole series (this and later)", "kk": "🔁 Бүкіл серия (осы және кейінгі)"},
+		// ── confirmDelete / doDelete / deleteErr ──
+		"medit.delete_one_q":      {"ru": "Удалить эту встречу?", "en": "Delete this meeting?", "kk": "Осы кездесуді өшіру керек пе?"},
+		"medit.delete_series_q":   {"ru": "Удалить всю серию (эту и далее)? Это отменит все будущие встречи серии.", "en": "Delete the whole series (this and later)? This cancels all future meetings in the series.", "kk": "Бүкіл серияны өшіру керек пе (осы және кейінгі)? Бұл серияның барлық болашақ кездесулерін болдырмайды."},
+		"medit.btn_delete_yes":    {"ru": "✅ Да, удалить", "en": "✅ Yes, delete", "kk": "✅ Иә, өшіру"},
+		"medit.series_deleted":    {"ru": "Удалено встреч серии: %[1]d ❌", "en": "Series meetings deleted: %[1]d ❌", "kk": "Серия кездесулері өшірілді: %[1]d ❌"},
+		"medit.meeting_deleted":   {"ru": "Встреча удалена ❌", "en": "Meeting deleted ❌", "kk": "Кездесу өшірілді ❌"},
+		"medit.meeting_unavailable": {"ru": "Встреча больше недоступна.", "en": "The meeting is no longer available.", "kk": "Кездесу енді қолжетімді емес."},
+		"medit.delete_failed":     {"ru": "Не удалось удалить, попробуй позже.", "en": "Couldn't delete, try later.", "kk": "Өшіру мүмкін болмады, кейінірек көр."},
+		// ── recReply / recLabel ──
+		"medit.pick_recurrence": {"ru": "Выбери частоту:", "en": "Pick a recurrence:", "kk": "Жиілікті таңда:"},
+		"medit.rec.once":        {"ru": "Однократно", "en": "Once", "kk": "Бір рет"},
+		"medit.rec.daily":       {"ru": "Ежедневно", "en": "Daily", "kk": "Күн сайын"},
+		"medit.rec.weekly":      {"ru": "Еженедельно", "en": "Weekly", "kk": "Апта сайын"},
+		"medit.rec.biweekly":    {"ru": "Раз в 2 недели", "en": "Every 2 weeks", "kk": "2 аптада бір"},
+		"medit.rec.monthly":     {"ru": "Ежемесячно", "en": "Monthly", "kk": "Ай сайын"},
+		// ── menuText ──
+		"medit.menu_series_header": {"ru": "Редактирование всей серии с %[1]s (★ — изменено):\n", "en": "Editing the whole series from %[1]s (★ = changed):\n", "kk": "%[1]s бастап бүкіл серияны өңдеу (★ — өзгертілген):\n"},
+		"medit.menu_one_header":    {"ru": "Редактирование встречи (★ — изменено):\n", "en": "Editing the meeting (★ = changed):\n", "kk": "Кездесуді өңдеу (★ — өзгертілген):\n"},
+		"medit.lbl_time":           {"ru": "Время", "en": "Time", "kk": "Уақыт"},
+		"medit.lbl_datetime":       {"ru": "Дата/время", "en": "Date/time", "kk": "Күн/уақыт"},
+		"medit.lbl_dept":           {"ru": "Отдел", "en": "Department", "kk": "Бөлім"},
+		"medit.lbl_type":           {"ru": "Тип", "en": "Type", "kk": "Түрі"},
+		"medit.lbl_host":           {"ru": "Ведущий", "en": "Host", "kk": "Жүргізуші"},
+		"medit.lbl_description":    {"ru": "Описание", "en": "Description", "kk": "Сипаттама"},
+		"medit.lbl_recurrence":     {"ru": "Частота", "en": "Recurrence", "kk": "Жиілік"},
+	})
+}
