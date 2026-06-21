@@ -163,7 +163,10 @@ function QuestionExtras({
   type: string
 }) {
   const t = useT()
-  const { setValue } = useFormContext<SurveyForm>()
+  const {
+    setValue,
+    formState: { errors },
+  } = useFormContext<SurveyForm>()
   const options =
     useWatch({ control, name: `questions.${index}.options` }) ?? []
 
@@ -182,6 +185,12 @@ function QuestionExtras({
   }
 
   if (type === "single" || type === "multi") {
+    const optionErrors = errors.questions?.[index]?.options
+    const hasBlankOption =
+      optionErrors &&
+      (Array.isArray(optionErrors)
+        ? optionErrors.some((e) => e?.message)
+        : "message" in optionErrors)
     return (
       <div className="space-y-1.5">
         <Label className="text-xs">{t("surveys.options")}</Label>
@@ -194,6 +203,9 @@ function QuestionExtras({
                 <Input
                   {...field}
                   placeholder={`${t("surveys.option")} ${oi + 1}`}
+                  aria-invalid={Boolean(
+                    Array.isArray(optionErrors) && optionErrors[oi]?.message
+                  )}
                 />
               )}
             />
@@ -207,6 +219,11 @@ function QuestionExtras({
             </Button>
           </div>
         ))}
+        {hasBlankOption && (
+          <p className="text-xs text-destructive">
+            {t("surveys.optionsRequired")}
+          </p>
+        )}
         <Button type="button" variant="outline" size="sm" onClick={addOption}>
           {t("surveys.addOption")}
         </Button>

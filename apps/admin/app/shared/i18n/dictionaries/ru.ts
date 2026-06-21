@@ -434,6 +434,7 @@ export const ru: typeof en = {
     options: "Варианты",
     option: "Вариант",
     addOption: "Добавить вариант",
+    optionsRequired: "Все варианты должны быть заполнены",
     type: {
       single: "Один вариант",
       multi: "Несколько вариантов",

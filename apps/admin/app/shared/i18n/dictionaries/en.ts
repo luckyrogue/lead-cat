@@ -428,6 +428,7 @@ export const en = {
     options: "Options",
     option: "Option",
     addOption: "Add option",
+    optionsRequired: "All options must be filled",
     type: {
       single: "Single choice",
       multi: "Multiple choice",

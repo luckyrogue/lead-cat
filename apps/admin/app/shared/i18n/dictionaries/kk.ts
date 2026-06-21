@@ -431,6 +431,7 @@ export const kk: typeof en = {
     options: "Нұсқалар",
     option: "Нұсқа",
     addOption: "Нұсқа қосу",
+    optionsRequired: "Барлық нұсқалар толтырылуы керек",
     type: {
       single: "Бір нұсқа",
       multi: "Бірнеше нұсқа",

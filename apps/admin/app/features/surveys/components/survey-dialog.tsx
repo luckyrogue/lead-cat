@@ -11,6 +11,7 @@ import {
   Label,
   Loader2,
 } from "@leadcat/ui"
+import { useEffect } from "react"
 import { Controller, FormProvider, useForm } from "react-hook-form"
 
 import type { Survey } from "~/entities/survey/types"
@@ -73,6 +74,12 @@ export function SurveyDialog({ open, onOpenChange, survey, orgId }: Props) {
     formState: { errors },
     reset,
   } = methods
+
+  useEffect(() => {
+    if (open) {
+      reset(survey ? surveyToForm(survey) : CREATE_DEFAULTS)
+    }
+  }, [open])
 
   function handleOpenChange(next: boolean) {
     if (!next) reset(defaultValues)
@@ -142,22 +149,20 @@ export function SurveyDialog({ open, onOpenChange, survey, orgId }: Props) {
               )}
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <Label>{t("surveys.active")}</Label>
-              <Controller
-                control={control}
-                name="is_active"
-                render={({ field }) => (
+            <Controller
+              control={control}
+              name="is_active"
+              render={({ field }) => (
+                <label className="flex cursor-pointer items-center gap-2 text-sm select-none">
                   <button
                     type="button"
                     role="switch"
                     aria-checked={field.value}
-                    aria-label={t("surveys.active")}
                     onClick={() => field.onChange(!field.value)}
                     className={
                       field.value
-                        ? "relative inline-flex h-6 w-11 items-center rounded-full border-2 border-primary bg-primary transition-colors"
-                        : "relative inline-flex h-6 w-11 items-center rounded-full border-2 border-input bg-input transition-colors"
+                        ? "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-primary bg-primary transition-colors"
+                        : "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-input bg-input transition-colors"
                     }
                   >
                     <span
@@ -168,9 +173,10 @@ export function SurveyDialog({ open, onOpenChange, survey, orgId }: Props) {
                       }
                     />
                   </button>
-                )}
-              />
-            </div>
+                  {t("surveys.active")}
+                </label>
+              )}
+            />
 
             <div className="flex flex-col gap-1.5">
               <QuestionEditor control={control} />
