@@ -96,7 +96,7 @@ func (h *MultiHandler) Handle(ctx context.Context, b *bot.Bot, update *models.Up
 			}
 
 			if _, err := h.store.GetBotUserByTelegramID(ctx, from.ID); err == nil {
-				reply, _ := h.agent.OnText(ctx, from.ID, text)
+				reply, _ := h.agent.OnText(ctx, from.ID, text, h.resolveLang(ctx, from))
 				h.sendAgentReply(ctx, b, chatID, 0, reply)
 			}
 		}
@@ -210,7 +210,7 @@ func (h *MultiHandler) handleCallback(ctx context.Context, b *bot.Bot, cq *model
 		}
 	}
 	if strings.HasPrefix(cq.Data, "agent:") {
-		if reply, handled := h.agent.OnCallback(ctx, cq.From.ID, cq.Data); handled && cq.Message.Message != nil {
+		if reply, handled := h.agent.OnCallback(ctx, cq.From.ID, cq.Data, h.resolveLang(ctx, &cq.From)); handled && cq.Message.Message != nil {
 			h.sendAgentReply(ctx, b, cq.Message.Message.Chat.ID, cq.Message.Message.ID, reply)
 		}
 	}

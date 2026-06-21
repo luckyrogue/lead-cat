@@ -76,7 +76,7 @@ func TestService_ProposeMeeting_ShowsConfirmCard(t *testing.T) {
 	sess := newMemSessions()
 	svc := NewWithBooker(planner, stubBackend{}, booker, sess)
 
-	reply, handled := svc.OnText(context.Background(), 5, "book sync with mia tomorrow 10:00")
+	reply, handled := svc.OnText(context.Background(), 5, "book sync with mia tomorrow 10:00", "ru")
 	if !handled {
 		t.Fatal("handled=false")
 	}
@@ -106,7 +106,7 @@ func TestService_OnCallback_ConfirmBooks(t *testing.T) {
 	}})
 	svc := NewWithBooker(&scriptPlanner{}, stubBackend{}, booker, sess)
 
-	reply, handled := svc.OnCallback(context.Background(), 5, "agent:book:yes")
+	reply, handled := svc.OnCallback(context.Background(), 5, "agent:book:yes", "ru")
 	if !handled {
 		t.Fatal("handled=false")
 	}
@@ -128,7 +128,7 @@ func TestService_OnCallback_Cancel(t *testing.T) {
 	_ = sess.Set(context.Background(), 5, State{Pending: &PendingBooking{Type: "Sync"}})
 	svc := NewWithBooker(&scriptPlanner{}, stubBackend{}, booker, sess)
 
-	_, handled := svc.OnCallback(context.Background(), 5, "agent:book:no")
+	_, handled := svc.OnCallback(context.Background(), 5, "agent:book:no", "ru")
 	if !handled {
 		t.Fatal("handled=false")
 	}
@@ -143,7 +143,7 @@ func TestService_OnCallback_Cancel(t *testing.T) {
 
 func TestService_OnCallback_NotOurs(t *testing.T) {
 	svc := NewWithBooker(&scriptPlanner{}, stubBackend{}, &fakeBooker{}, newMemSessions())
-	_, handled := svc.OnCallback(context.Background(), 5, "chk:done")
+	_, handled := svc.OnCallback(context.Background(), 5, "chk:done", "ru")
 	if handled {
 		t.Fatal("must not handle callbacks that aren't agent:book:*")
 	}
@@ -158,7 +158,7 @@ func TestService_AfterPropose_NoDanglingToolUse(t *testing.T) {
 	sess := newMemSessions()
 	svc := NewWithBooker(planner, stubBackend{}, &fakeBooker{}, sess)
 
-	if _, handled := svc.OnText(context.Background(), 5, "book it"); !handled {
+	if _, handled := svc.OnText(context.Background(), 5, "book it", "ru"); !handled {
 		t.Fatal("first OnText not handled")
 	}
 	st, _ := sess.Get(context.Background(), 5)
@@ -175,7 +175,7 @@ func TestService_AfterPropose_NoDanglingToolUse(t *testing.T) {
 			}
 		}
 	}
-	reply, handled := svc.OnText(context.Background(), 5, "ага")
+	reply, handled := svc.OnText(context.Background(), 5, "ага", "ru")
 	if !handled || reply.Text != "Ок!" {
 		t.Fatalf("follow-up OnText failed: handled=%v text=%q", handled, reply.Text)
 	}
@@ -212,7 +212,7 @@ func TestService_BadArgPropose_RePlans(t *testing.T) {
 	sess := newMemSessions()
 	svc := NewWithBooker(planner, stubBackend{}, booker, sess)
 
-	reply, handled := svc.OnText(context.Background(), 6, "book it")
+	reply, handled := svc.OnText(context.Background(), 6, "book it", "ru")
 	if !handled {
 		t.Fatal("OnText not handled")
 	}
