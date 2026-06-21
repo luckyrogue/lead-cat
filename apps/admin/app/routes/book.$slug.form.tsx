@@ -1,7 +1,7 @@
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@leadcat/ui"
 import { useState } from "react"
 
-import { useT } from "~/shared/i18n/context"
+import { useLocale, useT } from "~/shared/i18n/context"
 
 interface Slot {
   start: string
@@ -29,8 +29,8 @@ type FormState =
   | { status: "badInput" }
   | { status: "error" }
 
-function formatDateTime(iso: string, timezone: string): string {
-  return new Intl.DateTimeFormat(undefined, {
+function formatDateTime(iso: string, timezone: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
     timeZone: timezone,
     weekday: "long",
     month: "long",
@@ -52,6 +52,7 @@ export function BookingForm({
   onConflict,
 }: Props) {
   const t = useT()
+  const locale = useLocale()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [touched, setTouched] = useState({ name: false, email: false })
@@ -125,7 +126,7 @@ export function BookingForm({
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            {formatDateTime(result.start, timezone)}
+            {formatDateTime(result.start, timezone, locale)}
           </p>
           <a
             href={result.meet_link}

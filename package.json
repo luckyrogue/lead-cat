@@ -13,7 +13,7 @@
     "lint": "turbo run lint",
     "format": "turbo run format",
     "format:check": "turbo run format:check --filter=./apps/*",
-    "test": "turbo run test --filter=./apps/* --filter=@leadcat/ui",
+    "test": "turbo run test --filter=./apps/* --filter=@leadcat/ui --filter=@leadcat/api-client",
     "e2e": "bash e2e/run.sh"
   },
   "devDependencies": {

@@ -22,12 +22,15 @@ export function formatMeetingDate(
   })
 }
 
-export function formatDateTime(value: string, timeZone?: string): string {
+export function formatDateTime(
+  value: string,
+  { timeZone, locale }: FormatOptions = {}
+): string {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) {
     return "—"
   }
-  return date.toLocaleString(undefined, {
+  return date.toLocaleString(locale, {
     weekday: "short",
     day: "numeric",
     month: "short",
