@@ -161,7 +161,7 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	booking.Patch("/event-types/:id", api.BookingUpdateEventType)
 	booking.Delete("/event-types/:id", api.BookingDeleteEventType)
 
-	surveys := app.Group("/api/surveys", webAuth.Middleware)
+	surveys := app.Group("/api/surveys", webAuth.Middleware, middleware.RequireOrgMember(store))
 	surveys.Get("", api.SurveyList)
 	surveys.Post("", api.SurveyCreate)
 	surveys.Get("/:id", api.SurveyGet)
