@@ -18,19 +18,6 @@ function readCsrfCookie(): string | null {
   return match ? decodeURIComponent(match.slice("lc_csrf=".length)) : null
 }
 
-export function prepareMutationCsrf(
-  method: string,
-  csrf: string | null
-): { header?: string; warn?: boolean } {
-  if (!MUTATION_METHODS.has(method.toLowerCase())) {
-    return {}
-  }
-  if (csrf) {
-    return { header: csrf }
-  }
-  return { warn: true }
-}
-
 function resolveBaseUrl(): string {
   const url = import.meta.env.VITE_API_URL
   return typeof url === "string" && url.length > 0 ? url.replace(/\/$/, "") : ""
@@ -38,6 +25,28 @@ function resolveBaseUrl(): string {
 
 function isAuthPath(url: string | undefined): boolean {
   return typeof url === "string" && url.includes("/api/auth/")
+}
+
+export function prepareMutationCsrf(
+  method: string,
+  csrf: string | null,
+  url: string,
+  dev = import.meta.env.DEV
+): { header?: string; warn?: boolean } {
+  if (!MUTATION_METHODS.has(method.toLowerCase())) {
+    return {}
+  }
+  if (csrf) {
+    return { header: csrf }
+  }
+  // Pre-auth/login endpoints (/api/auth/*) have no session CSRF cookie yet — allow them.
+  if (isAuthPath(url)) {
+    return {}
+  }
+  if (dev) {
+    return { warn: true }
+  }
+  throw new Error("missing_csrf_token")
 }
 
 function isCsrfError(apiError: ApiError): boolean {
@@ -48,7 +57,11 @@ export const api: AxiosInstance = createApiClient(resolveBaseUrl())
 
 api.interceptors.request.use((config) => {
   const method = (config.method ?? "get").toLowerCase()
-  const csrfResult = prepareMutationCsrf(method, readCsrfCookie())
+  const csrfResult = prepareMutationCsrf(
+    method,
+    readCsrfCookie(),
+    config.url ?? ""
+  )
   if (csrfResult.header) {
     config.headers.set("X-CSRF-Token", csrfResult.header)
   } else if (csrfResult.warn && !csrfWarningLogged) {
