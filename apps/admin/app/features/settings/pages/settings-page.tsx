@@ -16,23 +16,10 @@ import { useMeSettings, useUpdateMeSettings } from "~/entities/me/queries"
 import { CalendarConnectionsCard } from "~/features/calendar-connections/components/calendar-connections-card"
 import { resolveLocale, useT } from "~/shared/i18n/context"
 import { writeLocalePreference } from "~/shared/i18n/locale-preference"
+import { getTimezoneOptionsWithEmpty } from "~/shared/lib/timezone-options"
 import { toastError, toastSuccess } from "~/shared/lib/toast"
 
 const DEFAULT = "__default__"
-
-const TIMEZONE_OPTIONS = [
-  { value: "", translatable: true },
-  { value: "Asia/Almaty", label: "Almaty (UTC+5)" },
-  { value: "Asia/Tashkent", label: "Tashkent (UTC+5)" },
-  { value: "Asia/Bishkek", label: "Bishkek (UTC+6)" },
-  { value: "Europe/Moscow", label: "Moscow (UTC+3)" },
-  { value: "Europe/Kyiv", label: "Kyiv (UTC+2/3)" },
-  { value: "Europe/London", label: "London (UTC+0/1)" },
-  { value: "Asia/Dubai", label: "Dubai (UTC+4)" },
-  { value: "Asia/Istanbul", label: "Istanbul (UTC+3)" },
-  { value: "America/New_York", label: "New York (UTC-5/4)" },
-  { value: "UTC", label: "UTC" },
-]
 
 const LANGUAGE_OPTIONS = [
   { value: "", translatable: true },
@@ -43,6 +30,10 @@ const LANGUAGE_OPTIONS = [
 
 export function SettingsPage() {
   const t = useT()
+  const timezoneOptions = getTimezoneOptionsWithEmpty(
+    t,
+    "settings.timezoneBrowserDefault"
+  )
   const { data: settings, isPending } = useMeSettings()
   const updateSettings = useUpdateMeSettings()
 
@@ -52,7 +43,7 @@ export function SettingsPage() {
       {
         onSuccess: () => toastSuccess(t("settings.toast.timezoneSaved")),
         onError: (error) =>
-          toastError(error, t("settings.toast.timezoneFailed")),
+          toastError(error, t, "settings.toast.timezoneFailed"),
       }
     )
   }
@@ -68,7 +59,7 @@ export function SettingsPage() {
           toastSuccess(t("settings.toast.languageSaved"))
         },
         onError: (error) =>
-          toastError(error, t("settings.toast.languageFailed")),
+          toastError(error, t, "settings.toast.languageFailed"),
       }
     )
   }
@@ -107,14 +98,12 @@ export function SettingsPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {TIMEZONE_OPTIONS.map((opt) => (
+                {timezoneOptions.map((opt) => (
                   <SelectItem
                     key={opt.value || "default"}
                     value={opt.value === "" ? DEFAULT : opt.value}
                   >
-                    {"translatable" in opt
-                      ? t("settings.timezoneBrowserDefault")
-                      : opt.label}
+                    {opt.label}
                   </SelectItem>
                 ))}
               </SelectContent>

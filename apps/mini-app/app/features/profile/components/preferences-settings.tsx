@@ -6,20 +6,22 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  toast,
 } from "@leadcat/ui"
 import { useQuery } from "@tanstack/react-query"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import { ErrorState, LoadingState } from "~/components/states"
-import { LANGUAGE_OPTIONS, TIMEZONE_OPTIONS } from "~/entities/settings/api"
+import { getLanguageOptions, getTimezoneOptions } from "~/entities/settings/api"
 import { settingsQuery, useUpdatePrefs } from "~/entities/settings/queries"
 import { useT } from "~/shared/i18n/context"
+import { toastError } from "~/shared/lib/toast"
 
 const DEFAULT = "__default__"
 
 export function PreferencesSettings() {
   const t = useT()
+  const timezoneOptions = useMemo(() => getTimezoneOptions(t), [t])
+  const languageOptions = useMemo(() => getLanguageOptions(t), [t])
   const settings = useQuery(settingsQuery())
   const update = useUpdatePrefs()
   const [timezone, setTimezone] = useState("")
@@ -38,8 +40,8 @@ export function PreferencesSettings() {
     update.mutate(
       { timezone: value },
       {
-        onError: () => {
-          toast.error(t("profile.preferences.toastError"))
+        onError: (error) => {
+          toastError(error, t, "profile.preferences.toastError")
           setTimezone(prev)
         },
       }
@@ -52,8 +54,8 @@ export function PreferencesSettings() {
     update.mutate(
       { language: value },
       {
-        onError: () => {
-          toast.error(t("profile.preferences.toastError"))
+        onError: (error) => {
+          toastError(error, t, "profile.preferences.toastError")
           setLanguage(prev)
         },
       }
@@ -91,14 +93,12 @@ export function PreferencesSettings() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {TIMEZONE_OPTIONS.map((opt) => (
+              {timezoneOptions.map((opt) => (
                 <SelectItem
                   key={opt.value || "default"}
                   value={opt.value === "" ? DEFAULT : opt.value}
                 >
-                  {opt.value === ""
-                    ? t("profile.preferences.tzDefault")
-                    : opt.label}
+                  {opt.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -117,14 +117,12 @@ export function PreferencesSettings() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {LANGUAGE_OPTIONS.map((opt) => (
+              {languageOptions.map((opt) => (
                 <SelectItem
                   key={opt.value || "default"}
                   value={opt.value === "" ? DEFAULT : opt.value}
                 >
-                  {opt.value === ""
-                    ? t("profile.preferences.langDefault")
-                    : opt.label}
+                  {opt.label}
                 </SelectItem>
               ))}
             </SelectContent>

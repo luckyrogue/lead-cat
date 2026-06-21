@@ -117,4 +117,10 @@ export const kk: LandingDict = {
     cta: "Lead Cat-ты алу",
     copyright: "Мейірім мен мұртпен жасалған.",
   },
+  errors: {
+    genericTitle: "Бір нәрсе дұрыс болмады",
+    genericDescription: "Күтпеген қате орын алды.",
+    notFoundDescription: "Бет табылмады.",
+    reload: "Жаңарту",
+  },
 }

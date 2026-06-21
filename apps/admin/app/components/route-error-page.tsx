@@ -10,19 +10,31 @@ import {
   CardTitle,
 } from "@leadcat/ui"
 
+import { AuthLocaleShell } from "~/components/auth-locale-shell"
+import { useT } from "~/shared/i18n/context"
+
 type RouteErrorPageProps = {
   error: unknown
 }
 
 export function RouteErrorPage({ error }: RouteErrorPageProps) {
-  let title = "Something went wrong"
-  let description = "An unexpected error occurred."
+  return (
+    <AuthLocaleShell>
+      <RouteErrorPageContent error={error} />
+    </AuthLocaleShell>
+  )
+}
+
+function RouteErrorPageContent({ error }: RouteErrorPageProps) {
+  const t = useT()
+  let title = t("errors.genericTitle")
+  let description = t("errors.genericDescription")
 
   if (isRouteErrorResponse(error)) {
     title = error.status === 404 ? "404" : String(error.status)
     description =
       error.status === 404
-        ? "This page could not be found."
+        ? t("errors.notFoundDescription")
         : error.statusText || description
   } else if (import.meta.env.DEV && error instanceof Error) {
     description = error.message
@@ -38,14 +50,14 @@ export function RouteErrorPage({ error }: RouteErrorPageProps) {
         <CardContent />
         <CardFooter className="gap-2">
           <Button asChild variant="outline">
-            <Link to="/">Back home</Link>
+            <Link to="/">{t("errors.backHome")}</Link>
           </Button>
           <Button
             type="button"
             variant="secondary"
             onClick={() => window.location.reload()}
           >
-            Reload
+            {t("errors.reload")}
           </Button>
         </CardFooter>
       </Card>

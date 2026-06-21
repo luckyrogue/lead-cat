@@ -1,17 +1,19 @@
-import { Card, CardContent, cn, toast } from "@leadcat/ui"
+import { Card, CardContent, cn } from "@leadcat/ui"
 import { useQuery } from "@tanstack/react-query"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import { ErrorState, LoadingState } from "~/components/states"
-import { REMINDER_OPTIONS } from "~/entities/settings/api"
+import { getReminderOptions } from "~/entities/settings/api"
 import {
   settingsQuery,
   useUpdateReminderMinutes,
 } from "~/entities/settings/queries"
 import { useT } from "~/shared/i18n/context"
+import { toastError } from "~/shared/lib/toast"
 
 export function ReminderSettings() {
   const t = useT()
+  const reminderOptions = useMemo(() => getReminderOptions(t), [t])
   const settings = useQuery(settingsQuery())
   const update = useUpdateReminderMinutes()
   const [selected, setSelected] = useState<number[]>([])
@@ -28,8 +30,8 @@ export function ReminderSettings() {
       : [...selected, minutes].sort((a, b) => a - b)
     setSelected(next)
     update.mutate(next, {
-      onError: () => {
-        toast.error(t("profile.reminder.toastError"))
+      onError: (error) => {
+        toastError(error, t, "profile.reminder.toastError")
         setSelected(settings.data?.reminder_minutes ?? [])
       },
     })
@@ -54,7 +56,7 @@ export function ReminderSettings() {
           {t("profile.reminder.title")}
         </p>
         <div className="flex flex-wrap gap-2">
-          {REMINDER_OPTIONS.map((option) => {
+          {reminderOptions.map((option) => {
             const active = selected.includes(option.minutes)
             return (
               <button

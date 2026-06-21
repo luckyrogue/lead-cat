@@ -76,7 +76,7 @@ export function MeetingsPage() {
         toastSuccess(t("meetings.toast.created"))
         setCreateOpen(false)
       },
-      onError: (error) => toastError(error, t("meetings.toast.createFailed")),
+      onError: (error) => toastError(error, t, "meetings.toast.createFailed"),
     })
   }
 
@@ -91,7 +91,7 @@ export function MeetingsPage() {
           toastSuccess(t("meetings.toast.updated"))
           setToEdit(null)
         },
-        onError: (error) => toastError(error, t("meetings.toast.updateFailed")),
+        onError: (error) => toastError(error, t, "meetings.toast.updateFailed"),
       }
     )
   }
@@ -108,7 +108,7 @@ export function MeetingsPage() {
           setToDelete(null)
         },
         onError: (error) => {
-          toastError(error, t("meetings.toast.cancelFailed"))
+          toastError(error, t, "meetings.toast.cancelFailed")
           setToDelete(null)
         },
       }

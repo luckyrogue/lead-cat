@@ -210,6 +210,8 @@ export function MeetingForm({
             date: t("meetings.form.labelDate"),
             start: t("meetings.form.labelStart"),
             end: t("meetings.form.labelEnd"),
+            hour: t("common.timeHour"),
+            minute: t("common.timeMinute"),
           }}
         />
       </Field>

@@ -1,4 +1,4 @@
-import { ParticipantsEditorPanel, toast } from "@leadcat/ui"
+import { ParticipantsEditorPanel } from "@leadcat/ui"
 import { useState } from "react"
 
 import {
@@ -6,6 +6,7 @@ import {
   useRemoveParticipant,
 } from "~/entities/meeting/mutations"
 import { useT } from "~/shared/i18n/context"
+import { toastError } from "~/shared/lib/toast"
 
 type Props = {
   meetingId: string
@@ -28,7 +29,8 @@ export function ParticipantsEditor({ meetingId, participants, series }: Props) {
       { id: meetingId, email: value },
       {
         onSuccess: () => setEmail(""),
-        onError: () => toast.error(t("meetings.edit.participantAddError")),
+        onError: (error) =>
+          toastError(error, t, "meetings.edit.participantAddError"),
       }
     )
   }
@@ -36,7 +38,10 @@ export function ParticipantsEditor({ meetingId, participants, series }: Props) {
   function handleRemove(target: string) {
     remove.mutate(
       { id: meetingId, email: target },
-      { onError: () => toast.error(t("meetings.edit.participantRemoveError")) }
+      {
+        onError: (error) =>
+          toastError(error, t, "meetings.edit.participantRemoveError"),
+      }
     )
   }
 
@@ -50,6 +55,16 @@ export function ParticipantsEditor({ meetingId, participants, series }: Props) {
       addPending={add.isPending}
       removePending={remove.isPending}
       series={series}
+      labels={{
+        title: t("meetings.participants.title"),
+        loading: t("meetings.participants.loading"),
+        empty: t("meetings.participants.empty"),
+        placeholder: t("meetings.participants.placeholder"),
+        removeAria: (participant) =>
+          t("meetings.participants.removeAria", { email: participant }),
+        addButton: t("meetings.participants.addButton"),
+        seriesHint: t("meetings.participants.seriesHint"),
+      }}
     />
   )
 }

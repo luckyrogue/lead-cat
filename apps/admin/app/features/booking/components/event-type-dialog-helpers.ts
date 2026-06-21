@@ -17,19 +17,6 @@ export const WEEKDAYS = [
   { value: 7, key: "7" },
 ] as const
 
-export const TIMEZONE_OPTIONS = [
-  { value: "Asia/Almaty", label: "Almaty (UTC+5)" },
-  { value: "Asia/Tashkent", label: "Tashkent (UTC+5)" },
-  { value: "Asia/Bishkek", label: "Bishkek (UTC+6)" },
-  { value: "Europe/Moscow", label: "Moscow (UTC+3)" },
-  { value: "Europe/Kyiv", label: "Kyiv (UTC+2/3)" },
-  { value: "Europe/London", label: "London (UTC+0/1)" },
-  { value: "Asia/Dubai", label: "Dubai (UTC+4)" },
-  { value: "Asia/Istanbul", label: "Istanbul (UTC+3)" },
-  { value: "America/New_York", label: "New York (UTC-5/4)" },
-  { value: "UTC", label: "UTC" },
-]
-
 export function minutesToTime(minutes: number): string {
   const h = Math.floor(minutes / 60)
     .toString()

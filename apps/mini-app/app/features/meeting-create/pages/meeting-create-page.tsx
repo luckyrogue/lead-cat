@@ -31,6 +31,7 @@ import type { Employee } from "~/entities/employee/types"
 import type { OccurrenceConflicts } from "~/entities/meeting/types"
 import { useT, useLocale } from "~/shared/i18n/context"
 import { todayIso, addMinutesToTime } from "~/shared/lib/format"
+import { toastError } from "~/shared/lib/toast"
 
 const RECURRENCES = ["once", "daily", "weekly", "monthly", "custom"] as const
 
@@ -88,10 +89,15 @@ export function MeetingCreatePage() {
         date: v.date,
         start: v.start,
         end: v.end,
+        recurrence: v.recurrence,
+        recurrence_until:
+          v.recurrence === "once" ? undefined : v.recurrence_until,
+        recurrence_days:
+          v.recurrence === "custom" ? v.recurrence_days : undefined,
       })
       setConflicts(result)
-    } catch {
-      toast.error(t("create.toastConflictError"))
+    } catch (error) {
+      toastError(error, t, "create.toastConflictError")
     } finally {
       setChecking(false)
     }
@@ -119,7 +125,7 @@ export function MeetingCreatePage() {
           toast.success(t("create.toastSuccess"))
           void navigate("/meetings")
         },
-        onError: () => toast.error(t("create.toastError")),
+        onError: (error) => toastError(error, t, "create.toastError"),
       }
     )
   }
@@ -173,6 +179,8 @@ export function MeetingCreatePage() {
               date: t("create.fieldDate"),
               start: t("create.fieldStart"),
               end: t("create.fieldEnd"),
+              hour: t("common.timeHour"),
+              minute: t("common.timeMinute"),
             }}
           />
         </Field>

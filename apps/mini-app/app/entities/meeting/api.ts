@@ -1,4 +1,5 @@
 import type {
+  MiniAppConflictsRequest,
   MiniAppFreeSlotsResponse,
   MiniAppMeetingsResponse,
   MiniAppOccurrenceConflicts,
@@ -16,13 +17,7 @@ import type {
   UpdateMeetingInput,
 } from "~/entities/meeting/types"
 
-type ConflictsInput = {
-  participants: string[]
-  date: string
-  start: string
-  end: string
-  exclude_id?: string
-}
+type ConflictsInput = MiniAppConflictsRequest
 
 type FreeSlotsInput = {
   participants: string[]

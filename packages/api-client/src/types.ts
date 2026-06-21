@@ -21,3 +21,23 @@ export type WebMeeting = Schemas["Meeting"]
 export type WebMeetingParticipant = Schemas["MeetingParticipant"]
 export type WebMeetingCreateRequest = Schemas["WebMeetingCreateRequest"]
 export type WebMeetingUpdateRequest = Schemas["WebMeetingUpdateRequest"]
+
+export type Org = Schemas["Org"]
+export type OrgMember = Schemas["OrgMember"]
+export type OrgInvite = Schemas["OrgInvite"]
+
+export type BookingEventType = Schemas["BookingEventType"]
+export type BookingEventTypeInput = Schemas["BookingEventTypeInput"]
+export type BookingEventTypesResponse = Schemas["BookingEventTypesResponse"]
+export type PublicBookingView = Schemas["PublicBookingView"]
+export type BookingEventView = Schemas["BookingEventView"]
+export type BookingSlot = Schemas["BookingSlot"]
+export type PublicBookingSubmitRequest = Schemas["PublicBookingSubmitRequest"]
+export type BookingConfirmation = Schemas["BookingConfirmation"]
+
+export type CalendarConnectionView = Schemas["CalendarConnectionView"]
+
+export type MyInviteView = Schemas["MyInviteView"]
+export type JoinRequestView = Schemas["JoinRequestView"]
+export type JoinRequestAdminView = Schemas["JoinRequestAdminView"]
+export type JoinRequestCreateResponse = Schemas["JoinRequestCreateResponse"]

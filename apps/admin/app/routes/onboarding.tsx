@@ -101,7 +101,7 @@ function OnboardingBody({
         setActiveOrgId(org.id)
         navigate("/", { replace: true })
       },
-      onError: (error) => toastError(error, t("auth.onboarding.createFailed")),
+      onError: (error) => toastError(error, t, "auth.onboarding.createFailed"),
     })
   }
 
@@ -125,7 +125,7 @@ function OnboardingBody({
         if (apiErr.status === 404) {
           setJoinNotFound(true)
         } else {
-          toastError(err, t("onboarding.join.requestFailed"))
+          toastError(err, t, "onboarding.join.requestFailed")
         }
       },
     })
@@ -166,7 +166,7 @@ function OnboardingBody({
                             navigate("/", { replace: true })
                           },
                           onError: (e) =>
-                            toastError(e, t("onboarding.invites.acceptFailed")),
+                            toastError(e, t, "onboarding.invites.acceptFailed"),
                         })
                       }
                     >

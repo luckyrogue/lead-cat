@@ -1,11 +1,13 @@
-import { api } from "~/shared/api/client"
 import type {
   BookingEventType,
-  EventTypeInput,
-} from "~/entities/booking-event-type/types"
+  BookingEventTypesResponse,
+} from "@leadcat/api-client"
+
+import { api } from "~/shared/api/client"
+import type { EventTypeInput } from "~/entities/booking-event-type/types"
 
 export async function listEventTypes(): Promise<BookingEventType[]> {
-  const { data } = await api.get<{ event_types: BookingEventType[] }>(
+  const { data } = await api.get<BookingEventTypesResponse>(
     "/api/booking/event-types"
   )
   return data.event_types ?? []
@@ -24,12 +26,8 @@ export async function createEventType(
 export async function updateEventType(
   id: string,
   input: EventTypeInput
-): Promise<BookingEventType> {
-  const { data } = await api.patch<BookingEventType>(
-    `/api/booking/event-types/${id}`,
-    input
-  )
-  return data
+): Promise<void> {
+  await api.patch(`/api/booking/event-types/${id}`, input)
 }
 
 export async function deleteEventType(id: string): Promise<void> {

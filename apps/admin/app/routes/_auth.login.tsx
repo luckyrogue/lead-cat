@@ -12,10 +12,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (error === "invalid_link") {
-      toastError(
-        new Error(t("auth.login.invalidLinkMessage")),
-        t("auth.login.invalidLinkTitle")
-      )
+      toastError(undefined, t, "auth.login.invalidLinkMessage")
     }
   }, [error, t])
 

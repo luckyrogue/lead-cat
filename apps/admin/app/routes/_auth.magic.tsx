@@ -27,7 +27,7 @@ export default function MagicLinkVerifyPage() {
         window.history.replaceState({}, "", "/auth/magic")
         navigate(dest, { replace: true })
       } catch (error) {
-        toastError(error, t("auth.login.invalidLinkMessage"))
+        toastError(error, t, "auth.login.invalidLinkMessage")
         navigate("/login?error=invalid_link", { replace: true })
       }
     })()

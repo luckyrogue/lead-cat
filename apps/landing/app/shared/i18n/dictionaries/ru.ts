@@ -117,4 +117,10 @@ export const ru: LandingDict = {
     cta: "Забрать Lead Cat",
     copyright: "Сделано с теплотой и усами.",
   },
+  errors: {
+    genericTitle: "Что-то пошло не так",
+    genericDescription: "Произошла непредвиденная ошибка.",
+    notFoundDescription: "Страница не найдена.",
+    reload: "Обновить",
+  },
 }

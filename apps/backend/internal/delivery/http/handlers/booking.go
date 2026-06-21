@@ -54,7 +54,7 @@ func (a *API) BookingListEventTypes(c *fiber.Ctx) error {
 	if err != nil {
 		return bookingErr(a.Log, err)
 	}
-	return c.JSON(list)
+	return c.JSON(fiber.Map{"event_types": list})
 }
 
 func (a *API) BookingCreateEventType(c *fiber.Ctx) error {

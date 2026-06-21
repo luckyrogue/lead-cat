@@ -2,7 +2,7 @@ import { ApiError, createApiClient, toApiError } from "@leadcat/api-client"
 import { isAxiosError, type AxiosInstance } from "axios"
 
 import { getActiveOrgId } from "~/shared/api/active-org"
-import { toastError } from "~/shared/lib/toast"
+import { toastApiError } from "~/shared/lib/toast"
 
 const MUTATION_METHODS = new Set(["post", "put", "patch", "delete"])
 
@@ -85,7 +85,7 @@ api.interceptors.response.use(
     const apiError = toApiError(error)
 
     if (apiError.status === 403 && isCsrfError(apiError)) {
-      toastError(apiError, "Session expired. Please sign in again.")
+      toastApiError(apiError, "errors.codes.csrf")
     }
 
     if (apiError.status === 401 && !isAuthPath(error.config?.url)) {

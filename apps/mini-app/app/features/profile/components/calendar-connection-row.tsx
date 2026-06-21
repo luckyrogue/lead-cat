@@ -9,6 +9,7 @@ import {
 import type { CalendarProvider } from "~/entities/calendar-connection/types"
 import { useT } from "~/shared/i18n/context"
 import { assertAllowedOAuthUrl } from "~/shared/lib/oauth-url"
+import { toastError } from "~/shared/lib/toast"
 import { getWebApp } from "~/shared/tma/telegram-env"
 
 export function CalendarConnectionRow() {
@@ -27,9 +28,20 @@ export function CalendarConnectionRow() {
   const microsoft = data.find((c) => c.provider === "microsoft")
 
   const connect = async (provider: CalendarProvider) => {
-    const res = await start.mutateAsync(provider)
-    const authUrl = assertAllowedOAuthUrl(res.auth_url)
-    getWebApp()?.openLink?.(authUrl)
+    try {
+      const res = await start.mutateAsync(provider)
+      const authUrl = assertAllowedOAuthUrl(res.auth_url)
+      getWebApp()?.openLink?.(authUrl)
+    } catch (error) {
+      toastError(error, t, "profile.calendar.connectFailed")
+    }
+  }
+
+  const disconnectProvider = (provider: CalendarProvider) => {
+    disconnect.mutate(provider, {
+      onError: (error) =>
+        toastError(error, t, "profile.calendar.disconnectFailed"),
+    })
   }
 
   return (
@@ -51,7 +63,7 @@ export function CalendarConnectionRow() {
                 className={cn(
                   "shrink-0 text-destructive hover:text-destructive"
                 )}
-                onClick={() => disconnect.mutate("google")}
+                onClick={() => disconnectProvider("google")}
               >
                 {t("profile.calendar.disconnect")}
               </Button>
@@ -79,7 +91,7 @@ export function CalendarConnectionRow() {
                 className={cn(
                   "shrink-0 text-destructive hover:text-destructive"
                 )}
-                onClick={() => disconnect.mutate("microsoft")}
+                onClick={() => disconnectProvider("microsoft")}
               >
                 {t("profile.calendar.disconnect")}
               </Button>

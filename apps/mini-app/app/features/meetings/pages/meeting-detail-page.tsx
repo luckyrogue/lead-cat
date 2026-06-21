@@ -22,6 +22,7 @@ import type { Meeting } from "~/entities/meeting/types"
 import { useAuth } from "~/shared/auth/auth-context"
 import { useLocale, useT } from "~/shared/i18n/context"
 import { formatDateLong, formatTimeRange } from "~/shared/lib/format"
+import { recurrenceLabel } from "~/shared/lib/recurrence-label"
 
 export function MeetingDetailPage() {
   const { meetingId = "" } = useParams()
@@ -99,7 +100,7 @@ function MeetingDetail({ meeting, canManage, onEdit, onDelete }: DetailProps) {
         <h1 className="text-xl font-bold text-foreground">{title}</h1>
         {meeting.rec ? (
           <span className="mt-1 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-            {meeting.rec}
+            {recurrenceLabel(t, meeting.rec)}
           </span>
         ) : null}
       </div>

@@ -67,7 +67,7 @@ export function LoginForm() {
       await requestMagicLink(values.email, locale)
       setSentTo(values.email)
     } catch (error) {
-      toastError(error, t("auth.login.magicLinkFailed"))
+      toastError(error, t, "auth.login.magicLinkFailed")
     }
   }
 

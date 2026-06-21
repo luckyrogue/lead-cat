@@ -9,19 +9,31 @@ import {
 } from "@leadcat/ui"
 import { isRouteErrorResponse } from "react-router"
 
+import { LocaleProvider, useT } from "~/shared/i18n/context"
+import { DEFAULT_LOCALE } from "~/shared/i18n/types"
+
 type RouteErrorPageProps = {
   error: unknown
 }
 
 export function RouteErrorPage({ error }: RouteErrorPageProps) {
-  let title = "Something went wrong"
-  let description = "An unexpected error occurred."
+  return (
+    <LocaleProvider locale={DEFAULT_LOCALE}>
+      <RouteErrorPageContent error={error} />
+    </LocaleProvider>
+  )
+}
+
+function RouteErrorPageContent({ error }: RouteErrorPageProps) {
+  const t = useT()
+  let title = t("errors.genericTitle")
+  let description = t("errors.genericDescription")
 
   if (isRouteErrorResponse(error)) {
     title = error.status === 404 ? "404" : String(error.status)
     description =
       error.status === 404
-        ? "This page could not be found."
+        ? t("errors.notFoundDescription")
         : error.statusText || description
   } else if (import.meta.env.DEV && error instanceof Error) {
     description = error.message
@@ -41,7 +53,7 @@ export function RouteErrorPage({ error }: RouteErrorPageProps) {
             variant="secondary"
             onClick={() => window.location.reload()}
           >
-            Reload
+            {t("errors.reload")}
           </Button>
         </CardFooter>
       </Card>

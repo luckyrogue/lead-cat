@@ -1,26 +1,15 @@
-export type OrgRole = "owner" | "admin" | "member"
+import type {
+  Org,
+  OrgInvite as ApiOrgInvite,
+  OrgMember as ApiOrgMember,
+} from "@leadcat/api-client"
 
-export type Organization = {
-  id: string
-  name: string
-  slug: string
-}
+export type OrgRole = ApiOrgMember["role"]
 
-export type OrgMemberStatus = "active" | "invited"
+export type Organization = Org
 
-export type OrgMember = {
-  user_id: string | null
-  role: OrgRole
-  email: string
-  name: string
-  status: OrgMemberStatus
-  invited_email: string | null
-  telegram_username: string
-}
+export type OrgMemberStatus = ApiOrgMember["status"]
 
-export type OrgInvite = {
-  id: string
-  email: string
-  role: OrgRole
-  expires_at?: string
-}
+export type OrgMember = ApiOrgMember
+
+export type OrgInvite = ApiOrgInvite

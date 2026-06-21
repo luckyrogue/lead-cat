@@ -1,8 +1,9 @@
-import { createContext, useContext, useMemo } from "react"
+import { createContext, useContext, useEffect, useMemo } from "react"
 
 import { dictionaries } from "~/shared/i18n/dictionaries"
 import { translate } from "~/shared/i18n/translate"
 import { DEFAULT_LOCALE, type Locale } from "~/shared/i18n/types"
+import { registerApiToastTranslator } from "~/shared/lib/toast"
 
 type TFn = (key: string, params?: Record<string, string | number>) => string
 
@@ -24,6 +25,11 @@ export function LocaleProvider({
       translate(active, dictionaries.en, key, params)
     return { locale, t }
   }, [locale])
+
+  useEffect(() => {
+    registerApiToastTranslator(value.t)
+  }, [value.t])
+
   return (
     <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
   )
@@ -38,5 +44,8 @@ export function useLocale(): Locale {
 }
 
 export function resolveLocale(language: string | undefined | null): Locale {
-  return language === "en" || language === "kk" ? language : DEFAULT_LOCALE
+  if (language === "en" || language === "ru" || language === "kk") {
+    return language
+  }
+  return DEFAULT_LOCALE
 }

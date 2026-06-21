@@ -60,7 +60,7 @@ export function BookingPage() {
             setDialogOpen(false)
             setEditing(null)
           },
-          onError: (err) => toastError(err, t("booking.toast.updateFailed")),
+          onError: (err) => toastError(err, t, "booking.toast.updateFailed"),
         }
       )
     } else {
@@ -69,7 +69,7 @@ export function BookingPage() {
           toastSuccess(t("booking.toast.created"))
           setDialogOpen(false)
         },
-        onError: (err) => toastError(err, t("booking.toast.createFailed")),
+        onError: (err) => toastError(err, t, "booking.toast.createFailed"),
       })
     }
   }
@@ -77,7 +77,7 @@ export function BookingPage() {
   function handleDelete(et: BookingEventType) {
     deleteEventType.mutate(et.id, {
       onSuccess: () => toastSuccess(t("booking.toast.deleted")),
-      onError: (err) => toastError(err, t("booking.toast.deleteFailed")),
+      onError: (err) => toastError(err, t, "booking.toast.deleteFailed"),
     })
   }
 

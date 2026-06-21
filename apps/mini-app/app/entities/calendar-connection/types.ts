@@ -1,11 +1,8 @@
-export type CalendarProvider = "google" | "microsoft"
+import type { CalendarConnectionView } from "@leadcat/api-client"
 
-export type CalendarConnection = {
-  provider: CalendarProvider
-  connected: boolean
-  email: string
-  scopes: string
-}
+export type CalendarProvider = CalendarConnectionView["provider"]
+
+export type CalendarConnection = CalendarConnectionView
 
 export type StartConnectResponse = {
   auth_url: string

@@ -69,7 +69,10 @@ export { TimePicker } from "./components/ui/time-picker"
 export { Toaster } from "./components/ui/sonner"
 
 export { ParticipantsEditorPanel } from "./components/meetings/participants-editor-panel"
-export type { ParticipantsEditorPanelProps } from "./components/meetings/participants-editor-panel"
+export type {
+  ParticipantsEditorLabels,
+  ParticipantsEditorPanelProps,
+} from "./components/meetings/participants-editor-panel"
 
 export { Paw } from "./components/cat/paw"
 export { CatFace } from "./components/cat/cat-face"

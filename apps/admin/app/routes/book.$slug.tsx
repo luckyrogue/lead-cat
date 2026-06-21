@@ -1,6 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle, Loader2 } from "@leadcat/ui"
 import { useEffect, useState } from "react"
 import { useParams } from "react-router"
+
+import { AuthLocaleShell } from "~/components/auth-locale-shell"
+import { useLocale, useT } from "~/shared/i18n/context"
+
 import { BookingForm } from "./book.$slug.form"
 
 interface Slot {
@@ -27,8 +31,12 @@ type PageState =
   | { status: "error" }
   | { status: "loaded"; data: BookingData }
 
-function formatDayLabel(isoStart: string, timezone: string): string {
-  return new Intl.DateTimeFormat(undefined, {
+function formatDayLabel(
+  isoStart: string,
+  timezone: string,
+  locale: string
+): string {
+  return new Intl.DateTimeFormat(locale, {
     timeZone: timezone,
     weekday: "short",
     month: "short",
@@ -36,18 +44,22 @@ function formatDayLabel(isoStart: string, timezone: string): string {
   }).format(new Date(isoStart))
 }
 
-function formatTimeLabel(isoStart: string, timezone: string): string {
-  return new Intl.DateTimeFormat(undefined, {
+function formatTimeLabel(
+  isoStart: string,
+  timezone: string,
+  locale: string
+): string {
+  return new Intl.DateTimeFormat(locale, {
     timeZone: timezone,
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(isoStart))
 }
 
-function getTzLabel(timezone: string): string {
+function getTzLabel(timezone: string, locale: string): string {
   try {
     return (
-      new Intl.DateTimeFormat(undefined, {
+      new Intl.DateTimeFormat(locale, {
         timeZone: timezone,
         timeZoneName: "short",
       })
@@ -59,10 +71,14 @@ function getTzLabel(timezone: string): string {
   }
 }
 
-function groupSlotsByDay(slots: Slot[], timezone: string): Map<string, Slot[]> {
+function groupSlotsByDay(
+  slots: Slot[],
+  timezone: string,
+  locale: string
+): Map<string, Slot[]> {
   const map = new Map<string, Slot[]>()
   for (const slot of slots) {
-    const day = formatDayLabel(slot.start, timezone)
+    const day = formatDayLabel(slot.start, timezone, locale)
     const existing = map.get(day)
     if (existing) {
       existing.push(slot)
@@ -74,6 +90,16 @@ function groupSlotsByDay(slots: Slot[], timezone: string): Map<string, Slot[]> {
 }
 
 export default function BookSlugPage() {
+  return (
+    <AuthLocaleShell>
+      <BookSlugPageContent />
+    </AuthLocaleShell>
+  )
+}
+
+function BookSlugPageContent() {
+  const t = useT()
+  const locale = useLocale()
   const { slug } = useParams<{ slug: string }>()
   const [state, setState] = useState<PageState>({ status: "loading" })
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null)
@@ -103,16 +129,20 @@ export default function BookSlugPage() {
       .then((json: BookingData | null) => {
         if (!json) return
         setState({ status: "loaded", data: json })
-        const grouped = groupSlotsByDay(json.slots, json.event.timezone)
+        const grouped = groupSlotsByDay(json.slots, json.event.timezone, locale)
         const firstDay = grouped.keys().next().value ?? null
         setSelectedDay(firstDay)
       })
       .catch(() => setState({ status: "error" }))
-  }, [slug, fetchKey])
+  }, [slug, fetchKey, locale])
 
   if (state.status === "loading") {
     return (
-      <div className="flex min-h-svh items-center justify-center">
+      <div
+        className="flex min-h-svh items-center justify-center"
+        role="status"
+        aria-label={t("publicBooking.loading")}
+      >
         <Loader2 className="size-6 animate-spin text-muted-foreground" />
       </div>
     )
@@ -121,9 +151,7 @@ export default function BookSlugPage() {
   if (state.status === "notFound") {
     return (
       <div className="flex min-h-svh items-center justify-center p-6">
-        <p className="text-muted-foreground">
-          This booking link isn't available.
-        </p>
+        <p className="text-muted-foreground">{t("publicBooking.notFound")}</p>
       </div>
     )
   }
@@ -131,17 +159,15 @@ export default function BookSlugPage() {
   if (state.status === "error") {
     return (
       <div className="flex min-h-svh items-center justify-center p-6">
-        <p className="text-destructive">
-          Something went wrong. Please try again.
-        </p>
+        <p className="text-destructive">{t("publicBooking.error")}</p>
       </div>
     )
   }
 
   const { event, slots } = state.data
-  const grouped = groupSlotsByDay(slots, event.timezone)
+  const grouped = groupSlotsByDay(slots, event.timezone, locale)
   const days = Array.from(grouped.keys())
-  const tzLabel = getTzLabel(event.timezone)
+  const tzLabel = getTzLabel(event.timezone, locale)
   const daySlots = selectedDay ? (grouped.get(selectedDay) ?? []) : []
 
   return (
@@ -152,7 +178,9 @@ export default function BookSlugPage() {
           <CardHeader>
             <CardTitle className="text-xl">{event.title}</CardTitle>
             <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-              <span>{event.duration_mins} min</span>
+              <span>
+                {event.duration_mins} {t("booking.fields.minutes")}
+              </span>
               <span>&middot;</span>
               <span>{event.org_name}</span>
             </div>
@@ -168,7 +196,7 @@ export default function BookSlugPage() {
           <Card>
             <CardContent className="py-6">
               <p className="text-center text-sm text-muted-foreground">
-                No available times in the next two weeks.
+                {t("publicBooking.noSlots")}
               </p>
             </CardContent>
           </Card>
@@ -176,7 +204,9 @@ export default function BookSlugPage() {
           <>
             <Card>
               <CardHeader>
-                <p className="text-sm font-medium">Select a day</p>
+                <p className="text-sm font-medium">
+                  {t("publicBooking.selectDay")}
+                </p>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
@@ -215,7 +245,8 @@ export default function BookSlugPage() {
                     {daySlots.map((slot) => {
                       const timeLabel = formatTimeLabel(
                         slot.start,
-                        event.timezone
+                        event.timezone,
+                        locale
                       )
                       const isSelected = selectedSlot?.start === slot.start
                       return (
@@ -248,7 +279,7 @@ export default function BookSlugPage() {
                   onClick={() => setShowForm(true)}
                   className="flex h-9 w-full items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                 >
-                  Continue
+                  {t("publicBooking.continue")}
                 </button>
               </div>
             ) : null}

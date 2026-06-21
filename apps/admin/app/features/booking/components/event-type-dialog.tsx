@@ -22,11 +22,11 @@ import type {
   EventTypeInput,
 } from "~/entities/booking-event-type/types"
 import { useT } from "~/shared/i18n/context"
+import { getTimezoneOptions } from "~/shared/lib/timezone-options"
 
 import { Field } from "./event-type-dialog-field"
 import {
   DURATION_OPTIONS,
-  TIMEZONE_OPTIONS,
   WEEKDAYS,
   browserTimezone,
   schema,
@@ -52,6 +52,7 @@ export function EventTypeDialog({
   onSubmit,
 }: Props) {
   const t = useT()
+  const timezoneOptions = getTimezoneOptions(t)
 
   const defaultValues: FormValues = editing
     ? toFormValues(editing)
@@ -216,7 +217,7 @@ export function EventTypeDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {TIMEZONE_OPTIONS.map((opt) => (
+                    {timezoneOptions.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>
@@ -236,6 +237,7 @@ export function EventTypeDialog({
                   type="button"
                   role="switch"
                   aria-checked={field.value}
+                  aria-label={t("booking.fields.active")}
                   onClick={() => field.onChange(!field.value)}
                   className={
                     field.value

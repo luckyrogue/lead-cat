@@ -15,7 +15,8 @@ export function HomePage() {
   const { user } = useAuth()
   const meetings = useQuery(myMeetingsQuery("upcoming"))
   const firstName =
-    getGreetingName(user?.name, getTelegramUser()?.first_name) || "there"
+    getGreetingName(user?.name, getTelegramUser()?.first_name) ||
+    t("home.welcomeFallback")
   const list = meetings.data ?? []
 
   return (

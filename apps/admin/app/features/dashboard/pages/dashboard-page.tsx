@@ -48,7 +48,8 @@ export function DashboardPage() {
   const invites = useInvites(activeOrgId)
   const t = useT()
 
-  const firstName = me?.user.email.split("@")[0] ?? "there"
+  const firstName =
+    me?.user.email.split("@")[0] ?? t("dashboard.welcomeFallbackName")
 
   return (
     <div className="flex flex-col gap-6">

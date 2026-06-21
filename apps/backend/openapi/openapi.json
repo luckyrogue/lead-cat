@@ -580,15 +580,24 @@
     "/api/miniapp/meetings/{id}/series-end": {
       "patch": {
         "operationId": "miniappMeetingSeriesEnd",
-        "tags": ["miniapp"],
+        "tags": [
+          "miniapp"
+        ],
         "summary": "Change a recurring series end date (mini-app)",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -597,8 +606,15 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["until"],
-                "properties": { "until": { "type": "string", "format": "date" } }
+                "required": [
+                  "until"
+                ],
+                "properties": {
+                  "until": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
               }
             }
           }
@@ -610,11 +626,21 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["meeting", "added", "removed"],
+                  "required": [
+                    "meeting",
+                    "added",
+                    "removed"
+                  ],
                   "properties": {
-                    "meeting": { "$ref": "#/components/schemas/MiniAppMeeting" },
-                    "added": { "type": "integer" },
-                    "removed": { "type": "integer" }
+                    "meeting": {
+                      "$ref": "#/components/schemas/MiniAppMeeting"
+                    },
+                    "added": {
+                      "type": "integer"
+                    },
+                    "removed": {
+                      "type": "integer"
+                    }
                   }
                 }
               }
@@ -622,19 +648,43 @@
           },
           "400": {
             "description": "Validation failed",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "404": {
             "description": "Not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -773,7 +823,7 @@
         "tags": [
           "miniapp-admin"
         ],
-        "summary": "Get workspace status (deprecated — use /organization)",
+        "summary": "Get workspace status (deprecated \u2014 use /organization)",
         "deprecated": true,
         "security": [
           {
@@ -828,7 +878,7 @@
         "tags": [
           "miniapp-admin"
         ],
-        "summary": "Ensure workspace (deprecated — use /organization)",
+        "summary": "Ensure workspace (deprecated \u2014 use /organization)",
         "deprecated": true,
         "security": [
           {
@@ -1526,46 +1576,102 @@
     "/api/miniapp/settings": {
       "get": {
         "operationId": "miniapp_settings_get",
-        "tags": ["miniapp"],
+        "tags": [
+          "miniapp"
+        ],
         "summary": "Get current user settings",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Current settings",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MiniAppUserSettings" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MiniAppUserSettings"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       },
       "patch": {
         "operationId": "miniapp_settings_patch",
-        "tags": ["miniapp"],
+        "tags": [
+          "miniapp"
+        ],
         "summary": "Update reminder minutes",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MiniAppUserSettingsPatch" } } }
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MiniAppUserSettingsPatch"
+              }
+            }
+          }
         },
         "responses": {
-          "204": { "description": "Saved" },
+          "204": {
+            "description": "Saved"
+          },
           "400": {
             "description": "validation_failed",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1573,21 +1679,37 @@
     "/api/auth/web/{provider}/start": {
       "get": {
         "operationId": "webAuthProviderStart",
-        "tags": ["web-auth"],
+        "tags": [
+          "web-auth"
+        ],
         "summary": "Begin OAuth SSO flow (redirect to provider)",
         "parameters": [
           {
             "name": "provider",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "enum": ["google", "microsoft"] }
+            "schema": {
+              "type": "string",
+              "enum": [
+                "google",
+                "microsoft"
+              ]
+            }
           }
         ],
         "responses": {
-          "302": { "description": "Redirect to OAuth provider" },
+          "302": {
+            "description": "Redirect to OAuth provider"
+          },
           "400": {
             "description": "Unknown provider",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1595,37 +1717,63 @@
     "/api/auth/web/{provider}/callback": {
       "get": {
         "operationId": "webAuthProviderCallback",
-        "tags": ["web-auth"],
-        "summary": "OAuth SSO callback — exchange code for session cookie",
+        "tags": [
+          "web-auth"
+        ],
+        "summary": "OAuth SSO callback \u2014 exchange code for session cookie",
         "parameters": [
           {
             "name": "provider",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "enum": ["google", "microsoft"] }
+            "schema": {
+              "type": "string",
+              "enum": [
+                "google",
+                "microsoft"
+              ]
+            }
           },
           {
             "name": "code",
             "in": "query",
             "required": false,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "state",
             "in": "query",
             "required": false,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "302": { "description": "Redirect to web dashboard (session cookie set)" },
+          "302": {
+            "description": "Redirect to web dashboard (session cookie set)"
+          },
           "400": {
             "description": "OAuth error / state mismatch",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1633,7 +1781,9 @@
     "/api/auth/web/magic/request": {
       "post": {
         "operationId": "webAuthMagicRequest",
-        "tags": ["web-auth"],
+        "tags": [
+          "web-auth"
+        ],
         "summary": "Request a magic-link email",
         "requestBody": {
           "required": true,
@@ -1641,12 +1791,21 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["email"],
+                "required": [
+                  "email"
+                ],
                 "properties": {
-                  "email": { "type": "string", "format": "email" },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
                   "language": {
                     "type": "string",
-                    "enum": ["ru", "en", "kk"],
+                    "enum": [
+                      "ru",
+                      "en",
+                      "kk"
+                    ],
                     "description": "Optional email locale; defaults to stored user preference or ru"
                   }
                 }
@@ -1661,14 +1820,24 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": { "ok": { "type": "boolean" } }
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
                 }
               }
             }
           },
           "400": {
             "description": "Invalid request",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1676,25 +1845,43 @@
     "/api/auth/web/magic/verify": {
       "get": {
         "operationId": "webAuthMagicVerify",
-        "tags": ["web-auth"],
+        "tags": [
+          "web-auth"
+        ],
         "summary": "Verify magic-link token and issue session cookie",
         "parameters": [
           {
             "name": "token",
             "in": "query",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "302": { "description": "Redirect to web dashboard (session cookie set)" },
+          "302": {
+            "description": "Redirect to web dashboard (session cookie set)"
+          },
           "400": {
             "description": "Token missing",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Token invalid or expired",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1702,14 +1889,28 @@
     "/api/auth/web/logout": {
       "post": {
         "operationId": "webAuthLogout",
-        "tags": ["web-auth"],
+        "tags": [
+          "web-auth"
+        ],
         "summary": "Invalidate current web session",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
-          "204": { "description": "Session destroyed" },
+          "204": {
+            "description": "Session destroyed"
+          },
           "401": {
             "description": "Not authenticated",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1717,21 +1918,35 @@
     "/api/auth/web/me": {
       "get": {
         "operationId": "webAuthMe",
-        "tags": ["web-auth"],
+        "tags": [
+          "web-auth"
+        ],
         "summary": "Get current web-session user identity",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Authenticated user",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/WebUser" }
+                "schema": {
+                  "$ref": "#/components/schemas/WebUser"
+                }
               }
             }
           },
           "401": {
             "description": "Not authenticated",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1739,60 +1954,32 @@
     "/api/auth/web/me/settings": {
       "get": {
         "operationId": "webMeSettingsGet",
-        "tags": ["web-auth"],
+        "tags": [
+          "web-auth"
+        ],
         "summary": "Get current user timezone and language settings",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "User settings",
-            "content": { "application/json": { "schema": { "type": "object", "required": ["timezone", "language"], "properties": { "timezone": { "type": "string" }, "language": { "type": "string" } } } } }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
-          }
-        }
-      },
-      "patch": {
-        "operationId": "webMeSettingsPatch",
-        "tags": ["web-auth"],
-        "summary": "Update user timezone and/or language settings",
-        "security": [{ "cookieAuth": [] }],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "type": "object", "properties": { "timezone": { "type": "string" }, "language": { "type": "string" } } } } }
-        },
-        "responses": {
-          "204": { "description": "Saved" },
-          "400": {
-            "description": "validation_failed",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
-          }
-        }
-      }
-    },
-    "/api/orgs": {
-      "get": {
-        "operationId": "orgsList",
-        "tags": ["organizations"],
-        "summary": "List organizations accessible to the current user",
-        "security": [{ "cookieAuth": [] }],
-        "responses": {
-          "200": {
-            "description": "Organizations list",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["organizations"],
+                  "required": [
+                    "timezone",
+                    "language"
+                  ],
                   "properties": {
-                    "organizations": {
-                      "type": "array",
-                      "items": { "$ref": "#/components/schemas/Org" }
+                    "timezone": {
+                      "type": "string"
+                    },
+                    "language": {
+                      "type": "string"
                     }
                   }
                 }
@@ -1801,25 +1988,145 @@
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       },
-      "post": {
-        "operationId": "orgsCreate",
-        "tags": ["organizations"],
-        "summary": "Create a new organization",
-        "security": [{ "cookieAuth": [] }],
+      "patch": {
+        "operationId": "webMeSettingsPatch",
+        "tags": [
+          "web-auth"
+        ],
+        "summary": "Update user timezone and/or language settings",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name"],
                 "properties": {
-                  "name": { "type": "string" },
-                  "slug": { "type": "string" }
+                  "timezone": {
+                    "type": "string"
+                  },
+                  "language": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Saved"
+          },
+          "400": {
+            "description": "validation_failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orgs": {
+      "get": {
+        "operationId": "orgsList",
+        "tags": [
+          "organizations"
+        ],
+        "summary": "List organizations accessible to the current user",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organizations list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "organizations"
+                  ],
+                  "properties": {
+                    "organizations": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Org"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "orgsCreate",
+        "tags": [
+          "organizations"
+        ],
+        "summary": "Create a new organization",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "slug": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -1830,21 +2137,41 @@
             "description": "Created organization",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Org" }
+                "schema": {
+                  "$ref": "#/components/schemas/Org"
+                }
               }
             }
           },
           "400": {
             "description": "Validation failed",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "409": {
             "description": "Slug conflict",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1852,45 +2179,72 @@
     "/api/orgs/{id}/meetings": {
       "get": {
         "operationId": "orgMeetingsList",
-        "tags": ["meetings"],
+        "tags": [
+          "meetings"
+        ],
         "summary": "List meetings visible to the current user in an organization",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "status",
             "in": "query",
             "required": false,
-            "schema": { "type": "string", "enum": ["scheduled", "cancelled", "all"] }
+            "schema": {
+              "type": "string",
+              "enum": [
+                "scheduled",
+                "cancelled",
+                "all"
+              ]
+            }
           },
           {
             "name": "from",
             "in": "query",
             "required": false,
-            "schema": { "type": "string", "format": "date" }
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
           },
           {
             "name": "to",
             "in": "query",
             "required": false,
-            "schema": { "type": "string", "format": "date" }
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
           },
           {
             "name": "dept",
             "in": "query",
             "required": false,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "organizer",
             "in": "query",
             "required": false,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -1900,11 +2254,15 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["meetings"],
+                  "required": [
+                    "meetings"
+                  ],
                   "properties": {
                     "meetings": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/Meeting" }
+                      "items": {
+                        "$ref": "#/components/schemas/Meeting"
+                      }
                     }
                   }
                 }
@@ -1913,32 +2271,55 @@
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       },
       "post": {
         "operationId": "orgMeetingsCreate",
-        "tags": ["meetings"],
+        "tags": [
+          "meetings"
+        ],
         "summary": "Create a meeting in an organization",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/WebMeetingCreateRequest" }
+              "schema": {
+                "$ref": "#/components/schemas/WebMeetingCreateRequest"
+              }
             }
           }
         },
@@ -1949,9 +2330,13 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["meeting"],
+                  "required": [
+                    "meeting"
+                  ],
                   "properties": {
-                    "meeting": { "$ref": "#/components/schemas/Meeting" }
+                    "meeting": {
+                      "$ref": "#/components/schemas/Meeting"
+                    }
                   }
                 }
               }
@@ -1959,15 +2344,33 @@
           },
           "400": {
             "description": "Validation failed",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1975,21 +2378,33 @@
     "/api/orgs/{id}/meetings/{mid}": {
       "get": {
         "operationId": "orgMeetingGet",
-        "tags": ["meetings"],
+        "tags": [
+          "meetings"
+        ],
         "summary": "Get a single meeting",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "mid",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -1999,9 +2414,13 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["meeting"],
+                  "required": [
+                    "meeting"
+                  ],
                   "properties": {
-                    "meeting": { "$ref": "#/components/schemas/Meeting" }
+                    "meeting": {
+                      "$ref": "#/components/schemas/Meeting"
+                    }
                   }
                 }
               }
@@ -2009,48 +2428,87 @@
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "404": {
             "description": "Not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       },
       "patch": {
         "operationId": "orgMeetingUpdate",
-        "tags": ["meetings"],
+        "tags": [
+          "meetings"
+        ],
         "summary": "Update a meeting (scope=this) or its whole series (scope=whole)",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "mid",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "scope",
             "in": "query",
             "required": false,
-            "schema": { "type": "string", "enum": ["this", "whole"], "default": "this" }
+            "schema": {
+              "type": "string",
+              "enum": [
+                "this",
+                "whole"
+              ],
+              "default": "this"
+            }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/WebMeetingUpdateRequest" }
+              "schema": {
+                "$ref": "#/components/schemas/WebMeetingUpdateRequest"
+              }
             }
           }
         },
@@ -2061,9 +2519,13 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["meeting"],
+                  "required": [
+                    "meeting"
+                  ],
                   "properties": {
-                    "meeting": { "$ref": "#/components/schemas/Meeting" }
+                    "meeting": {
+                      "$ref": "#/components/schemas/Meeting"
+                    }
                   }
                 }
               }
@@ -2071,64 +2533,133 @@
           },
           "400": {
             "description": "Validation failed",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "404": {
             "description": "Not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       },
       "delete": {
         "operationId": "orgMeetingDelete",
-        "tags": ["meetings"],
+        "tags": [
+          "meetings"
+        ],
         "summary": "Cancel a meeting (scope=this) or its whole series (scope=whole)",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "mid",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "scope",
             "in": "query",
             "required": false,
-            "schema": { "type": "string", "enum": ["this", "whole"], "default": "this" }
+            "schema": {
+              "type": "string",
+              "enum": [
+                "this",
+                "whole"
+              ],
+              "default": "this"
+            }
           }
         ],
         "responses": {
-          "204": { "description": "Cancelled" },
+          "204": {
+            "description": "Cancelled"
+          },
           "400": {
             "description": "Validation failed",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "404": {
             "description": "Not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -2136,21 +2667,33 @@
     "/api/orgs/{id}/meetings/{mid}/participants": {
       "post": {
         "operationId": "orgMeetingParticipantAdd",
-        "tags": ["meetings"],
+        "tags": [
+          "meetings"
+        ],
         "summary": "Add a participant to a meeting",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "mid",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -2159,8 +2702,15 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["email"],
-                "properties": { "email": { "type": "string", "format": "email" } }
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
               }
             }
           }
@@ -2172,9 +2722,13 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["meeting"],
+                  "required": [
+                    "meeting"
+                  ],
                   "properties": {
-                    "meeting": { "$ref": "#/components/schemas/Meeting" }
+                    "meeting": {
+                      "$ref": "#/components/schemas/Meeting"
+                    }
                   }
                 }
               }
@@ -2182,45 +2736,84 @@
           },
           "400": {
             "description": "Validation failed",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "409": {
             "description": "Meeting not editable",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       },
       "delete": {
         "operationId": "orgMeetingParticipantRemove",
-        "tags": ["meetings"],
+        "tags": [
+          "meetings"
+        ],
         "summary": "Remove a participant from a meeting",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "mid",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "email",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "format": "email" }
+            "schema": {
+              "type": "string",
+              "format": "email"
+            }
           }
         ],
         "responses": {
@@ -2230,9 +2823,13 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["meeting"],
+                  "required": [
+                    "meeting"
+                  ],
                   "properties": {
-                    "meeting": { "$ref": "#/components/schemas/Meeting" }
+                    "meeting": {
+                      "$ref": "#/components/schemas/Meeting"
+                    }
                   }
                 }
               }
@@ -2240,19 +2837,43 @@
           },
           "400": {
             "description": "Validation failed",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "409": {
             "description": "Meeting not editable",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -2260,21 +2881,33 @@
     "/api/orgs/{id}/meetings/{mid}/series-end": {
       "patch": {
         "operationId": "orgMeetingSeriesEnd",
-        "tags": ["meetings"],
+        "tags": [
+          "meetings"
+        ],
         "summary": "Change a recurring series end date",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "mid",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -2283,8 +2916,15 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["until"],
-                "properties": { "until": { "type": "string", "format": "date" } }
+                "required": [
+                  "until"
+                ],
+                "properties": {
+                  "until": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
               }
             }
           }
@@ -2296,11 +2936,21 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["meeting", "added", "removed"],
+                  "required": [
+                    "meeting",
+                    "added",
+                    "removed"
+                  ],
                   "properties": {
-                    "meeting": { "$ref": "#/components/schemas/Meeting" },
-                    "added": { "type": "integer" },
-                    "removed": { "type": "integer" }
+                    "meeting": {
+                      "$ref": "#/components/schemas/Meeting"
+                    },
+                    "added": {
+                      "type": "integer"
+                    },
+                    "removed": {
+                      "type": "integer"
+                    }
                   }
                 }
               }
@@ -2308,19 +2958,43 @@
           },
           "400": {
             "description": "Validation failed",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "404": {
             "description": "Not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -2328,15 +3002,24 @@
     "/api/orgs/{id}/members": {
       "get": {
         "operationId": "orgMembersList",
-        "tags": ["organizations"],
+        "tags": [
+          "organizations"
+        ],
         "summary": "List members of an organization",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -2346,11 +3029,15 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["members"],
+                  "required": [
+                    "members"
+                  ],
                   "properties": {
                     "members": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/OrgMember" }
+                      "items": {
+                        "$ref": "#/components/schemas/OrgMember"
+                      }
                     }
                   }
                 }
@@ -2359,15 +3046,33 @@
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "404": {
             "description": "Organization not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -2375,21 +3080,33 @@
     "/api/orgs/{id}/members/{uid}/role": {
       "patch": {
         "operationId": "orgMemberUpdateRole",
-        "tags": ["organizations"],
+        "tags": [
+          "organizations"
+        ],
         "summary": "Update a member's role in the organization",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "uid",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -2398,31 +3115,66 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["role"],
+                "required": [
+                  "role"
+                ],
                 "properties": {
-                  "role": { "type": "string", "enum": ["owner", "admin", "member"] }
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "owner",
+                      "admin",
+                      "member"
+                    ]
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "204": { "description": "Role updated" },
+          "204": {
+            "description": "Role updated"
+          },
           "400": {
             "description": "Invalid role",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "404": {
             "description": "Member not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -2430,36 +3182,68 @@
     "/api/orgs/{id}/members/{uid}": {
       "delete": {
         "operationId": "orgMemberRemove",
-        "tags": ["organizations"],
+        "tags": [
+          "organizations"
+        ],
         "summary": "Remove a member from the organization",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "uid",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
-          "204": { "description": "Member removed" },
+          "204": {
+            "description": "Member removed"
+          },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "404": {
             "description": "Member not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -2467,15 +3251,24 @@
     "/api/orgs/{id}/invites": {
       "get": {
         "operationId": "orgInvitesList",
-        "tags": ["organizations"],
+        "tags": [
+          "organizations"
+        ],
         "summary": "List pending invites for an organization",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -2485,11 +3278,15 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["invites"],
+                  "required": [
+                    "invites"
+                  ],
                   "properties": {
                     "invites": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/OrgInvite" }
+                      "items": {
+                        "$ref": "#/components/schemas/OrgInvite"
+                      }
                     }
                   }
                 }
@@ -2498,29 +3295,56 @@
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "404": {
             "description": "Organization not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       },
       "post": {
         "operationId": "orgInviteCreate",
-        "tags": ["organizations"],
+        "tags": [
+          "organizations"
+        ],
         "summary": "Create (send) an invite to the organization",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -2529,10 +3353,21 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["email"],
+                "required": [
+                  "email"
+                ],
                 "properties": {
-                  "email": { "type": "string", "format": "email" },
-                  "role": { "type": "string", "enum": ["admin", "member"] }
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "admin",
+                      "member"
+                    ]
+                  }
                 }
               }
             }
@@ -2543,29 +3378,61 @@
             "description": "Invite created",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/OrgInvite" }
+                "schema": {
+                  "$ref": "#/components/schemas/OrgInvite"
+                }
               }
             }
           },
           "400": {
             "description": "Validation failed",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "404": {
             "description": "Organization not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "409": {
             "description": "Already a member or invite pending",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -2573,36 +3440,1203 @@
     "/api/orgs/{id}/invites/{iid}": {
       "delete": {
         "operationId": "orgInviteDelete",
-        "tags": ["organizations"],
+        "tags": [
+          "organizations"
+        ],
         "summary": "Revoke a pending invite",
-        "security": [{ "cookieAuth": [] }],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "iid",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
-          "204": { "description": "Invite revoked" },
+          "204": {
+            "description": "Invite revoked"
+          },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           },
           "404": {
             "description": "Invite not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/booking/event-types": {
+      "get": {
+        "operationId": "bookingEventTypesList",
+        "tags": [
+          "booking"
+        ],
+        "summary": "List booking event types for the current user",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Event types",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingEventTypesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "bookingEventTypesCreate",
+        "tags": [
+          "booking"
+        ],
+        "summary": "Create a booking event type",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Org-Id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookingEventTypeInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingEventType"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/booking/event-types/{id}": {
+      "patch": {
+        "operationId": "bookingEventTypesUpdate",
+        "tags": [
+          "booking"
+        ],
+        "summary": "Update a booking event type",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookingEventTypeInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated"
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "bookingEventTypesDelete",
+        "tags": [
+          "booking"
+        ],
+        "summary": "Delete a booking event type",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/book/{slug}": {
+      "get": {
+        "operationId": "publicBookingGet",
+        "tags": [
+          "public-booking"
+        ],
+        "summary": "Public booking page data",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Event and slots",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicBookingView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "publicBookingSubmit",
+        "tags": [
+          "public-booking"
+        ],
+        "summary": "Submit a public booking",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicBookingSubmitRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Confirmed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingConfirmation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid booking",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Slot taken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/calendar/connections": {
+      "get": {
+        "operationId": "calendarConnectionsList",
+        "tags": [
+          "calendar"
+        ],
+        "summary": "List calendar connections",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Connections",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CalendarConnectionView"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/calendar/connect/{provider}/start": {
+      "post": {
+        "operationId": "calendarConnectStart",
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Start calendar OAuth",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "google",
+                "microsoft"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Auth URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "auth_url"
+                  ],
+                  "properties": {
+                    "auth_url": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown provider",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/calendar/connections/{provider}": {
+      "delete": {
+        "operationId": "calendarDisconnect",
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Disconnect calendar",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "google",
+                "microsoft"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Disconnected"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/miniapp/calendar/connections": {
+      "get": {
+        "operationId": "miniappCalendarConnectionsList",
+        "tags": [
+          "calendar",
+          "miniapp"
+        ],
+        "summary": "List calendar connections (mini-app)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Connections",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CalendarConnectionView"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/miniapp/calendar/connect/{provider}/start": {
+      "post": {
+        "operationId": "miniappCalendarConnectStart",
+        "tags": [
+          "calendar",
+          "miniapp"
+        ],
+        "summary": "Start calendar OAuth (mini-app)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "google",
+                "microsoft"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Auth URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "auth_url"
+                  ],
+                  "properties": {
+                    "auth_url": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/miniapp/calendar/connections/{provider}": {
+      "delete": {
+        "operationId": "miniappCalendarDisconnect",
+        "tags": [
+          "calendar",
+          "miniapp"
+        ],
+        "summary": "Disconnect calendar (mini-app)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "google",
+                "microsoft"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Disconnected"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/web/me/invites": {
+      "get": {
+        "operationId": "webMyInvitesList",
+        "tags": [
+          "invites"
+        ],
+        "summary": "List invites for the current user",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invites",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MyInviteView"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/web/me/invites/{iid}/accept": {
+      "post": {
+        "operationId": "webMyInviteAccept",
+        "tags": [
+          "invites"
+        ],
+        "summary": "Accept an invite",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "iid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Accepted"
+          },
+          "400": {
+            "description": "Bad id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Email mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/web/me/invites/{iid}/decline": {
+      "post": {
+        "operationId": "webMyInviteDecline",
+        "tags": [
+          "invites"
+        ],
+        "summary": "Decline an invite",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "iid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Declined"
+          },
+          "400": {
+            "description": "Bad id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/web/me/join-requests": {
+      "get": {
+        "operationId": "webMyJoinRequestsList",
+        "tags": [
+          "join-requests"
+        ],
+        "summary": "List join requests for the current user",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Join requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JoinRequestView"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "webJoinRequestCreate",
+        "tags": [
+          "join-requests"
+        ],
+        "summary": "Request to join an organization by slug",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "slug"
+                ],
+                "properties": {
+                  "slug": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinRequestCreateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing slug",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Org not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orgs/{id}/join-requests": {
+      "get": {
+        "operationId": "orgJoinRequestsList",
+        "tags": [
+          "join-requests",
+          "organizations"
+        ],
+        "summary": "List pending join requests for an organization",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Join requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JoinRequestAdminView"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orgs/{id}/join-requests/{rid}/accept": {
+      "post": {
+        "operationId": "orgJoinRequestAccept",
+        "tags": [
+          "join-requests",
+          "organizations"
+        ],
+        "summary": "Accept a join request",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Accepted"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orgs/{id}/join-requests/{rid}/decline": {
+      "post": {
+        "operationId": "orgJoinRequestDecline",
+        "tags": [
+          "join-requests",
+          "organizations"
+        ],
+        "summary": "Decline a join request",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Declined"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -3364,82 +5398,199 @@
       },
       "MiniAppUserSettings": {
         "type": "object",
-        "required": ["reminder_minutes", "timezone", "language"],
+        "required": [
+          "reminder_minutes",
+          "timezone",
+          "language"
+        ],
         "properties": {
           "reminder_minutes": {
             "type": "array",
-            "items": { "type": "integer", "format": "int32" }
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
           },
-          "timezone": { "type": "string" },
-          "language": { "type": "string" }
+          "timezone": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          }
         }
       },
       "MiniAppUserSettingsPatch": {
         "type": "object",
-        "required": ["reminder_minutes"],
+        "required": [
+          "reminder_minutes"
+        ],
         "properties": {
           "reminder_minutes": {
             "type": "array",
             "items": {
               "type": "integer",
               "format": "int32",
-              "enum": [10, 15, 30, 60, 120, 1440]
+              "enum": [
+                10,
+                15,
+                30,
+                60,
+                120,
+                1440
+              ]
             }
           },
-          "timezone": { "type": "string" },
-          "language": { "type": "string" }
+          "timezone": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          }
         }
       },
       "WebUser": {
         "type": "object",
-        "required": ["id", "email", "name", "timezone", "language"],
+        "required": [
+          "id",
+          "email",
+          "name",
+          "timezone",
+          "language"
+        ],
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "email": { "type": "string", "format": "email" },
-          "name": { "type": "string" },
-          "provider": { "type": "string", "description": "google | microsoft | magic_link" },
-          "timezone": { "type": "string" },
-          "language": { "type": "string" }
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "name": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string",
+            "description": "google | microsoft | magic_link"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          }
         }
       },
       "Org": {
         "type": "object",
-        "required": ["id", "name", "slug"],
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ],
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "name": { "type": "string" },
-          "slug": { "type": "string" }
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
         }
       },
       "OrgMember": {
         "type": "object",
-        "required": ["role", "email", "name", "status"],
+        "required": [
+          "role",
+          "email",
+          "name",
+          "status"
+        ],
         "properties": {
-          "user_id": { "type": "string", "format": "uuid", "nullable": true },
-          "role": { "type": "string", "enum": ["owner", "admin", "member"] },
-          "email": { "type": "string" },
-          "name": { "type": "string" },
-          "status": { "type": "string", "enum": ["active", "invited"] },
-          "invited_email": { "type": "string", "format": "email", "nullable": true },
-          "telegram_username": { "type": "string" }
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "admin",
+              "member"
+            ]
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "invited"
+            ]
+          },
+          "invited_email": {
+            "type": "string",
+            "format": "email",
+            "nullable": true
+          },
+          "telegram_username": {
+            "type": "string"
+          }
         }
       },
       "OrgInvite": {
         "type": "object",
-        "required": ["id", "email", "role", "expires_at"],
+        "required": [
+          "id",
+          "email",
+          "role",
+          "expires_at"
+        ],
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "email": { "type": "string", "format": "email" },
-          "role": { "type": "string", "enum": ["admin", "member"] },
-          "expires_at": { "type": "string", "format": "date-time" }
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "member"
+            ]
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       },
       "MeetingParticipant": {
         "type": "object",
-        "required": ["email"],
+        "required": [
+          "email"
+        ],
         "properties": {
-          "employee_id": { "type": "string", "format": "uuid", "nullable": true },
-          "email": { "type": "string", "format": "email" }
+          "employee_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
         }
       },
       "Meeting": {
@@ -3461,53 +5612,132 @@
           "participants"
         ],
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "organization_id": { "type": "string", "format": "uuid" },
-          "organizer_user_id": { "type": "string", "format": "uuid", "nullable": true },
-          "dept": { "type": "string" },
-          "type": { "type": "string" },
-          "host": { "type": "string" },
-          "starts_at": { "type": "string", "format": "date-time" },
-          "ends_at": { "type": "string", "format": "date-time" },
-          "recurrence": { "type": "string" },
-          "name": { "type": "string" },
-          "description": { "type": "string" },
-          "google_event_id": { "type": "string" },
-          "meet_link": { "type": "string" },
-          "status": { "type": "string" },
-          "series_id": { "type": "string", "format": "uuid", "nullable": true },
-          "recurrence_until": { "type": "string", "format": "date-time", "nullable": true },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "organization_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "organizer_user_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "dept": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "host": {
+            "type": "string"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "recurrence": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "google_event_id": {
+            "type": "string"
+          },
+          "meet_link": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "series_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "recurrence_until": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "recurrence_days": {
             "type": "array",
-            "items": { "type": "integer" },
+            "items": {
+              "type": "integer"
+            },
             "nullable": true
           },
           "participants": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/MeetingParticipant" }
+            "items": {
+              "$ref": "#/components/schemas/MeetingParticipant"
+            }
           }
         }
       },
       "WebMeetingCreateRequest": {
         "type": "object",
-        "required": ["dept", "type", "date", "start", "end", "recurrence"],
+        "required": [
+          "dept",
+          "type",
+          "date",
+          "start",
+          "end",
+          "recurrence"
+        ],
         "properties": {
-          "dept": { "type": "string" },
-          "type": { "type": "string" },
-          "host": { "type": "string" },
-          "date": { "type": "string", "format": "date" },
-          "start": { "type": "string" },
-          "end": { "type": "string" },
-          "recurrence": { "type": "string" },
-          "desc": { "type": "string" },
+          "dept": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "host": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "start": {
+            "type": "string"
+          },
+          "end": {
+            "type": "string"
+          },
+          "recurrence": {
+            "type": "string"
+          },
+          "desc": {
+            "type": "string"
+          },
           "participants": {
             "type": "array",
-            "items": { "type": "string", "format": "email" }
+            "items": {
+              "type": "string",
+              "format": "email"
+            }
           },
-          "recurrence_until": { "type": "string", "format": "date", "nullable": true },
+          "recurrence_until": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
           "recurrence_days": {
             "type": "array",
-            "items": { "type": "integer" },
+            "items": {
+              "type": "integer"
+            },
             "nullable": true
           }
         }
@@ -3515,13 +5745,383 @@
       "WebMeetingUpdateRequest": {
         "type": "object",
         "properties": {
-          "dept": { "type": "string" },
-          "type": { "type": "string" },
-          "host": { "type": "string" },
-          "date": { "type": "string", "format": "date" },
-          "start": { "type": "string" },
-          "end": { "type": "string" },
-          "desc": { "type": "string" }
+          "dept": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "host": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "start": {
+            "type": "string"
+          },
+          "end": {
+            "type": "string"
+          },
+          "desc": {
+            "type": "string"
+          }
+        }
+      },
+      "BookingEventType": {
+        "type": "object",
+        "required": [
+          "id",
+          "host_user_id",
+          "organization_id",
+          "slug",
+          "title",
+          "description",
+          "duration_mins",
+          "active",
+          "timezone",
+          "avail_weekdays",
+          "avail_start_minute",
+          "avail_end_minute",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "host_user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "organization_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "duration_mins": {
+            "type": "integer"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "avail_weekdays": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "avail_start_minute": {
+            "type": "integer"
+          },
+          "avail_end_minute": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "BookingEventTypeInput": {
+        "type": "object",
+        "required": [
+          "title",
+          "duration_mins",
+          "timezone",
+          "avail_weekdays",
+          "avail_start_minute",
+          "avail_end_minute",
+          "active"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "duration_mins": {
+            "type": "integer"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "avail_weekdays": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "avail_start_minute": {
+            "type": "integer"
+          },
+          "avail_end_minute": {
+            "type": "integer"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "BookingEventTypesResponse": {
+        "type": "object",
+        "required": [
+          "event_types"
+        ],
+        "properties": {
+          "event_types": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BookingEventType"
+            }
+          }
+        }
+      },
+      "BookingSlot": {
+        "type": "object",
+        "required": [
+          "start",
+          "end"
+        ],
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "BookingEventView": {
+        "type": "object",
+        "required": [
+          "title",
+          "description",
+          "duration_mins",
+          "org_name",
+          "timezone"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "duration_mins": {
+            "type": "integer"
+          },
+          "org_name": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          }
+        }
+      },
+      "PublicBookingView": {
+        "type": "object",
+        "required": [
+          "event",
+          "slots"
+        ],
+        "properties": {
+          "event": {
+            "$ref": "#/components/schemas/BookingEventView"
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BookingSlot"
+            }
+          }
+        }
+      },
+      "PublicBookingSubmitRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "email",
+          "start"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "language": {
+            "type": "string"
+          }
+        }
+      },
+      "BookingConfirmation": {
+        "type": "object",
+        "required": [
+          "meet_link",
+          "start",
+          "end"
+        ],
+        "properties": {
+          "meet_link": {
+            "type": "string",
+            "format": "uri"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CalendarConnectionView": {
+        "type": "object",
+        "required": [
+          "provider",
+          "connected",
+          "email",
+          "scopes"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "google",
+              "microsoft"
+            ]
+          },
+          "connected": {
+            "type": "boolean"
+          },
+          "email": {
+            "type": "string"
+          },
+          "scopes": {
+            "type": "string"
+          }
+        }
+      },
+      "MyInviteView": {
+        "type": "object",
+        "required": [
+          "invite_id",
+          "organization_id",
+          "org_name",
+          "role"
+        ],
+        "properties": {
+          "invite_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "organization_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "org_name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          }
+        }
+      },
+      "JoinRequestView": {
+        "type": "object",
+        "required": [
+          "organization_id",
+          "org_name",
+          "status"
+        ],
+        "properties": {
+          "organization_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "org_name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "JoinRequestAdminView": {
+        "type": "object",
+        "required": [
+          "request_id",
+          "user_id",
+          "name",
+          "email",
+          "created_at"
+        ],
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "JoinRequestCreateResponse": {
+        "type": "object",
+        "required": [
+          "organization_id"
+        ],
+        "properties": {
+          "already_member": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          },
+          "organization_id": {
+            "type": "string",
+            "format": "uuid"
+          }
         }
       }
     }

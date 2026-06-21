@@ -173,10 +173,13 @@ func TestBookingListEventTypes(t *testing.T) {
 		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, b)
 	}
 
-	var list []model.BookingEventType
-	if err := json.NewDecoder(resp.Body).Decode(&list); err != nil {
+	var body struct {
+		EventTypes []model.BookingEventType `json:"event_types"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
+	list := body.EventTypes
 	if len(list) != 1 || list[0].ID != bookingETID {
 		t.Fatalf("unexpected list: %+v", list)
 	}

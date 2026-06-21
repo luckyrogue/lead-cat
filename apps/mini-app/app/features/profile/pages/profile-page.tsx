@@ -17,6 +17,12 @@ import { ReminderSettings } from "~/features/profile/components/reminder-setting
 import { useAuth } from "~/shared/auth/auth-context"
 import { useT } from "~/shared/i18n/context"
 
+function roleLabel(t: ReturnType<typeof useT>, role: string): string {
+  const key = `profile.role.${role}`
+  const mapped = t(key)
+  return mapped !== key ? mapped : role
+}
+
 export function ProfilePage() {
   const t = useT()
   const { user } = useAuth()
@@ -48,7 +54,7 @@ export function ProfilePage() {
             {user?.role ? (
               <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Shield className="size-3" />
-                {user.role}
+                {roleLabel(t, user.role)}
               </p>
             ) : null}
           </div>

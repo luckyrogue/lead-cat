@@ -10,6 +10,7 @@ import {
   SelectValue,
   UserPlus,
 } from "@leadcat/ui"
+import { useMemo } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -21,12 +22,10 @@ import {
 import type { OrgRole } from "~/entities/org/types"
 import { useT } from "~/shared/i18n/context"
 
-const schema = z.object({
-  email: z.string().email("Enter a valid email address"),
-  role: z.enum(["admin", "member"]),
-})
-
-export type InviteFormValues = z.infer<typeof schema>
+export type InviteFormValues = {
+  email: string
+  role: Extract<OrgRole, "admin" | "member">
+}
 
 type InviteFormProps = {
   pending: boolean
@@ -35,6 +34,14 @@ type InviteFormProps = {
 
 export function InviteForm({ pending, onSubmit }: InviteFormProps) {
   const t = useT()
+  const schema = useMemo(
+    () =>
+      z.object({
+        email: z.string().email(t("auth.login.errors.emailInvalid")),
+        role: z.enum(["admin", "member"]),
+      }),
+    [t]
+  )
   const {
     control,
     register,

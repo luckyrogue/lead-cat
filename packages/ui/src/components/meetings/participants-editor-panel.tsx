@@ -3,18 +3,27 @@ import { Input } from "../ui/input"
 import { Label } from "../ui/label"
 import { Loader2, Mail, UserPlus, X } from "lucide-react"
 
+export type ParticipantsEditorLabels = {
+  title: string
+  loading: string
+  empty: string
+  placeholder: string
+  removeAria: (email: string) => string
+  addButton?: string
+  seriesHint?: string
+}
+
 export type ParticipantsEditorPanelProps = {
   participants: string[]
   email: string
   onEmailChange: (value: string) => void
   onAdd: () => void
   onRemove: (email: string) => void
+  labels: ParticipantsEditorLabels
   addPending?: boolean
   removePending?: boolean
   loading?: boolean
   series?: boolean
-  addButtonLabel?: string
-  seriesHint?: string
   className?: string
 }
 
@@ -24,21 +33,20 @@ export function ParticipantsEditorPanel({
   onEmailChange,
   onAdd,
   onRemove,
+  labels,
   addPending = false,
   removePending = false,
   loading = false,
   series = false,
-  addButtonLabel,
-  seriesHint = "Applies to this occurrence only.",
   className,
 }: ParticipantsEditorPanelProps) {
   return (
     <div className={className ?? "flex flex-col gap-1.5"}>
-      <Label>Participants</Label>
+      <Label>{labels.title}</Label>
       {loading ? (
-        <p className="text-sm text-muted-foreground">Loading participants…</p>
+        <p className="text-sm text-muted-foreground">{labels.loading}</p>
       ) : participants.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No participants yet.</p>
+        <p className="text-sm text-muted-foreground">{labels.empty}</p>
       ) : (
         <ul className="flex flex-wrap gap-2">
           {participants.map((participant) => (
@@ -50,7 +58,7 @@ export function ParticipantsEditorPanel({
               <span>{participant}</span>
               <button
                 type="button"
-                aria-label={`Remove ${participant}`}
+                aria-label={labels.removeAria(participant)}
                 onClick={() => onRemove(participant)}
                 disabled={removePending}
                 className="rounded-full p-0.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
@@ -64,7 +72,7 @@ export function ParticipantsEditorPanel({
       <div className="flex gap-2">
         <Input
           type="email"
-          placeholder="name@company.com"
+          placeholder={labels.placeholder}
           value={email}
           onChange={(event) => onEmailChange(event.target.value)}
           onKeyDown={(event) => {
@@ -85,13 +93,13 @@ export function ParticipantsEditorPanel({
           ) : (
             <>
               <UserPlus className="size-4" />
-              {addButtonLabel}
+              {labels.addButton}
             </>
           )}
         </Button>
       </div>
-      {series ? (
-        <p className="text-xs text-muted-foreground">{seriesHint}</p>
+      {series && labels.seriesHint ? (
+        <p className="text-xs text-muted-foreground">{labels.seriesHint}</p>
       ) : null}
     </div>
   )

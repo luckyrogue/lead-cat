@@ -1,6 +1,3 @@
-export type MyInvite = {
-  invite_id: string
-  organization_id: string
-  org_name: string
-  role: string
-}
+import type { MyInviteView } from "@leadcat/api-client"
+
+export type MyInvite = MyInviteView

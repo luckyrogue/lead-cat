@@ -19,6 +19,12 @@ import type { Me } from "~/shared/auth/types"
 import { useActiveOrg } from "~/shared/auth/use-active-org"
 import { useT } from "~/shared/i18n/context"
 
+function authMethodLabel(t: ReturnType<typeof useT>, method: string): string {
+  const key = `auth.method.${method}`
+  const mapped = t(key)
+  return mapped !== key ? mapped : method
+}
+
 function initials(email: string) {
   const name = email.split("@")[0] ?? ""
   const tokens = name.split(/[._-]+/).filter(Boolean)
@@ -96,7 +102,9 @@ export function SidebarUserCard({ me }: SidebarUserCardProps) {
           <p className="truncate text-sm font-medium text-foreground">
             {user.email}
           </p>
-          <p className="text-xs text-muted-foreground">{user.auth_method}</p>
+          <p className="text-xs text-muted-foreground">
+            {authMethodLabel(t, user.auth_method)}
+          </p>
         </div>
         <Link
           to="/logout"

@@ -4,6 +4,7 @@ import { Link } from "react-router"
 import type { Meeting } from "~/entities/meeting/types"
 import { useLocale, useT } from "~/shared/i18n/context"
 import { formatDate, formatTimeRange } from "~/shared/lib/format"
+import { recurrenceLabel } from "~/shared/lib/recurrence-label"
 
 export function MeetingCard({ meeting }: { meeting: Meeting }) {
   const t = useT()
@@ -21,7 +22,7 @@ export function MeetingCard({ meeting }: { meeting: Meeting }) {
             </p>
             {meeting.rec ? (
               <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                {meeting.rec}
+                {recurrenceLabel(t, meeting.rec)}
               </span>
             ) : null}
           </div>

@@ -19,6 +19,8 @@ export type MeetingWhenLabels = {
   date?: string
   start?: string
   end?: string
+  hour?: string
+  minute?: string
 }
 
 type MeetingWhenPickerProps = {
@@ -94,6 +96,8 @@ export function MeetingWhenPicker({
           onChange={handleStartChange}
           disabled={disabledTime}
           placeholder={labels?.start ?? "Start"}
+          hourLabel={labels?.hour ?? "Hour"}
+          minuteLabel={labels?.minute ?? "Minute"}
         />
         <span className="text-sm text-muted-foreground" aria-hidden="true">
           –
@@ -103,6 +107,8 @@ export function MeetingWhenPicker({
           onChange={handleEndChange}
           disabled={disabledTime}
           placeholder={labels?.end ?? "End"}
+          hourLabel={labels?.hour ?? "Hour"}
+          minuteLabel={labels?.minute ?? "Minute"}
         />
       </div>
     </div>

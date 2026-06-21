@@ -4,35 +4,51 @@ import { apiFetch } from "~/shared/api/client"
 
 export type UserSettings = MiniAppUserSettings
 
-export const REMINDER_OPTIONS: { minutes: number; label: string }[] = [
-  { minutes: 10, label: "10m" },
-  { minutes: 15, label: "15m" },
-  { minutes: 30, label: "30m" },
-  { minutes: 60, label: "1h" },
-  { minutes: 120, label: "2h" },
-  { minutes: 1440, label: "1d" },
-]
+const REMINDER_MINUTES = [10, 15, 30, 60, 120, 1440] as const
 
-export const TIMEZONE_OPTIONS: { value: string; label: string }[] = [
-  { value: "", label: "Default (Almaty)" },
-  { value: "Asia/Almaty", label: "Almaty (UTC+5)" },
-  { value: "Asia/Tashkent", label: "Tashkent (UTC+5)" },
-  { value: "Asia/Bishkek", label: "Bishkek (UTC+6)" },
-  { value: "Europe/Moscow", label: "Moscow (UTC+3)" },
-  { value: "Europe/Kyiv", label: "Kyiv (UTC+2/3)" },
-  { value: "Europe/London", label: "London (UTC+0/1)" },
-  { value: "Asia/Dubai", label: "Dubai (UTC+4)" },
-  { value: "Asia/Istanbul", label: "Istanbul (UTC+3)" },
-  { value: "America/New_York", label: "New York (UTC-5/4)" },
-  { value: "UTC", label: "UTC" },
-]
+const TIMEZONE_KEYS = [
+  { value: "Asia/Almaty", key: "almaty" },
+  { value: "Asia/Tashkent", key: "tashkent" },
+  { value: "Asia/Bishkek", key: "bishkek" },
+  { value: "Europe/Moscow", key: "moscow" },
+  { value: "Europe/Kyiv", key: "kyiv" },
+  { value: "Europe/London", key: "london" },
+  { value: "Asia/Dubai", key: "dubai" },
+  { value: "Asia/Istanbul", key: "istanbul" },
+  { value: "America/New_York", key: "newYork" },
+  { value: "UTC", key: "utc" },
+] as const
 
-export const LANGUAGE_OPTIONS: { value: string; label: string }[] = [
-  { value: "", label: "Default" },
-  { value: "ru", label: "Русский" },
-  { value: "en", label: "English" },
-  { value: "kk", label: "Қазақша" },
-]
+const LANGUAGE_VALUES = ["", "ru", "en", "kk"] as const
+
+type TFn = (key: string) => string
+
+export function getReminderOptions(t: TFn) {
+  return REMINDER_MINUTES.map((minutes) => ({
+    minutes,
+    label: t(`profile.reminder.options.${minutes}`),
+  }))
+}
+
+export function getTimezoneOptions(t: TFn) {
+  return [
+    { value: "", label: t("profile.preferences.tzDefault") },
+    ...TIMEZONE_KEYS.map(({ value, key }) => ({
+      value,
+      label: t(`timezones.${key}`),
+    })),
+  ]
+}
+
+export function getLanguageOptions(t: TFn) {
+  return LANGUAGE_VALUES.map((value) => ({
+    value,
+    label:
+      value === ""
+        ? t("profile.preferences.langDefault")
+        : t(`profile.preferences.languages.${value}`),
+  }))
+}
 
 export async function fetchSettings(): Promise<UserSettings> {
   const res = await apiFetch<UserSettings>("/api/miniapp/settings")

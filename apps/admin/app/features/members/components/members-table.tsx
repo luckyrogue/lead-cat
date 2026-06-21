@@ -20,8 +20,8 @@ import { useT } from "~/shared/i18n/context"
 
 const ROLES: OrgRole[] = ["owner", "admin", "member"]
 
-function memberLabel(member: OrgMember) {
-  return member.name || member.email || member.telegram_username || "Member"
+function memberLabel(member: OrgMember, fallback: string) {
+  return member.name || member.email || member.telegram_username || fallback
 }
 
 type MembersTableProps = {
@@ -65,7 +65,7 @@ export function MembersTable({
             <TableRow key={member.user_id ?? member.email}>
               <TableCell>
                 <span className="font-medium text-foreground">
-                  {memberLabel(member)}
+                  {memberLabel(member, t("members.table.unnamedMember"))}
                 </span>
                 {subline ? (
                   <span className="block text-xs text-muted-foreground">

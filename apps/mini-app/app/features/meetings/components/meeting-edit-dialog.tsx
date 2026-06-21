@@ -25,6 +25,7 @@ import {
 import { ParticipantsEditor } from "~/features/meetings/components/participants-editor"
 import { ScopeToggle } from "~/features/meetings/components/scope-toggle"
 import { useT, useLocale } from "~/shared/i18n/context"
+import { toastError } from "~/shared/lib/toast"
 
 type Props = {
   open: boolean
@@ -80,7 +81,7 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
           toast.success(t("meetings.edit.toastSuccess"))
           onOpenChange(false)
         },
-        onError: () => toast.error(t("meetings.edit.toastError")),
+        onError: (error) => toastError(error, t, "meetings.edit.toastError"),
       }
     )
   }
@@ -113,8 +114,8 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
                     {
                       onSuccess: () =>
                         toast.success(t("meetings.edit.toastEndSuccess")),
-                      onError: () =>
-                        toast.error(t("meetings.edit.toastEndError")),
+                      onError: (error) =>
+                        toastError(error, t, "meetings.edit.toastEndError"),
                     }
                   )
                 }
@@ -142,6 +143,8 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
                   : t("meetings.edit.fieldDate"),
                 start: t("meetings.edit.fieldStart"),
                 end: t("meetings.edit.fieldEnd"),
+                hour: t("common.timeHour"),
+                minute: t("common.timeMinute"),
               }}
             />
           </Field>

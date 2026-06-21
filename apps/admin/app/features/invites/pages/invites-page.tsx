@@ -42,14 +42,14 @@ export function InvitesPage() {
     createInvite.mutate(values, {
       onSuccess: () =>
         toastSuccess(t("invites.toast.invited", { email: values.email })),
-      onError: (error) => toastError(error, t("invites.toast.inviteFailed")),
+      onError: (error) => toastError(error, t, "invites.toast.inviteFailed"),
     })
   }
 
   function handleDelete(invite: OrgInvite) {
     deleteInvite.mutate(invite.id, {
       onSuccess: () => toastSuccess(t("invites.toast.revoked")),
-      onError: (error) => toastError(error, t("invites.toast.revokeFailed")),
+      onError: (error) => toastError(error, t, "invites.toast.revokeFailed"),
     })
   }
 
@@ -135,7 +135,7 @@ export function InvitesPage() {
                           { orgId: activeOrgId ?? "", rid: req.request_id },
                           {
                             onError: (e) =>
-                              toastError(e, t("invites.requests.accept")),
+                              toastError(e, t, "invites.requests.acceptFailed"),
                           }
                         )
                       }
@@ -151,7 +151,11 @@ export function InvitesPage() {
                           { orgId: activeOrgId ?? "", rid: req.request_id },
                           {
                             onError: (e) =>
-                              toastError(e, t("invites.requests.decline")),
+                              toastError(
+                                e,
+                                t,
+                                "invites.requests.declineFailed"
+                              ),
                           }
                         )
                       }

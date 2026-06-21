@@ -117,6 +117,12 @@ export const en = {
     cta: "Adopt Lead Cat",
     copyright: "Made with whiskers and warmth.",
   },
+  errors: {
+    genericTitle: "Something went wrong",
+    genericDescription: "An unexpected error occurred.",
+    notFoundDescription: "This page could not be found.",
+    reload: "Reload",
+  },
 } satisfies Dict
 
 export type LandingDict = typeof en

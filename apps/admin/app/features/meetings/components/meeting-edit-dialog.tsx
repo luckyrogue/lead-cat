@@ -78,7 +78,7 @@ function SeriesEndEditor({
                 onSuccess: () =>
                   toastSuccess(t("meetings.dialog.seriesEndSuccess")),
                 onError: (error) =>
-                  toastError(error, t("meetings.dialog.seriesEndFailed")),
+                  toastError(error, t, "meetings.dialog.seriesEndFailed"),
               }
             )
           }

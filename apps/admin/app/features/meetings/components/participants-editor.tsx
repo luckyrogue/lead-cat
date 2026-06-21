@@ -34,7 +34,7 @@ export function ParticipantsEditor({ orgId, meetingId, series }: Props) {
       {
         onSuccess: () => setEmail(""),
         onError: (error) =>
-          toastError(error, t("meetings.participants.addFailed")),
+          toastError(error, t, "meetings.participants.addFailed"),
       }
     )
   }
@@ -44,7 +44,7 @@ export function ParticipantsEditor({ orgId, meetingId, series }: Props) {
       { meetingId, email: target },
       {
         onError: (error) =>
-          toastError(error, t("meetings.participants.removeFailed")),
+          toastError(error, t, "meetings.participants.removeFailed"),
       }
     )
   }
@@ -61,8 +61,15 @@ export function ParticipantsEditor({ orgId, meetingId, series }: Props) {
       removePending={remove.isPending}
       loading={meeting.isPending}
       series={series}
-      addButtonLabel={t("meetings.participants.addButton")}
-      seriesHint={t("meetings.participants.seriesHint")}
+      labels={{
+        title: t("meetings.participants.title"),
+        loading: t("meetings.participants.loading"),
+        empty: t("meetings.participants.empty"),
+        placeholder: t("meetings.participants.placeholder"),
+        removeAria: (email) => t("meetings.participants.removeAria", { email }),
+        addButton: t("meetings.participants.addButton"),
+        seriesHint: t("meetings.participants.seriesHint"),
+      }}
     />
   )
 }

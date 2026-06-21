@@ -42,7 +42,7 @@ export function MembersPage() {
       {
         onSuccess: () => toastSuccess(t("members.toast.roleUpdated")),
         onError: (error) =>
-          toastError(error, t("members.toast.roleUpdateFailed")),
+          toastError(error, t, "members.toast.roleUpdateFailed"),
       }
     )
   }
@@ -57,7 +57,7 @@ export function MembersPage() {
         setToRemove(null)
       },
       onError: (error) => {
-        toastError(error, t("members.toast.removeFailed"))
+        toastError(error, t, "members.toast.removeFailed")
         setToRemove(null)
       },
     })

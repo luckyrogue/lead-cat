@@ -19,6 +19,7 @@ import {
 } from "~/entities/meeting/types"
 import { ScopeToggle } from "~/features/meetings/components/scope-toggle"
 import { useT } from "~/shared/i18n/context"
+import { toastError } from "~/shared/lib/toast"
 
 type Props = {
   open: boolean
@@ -48,7 +49,7 @@ export function MeetingCancelDialog({ open, onOpenChange, meeting }: Props) {
           onOpenChange(false)
           void navigate("/meetings")
         },
-        onError: () => toast.error(t("meetings.cancel.toastError")),
+        onError: (error) => toastError(error, t, "meetings.cancel.toastError"),
       }
     )
   }

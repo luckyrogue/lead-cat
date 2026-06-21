@@ -71,6 +71,60 @@ Requires `lc_session` cookie. Org-scoped routes also require org membership (`Re
 | `GET` | `/api/orgs/:id/invites` | List invites (admin) |
 | `POST` | `/api/orgs/:id/invites` | Invite by email (admin) |
 | `DELETE` | `/api/orgs/:id/invites/:iid` | Revoke invite (admin) |
+| `GET` | `/api/orgs/:id/join-requests` | List pending join requests (admin) |
+| `POST` | `/api/orgs/:id/join-requests/:rid/accept` | Accept join request (admin) |
+| `POST` | `/api/orgs/:id/join-requests/:rid/decline` | Decline join request (admin) |
+
+### Web — my invites & join requests
+
+Requires `lc_session` cookie.
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| `GET` | `/api/auth/web/me/invites` | List invites for current user |
+| `POST` | `/api/auth/web/me/invites/:iid/accept` | Accept invite |
+| `POST` | `/api/auth/web/me/invites/:iid/decline` | Decline invite |
+| `GET` | `/api/auth/web/me/join-requests` | List my join requests |
+| `POST` | `/api/auth/web/me/join-requests` | Request to join org by slug (`{ slug }`) |
+
+---
+
+## Booking (admin)
+
+Requires `lc_session` cookie. Create also requires `X-Org-Id` header.
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| `GET` | `/api/booking/event-types` | List my event types → `{ event_types: [...] }` |
+| `POST` | `/api/booking/event-types` | Create event type |
+| `PATCH` | `/api/booking/event-types/:id` | Update event type (empty 200) |
+| `DELETE` | `/api/booking/event-types/:id` | Delete event type |
+
+---
+
+## Public booking
+
+No auth. Rate-limited.
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| `GET` | `/api/book/:slug` | Event + available slots |
+| `POST` | `/api/book/:slug` | Submit booking → `{ meet_link, start, end }` |
+
+---
+
+## Calendar connections
+
+Web routes require `lc_session`; mini-app routes require Bearer JWT.
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| `POST` | `/api/calendar/connect/:provider/start` | Start OAuth → `{ auth_url }` |
+| `GET` | `/api/calendar/connections` | List connections |
+| `DELETE` | `/api/calendar/connections/:provider` | Disconnect |
+| `POST` | `/api/miniapp/calendar/connect/:provider/start` | Mini-app OAuth start |
+| `GET` | `/api/miniapp/calendar/connections` | Mini-app list |
+| `DELETE` | `/api/miniapp/calendar/connections/:provider` | Mini-app disconnect |
 
 ---
 

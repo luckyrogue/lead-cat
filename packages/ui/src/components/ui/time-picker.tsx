@@ -21,6 +21,8 @@ type TimePickerProps = {
   onChange?: (value: string) => void
   disabled?: boolean
   placeholder?: string
+  hourLabel?: string
+  minuteLabel?: string
   className?: string
   id?: string
   minuteStep?: number
@@ -31,6 +33,8 @@ export function TimePicker({
   onChange,
   disabled = false,
   placeholder = "Pick a time",
+  hourLabel = "Hour",
+  minuteLabel = "Minute",
   className,
   id,
   minuteStep = 5,
@@ -54,12 +58,12 @@ export function TimePicker({
   }, [minuteStep])
 
   const current = parseTimeValue(value)
-  const hourLabel = String(current.hour).padStart(2, "0")
+  const hourValue = String(current.hour).padStart(2, "0")
   const snappedMinute = Math.min(
     59,
     Math.round(current.minute / minuteStep) * minuteStep
   )
-  const minuteLabel = String(snappedMinute).padStart(2, "0")
+  const minuteValue = String(snappedMinute).padStart(2, "0")
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -86,11 +90,11 @@ export function TimePicker({
       <PopoverContent className="w-[min(100vw-2rem,16rem)] p-3" align="start">
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1.5">
-            <p className="text-xs font-medium text-muted-foreground">Hour</p>
+            <p className="text-xs font-medium text-muted-foreground">{hourLabel}</p>
             <Select
-              value={hourLabel}
+              value={hourValue}
               onValueChange={(nextHour) =>
-                updateTime(Number(nextHour), Number(minuteLabel))
+                updateTime(Number(nextHour), Number(minuteValue))
               }
             >
               <SelectTrigger className="w-full">
@@ -106,11 +110,11 @@ export function TimePicker({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <p className="text-xs font-medium text-muted-foreground">Minute</p>
+            <p className="text-xs font-medium text-muted-foreground">{minuteLabel}</p>
             <Select
-              value={minuteLabel}
+              value={minuteValue}
               onValueChange={(nextMinute) =>
-                updateTime(Number(hourLabel), Number(nextMinute))
+                updateTime(Number(hourValue), Number(nextMinute))
               }
             >
               <SelectTrigger className="w-full">

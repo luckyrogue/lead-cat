@@ -1,5 +1,6 @@
 export { createApiClient } from "./client";
 export { ApiError, toApiError, isAbortError } from "./errors";
+export { mapApiErrorMessage } from "./map-api-error";
 export type { ApiErrorBody } from "./errors";
 export { apiFetch } from "./fetch";
 export type { ApiFetchOptions } from "./fetch";
@@ -23,4 +24,20 @@ export type {
   WebMeetingParticipant,
   WebMeetingCreateRequest,
   WebMeetingUpdateRequest,
+  Org,
+  OrgMember,
+  OrgInvite,
+  BookingEventType,
+  BookingEventTypeInput,
+  BookingEventTypesResponse,
+  PublicBookingView,
+  BookingEventView,
+  BookingSlot,
+  PublicBookingSubmitRequest,
+  BookingConfirmation,
+  CalendarConnectionView,
+  MyInviteView,
+  JoinRequestView,
+  JoinRequestAdminView,
+  JoinRequestCreateResponse,
 } from "./types";
