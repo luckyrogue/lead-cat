@@ -103,6 +103,7 @@ export {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   ChevronsUpDown,
   Clock,
   Heart,

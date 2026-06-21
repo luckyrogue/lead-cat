@@ -455,6 +455,20 @@ export const ru: typeof en = {
     assignNone: "Нет",
     empty: "Опросов пока нет.",
     questionsCount: "{count} вопросов",
+    dialog: {
+      createTitle: "Новый опрос",
+      editTitle: "Редактировать опрос",
+      createDescription: "Создайте опрос для отправки контактам при отказе.",
+      editDescription: "Обновите название, статус и вопросы опроса.",
+      create: "Создать опрос",
+      save: "Сохранить изменения",
+    },
+    toast: {
+      created: "Опрос создан.",
+      updated: "Опрос обновлён.",
+      createFailed: "Не удалось создать опрос.",
+      updateFailed: "Не удалось обновить опрос.",
+    },
   },
   errors: {
     genericTitle: "Что-то пошло не так",

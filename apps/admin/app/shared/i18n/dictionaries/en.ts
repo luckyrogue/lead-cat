@@ -446,6 +446,20 @@ export const en = {
     assignNone: "None",
     empty: "No surveys yet.",
     questionsCount: "{count} questions",
+    dialog: {
+      createTitle: "New survey",
+      editTitle: "Edit survey",
+      createDescription: "Build a survey to send to contacts on decline.",
+      editDescription: "Update survey name, status, and questions.",
+      create: "Create survey",
+      save: "Save changes",
+    },
+    toast: {
+      created: "Survey created.",
+      updated: "Survey updated.",
+      createFailed: "Could not create the survey.",
+      updateFailed: "Could not update the survey.",
+    },
   },
   errors: {
     genericTitle: "Something went wrong",

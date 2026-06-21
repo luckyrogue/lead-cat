@@ -449,6 +449,20 @@ export const kk: typeof en = {
     assignNone: "Жоқ",
     empty: "Сауалнамалар әлі жоқ.",
     questionsCount: "{count} сұрақ",
+    dialog: {
+      createTitle: "Жаңа сауалнама",
+      editTitle: "Сауалнаманы өңдеу",
+      createDescription: "Бас тартқанда жіберу үшін сауалнама жасаңыз.",
+      editDescription: "Сауалнаманың атауын, күйін және сұрақтарын жаңартыңыз.",
+      create: "Сауалнама жасау",
+      save: "Өзгерістерді сақтау",
+    },
+    toast: {
+      created: "Сауалнама жасалды.",
+      updated: "Сауалнама жаңартылды.",
+      createFailed: "Сауалнаманы жасау мүмкін болмады.",
+      updateFailed: "Сауалнаманы жаңарту мүмкін болмады.",
+    },
   },
   errors: {
     genericTitle: "Бір нәрсе дұрыс болмады",
