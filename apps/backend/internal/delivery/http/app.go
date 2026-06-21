@@ -39,6 +39,7 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	})
 	app.Use(recover.New())
 	app.Use(requestid.New())
+	app.Use(middleware.SecurityHeaders(cfg.IsProduction()))
 	app.Use(middleware.RequestContext())
 	app.Use(middleware.PrometheusHTTP())
 	app.Use(logger.New())
