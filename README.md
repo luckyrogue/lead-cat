@@ -20,8 +20,8 @@ Or step by step: `make help`
 | Doc | Topic |
 | --- | ----- |
 | [AGENTS.md](AGENTS.md) | Stack, architecture, conventions |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Workflow, PR checks via GitHub Actions |
 | [docs/README.md](docs/README.md) | Doc index |
+| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Workflow, PR checks via GitHub Actions |
 | [deploy/README.md](deploy/README.md) | Dokploy deploy, env, CI |
 | [deploy/.env.example](deploy/.env.example) | Local env template |
 
@@ -29,5 +29,5 @@ Or step by step: `make help`
 
 - `apps/backend/` — Go monolith (`cmd/server`, `cmd/migrate`, `internal/`, `migrations/`)
 - `apps/mini-app/`, `apps/admin/`, `apps/landing/` — React frontends
-- `deploy/` — Docker, compose, env examples
+- `deploy/` — Dockerfiles (`deploy/docker/`), nginx, compose, env examples
 - `packages/` — shared UI, brand, api-client, config

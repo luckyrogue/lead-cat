@@ -6,7 +6,9 @@ Long-form specs and planning notes were removed during active development. Use t
 | ----- | ----- |
 | Quick start | [README.md](../README.md) |
 | Agent / architecture / conventions | [AGENTS.md](../AGENTS.md) |
-| Contributing & CI | [CONTRIBUTING.md](../CONTRIBUTING.md) |
+| Contributing & CI | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Code of conduct | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) |
+| Security | [.github/SECURITY.md](../.github/SECURITY.md) |
 | Local env vars | [deploy/.env.example](../deploy/.env.example) |
 | Local Docker infra | [deploy/docker-compose.yml](../deploy/docker-compose.yml) |
 | Production deploy (Dokploy) | [deploy/README.md](../deploy/README.md) |

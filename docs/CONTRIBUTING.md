@@ -4,8 +4,8 @@ Thanks for helping improve Lead Cat — a Google Meet meetings-management Telegr
 
 ## Before you start
 
-- Read [AGENTS.md](AGENTS.md) for stack, architecture, and conventions.
-- Local setup: `make setup && make migrate && make dev` (see [README.md](README.md)).
+- Read [AGENTS.md](../AGENTS.md) for stack, architecture, and conventions.
+- Local setup: `make setup && make migrate && make dev` (see [README.md](../README.md)).
 
 ## Development workflow
 
@@ -24,7 +24,7 @@ Format locally: `make fmt`.
 
 ## Code style
 
-- **Go:** Clean Architecture under `apps/backend/internal/` — see [AGENTS.md](AGENTS.md).
+- **Go:** Clean Architecture under `apps/backend/internal/` — see [AGENTS.md](../AGENTS.md).
 - **Frontend:** lite FSD in `apps/mini-app`, `apps/admin`, `apps/landing` — see `.cursor/rules/frontend-fsd.mdc`.
 - **UI:** cat design — see `.cursor/rules/cat-design.mdc`.
 
