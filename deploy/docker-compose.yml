@@ -38,7 +38,7 @@ services:
     profiles: [stack]
     build:
       context: ..
-      dockerfile: apps/backend/Dockerfile
+      dockerfile: deploy/docker/Dockerfile.backend
     env_file:
       - ../.env
     environment:
@@ -58,7 +58,7 @@ services:
     profiles: [stack]
     build:
       context: ..
-      dockerfile: apps/admin/Dockerfile
+      dockerfile: deploy/docker/Dockerfile.admin
       args:
         FRONTEND_DEPS_IMAGE: ${FRONTEND_DEPS_IMAGE:-leadcat-frontend-deps:local}
     environment:
@@ -72,7 +72,7 @@ services:
     profiles: [stack]
     build:
       context: ..
-      dockerfile: apps/mini-app/Dockerfile
+      dockerfile: deploy/docker/Dockerfile.mini-app
       args:
         FRONTEND_DEPS_IMAGE: ${FRONTEND_DEPS_IMAGE:-leadcat-frontend-deps:local}
     environment:
@@ -86,7 +86,7 @@ services:
     profiles: [stack]
     build:
       context: ..
-      dockerfile: apps/landing/Dockerfile
+      dockerfile: deploy/docker/Dockerfile.landing
       args:
         FRONTEND_DEPS_IMAGE: ${FRONTEND_DEPS_IMAGE:-leadcat-frontend-deps:local}
     ports:
