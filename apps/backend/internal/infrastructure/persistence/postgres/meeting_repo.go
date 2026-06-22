@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
@@ -77,12 +78,8 @@ func (s *Store) CreateMeetingSeries(ctx context.Context, ms []Meeting, ps []Meet
 		if err != nil {
 			return nil, err
 		}
-		for _, p := range ps {
-			if _, err := tx.Exec(ctx, `
-				INSERT INTO meeting_participants (meeting_id, employee_id, email)
-				VALUES ($1, $2, $3) ON CONFLICT (meeting_id, email) DO NOTHING`, created.ID, p.EmployeeID, p.Email); err != nil {
-				return nil, err
-			}
+		if err := insertParticipants(ctx, tx, created.ID, ps); err != nil {
+			return nil, err
 		}
 		created.Participants = ps
 		out = append(out, created)
@@ -91,6 +88,76 @@ func (s *Store) CreateMeetingSeries(ctx context.Context, ms []Meeting, ps []Meet
 		return nil, err
 	}
 	return out, nil
+}
+
+func insertParticipants(ctx context.Context, tx pgx.Tx, meetingID uuid.UUID, ps []MeetingParticipant) error {
+	for _, p := range ps {
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO meeting_participants (meeting_id, employee_id, email)
+			VALUES ($1, $2, $3) ON CONFLICT (meeting_id, email) DO NOTHING`, meetingID, p.EmployeeID, p.Email); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Store) CreateMeetingWithParticipants(ctx context.Context, m Meeting, ps []MeetingParticipant) (Meeting, error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return Meeting{}, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	created, err := scanMeeting(tx.QueryRow(ctx, insertMeetingSQL, meetingInsertArgs(m)...))
+	if err != nil {
+		return Meeting{}, err
+	}
+	if err := insertParticipants(ctx, tx, created.ID, ps); err != nil {
+		return Meeting{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return Meeting{}, err
+	}
+	created.Participants = ps
+	return created, nil
+}
+
+func (s *Store) ReshapeSeriesTx(ctx context.Context, organizationID, seriesID uuid.UUID, newRows []Meeting, ps []MeetingParticipant, cancelFrom, until time.Time) (added, removed int, err error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	for _, m := range newRows {
+		created, cerr := scanMeeting(tx.QueryRow(ctx, insertMeetingSQL, meetingInsertArgs(m)...))
+		if cerr != nil {
+			return 0, 0, cerr
+		}
+		if perr := insertParticipants(ctx, tx, created.ID, ps); perr != nil {
+			return 0, 0, perr
+		}
+	}
+
+	ct, err := tx.Exec(ctx, `
+		UPDATE meetings SET status = 'cancelled', updated_at = now()
+		WHERE series_id = $1 AND organization_id = $2 AND starts_at >= $3 AND status = 'scheduled'`,
+		seriesID, organizationID, cancelFrom)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	if _, err := tx.Exec(ctx, `
+		UPDATE meetings SET recurrence_until = $3, updated_at = now()
+		WHERE series_id = $1 AND organization_id = $2 AND status = 'scheduled'`,
+		seriesID, organizationID, until); err != nil {
+		return 0, 0, err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return 0, 0, err
+	}
+	return len(newRows), int(ct.RowsAffected()), nil
 }
 
 func (s *Store) AddParticipants(ctx context.Context, meetingID uuid.UUID, ps []MeetingParticipant) error {

@@ -133,24 +133,16 @@ func (c *Meetings) CreateMeeting(ctx context.Context, organizationID, organizerI
 		if err != nil {
 			return model.Meeting{}, fmt.Errorf("calendar: %w", err)
 		}
-		m, err := c.Store.CreateMeeting(ctx, model.Meeting{
+		m, err := c.Store.CreateMeetingWithParticipants(ctx, model.Meeting{
 			OrganizationID: organizationID, OrganizerUserID: &organizerID,
 			Dept: in.Dept, Type: in.Type, Host: in.Host,
 			StartsAt: startsAt.UTC(), EndsAt: endsAt.UTC(),
 			Recurrence: string(rec), Name: name, Description: in.Description,
 			GoogleEventID: cal.EventID, MeetLink: cal.MeetLink,
-		})
+		}, in.Participants)
 		if err != nil {
 			c.deleteEventsBestEffort(ctx, calSvc, []string{cal.EventID})
 			return model.Meeting{}, err
-		}
-		if len(in.Participants) > 0 {
-			if err := c.Store.AddParticipants(ctx, m.ID, in.Participants); err != nil {
-				c.deleteEventsBestEffort(ctx, calSvc, []string{cal.EventID})
-				_ = c.Store.CancelMeeting(ctx, organizationID, m.ID)
-				return model.Meeting{}, err
-			}
-			m.Participants = in.Participants
 		}
 		c.enqueueCreated(ctx, organizationID, m.ID)
 		return m, nil

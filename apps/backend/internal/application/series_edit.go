@@ -291,16 +291,23 @@ func (s *Services) ChangeSeriesEnd(ctx context.Context, organizationID, userID, 
 		return 0, 0, err
 	}
 	plan := planSeriesReshape(occs, existingStarts, candidate, newUntil, loc)
+	cutoff := time.Date(newUntil.Year(), newUntil.Month(), newUntil.Day(), 0, 0, 0, 0, loc).AddDate(0, 0, 1)
 
-	added := 0
+	var (
+		calSvc     CalendarService
+		createdIDs []string
+		rows       []model.Meeting
+		parts      []model.MeetingParticipant
+	)
 	if len(plan.Create) > 0 {
-		calSvc, ferr := s.Calendar.For(ctx, organizationID, s.organizerEmail(ctx, anchor.OrganizerUserID))
+		var ferr error
+		calSvc, ferr = s.Calendar.For(ctx, organizationID, s.organizerEmail(ctx, anchor.OrganizerUserID))
 		if ferr != nil {
 			return 0, 0, ferr
 		}
-		parts, perr := s.Store.ListParticipants(ctx, anchor.ID)
-		if perr != nil {
-			return 0, 0, perr
+		parts, err = s.Store.ListParticipants(ctx, anchor.ID)
+		if err != nil {
+			return 0, 0, err
 		}
 		var emails []string
 		for _, p := range parts {
@@ -308,8 +315,7 @@ func (s *Services) ChangeSeriesEnd(ctx context.Context, organizationID, userID, 
 				emails = append(emails, p.Email)
 			}
 		}
-		var createdIDs []string
-		rows := make([]model.Meeting, 0, len(plan.Create))
+		rows = make([]model.Meeting, 0, len(plan.Create))
 		for _, sp := range plan.Create {
 			name := meeting.GenerateName(anchor.Dept, anchor.Type, anchor.Host, sp.Start, rec)
 			res, cerr := calSvc.CreateEvent(ctx, CalendarEvent{
@@ -331,39 +337,32 @@ func (s *Services) ChangeSeriesEnd(ctx context.Context, organizationID, userID, 
 				SeriesID: picked.SeriesID, RecurrenceUntil: &until,
 			})
 		}
-		if _, serr := s.Store.CreateMeetingSeries(ctx, rows, parts); serr != nil {
-			s.deleteEventsBestEffort(ctx, calSvc, createdIDs)
-			return 0, 0, serr
-		}
-		added = len(rows)
 	}
 
-	removed := 0
+	added, removed, err := s.Store.ReshapeSeriesTx(ctx, organizationID, *picked.SeriesID, rows, parts, cutoff, newUntil)
+	if err != nil {
+		if len(createdIDs) > 0 && calSvc != nil {
+			s.deleteEventsBestEffort(ctx, calSvc, createdIDs)
+		}
+		return 0, 0, err
+	}
+
 	if len(plan.CancelIDs) > 0 {
 		cancelSet := make(map[uuid.UUID]bool, len(plan.CancelIDs))
 		for _, id := range plan.CancelIDs {
 			cancelSet[id] = true
 		}
-		cutoff := time.Date(newUntil.Year(), newUntil.Month(), newUntil.Day(), 0, 0, 0, 0, loc).AddDate(0, 0, 1)
-		if calSvc, ferr := s.Calendar.For(ctx, organizationID, s.organizerEmail(ctx, anchor.OrganizerUserID)); ferr == nil {
+		if delSvc, ferr := s.Calendar.For(ctx, organizationID, s.organizerEmail(ctx, anchor.OrganizerUserID)); ferr == nil {
 			var ids []string
 			for _, o := range occs {
 				if cancelSet[o.ID] && o.GoogleEventID != "" {
 					ids = append(ids, o.GoogleEventID)
 				}
 			}
-			s.deleteEventsBestEffort(ctx, calSvc, ids)
+			s.deleteEventsBestEffort(ctx, delSvc, ids)
 		}
-		n, cerr := s.Store.CancelSeriesOccurrences(ctx, organizationID, *picked.SeriesID, cutoff)
-		if cerr != nil {
-			return added, 0, cerr
-		}
-		removed = n
 	}
 
-	if err := s.Store.SetSeriesRecurrenceUntil(ctx, organizationID, *picked.SeriesID, newUntil); err != nil {
-		return added, removed, err
-	}
 	if s.Queue != nil {
 		if err := s.Queue.EnqueueMeetingUpdated(ctx, organizationID, meetingID); err != nil && s.Log != nil {
 			s.Log.Warn("enqueue_series_end_changed",

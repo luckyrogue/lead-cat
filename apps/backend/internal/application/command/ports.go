@@ -14,6 +14,7 @@ type Store interface {
 	GetUserByID(ctx context.Context, id uuid.UUID) (model.User, error)
 	GetMeeting(ctx context.Context, organizationID, id uuid.UUID) (model.Meeting, error)
 	CreateMeeting(ctx context.Context, m model.Meeting) (model.Meeting, error)
+	CreateMeetingWithParticipants(ctx context.Context, m model.Meeting, ps []model.MeetingParticipant) (model.Meeting, error)
 	CreateMeetingSeries(ctx context.Context, ms []model.Meeting, ps []model.MeetingParticipant) ([]model.Meeting, error)
 	UpdateMeeting(ctx context.Context, organizationID, id uuid.UUID, m model.Meeting) error
 	CancelMeeting(ctx context.Context, organizationID, id uuid.UUID) error

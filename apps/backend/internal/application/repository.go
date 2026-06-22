@@ -58,6 +58,7 @@ type Repository interface {
 
 	GetMeeting(ctx context.Context, organizationID, id uuid.UUID) (model.Meeting, error)
 	CreateMeeting(ctx context.Context, m model.Meeting) (model.Meeting, error)
+	CreateMeetingWithParticipants(ctx context.Context, m model.Meeting, ps []model.MeetingParticipant) (model.Meeting, error)
 	UpdateMeeting(ctx context.Context, organizationID, id uuid.UUID, m model.Meeting) error
 	UpdateMeetingsTx(ctx context.Context, organizationID uuid.UUID, ms []model.Meeting) error
 	CancelMeeting(ctx context.Context, organizationID, id uuid.UUID) error
@@ -75,6 +76,7 @@ type Repository interface {
 	CancelSeriesOccurrences(ctx context.Context, organizationID, seriesID uuid.UUID, fromStart time.Time) (int, error)
 	CancelAllSeriesOccurrences(ctx context.Context, organizationID, seriesID uuid.UUID) (int, error)
 	SetSeriesRecurrenceUntil(ctx context.Context, organizationID, seriesID uuid.UUID, until time.Time) error
+	ReshapeSeriesTx(ctx context.Context, organizationID, seriesID uuid.UUID, newRows []model.Meeting, ps []model.MeetingParticipant, cancelFrom, until time.Time) (added, removed int, err error)
 
 	AddParticipants(ctx context.Context, meetingID uuid.UUID, ps []model.MeetingParticipant) error
 	RemoveParticipant(ctx context.Context, meetingID uuid.UUID, email string) error
