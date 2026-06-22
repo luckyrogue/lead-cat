@@ -1,20 +1,11 @@
 package handlers
 
-import "time"
+import (
+	"time"
 
-func almatyLoc() *time.Location {
-	loc, err := time.LoadLocation("Asia/Almaty")
-	if err != nil {
-		return time.FixedZone("Asia/Almaty", 5*3600)
-	}
-	return loc
-}
+	"github.com/luckyrogue/lead-cat/internal/platform/tz"
+)
 
-func resolveLoc(tz string) *time.Location {
-	if tz != "" {
-		if loc, err := time.LoadLocation(tz); err == nil {
-			return loc
-		}
-	}
-	return almatyLoc()
+func resolveLoc(name string) *time.Location {
+	return tz.Load(name)
 }

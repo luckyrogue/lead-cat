@@ -15,6 +15,7 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
 	"github.com/luckyrogue/lead-cat/internal/platform/boti18n"
+	"github.com/luckyrogue/lead-cat/internal/platform/tz"
 )
 
 type Backend interface {
@@ -291,10 +292,7 @@ func (s *Service) doApply(ctx context.Context, telegramID int64, st *State, lang
 }
 
 func formatConflictWarning(cs []application.Conflict, lang string) string {
-	loc, err := time.LoadLocation("Asia/Almaty")
-	if err != nil {
-		loc = time.FixedZone("Almaty", 5*60*60)
-	}
+	loc := tz.Load("")
 	var b strings.Builder
 	b.WriteString(boti18n.T(lang, "medit.conflict_header"))
 	for _, c := range cs {
@@ -722,13 +720,6 @@ func summary(m model.Meeting) string {
 	return s
 }
 
-func loadLoc(tz string) *time.Location {
-	if tz == "" {
-		tz = "Asia/Almaty"
-	}
-	loc, err := time.LoadLocation(tz)
-	if err != nil {
-		return time.UTC
-	}
-	return loc
+func loadLoc(name string) *time.Location {
+	return tz.Load(name)
 }

@@ -91,10 +91,3 @@ func (s *Services) AddParticipant(ctx context.Context, organizationID, userID, m
 func (s *Services) RemoveParticipant(ctx context.Context, organizationID, userID, meetingID uuid.UUID, email string) error {
 	return s.Commands.RemoveParticipant(ctx, organizationID, userID, meetingID, email)
 }
-
-func orDefault(v, def string) string {
-	if v == "" {
-		return def
-	}
-	return v
-}

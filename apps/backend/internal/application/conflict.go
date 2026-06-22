@@ -9,15 +9,10 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
+	"github.com/luckyrogue/lead-cat/internal/platform/tz"
 )
 
-var almatyLoc = func() *time.Location {
-	loc, err := time.LoadLocation("Asia/Almaty")
-	if err != nil {
-		return time.FixedZone("Almaty", 5*60*60)
-	}
-	return loc
-}()
+var almatyLoc = tz.Load("")
 
 const (
 	workStartHour = 9
@@ -122,10 +117,7 @@ func (s *Services) MeetingUpdateConflicts(ctx context.Context, organizationID, m
 	if err != nil {
 		return nil, err
 	}
-	loc, err := time.LoadLocation(orDefault(w.TZ, "Asia/Almaty"))
-	if err != nil {
-		loc = almatyLoc
-	}
+	loc := tz.Load(w.TZ)
 	start, err := time.ParseInLocation("2006-01-02 15:04", *in.Date+" "+*in.Start, loc)
 	if err != nil {
 		return nil, nil

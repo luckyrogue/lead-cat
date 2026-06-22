@@ -15,6 +15,7 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/platform/botsettings"
 	"github.com/luckyrogue/lead-cat/internal/platform/emailtemplates"
 	"github.com/luckyrogue/lead-cat/internal/platform/meetingrecipients"
+	"github.com/luckyrogue/lead-cat/internal/platform/tz"
 )
 
 const lockKey = "leadcat:reminders:leader"
@@ -133,12 +134,7 @@ func (s *Scheduler) recipients(ctx context.Context, m model.Meeting) []reminderT
 }
 
 func (s *Scheduler) sendReminderEmail(ctx context.Context, m model.Meeting, t reminderTarget) {
-	loc, err := time.LoadLocation(t.Timezone)
-	if t.Timezone == "" || err != nil {
-		if loc, err = time.LoadLocation("Asia/Almaty"); err != nil {
-			loc = time.FixedZone("Almaty", 5*3600)
-		}
-	}
+	loc := tz.Load(t.Timezone)
 	start, end := m.StartsAt.In(loc), m.EndsAt.In(loc)
 	timeStr := start.Format("15:04") + "–" + end.Format("15:04")
 

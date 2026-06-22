@@ -12,15 +12,10 @@ import (
 
 	"github.com/luckyrogue/lead-cat/internal/application"
 	"github.com/luckyrogue/lead-cat/internal/application/model"
+	"github.com/luckyrogue/lead-cat/internal/platform/tz"
 )
 
-var almatyLoc = func() *time.Location {
-	loc, err := time.LoadLocation("Asia/Almaty")
-	if err != nil {
-		return time.FixedZone("Almaty", 5*60*60)
-	}
-	return loc
-}()
+var almatyLoc = tz.Load("")
 
 type Backend interface {
 	SearchEmployeesGlobal(ctx context.Context, query string) ([]model.Employee, error)
