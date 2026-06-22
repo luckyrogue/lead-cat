@@ -125,7 +125,7 @@ func (s *Services) CreateOrganizationForOwner(ctx context.Context, name string, 
 
 func (s *Services) WireCQRS() {
 	if s.Queries == nil {
-		s.Queries = query.NewMeetings(s)
+		s.Queries = query.NewMeetings(s.Store)
 	}
 	if s.Commands == nil {
 		s.Commands = &command.Meetings{

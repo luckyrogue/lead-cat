@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -16,31 +17,35 @@ type UpdateMeetingInput = command.UpdateInput
 type SeriesUpdateInput = command.SeriesUpdateInput
 
 func (s *Services) ListEmployees(ctx context.Context, organizationID uuid.UUID) ([]model.Employee, error) {
-	return s.Store.ListEmployees(ctx, organizationID)
+	return s.Queries.ListEmployees(ctx, organizationID)
 }
 
 func (s *Services) ListMeetings(ctx context.Context, organizationID, userID uuid.UUID) ([]model.Meeting, error) {
-	return s.ListMeetingsFiltered(ctx, organizationID, userID, model.MeetingFilter{})
+	return s.Queries.ListMeetings(ctx, organizationID, userID)
 }
 
 func (s *Services) ListMeetingsFiltered(ctx context.Context, organizationID, userID uuid.UUID, f model.MeetingFilter) ([]model.Meeting, error) {
-	w, err := s.Store.GetOrganization(ctx, organizationID)
-	if err != nil {
-		return nil, err
-	}
-	if w.OwnerUserID == nil || *w.OwnerUserID != userID {
-		f.Organizer = &userID
-	}
-	return s.Store.ListMeetingsFiltered(ctx, organizationID, f)
+	return s.Queries.ListMeetingsFiltered(ctx, organizationID, userID, f)
 }
 
 func (s *Services) GetMeeting(ctx context.Context, organizationID, id uuid.UUID) (model.Meeting, error) {
-	m, err := s.Store.GetMeeting(ctx, organizationID, id)
-	if err != nil {
-		return m, err
-	}
-	m.Participants, err = s.Store.ListParticipants(ctx, id)
-	return m, err
+	return s.Queries.GetMeeting(ctx, organizationID, id)
+}
+
+func (s *Services) SearchEmployees(ctx context.Context, organizationID uuid.UUID, query string) ([]model.Employee, error) {
+	return s.Queries.SearchEmployees(ctx, organizationID, query)
+}
+
+func (s *Services) SearchEmployeesGlobal(ctx context.Context, query string) ([]model.Employee, error) {
+	return s.Queries.SearchEmployeesGlobal(ctx, query)
+}
+
+func (s *Services) EmployeeSchedule(ctx context.Context, email string, from, to time.Time) ([]model.Meeting, error) {
+	return s.Queries.EmployeeSchedule(ctx, email, from, to)
+}
+
+func (s *Services) ListParticipants(ctx context.Context, meetingID uuid.UUID) ([]model.MeetingParticipant, error) {
+	return s.Queries.ListParticipants(ctx, meetingID)
 }
 
 func (s *Services) CreateMeeting(ctx context.Context, organizationID, organizerID uuid.UUID, in CreateMeetingInput) (model.Meeting, error) {
@@ -52,7 +57,7 @@ func (s *Services) UpdateMeeting(ctx context.Context, organizationID, userID, me
 }
 
 func (s *Services) ListEditableMeetings(ctx context.Context, telegramID int64) ([]model.MeetingWithTZ, error) {
-	return s.Store.ListMeetingsByOrganizerTelegram(ctx, telegramID)
+	return s.Queries.ListEditableMeetings(ctx, telegramID)
 }
 
 func (s *Services) CancelMeeting(ctx context.Context, organizationID, userID, id uuid.UUID) error {
