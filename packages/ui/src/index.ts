@@ -129,6 +129,7 @@ export {
   MapPin,
   Pencil,
   Plus,
+  Repeat,
   Search,
   Send,
   Settings,

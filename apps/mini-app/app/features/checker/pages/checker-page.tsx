@@ -1,4 +1,4 @@
-import { Button, DateRangePicker, Input, Label, toast } from "@leadcat/ui"
+import { Button, DateRangePicker, Input, Label, toast, toastError } from "@leadcat/ui"
 import { useState } from "react"
 
 import { EmployeePicker } from "~/components/employee-picker"
@@ -41,8 +41,8 @@ export function CheckerPage() {
         duration_mins: duration,
       })
       setSlots(result)
-    } catch {
-      toast.error(t("checker.toastError"))
+    } catch (error) {
+      toastError(error, t, "checker.toastError")
     } finally {
       setLoading(false)
     }
@@ -75,7 +75,7 @@ export function CheckerPage() {
           min={5}
           step={5}
           value={duration}
-          onChange={(e) => setDuration(Number(e.target.value))}
+          onChange={(e) => setDuration(Number(e.target.value) || 0)}
         />
       </Field>
 

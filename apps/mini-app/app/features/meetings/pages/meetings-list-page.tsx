@@ -1,4 +1,4 @@
-import { Button, ChevronDown, ChevronRight, cn, Plus } from "@leadcat/ui"
+import { Button, ChevronDown, ChevronRight, cn, Plus, Repeat } from "@leadcat/ui"
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 import { Link } from "react-router"
@@ -60,8 +60,8 @@ function MeetingsList({ meetings }: { meetings: Meeting[] }) {
               <span className="min-w-0 flex-1 truncate font-semibold text-foreground">
                 {title}
               </span>
-              <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                🔁 {occurrences.length}
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                <Repeat className="size-3" /> {occurrences.length}
               </span>
               <span className="shrink-0 text-sm text-muted-foreground">
                 {formatDate(first.date, locale)}
