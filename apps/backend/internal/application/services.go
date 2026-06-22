@@ -37,6 +37,8 @@ type Services struct {
 	BookingCommands    *command.Bookings
 	MembershipQueries  *query.Membership
 	MembershipCommands *command.Membership
+	OrgMemberQueries   *query.OrgMembers
+	OrgMemberCommands  *command.OrgMembers
 	syncChat           ChatSyncer
 
 	sso        map[string]SSOProvider
@@ -159,6 +161,12 @@ func (s *Services) WireCQRS() {
 	}
 	if s.MembershipCommands == nil {
 		s.MembershipCommands = &command.Membership{Store: s.Store}
+	}
+	if s.OrgMemberQueries == nil {
+		s.OrgMemberQueries = query.NewOrgMembers(s.Store)
+	}
+	if s.OrgMemberCommands == nil {
+		s.OrgMemberCommands = &command.OrgMembers{Store: s.Store}
 	}
 }
 
@@ -292,10 +300,6 @@ func (s *Services) VerifyIntegrations(ctx context.Context, organizationID uuid.U
 	return err
 }
 
-func (s *Services) ListMembers(ctx context.Context, organizationID uuid.UUID) ([]model.Member, error) {
-	return s.Store.ListMembers(ctx, organizationID)
-}
-
 func (s *Services) InviteToOrg(ctx context.Context, orgID uuid.UUID, email, role string, inviterUserID uuid.UUID) (model.OrganizationInvite, error) {
 	raw, err := authweb.NewState(nil)
 	if err != nil {
@@ -334,59 +338,6 @@ func (s *Services) InviteToOrg(ctx context.Context, orgID uuid.UUID, email, role
 		}
 	}
 	return inv, nil
-}
-
-func (s *Services) ListOrgInvites(ctx context.Context, orgID uuid.UUID) ([]model.OrganizationInvite, error) {
-	return s.Store.ListInvites(ctx, orgID)
-}
-
-func (s *Services) DeleteOrgInvite(ctx context.Context, orgID, inviteID uuid.UUID) error {
-	return s.Store.DeleteInvite(ctx, orgID, inviteID)
-}
-
-func (s *Services) ListOrgMembers(ctx context.Context, orgID uuid.UUID) ([]model.Member, error) {
-	return s.Store.ListOrgMembers(ctx, orgID)
-}
-
-func (s *Services) RemoveOrgMember(ctx context.Context, orgID, targetUserID uuid.UUID) error {
-	members, err := s.Store.ListOrgMembers(ctx, orgID)
-	if err != nil {
-		return err
-	}
-	views, idx := memberViews(members, targetUserID)
-	if idx < 0 {
-		return nil
-	}
-	if err := canDemoteOrRemove(views, idx); err != nil {
-		return err
-	}
-	return s.Store.RemoveMember(ctx, orgID, targetUserID)
-}
-
-func (s *Services) SetOrgMemberRole(ctx context.Context, orgID, targetUserID uuid.UUID, newRole string) error {
-	members, err := s.Store.ListOrgMembers(ctx, orgID)
-	if err != nil {
-		return err
-	}
-	views, idx := memberViews(members, targetUserID)
-	if idx < 0 {
-		return nil
-	}
-
-	if newRole != "owner" {
-		if err := canDemoteOrRemove(views, idx); err != nil {
-			return err
-		}
-	}
-	return s.Store.UpdateMemberRole(ctx, orgID, targetUserID, newRole)
-}
-
-func (s *Services) AddMember(ctx context.Context, organizationID uuid.UUID, username, role string) (model.Member, error) {
-	return s.Store.AddMember(ctx, organizationID, username, role)
-}
-
-func (s *Services) DeleteMember(ctx context.Context, memberID uuid.UUID) error {
-	return s.Store.DeleteMember(ctx, memberID)
 }
 
 func (s *Services) sendWelcomeEmail(ctx context.Context, ownerUserID uuid.UUID) {
