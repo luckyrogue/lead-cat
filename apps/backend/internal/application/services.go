@@ -15,24 +15,27 @@ import (
 	"github.com/luckyrogue/lead-cat/internal/application/query"
 	"github.com/luckyrogue/lead-cat/internal/platform/authweb"
 	"github.com/luckyrogue/lead-cat/internal/platform/emailtemplates"
+	"github.com/luckyrogue/lead-cat/internal/platform/slug"
 )
 
 type ChatSyncer func(ctx context.Context, organizationID uuid.UUID) (int, error)
 
 type Services struct {
-	Store          Repository
-	Cipher         Cipher
-	Queue          JobQueue
-	Calendar       CalendarProvider
-	Busy           BusyResolver
-	GoogleProber   GoogleProber
-	Log            *zap.Logger
-	Bot            *bot.Bot
-	Queries        *query.Meetings
-	Commands       *command.Meetings
-	SurveyQueries  *query.Surveys
-	SurveyCommands *command.Surveys
-	syncChat       ChatSyncer
+	Store           Repository
+	Cipher          Cipher
+	Queue           JobQueue
+	Calendar        CalendarProvider
+	Busy            BusyResolver
+	GoogleProber    GoogleProber
+	Log             *zap.Logger
+	Bot             *bot.Bot
+	Queries         *query.Meetings
+	Commands        *command.Meetings
+	SurveyQueries   *query.Surveys
+	SurveyCommands  *command.Surveys
+	BookingQueries  *query.Bookings
+	BookingCommands *command.Bookings
+	syncChat        ChatSyncer
 
 	sso        map[string]SSOProvider
 	connectors map[string]CalendarConnector
@@ -108,7 +111,7 @@ func (s *Services) ListOrganizationsForUser(ctx context.Context, userID uuid.UUI
 }
 
 func (s *Services) CreateOrganizationForOwner(ctx context.Context, name string, ownerUserID uuid.UUID) (model.Organization, error) {
-	base := slugify(name)
+	base := slug.Make(name)
 	if base == "" {
 		base = "org"
 	}
@@ -142,6 +145,12 @@ func (s *Services) WireCQRS() {
 	}
 	if s.SurveyCommands == nil {
 		s.SurveyCommands = &command.Surveys{Store: s.Store}
+	}
+	if s.BookingQueries == nil {
+		s.BookingQueries = query.NewBookings(s.Store)
+	}
+	if s.BookingCommands == nil {
+		s.BookingCommands = &command.Bookings{Store: s.Store}
 	}
 }
 

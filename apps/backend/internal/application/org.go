@@ -2,13 +2,8 @@ package application
 
 import (
 	"errors"
-	"strings"
-	"unicode"
 
 	"github.com/google/uuid"
-	"golang.org/x/text/runes"
-	"golang.org/x/text/transform"
-	"golang.org/x/text/unicode/norm"
 
 	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
@@ -57,32 +52,4 @@ func memberViews(members []model.Member, target uuid.UUID) ([]OrgMemberView, int
 		}
 	}
 	return views, idx
-}
-
-func slugify(name string) string {
-
-	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
-	folded, _, err := transform.String(t, name)
-	if err != nil {
-		folded = name
-	}
-
-	lower := strings.ToLower(folded)
-
-	var sb strings.Builder
-	inSep := true
-	for _, r := range lower {
-		if r >= 'a' && r <= 'z' || r >= '0' && r <= '9' {
-			sb.WriteRune(r)
-			inSep = false
-		} else {
-			if !inSep {
-				sb.WriteRune('-')
-				inSep = true
-			}
-		}
-	}
-
-	result := sb.String()
-	return strings.TrimRight(result, "-")
 }
