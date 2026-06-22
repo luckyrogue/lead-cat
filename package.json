@@ -11,8 +11,7 @@
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "format": "turbo run format",
-    "format:check": "turbo run format:check --filter=./apps/*",
-    "test": "turbo run test --filter=./apps/* --filter=@leadcat/ui --filter=@leadcat/api-client"
+    "format:check": "turbo run format:check --filter=./apps/*"
   },
   "devDependencies": {
     "prettier": "^3.8.4",

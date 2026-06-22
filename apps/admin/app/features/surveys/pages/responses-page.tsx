@@ -134,7 +134,6 @@ export function ResponsesPage() {
         </div>
       }
     >
-      {/* Filter bar */}
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-muted-foreground">
@@ -225,7 +224,6 @@ export function ResponsesPage() {
         </div>
       </div>
 
-      {/* Responses table */}
       <Table>
         <TableHeader>
           <TableRow>

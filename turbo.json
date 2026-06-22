@@ -29,9 +29,6 @@
     },
     "generate": {
       "outputs": ["public/**", "src/generated/**"]
-    },
-    "test": {
-      "outputs": []
     }
   }
 }

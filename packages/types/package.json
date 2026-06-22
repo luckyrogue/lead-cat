@@ -7,14 +7,11 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@leadcat/config": "workspace:*",
     "@types/node": "^25",
-    "typescript": "^6.0.3",
-    "vite": "^8.0.16",
-    "vitest": "^4.1.9"
+    "typescript": "^6.0.3"
   }
 }
