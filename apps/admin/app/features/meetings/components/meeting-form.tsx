@@ -3,8 +3,8 @@ import {
   Button,
   CalendarPlus,
   DatePicker,
+  Field,
   Input,
-  Label,
   Loader2,
   MeetingWhenPicker,
   Pencil,
@@ -13,6 +13,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  WeekdayPicker,
   addMinutesToTime,
   todayIso,
 } from "@leadcat/ui"
@@ -21,7 +22,6 @@ import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 
 import type { MeetingRecurrence, MeetingScope } from "~/entities/meeting/types"
-import { WEEKDAYS, toggleDay } from "@leadcat/types"
 import { useT, useLocale } from "~/shared/i18n/context"
 
 const RECURRENCES: MeetingRecurrence[] = [
@@ -268,28 +268,11 @@ export function MeetingForm({
                 control={control}
                 name="recurrence_days"
                 render={({ field }) => (
-                  <div className="flex flex-wrap gap-2">
-                    {WEEKDAYS.map((day) => {
-                      const active = field.value.includes(day.value)
-                      return (
-                        <button
-                          key={day.value}
-                          type="button"
-                          aria-pressed={active}
-                          onClick={() =>
-                            field.onChange(toggleDay(field.value, day.value))
-                          }
-                          className={
-                            active
-                              ? "rounded-[calc(var(--radius)*0.75)] border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
-                              : "rounded-[calc(var(--radius)*0.75)] border border-border bg-background px-3 py-1.5 text-sm text-foreground transition hover:bg-muted"
-                          }
-                        >
-                          {t(`meetings.form.weekdays.${day.value}`)}
-                        </button>
-                      )
-                    })}
-                  </div>
+                  <WeekdayPicker
+                    value={field.value}
+                    onChange={field.onChange}
+                    label={(day) => t(`meetings.form.weekdays.${day}`)}
+                  />
                 )}
               />
             </Field>
@@ -335,33 +318,5 @@ export function MeetingForm({
         </Button>
       </div>
     </form>
-  )
-}
-
-type FieldProps = {
-  label: string
-  hint?: string
-  error?: string
-  children: React.ReactNode
-}
-
-function Field({ label, hint, error, children }: FieldProps) {
-  return (
-    <div className="space-y-2">
-      <Label>
-        {label}
-        {hint ? (
-          <span className="ml-2 text-xs font-normal text-muted-foreground">
-            {hint}
-          </span>
-        ) : null}
-      </Label>
-      {children}
-      {error ? (
-        <p className="text-sm text-destructive" role="alert">
-          {error}
-        </p>
-      ) : null}
-    </div>
   )
 }

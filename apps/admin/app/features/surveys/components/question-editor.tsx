@@ -10,6 +10,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Switch,
   Trash2,
 } from "@leadcat/ui"
 import {
@@ -104,25 +105,12 @@ export function QuestionEditor({ control }: { control: Control<SurveyForm> }) {
               name={`questions.${i}.required`}
               render={({ field }) => (
                 <label className="flex cursor-pointer items-center gap-2 text-sm select-none">
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={field.value}
-                    onClick={() => field.onChange(!field.value)}
-                    className={
-                      field.value
-                        ? "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border-2 border-primary bg-primary transition-colors"
-                        : "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border-2 border-input bg-input transition-colors"
-                    }
-                  >
-                    <span
-                      className={
-                        field.value
-                          ? "inline-block h-3 w-3 translate-x-4 rounded-full bg-primary-foreground transition-transform"
-                          : "inline-block h-3 w-3 translate-x-0.5 rounded-full bg-background transition-transform"
-                      }
-                    />
-                  </button>
+                  <Switch
+                    size="sm"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    aria-label={t("surveys.required")}
+                  />
                   {t("surveys.required")}
                 </label>
               )}

@@ -2,6 +2,7 @@ import { Button, DateRangePicker, Input, Label, toast } from "@leadcat/ui"
 import { useState } from "react"
 
 import { EmployeePicker } from "~/components/employee-picker"
+import { Field } from "~/components/field"
 import { PageHeader } from "~/components/page-header"
 import { EmptyState, LoadingState } from "~/components/states"
 import { FreeSlotList } from "~/features/checker/components/free-slot-list"
@@ -92,21 +93,6 @@ export function CheckerPage() {
       ) : (
         <FreeSlotList slots={slots} />
       )}
-    </div>
-  )
-}
-
-function Field({
-  label,
-  children,
-}: {
-  label: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Label>{label}</Label>
-      {children}
     </div>
   )
 }

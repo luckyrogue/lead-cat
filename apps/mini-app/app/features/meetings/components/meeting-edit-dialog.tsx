@@ -7,13 +7,13 @@ import {
   DialogHeader,
   DialogTitle,
   Input,
-  Label,
   MeetingWhenPicker,
   toast,
   toastError,
 } from "@leadcat/ui"
 import { useEffect, useState } from "react"
 
+import { Field } from "~/components/field"
 import {
   useChangeSeriesEnd,
   useUpdateMeeting,
@@ -167,20 +167,5 @@ export function MeetingEditDialog({ open, onOpenChange, meeting }: Props) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
-}
-
-function Field({
-  label,
-  children,
-}: {
-  label: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Label>{label}</Label>
-      {children}
-    </div>
   )
 }

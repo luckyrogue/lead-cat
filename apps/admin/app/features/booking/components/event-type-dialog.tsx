@@ -7,6 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Field,
   Input,
   Loader2,
   Select,
@@ -14,8 +15,10 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Switch,
+  Textarea,
+  WeekdayPicker,
 } from "@leadcat/ui"
-import { WEEKDAYS, toggleDay } from "@leadcat/types"
 import { Controller, useForm } from "react-hook-form"
 
 import type {
@@ -26,7 +29,6 @@ import { useSurveys } from "~/entities/survey/queries"
 import { useT } from "~/shared/i18n/context"
 import { getTimezoneOptions } from "~/shared/lib/timezone-options"
 
-import { Field } from "./event-type-dialog-field"
 import {
   DURATION_OPTIONS,
   browserTimezone,
@@ -130,8 +132,7 @@ export function EventTypeDialog({
           </Field>
 
           <Field label={t("booking.fields.description")}>
-            <textarea
-              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            <Textarea
               placeholder={t("booking.fields.descriptionPlaceholder")}
               {...register("description")}
             />
@@ -172,28 +173,11 @@ export function EventTypeDialog({
               control={control}
               name="avail_weekdays"
               render={({ field }) => (
-                <div className="flex flex-wrap gap-2">
-                  {WEEKDAYS.map((day) => {
-                    const active = field.value.includes(day.value)
-                    return (
-                      <button
-                        key={day.value}
-                        type="button"
-                        aria-pressed={active}
-                        onClick={() =>
-                          field.onChange(toggleDay(field.value, day.value))
-                        }
-                        className={
-                          active
-                            ? "rounded-[calc(var(--radius)*0.75)] border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
-                            : "rounded-[calc(var(--radius)*0.75)] border border-border bg-background px-3 py-1.5 text-sm text-foreground transition hover:bg-muted"
-                        }
-                      >
-                        {t(`meetings.form.weekdays.${day.value}`)}
-                      </button>
-                    )
-                  })}
-                </div>
+                <WeekdayPicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  label={(day) => t(`meetings.form.weekdays.${day}`)}
+                />
               )}
             />
           </Field>
@@ -242,26 +226,11 @@ export function EventTypeDialog({
               control={control}
               name="active"
               render={({ field }) => (
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={field.value}
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
                   aria-label={t("booking.fields.active")}
-                  onClick={() => field.onChange(!field.value)}
-                  className={
-                    field.value
-                      ? "relative inline-flex h-6 w-11 items-center rounded-full border-2 border-primary bg-primary transition-colors"
-                      : "relative inline-flex h-6 w-11 items-center rounded-full border-2 border-input bg-input transition-colors"
-                  }
-                >
-                  <span
-                    className={
-                      field.value
-                        ? "inline-block h-4 w-4 translate-x-5 rounded-full bg-primary-foreground transition-transform"
-                        : "inline-block h-4 w-4 translate-x-0.5 rounded-full bg-background transition-transform"
-                    }
-                  />
-                </button>
+                />
               )}
             />
           </Field>

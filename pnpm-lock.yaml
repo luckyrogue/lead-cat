@@ -380,6 +380,9 @@ importers:
       '@leadcat/api-client':
         specifier: workspace:*
         version: link:../api-client
+      '@leadcat/types':
+        specifier: workspace:*
+        version: link:../types
       '@react-three/drei':
         specifier: ^10.7.7
         version: 10.7.7(@react-three/fiber@9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.184.0))(@types/react@19.2.17)(@types/three@0.184.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.184.0)

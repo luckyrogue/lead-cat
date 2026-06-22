@@ -1,4 +1,4 @@
-import { Button } from "@leadcat/ui"
+import { Button, Textarea } from "@leadcat/ui"
 import { useState } from "react"
 
 import { useT } from "~/shared/i18n/context"
@@ -53,11 +53,10 @@ export function SurveyForm({
             {q.required ? " *" : ""}
           </p>
           {q.type === "text" && (
-            <textarea
+            <Textarea
               value={(values[q.id] as string) ?? ""}
               onChange={(e) => set(q.id, e.target.value)}
               rows={3}
-              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             />
           )}
           {q.type === "single" &&

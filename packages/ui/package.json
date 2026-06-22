@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@leadcat/api-client": "workspace:*",
+    "@leadcat/types": "workspace:*",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "class-variance-authority": "^0.7.1",

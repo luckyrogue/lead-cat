@@ -10,6 +10,7 @@ import {
   Input,
   Label,
   Loader2,
+  Switch,
   toastApiError,
   toastSuccess,
 } from "@leadcat/ui"
@@ -155,25 +156,11 @@ export function SurveyDialog({ open, onOpenChange, survey, orgId }: Props) {
               name="is_active"
               render={({ field }) => (
                 <label className="flex cursor-pointer items-center gap-2 text-sm select-none">
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={field.value}
-                    onClick={() => field.onChange(!field.value)}
-                    className={
-                      field.value
-                        ? "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-primary bg-primary transition-colors"
-                        : "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-input bg-input transition-colors"
-                    }
-                  >
-                    <span
-                      className={
-                        field.value
-                          ? "inline-block h-4 w-4 translate-x-5 rounded-full bg-primary-foreground transition-transform"
-                          : "inline-block h-4 w-4 translate-x-0.5 rounded-full bg-background transition-transform"
-                      }
-                    />
-                  </button>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    aria-label={t("surveys.active")}
+                  />
                   {t("surveys.active")}
                 </label>
               )}

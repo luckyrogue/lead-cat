@@ -11,6 +11,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  WeekdayPicker,
   toast,
   toastError,
 } from "@leadcat/ui"
@@ -19,13 +20,13 @@ import { Controller, useForm } from "react-hook-form"
 import { useNavigate } from "react-router"
 
 import { EmployeePicker } from "~/components/employee-picker"
+import { Field } from "~/components/field"
 import { PageHeader } from "~/components/page-header"
 import { ConflictPreview } from "~/features/meeting-create/components/conflict-preview"
 import {
   createMeetingSchema,
   type CreateMeetingForm,
 } from "~/features/meeting-create/lib/schema"
-import { WEEKDAYS, toggleDay } from "@leadcat/types"
 import { fetchConflicts } from "~/entities/meeting/api"
 import { useCreateMeeting } from "~/entities/meeting/mutations"
 import type { Employee } from "~/entities/employee/types"
@@ -239,28 +240,11 @@ export function MeetingCreatePage() {
               control={control}
               name="recurrence_days"
               render={({ field }) => (
-                <div className="flex flex-wrap gap-2">
-                  {WEEKDAYS.map((day) => {
-                    const active = field.value.includes(day.value)
-                    return (
-                      <button
-                        key={day.value}
-                        type="button"
-                        aria-pressed={active}
-                        onClick={() =>
-                          field.onChange(toggleDay(field.value, day.value))
-                        }
-                        className={
-                          active
-                            ? "rounded-[var(--radius)] border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
-                            : "rounded-[var(--radius)] border border-border bg-background px-3 py-1.5 text-sm text-foreground"
-                        }
-                      >
-                        {t(`create.weekdays.${day.value}`)}
-                      </button>
-                    )
-                  })}
-                </div>
+                <WeekdayPicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  label={(day) => t(`create.weekdays.${day}`)}
+                />
               )}
             />
           </Field>
@@ -295,28 +279,6 @@ export function MeetingCreatePage() {
           {t("create.createBtn")}
         </Button>
       </form>
-    </div>
-  )
-}
-
-function Field({
-  label,
-  error,
-  children,
-}: {
-  label: string
-  error?: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Label>{label}</Label>
-      {children}
-      {error ? (
-        <p className="text-xs text-destructive" role="alert">
-          {error}
-        </p>
-      ) : null}
     </div>
   )
 }

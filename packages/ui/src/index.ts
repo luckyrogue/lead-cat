@@ -10,6 +10,10 @@ export {
 export { Badge, badgeVariants } from "./components/ui/badge"
 export { Input } from "./components/ui/input"
 export { Label } from "./components/ui/label"
+export { Switch } from "./components/ui/switch"
+export { Textarea } from "./components/ui/textarea"
+export { Field } from "./components/ui/field"
+export { WeekdayPicker } from "./components/ui/weekday-picker"
 export {
   Table,
   TableHeader,
