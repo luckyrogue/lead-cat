@@ -1,9 +1,4 @@
-import {
-  Card,
-  CardContent,
-  cn,
-  toastError,
-} from "@leadcat/ui"
+import { Card, CardContent, cn, toastError } from "@leadcat/ui"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useMemo, useState } from "react"
 

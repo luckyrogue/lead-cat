@@ -1,10 +1,4 @@
-import {
-  Button,
-  Card,
-  CardContent,
-  cn,
-  toastError,
-} from "@leadcat/ui"
+import { Button, Card, CardContent, cn, toastError } from "@leadcat/ui"
 import { useEffect } from "react"
 
 import {

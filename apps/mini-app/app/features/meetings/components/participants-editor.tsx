@@ -1,7 +1,4 @@
-import {
-  ParticipantsEditorPanel,
-  toastError,
-} from "@leadcat/ui"
+import { ParticipantsEditorPanel, toastError } from "@leadcat/ui"
 import { useState } from "react"
 
 import {
