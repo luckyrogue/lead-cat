@@ -1,6 +1,10 @@
 package scheduler_agent
 
-import "github.com/luckyrogue/lead-cat/internal/application"
+import (
+	"strings"
+
+	"github.com/luckyrogue/lead-cat/internal/application"
+)
 
 type PendingBooking struct {
 	Dept   string   `json:"dept,omitempty"`
@@ -10,6 +14,10 @@ type PendingBooking struct {
 	End    string   `json:"end"`
 	Emails []string `json:"emails"`
 	Desc   string   `json:"desc,omitempty"`
+}
+
+func (p PendingBooking) Signature() string {
+	return strings.Join(append([]string{p.Type, p.Date, p.Start, p.End}, p.Emails...), "|")
 }
 
 type State struct {

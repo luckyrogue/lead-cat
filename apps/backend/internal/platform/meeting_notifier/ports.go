@@ -21,7 +21,12 @@ type store interface {
 	GetBotUserByTelegramID(ctx context.Context, telegramID int64) (model.BotUser, error)
 	GetUserTelegramID(ctx context.Context, userID uuid.UUID) (int64, bool, error)
 	ListParticipants(ctx context.Context, meetingID uuid.UUID) ([]model.MeetingParticipant, error)
-	TryClaimReminder(ctx context.Context, meetingID uuid.UUID, telegramID int64, offset int) (bool, error)
+}
+
+// claimer provides per-delivery idempotency: Claim returns true only the
+// first time a key is seen, so a redelivered asynq task does not re-notify.
+type claimer interface {
+	Claim(ctx context.Context, key string) (bool, error)
 }
 
 var _ sender = (*bot.Bot)(nil)

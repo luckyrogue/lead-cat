@@ -49,3 +49,8 @@ func (r *RedisSessions) Set(ctx context.Context, telegramID int64, s State) erro
 func (r *RedisSessions) Del(ctx context.Context, telegramID int64) error {
 	return r.rdb.Del(ctx, r.key(telegramID)).Err()
 }
+
+func (r *RedisSessions) ClaimBooking(ctx context.Context, telegramID int64, signature string) (bool, error) {
+	key := "agent:book:" + strconv.FormatInt(telegramID, 10) + ":" + signature
+	return r.rdb.SetNX(ctx, key, "1", 10*time.Minute).Result()
+}

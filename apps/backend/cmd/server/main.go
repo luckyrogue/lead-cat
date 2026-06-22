@@ -200,7 +200,11 @@ func main() {
 	} else {
 		logger.Fatal("telegram", zap.Error(fmt.Errorf("BOT_TOKEN is required")))
 	}
-	notifier := meeting_notifier.New(store, tg, logger)
+	notifier := meeting_notifier.New(store, tg, meeting_notifier.NewRedisClaims(rdb), logger)
+	taskID := func(c context.Context) string {
+		id, _ := asynq.GetTaskID(c)
+		return id
+	}
 	meetingCreatedHandler := func(c context.Context, t *asynq.Task) error {
 		p, err := asynqqueue.ParseMeetingCreated(t)
 		if err != nil {
@@ -208,7 +212,7 @@ func main() {
 		}
 		wid, _ := uuid.Parse(p.OrganizationID)
 		mid, _ := uuid.Parse(p.MeetingID)
-		return notifier.HandleCreated(c, wid, mid)
+		return notifier.HandleCreated(c, taskID(c), wid, mid)
 	}
 	meetingUpdatedHandler := func(c context.Context, t *asynq.Task) error {
 		p, err := asynqqueue.ParseMeetingUpdated(t)
@@ -217,7 +221,7 @@ func main() {
 		}
 		wid, _ := uuid.Parse(p.OrganizationID)
 		mid, _ := uuid.Parse(p.MeetingID)
-		return notifier.HandleUpdated(c, wid, mid)
+		return notifier.HandleUpdated(c, taskID(c), wid, mid)
 	}
 	participantAddedHandler := func(c context.Context, t *asynq.Task) error {
 		p, err := asynqqueue.ParseParticipant(t)
@@ -226,7 +230,7 @@ func main() {
 		}
 		wid, _ := uuid.Parse(p.OrganizationID)
 		mid, _ := uuid.Parse(p.MeetingID)
-		return notifier.HandleParticipantAdded(c, wid, mid, p.Email)
+		return notifier.HandleParticipantAdded(c, taskID(c), wid, mid, p.Email)
 	}
 	participantRemovedHandler := func(c context.Context, t *asynq.Task) error {
 		p, err := asynqqueue.ParseParticipant(t)
@@ -235,7 +239,7 @@ func main() {
 		}
 		wid, _ := uuid.Parse(p.OrganizationID)
 		mid, _ := uuid.Parse(p.MeetingID)
-		return notifier.HandleParticipantRemoved(c, wid, mid, p.Email)
+		return notifier.HandleParticipantRemoved(c, taskID(c), wid, mid, p.Email)
 	}
 	meetingCancelledHandler := func(c context.Context, t *asynq.Task) error {
 		p, err := asynqqueue.ParseMeetingCancelled(t)
@@ -244,7 +248,7 @@ func main() {
 		}
 		wid, _ := uuid.Parse(p.OrganizationID)
 		mid, _ := uuid.Parse(p.MeetingID)
-		return notifier.HandleCancelled(c, wid, mid)
+		return notifier.HandleCancelled(c, taskID(c), wid, mid)
 	}
 
 	asynqSrv, err := asynqqueue.NewServer(cfg.RedisURL, logger, map[string]asynq.HandlerFunc{

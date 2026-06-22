@@ -16,13 +16,29 @@ import (
 )
 
 type Notifier struct {
-	store store
-	bot   sender
-	log   *zap.Logger
+	store  store
+	bot    sender
+	claims claimer
+	log    *zap.Logger
 }
 
-func New(st store, b sender, log *zap.Logger) *Notifier {
-	return &Notifier{store: st, bot: b, log: log}
+func New(st store, b sender, claims claimer, log *zap.Logger) *Notifier {
+	return &Notifier{store: st, bot: b, claims: claims, log: log}
+}
+
+// claim reports whether this (task, recipient) pair should be notified now.
+// It fails open: on a claim-store error it returns true, preferring a rare
+// duplicate over a dropped notification.
+func (n *Notifier) claim(ctx context.Context, taskID string, telegramID int64) bool {
+	if n.claims == nil || taskID == "" {
+		return true
+	}
+	ok, err := n.claims.Claim(ctx, fmt.Sprintf("notif:%s:%d", taskID, telegramID))
+	if err != nil {
+		n.log.Warn("notify_claim_failed", zap.String("task_id", taskID), zap.Error(err))
+		return true
+	}
+	return ok
 }
 
 func (n *Notifier) recipientLoc(recipientTZ, orgTZ string) *time.Location {
@@ -35,7 +51,7 @@ func (n *Notifier) recipientLoc(recipientTZ, orgTZ string) *time.Location {
 	return loc
 }
 
-func (n *Notifier) HandleCreated(ctx context.Context, organizationID, meetingID uuid.UUID) error {
+func (n *Notifier) HandleCreated(ctx context.Context, taskID string, organizationID, meetingID uuid.UUID) error {
 	m, err := n.store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
 		return fmt.Errorf("get meeting: %w", err)
@@ -50,11 +66,7 @@ func (n *Notifier) HandleCreated(ctx context.Context, organizationID, meetingID 
 		return fmt.Errorf("resolve recipients: %w", err)
 	}
 	for _, r := range recs {
-		claimed, err := n.store.TryClaimReminder(ctx, m.ID, r.TelegramID, model.ReminderOffsetCreated)
-		if err != nil {
-			return fmt.Errorf("claim reminder: %w", err)
-		}
-		if !claimed {
+		if !n.claim(ctx, taskID, r.TelegramID) {
 			continue
 		}
 		loc := n.recipientLoc(r.Timezone, w.TZ)
@@ -72,15 +84,15 @@ func (n *Notifier) HandleCreated(ctx context.Context, organizationID, meetingID 
 	return nil
 }
 
-func (n *Notifier) HandleParticipantAdded(ctx context.Context, organizationID, meetingID uuid.UUID, email string) error {
-	return n.notifyParticipant(ctx, organizationID, meetingID, email, true)
+func (n *Notifier) HandleParticipantAdded(ctx context.Context, taskID string, organizationID, meetingID uuid.UUID, email string) error {
+	return n.notifyParticipant(ctx, taskID, organizationID, meetingID, email, true)
 }
 
-func (n *Notifier) HandleParticipantRemoved(ctx context.Context, organizationID, meetingID uuid.UUID, email string) error {
-	return n.notifyParticipant(ctx, organizationID, meetingID, email, false)
+func (n *Notifier) HandleParticipantRemoved(ctx context.Context, taskID string, organizationID, meetingID uuid.UUID, email string) error {
+	return n.notifyParticipant(ctx, taskID, organizationID, meetingID, email, false)
 }
 
-func (n *Notifier) notifyParticipant(ctx context.Context, organizationID, meetingID uuid.UUID, email string, added bool) error {
+func (n *Notifier) notifyParticipant(ctx context.Context, taskID string, organizationID, meetingID uuid.UUID, email string, added bool) error {
 	m, err := n.store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
 		return fmt.Errorf("get meeting: %w", err)
@@ -95,6 +107,9 @@ func (n *Notifier) notifyParticipant(ctx context.Context, organizationID, meetin
 	}
 	if err != nil {
 		return fmt.Errorf("get bot user: %w", err)
+	}
+	if !n.claim(ctx, taskID, u.TelegramID) {
+		return nil
 	}
 	loc := n.recipientLoc(u.Timezone, w.TZ)
 	var text string
@@ -114,7 +129,7 @@ func (n *Notifier) notifyParticipant(ctx context.Context, organizationID, meetin
 	return nil
 }
 
-func (n *Notifier) HandleCancelled(ctx context.Context, organizationID, meetingID uuid.UUID) error {
+func (n *Notifier) HandleCancelled(ctx context.Context, taskID string, organizationID, meetingID uuid.UUID) error {
 	m, err := n.store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
 		return fmt.Errorf("get meeting: %w", err)
@@ -129,6 +144,9 @@ func (n *Notifier) HandleCancelled(ctx context.Context, organizationID, meetingI
 		return fmt.Errorf("resolve recipients: %w", err)
 	}
 	for _, r := range recs {
+		if !n.claim(ctx, taskID, r.TelegramID) {
+			continue
+		}
 		loc := n.recipientLoc(r.Timezone, w.TZ)
 		text := buildCancelledMessage(r.Language, m.Name, m.StartsAt, loc)
 		if _, err := n.bot.SendMessage(ctx, &bot.SendMessageParams{
@@ -144,7 +162,7 @@ func (n *Notifier) HandleCancelled(ctx context.Context, organizationID, meetingI
 	return nil
 }
 
-func (n *Notifier) HandleUpdated(ctx context.Context, organizationID, meetingID uuid.UUID) error {
+func (n *Notifier) HandleUpdated(ctx context.Context, taskID string, organizationID, meetingID uuid.UUID) error {
 	m, err := n.store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
 		return fmt.Errorf("get meeting: %w", err)
@@ -159,6 +177,9 @@ func (n *Notifier) HandleUpdated(ctx context.Context, organizationID, meetingID 
 		return fmt.Errorf("resolve recipients: %w", err)
 	}
 	for _, r := range recs {
+		if !n.claim(ctx, taskID, r.TelegramID) {
+			continue
+		}
 		loc := n.recipientLoc(r.Timezone, w.TZ)
 		text := buildUpdatedMessage(r.Language, m.Name, m.MeetLink, m.StartsAt, m.EndsAt, loc)
 		if _, err := n.bot.SendMessage(ctx, &bot.SendMessageParams{

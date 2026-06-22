@@ -17,6 +17,7 @@ type sessions interface {
 	Get(ctx context.Context, telegramID int64) (*State, error)
 	Set(ctx context.Context, telegramID int64, s State) error
 	Del(ctx context.Context, telegramID int64) error
+	ClaimBooking(ctx context.Context, telegramID int64, signature string) (bool, error)
 }
 
 type Service struct {
@@ -145,6 +146,9 @@ func (s *Service) OnCallback(ctx context.Context, telegramID int64, data, lang s
 		st.Pending = nil
 		_ = s.sessions.Set(ctx, telegramID, *st)
 		s.bookMu.Unlock()
+		if claimed, cerr := s.sessions.ClaimBooking(ctx, telegramID, pb.Signature()); cerr == nil && !claimed {
+			return Reply{Text: boti18n.T(lang, "agent.proposal_stale"), Edit: true}, true
+		}
 		if s.booker == nil {
 			return Reply{Text: boti18n.T(lang, "agent.booking_unavailable"), Edit: true}, true
 		}
