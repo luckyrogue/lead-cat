@@ -80,7 +80,6 @@ export function landingMeta(
   const jsonLd = landingJsonLd(locale, siteUrl)
 
   return [
-    { html: { lang: locale } },
     { title: dict.meta.title },
     { name: "description", content: dict.meta.description },
     { name: "keywords", content: dict.meta.keywords },
