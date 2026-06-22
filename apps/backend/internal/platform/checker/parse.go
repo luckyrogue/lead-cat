@@ -6,14 +6,6 @@ import (
 	"time"
 )
 
-func almaty() *time.Location {
-	loc, err := time.LoadLocation("Asia/Almaty")
-	if err != nil {
-		return time.FixedZone("Almaty", 5*60*60)
-	}
-	return loc
-}
-
 func parseRange(s string, loc *time.Location) (from, to time.Time, err error) {
 	parts := strings.SplitN(strings.TrimSpace(s), "..", 2)
 	if len(parts) != 2 {

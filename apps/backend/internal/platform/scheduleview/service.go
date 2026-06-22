@@ -210,11 +210,3 @@ func indexInto(list []string, idxStr string) (string, bool) {
 	}
 	return list[i], true
 }
-
-func almaty() *time.Location {
-	loc, err := time.LoadLocation("Asia/Almaty")
-	if err != nil {
-		return time.UTC
-	}
-	return loc
-}
