@@ -21,27 +21,29 @@ import (
 type ChatSyncer func(ctx context.Context, organizationID uuid.UUID) (int, error)
 
 type Services struct {
-	Store              Repository
-	Cipher             Cipher
-	Queue              JobQueue
-	Calendar           CalendarProvider
-	Busy               BusyResolver
-	GoogleProber       GoogleProber
-	Log                *zap.Logger
-	Bot                *bot.Bot
-	Queries            *query.Meetings
-	Commands           *command.Meetings
-	SurveyQueries      *query.Surveys
-	SurveyCommands     *command.Surveys
-	BookingQueries     *query.Bookings
-	BookingCommands    *command.Bookings
-	MembershipQueries  *query.Membership
-	MembershipCommands *command.Membership
-	OrgMemberQueries   *query.OrgMembers
-	OrgMemberCommands  *command.OrgMembers
-	SettingsQueries    *query.Settings
-	SettingsCommands   *command.Settings
-	syncChat           ChatSyncer
+	Store                   Repository
+	Cipher                  Cipher
+	Queue                   JobQueue
+	Calendar                CalendarProvider
+	Busy                    BusyResolver
+	GoogleProber            GoogleProber
+	Log                     *zap.Logger
+	Bot                     *bot.Bot
+	Queries                 *query.Meetings
+	Commands                *command.Meetings
+	SurveyQueries           *query.Surveys
+	SurveyCommands          *command.Surveys
+	BookingQueries          *query.Bookings
+	BookingCommands         *command.Bookings
+	MembershipQueries       *query.Membership
+	MembershipCommands      *command.Membership
+	OrgMemberQueries        *query.OrgMembers
+	OrgMemberCommands       *command.OrgMembers
+	SettingsQueries         *query.Settings
+	SettingsCommands        *command.Settings
+	CalendarConnectQueries  *query.Calendar
+	CalendarConnectCommands *command.Calendar
+	syncChat                ChatSyncer
 
 	sso        map[string]SSOProvider
 	connectors map[string]CalendarConnector
@@ -105,7 +107,16 @@ func (s *Services) SSOProviderByName(name string) (SSOProvider, bool) {
 	return p, ok
 }
 
-func (s *Services) ConfigureCalendarConnectors(c map[string]CalendarConnector) { s.connectors = c }
+func (s *Services) ConfigureCalendarConnectors(c map[string]CalendarConnector) {
+	s.connectors = c
+	s.CalendarConnectCommands = &command.Calendar{
+		Store: s.Store,
+		Connector: func(provider string) (command.CalendarConnector, bool) {
+			conn, ok := s.connectors[provider]
+			return conn, ok
+		},
+	}
+}
 
 func (s *Services) CalendarConnectorByName(name string) (CalendarConnector, bool) {
 	c, ok := s.connectors[name]
@@ -175,6 +186,9 @@ func (s *Services) WireCQRS() {
 	}
 	if s.SettingsCommands == nil {
 		s.SettingsCommands = &command.Settings{Store: s.Store}
+	}
+	if s.CalendarConnectQueries == nil {
+		s.CalendarConnectQueries = query.NewCalendar(s.Store)
 	}
 }
 

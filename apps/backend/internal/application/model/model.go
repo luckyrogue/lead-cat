@@ -102,6 +102,13 @@ type MeetingWithTZ struct {
 
 const ReminderOffsetCreated = -1
 
+type CalendarToken struct {
+	AccessToken  string
+	RefreshToken string
+	Expiry       time.Time
+	Scopes       string
+}
+
 type MeetingFilter struct {
 	Status    string
 	From      *time.Time

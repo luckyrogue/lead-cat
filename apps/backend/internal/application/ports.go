@@ -2,8 +2,8 @@ package application
 
 import (
 	"context"
-	"time"
 
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 	docalendar "github.com/luckyrogue/lead-cat/internal/domain/calendar"
 )
 
@@ -31,12 +31,7 @@ type EmailSender interface {
 	SendMultipart(ctx context.Context, to, subject, textBody, htmlBody, listUnsubscribe string) error
 }
 
-type CalendarToken struct {
-	AccessToken  string
-	RefreshToken string
-	Expiry       time.Time
-	Scopes       string
-}
+type CalendarToken = model.CalendarToken
 
 type CalendarConnector interface {
 	Name() string
