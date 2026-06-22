@@ -21,21 +21,23 @@ import (
 type ChatSyncer func(ctx context.Context, organizationID uuid.UUID) (int, error)
 
 type Services struct {
-	Store           Repository
-	Cipher          Cipher
-	Queue           JobQueue
-	Calendar        CalendarProvider
-	Busy            BusyResolver
-	GoogleProber    GoogleProber
-	Log             *zap.Logger
-	Bot             *bot.Bot
-	Queries         *query.Meetings
-	Commands        *command.Meetings
-	SurveyQueries   *query.Surveys
-	SurveyCommands  *command.Surveys
-	BookingQueries  *query.Bookings
-	BookingCommands *command.Bookings
-	syncChat        ChatSyncer
+	Store              Repository
+	Cipher             Cipher
+	Queue              JobQueue
+	Calendar           CalendarProvider
+	Busy               BusyResolver
+	GoogleProber       GoogleProber
+	Log                *zap.Logger
+	Bot                *bot.Bot
+	Queries            *query.Meetings
+	Commands           *command.Meetings
+	SurveyQueries      *query.Surveys
+	SurveyCommands     *command.Surveys
+	BookingQueries     *query.Bookings
+	BookingCommands    *command.Bookings
+	MembershipQueries  *query.Membership
+	MembershipCommands *command.Membership
+	syncChat           ChatSyncer
 
 	sso        map[string]SSOProvider
 	connectors map[string]CalendarConnector
@@ -151,6 +153,12 @@ func (s *Services) WireCQRS() {
 	}
 	if s.BookingCommands == nil {
 		s.BookingCommands = &command.Bookings{Store: s.Store}
+	}
+	if s.MembershipQueries == nil {
+		s.MembershipQueries = query.NewMembership(s.Store)
+	}
+	if s.MembershipCommands == nil {
+		s.MembershipCommands = &command.Membership{Store: s.Store}
 	}
 }
 
