@@ -39,6 +39,8 @@ type Services struct {
 	MembershipCommands *command.Membership
 	OrgMemberQueries   *query.OrgMembers
 	OrgMemberCommands  *command.OrgMembers
+	SettingsQueries    *query.Settings
+	SettingsCommands   *command.Settings
 	syncChat           ChatSyncer
 
 	sso        map[string]SSOProvider
@@ -167,6 +169,12 @@ func (s *Services) WireCQRS() {
 	}
 	if s.OrgMemberCommands == nil {
 		s.OrgMemberCommands = &command.OrgMembers{Store: s.Store}
+	}
+	if s.SettingsQueries == nil {
+		s.SettingsQueries = query.NewSettings(s.Store)
+	}
+	if s.SettingsCommands == nil {
+		s.SettingsCommands = &command.Settings{Store: s.Store}
 	}
 }
 
