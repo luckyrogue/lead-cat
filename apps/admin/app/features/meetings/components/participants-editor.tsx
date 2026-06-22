@@ -1,4 +1,7 @@
-import { ParticipantsEditorPanel } from "@leadcat/ui"
+import {
+  ParticipantsEditorPanel,
+  toastError,
+} from "@leadcat/ui"
 import { useState } from "react"
 
 import {
@@ -6,7 +9,6 @@ import {
   useRemoveParticipant,
 } from "~/entities/meeting/mutations"
 import { useMeeting } from "~/entities/meeting/queries"
-import { toastError } from "~/shared/lib/toast"
 import { useT } from "~/shared/i18n/context"
 
 type Props = {

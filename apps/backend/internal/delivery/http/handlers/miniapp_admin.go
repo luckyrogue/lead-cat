@@ -36,7 +36,7 @@ func (a *API) adminOrganizationID(c *fiber.Ctx) (uuid.UUID, error) {
 	return a.App.EnsureDefaultOrganization(c.Context(), ownerID)
 }
 
-func (a *API) MiniAppAdminGetWorkspace(c *fiber.Ctx) error {
+func (a *API) MiniAppAdminGetOrganization(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
 	if err != nil {
@@ -44,7 +44,7 @@ func (a *API) MiniAppAdminGetWorkspace(c *fiber.Ctx) error {
 	}
 	w, err := a.App.GetOrganization(c.Context(), id)
 	if err != nil {
-		return internalAPIError(a.Log, "miniapp_admin_get_workspace_failed", err)
+		return internalAPIError(a.Log, "miniapp_admin_get_organization_failed", err)
 	}
 	view, err := a.App.GetIntegrations(c.Context(), id)
 	if err != nil {
@@ -67,7 +67,7 @@ func (a *API) MiniAppAdminGetWorkspace(c *fiber.Ctx) error {
 	})
 }
 
-func (a *API) MiniAppAdminCreateWorkspace(c *fiber.Ctx) error {
+func (a *API) MiniAppAdminCreateOrganization(c *fiber.Ctx) error {
 	a.withAuditActor(c)
 	id, err := a.adminOrganizationID(c)
 	if err != nil {

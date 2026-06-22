@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router"
 
 import { LoginForm } from "~/features/auth/components/login-form"
 import { useT } from "~/shared/i18n/context"
-import { toastError } from "~/shared/lib/toast"
+import { toastError } from "@leadcat/ui"
 
 export default function LoginPage() {
   const t = useT()

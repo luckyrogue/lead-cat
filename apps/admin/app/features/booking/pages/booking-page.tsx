@@ -8,6 +8,8 @@ import {
   Loader2,
   Pencil,
   Trash2,
+  toastError,
+  toastSuccess,
 } from "@leadcat/ui"
 
 import {
@@ -22,7 +24,6 @@ import type {
 } from "~/entities/booking-event-type/types"
 import { EventTypeDialog } from "~/features/booking/components/event-type-dialog"
 import { ListPageShell } from "~/components/list-page-shell"
-import { toastError, toastSuccess } from "~/shared/lib/toast"
 import { useActiveOrg } from "~/shared/auth/use-active-org"
 import { useMe } from "~/shared/auth/use-me"
 import { useT } from "~/shared/i18n/context"

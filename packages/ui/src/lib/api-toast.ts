@@ -1,5 +1,5 @@
 import { mapApiErrorMessage } from "@leadcat/api-client"
-import { toast as sonner } from "@leadcat/ui"
+import { toast as sonner } from "sonner"
 
 type TFn = (key: string, params?: Record<string, string | number>) => string
 
@@ -12,7 +12,7 @@ export function registerApiToastTranslator(t: TFn) {
 export function getErrorMessage(
   error: unknown,
   t: TFn,
-  fallbackKey: string
+  fallbackKey: string,
 ): string {
   return mapApiErrorMessage(t, error, fallbackKey)
 }

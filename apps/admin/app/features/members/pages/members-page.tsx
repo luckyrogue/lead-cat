@@ -9,6 +9,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  toastError,
+  toastSuccess,
 } from "@leadcat/ui"
 
 import { ListPageShell } from "~/components/list-page-shell"
@@ -22,7 +24,6 @@ import { MembersTable } from "~/features/members/components/members-table"
 import { useActiveOrg } from "~/shared/auth/use-active-org"
 import { useMe } from "~/shared/auth/use-me"
 import { useT } from "~/shared/i18n/context"
-import { toastError, toastSuccess } from "~/shared/lib/toast"
 
 export function MembersPage() {
   const t = useT()

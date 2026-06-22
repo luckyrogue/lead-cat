@@ -30,7 +30,7 @@ function AppLayoutBody() {
   if (isPending) {
     return (
       <div className="flex min-h-svh items-center justify-center p-6">
-        <PageLoading>{t("sidebar.loadingWorkspace")}</PageLoading>
+        <PageLoading>{t("sidebar.loadingOrganization")}</PageLoading>
       </div>
     )
   }

@@ -30,7 +30,7 @@ export const en = {
     welcome: "Welcome, {name}",
     welcomeFallbackName: "there",
     descriptionOrg: "A calm snapshot of {org}.",
-    descriptionDefault: "A calm snapshot of your workspace.",
+    descriptionDefault: "A calm snapshot of your organization.",
     statOrganization: "Organization",
     statOrganizationHintNone: "No organization yet",
     statOrganizationHintSlug: "Slug: {slug}",
@@ -55,7 +55,7 @@ export const en = {
     organizationLabel: "Organization",
     organizationsMenuLabel: "Organizations",
     logoutLabel: "Log out",
-    loadingWorkspace: "Loading your workspace…",
+    loadingOrganization: "Loading your organization…",
   },
   members: {
     eyebrow: "Organization",
@@ -181,7 +181,7 @@ export const en = {
     onboarding: {
       title: "Create your organization",
       description:
-        "Set up a workspace to manage members, invites, and meetings.",
+        "Set up an organization to manage members, invites, and meetings.",
       nameLabel: "Organization name",
       namePlaceholder: "Acme Inc.",
       submit: "Create organization",

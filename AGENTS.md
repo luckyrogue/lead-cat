@@ -4,7 +4,7 @@ Single-purpose **Google Meet meetings-management Telegram Mini App**: **frontend
 
 ## Stack
 
-- **Auth:** TMA JWT via `POST /api/auth/miniapp` + web cookie sessions via `/api/auth/web/*` and `/api/orgs/*`; legacy platform OTP/passkey/OAuth and `/api/workspaces/*` return 410. TMA operator setup via `/api/miniapp/admin/*` — see `.cursor/rules/lead-cat-auth.mdc`.
+- **Auth:** TMA JWT via `POST /api/auth/miniapp` + web cookie sessions via `/api/auth/web/*` and `/api/orgs/*`. TMA operator setup via `/api/miniapp/admin/*` — see `.cursor/rules/lead-cat-auth.mdc`.
 - **Data:** Postgres (SoT), Redis (asynq job queues + scheduler leader lock)
 - **Deploy:** Dokploy — see `deploy/README.md`
 - **Frontends:** `apps/mini-app`, `apps/admin`, `apps/landing` — lite FSD per `.cursor/rules/frontend-fsd.mdc`

@@ -30,7 +30,7 @@ export const kk: typeof en = {
     welcome: "Қош келдіңіз, {name}",
     welcomeFallbackName: "дос",
     descriptionOrg: "{org} жұмыс кеңістігінің қысқаша шолуы.",
-    descriptionDefault: "Жұмыс кеңістігіңіздің қысқаша шолуы.",
+    descriptionDefault: "Ұйымыңыздың қысқаша шолуы.",
     statOrganization: "Ұйым",
     statOrganizationHintNone: "Ұйым әлі таңдалмаған",
     statOrganizationHintSlug: "Слаг: {slug}",
@@ -55,7 +55,7 @@ export const kk: typeof en = {
     organizationLabel: "Ұйым",
     organizationsMenuLabel: "Ұйымдар",
     logoutLabel: "Шығу",
-    loadingWorkspace: "Жұмыс кеңістігі жүктелуде…",
+    loadingOrganization: "Ұйым жүктелуде…",
   },
   members: {
     eyebrow: "Ұйым",
@@ -409,7 +409,7 @@ export const kk: typeof en = {
     onboarding: {
       title: "Ұйымды жасаңыз",
       description:
-        "Мүшелерді, шақыруларды және кездесулерді басқару үшін жұмыс кеңістігін баптаңыз.",
+        "Мүшелерді, шақыруларды және кездесулерді басқару үшін ұйымды баптаңыз.",
       nameLabel: "Ұйым атауы",
       namePlaceholder: "Acme Inc.",
       submit: "Ұйымды жасау",

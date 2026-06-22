@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@leadcat/ui"
+import { WEEKDAYS, toggleDay } from "@leadcat/types"
 import { Controller, useForm } from "react-hook-form"
 
 import type {
@@ -28,12 +29,10 @@ import { getTimezoneOptions } from "~/shared/lib/timezone-options"
 import { Field } from "./event-type-dialog-field"
 import {
   DURATION_OPTIONS,
-  WEEKDAYS,
   browserTimezone,
   schema,
   toFormValues,
   toInput,
-  toggleWeekday,
   type FormValues,
 } from "./event-type-dialog-helpers"
 
@@ -182,7 +181,7 @@ export function EventTypeDialog({
                         type="button"
                         aria-pressed={active}
                         onClick={() =>
-                          field.onChange(toggleWeekday(field.value, day.value))
+                          field.onChange(toggleDay(field.value, day.value))
                         }
                         className={
                           active
@@ -190,7 +189,7 @@ export function EventTypeDialog({
                             : "rounded-[calc(var(--radius)*0.75)] border border-border bg-background px-3 py-1.5 text-sm text-foreground transition hover:bg-muted"
                         }
                       >
-                        {t(`meetings.form.weekdays.${day.key}`)}
+                        {t(`meetings.form.weekdays.${day.value}`)}
                       </button>
                     )
                   })}

@@ -1,4 +1,4 @@
-const LEAD_CAT_MODEL_URL = "/models/lead-cat.glb"
+import { LEAD_CAT_MODEL_URL } from "@leadcat/ui/3d"
 
 export function heroAssetLinks() {
   return [

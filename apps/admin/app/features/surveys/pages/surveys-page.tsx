@@ -7,13 +7,14 @@ import {
   Loader2,
   Pencil,
   Trash2,
+  toastError,
+  toastSuccess,
 } from "@leadcat/ui"
 
 import { useSurveys, useDeleteSurvey } from "~/entities/survey/queries"
 import type { Survey } from "~/entities/survey/types"
 import { SurveyDialog } from "~/features/surveys/components/survey-dialog"
 import { ListPageShell } from "~/components/list-page-shell"
-import { toastError, toastSuccess } from "~/shared/lib/toast"
 import { toApiError } from "~/shared/api/client"
 import { useActiveOrg } from "~/shared/auth/use-active-org"
 import { useMe } from "~/shared/auth/use-me"

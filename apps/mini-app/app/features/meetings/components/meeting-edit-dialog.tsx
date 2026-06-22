@@ -10,6 +10,7 @@ import {
   Label,
   MeetingWhenPicker,
   toast,
+  toastError,
 } from "@leadcat/ui"
 import { useEffect, useState } from "react"
 
@@ -25,7 +26,6 @@ import {
 import { ParticipantsEditor } from "~/features/meetings/components/participants-editor"
 import { ScopeToggle } from "~/features/meetings/components/scope-toggle"
 import { useT, useLocale } from "~/shared/i18n/context"
-import { toastError } from "~/shared/lib/toast"
 
 type Props = {
   open: boolean

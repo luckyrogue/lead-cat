@@ -78,6 +78,12 @@ export function timeToMinutes(time: string): number {
   return hour * 60 + minute
 }
 
+export function minutesToTime(minutes: number): string {
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  return formatTimeValue(h, m)
+}
+
 export function diffMinutes(start: string, end: string): number {
   if (!start || !end) {
     return DEFAULT_MEETING_DURATION_MIN

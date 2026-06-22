@@ -6,6 +6,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  toastError,
 } from "@leadcat/ui"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useMemo, useState } from "react"
@@ -14,7 +15,6 @@ import { ErrorState, LoadingState } from "~/components/states"
 import { getLanguageOptions, getTimezoneOptions } from "~/entities/settings/api"
 import { settingsQuery, useUpdatePrefs } from "~/entities/settings/queries"
 import { useT } from "~/shared/i18n/context"
-import { toastError } from "~/shared/lib/toast"
 
 const DEFAULT = "__default__"
 

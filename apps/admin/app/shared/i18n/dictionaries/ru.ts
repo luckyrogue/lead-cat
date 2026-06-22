@@ -30,7 +30,7 @@ export const ru: typeof en = {
     welcome: "Добро пожаловать, {name}",
     welcomeFallbackName: "друг",
     descriptionOrg: "Краткий обзор {org}.",
-    descriptionDefault: "Краткий обзор вашего рабочего пространства.",
+    descriptionDefault: "Краткий обзор вашей организации.",
     statOrganization: "Организация",
     statOrganizationHintNone: "Организация не выбрана",
     statOrganizationHintSlug: "Слаг: {slug}",
@@ -55,7 +55,7 @@ export const ru: typeof en = {
     organizationLabel: "Организация",
     organizationsMenuLabel: "Организации",
     logoutLabel: "Выйти",
-    loadingWorkspace: "Загрузка рабочего пространства…",
+    loadingOrganization: "Загрузка организации…",
   },
   members: {
     eyebrow: "Организация",
@@ -412,7 +412,7 @@ export const ru: typeof en = {
     onboarding: {
       title: "Создайте организацию",
       description:
-        "Настройте рабочее пространство для управления участниками, приглашениями и встречами.",
+        "Настройте организацию для управления участниками, приглашениями и встречами.",
       nameLabel: "Название организации",
       namePlaceholder: "Acme Inc.",
       submit: "Создать организацию",

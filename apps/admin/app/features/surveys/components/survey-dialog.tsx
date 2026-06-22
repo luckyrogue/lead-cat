@@ -10,6 +10,8 @@ import {
   Input,
   Label,
   Loader2,
+  toastApiError,
+  toastSuccess,
 } from "@leadcat/ui"
 import { useEffect } from "react"
 import { Controller, FormProvider, useForm } from "react-hook-form"
@@ -17,7 +19,6 @@ import { Controller, FormProvider, useForm } from "react-hook-form"
 import type { Survey } from "~/entities/survey/types"
 import { useCreateSurvey, useUpdateSurvey } from "~/entities/survey/queries"
 import { useT } from "~/shared/i18n/context"
-import { toastApiError, toastSuccess } from "~/shared/lib/toast"
 
 import {
   emptyQuestion,

@@ -1,6 +1,11 @@
 import { useState } from "react"
 
-import { Button, CalendarPlus } from "@leadcat/ui"
+import {
+  Button,
+  CalendarPlus,
+  toastError,
+  toastSuccess,
+} from "@leadcat/ui"
 
 import { ListPageShell } from "~/components/list-page-shell"
 import {
@@ -32,7 +37,6 @@ import {
 import { useActiveOrg } from "~/shared/auth/use-active-org"
 import { useMe } from "~/shared/auth/use-me"
 import { useDebouncedValue } from "~/shared/lib/use-debounced-value"
-import { toastError, toastSuccess } from "~/shared/lib/toast"
 import { useT } from "~/shared/i18n/context"
 
 export function MeetingsPage() {

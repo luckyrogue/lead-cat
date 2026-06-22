@@ -10,6 +10,8 @@ import {
   DialogTitle,
   Label,
   Separator,
+  toastError,
+  toastSuccess,
 } from "@leadcat/ui"
 
 import { useChangeSeriesEnd } from "~/entities/meeting/mutations"
@@ -24,7 +26,6 @@ import {
   type MeetingFormValues,
 } from "~/features/meetings/components/meeting-form"
 import { ParticipantsEditor } from "~/features/meetings/components/participants-editor"
-import { toastError, toastSuccess } from "~/shared/lib/toast"
 import { useT, useLocale } from "~/shared/i18n/context"
 
 type Props = {

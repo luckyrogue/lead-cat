@@ -7,10 +7,13 @@ import {
   CardHeader,
   CardTitle,
   CheckCircle2,
+  GoogleMark,
   Input,
   Label,
   Loader2,
   Mail,
+  MicrosoftMark,
+  toastError,
 } from "@leadcat/ui"
 import { useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
@@ -18,29 +21,6 @@ import { z } from "zod"
 
 import { requestMagicLink, ssoStartUrl } from "~/shared/auth/api"
 import { useLocale, useT } from "~/shared/i18n/context"
-import { toastError } from "~/shared/lib/toast"
-
-function GoogleMark() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
-      <path
-        fill="#EA4335"
-        d="M12 10.8v3.6h5.1c-.2 1.3-1.6 3.9-5.1 3.9-3.1 0-5.6-2.6-5.6-5.7s2.5-5.7 5.6-5.7c1.8 0 3 .8 3.6 1.4l2.5-2.4C16.6 3.9 14.5 3 12 3 6.9 3 2.8 7.1 2.8 12S6.9 21 12 21c5.2 0 8.7-3.7 8.7-8.8 0-.6-.1-1-.2-1.4H12z"
-      />
-    </svg>
-  )
-}
-
-function MicrosoftMark() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
-      <path fill="#F25022" d="M3 3h8.5v8.5H3z" />
-      <path fill="#7FBA00" d="M12.5 3H21v8.5h-8.5z" />
-      <path fill="#00A4EF" d="M3 12.5h8.5V21H3z" />
-      <path fill="#FFB900" d="M12.5 12.5H21V21h-8.5z" />
-    </svg>
-  )
-}
 
 export function LoginForm() {
   const t = useT()
@@ -113,7 +93,7 @@ export function LoginForm() {
               window.location.href = ssoStartUrl("google")
             }}
           >
-            <GoogleMark />
+            <GoogleMark className="size-4" />
             {t("auth.login.continueGoogle")}
           </Button>
           <Button
@@ -123,7 +103,7 @@ export function LoginForm() {
               window.location.href = ssoStartUrl("microsoft")
             }}
           >
-            <MicrosoftMark />
+            <MicrosoftMark className="size-4" />
             {t("auth.login.continueMicrosoft")}
           </Button>
         </div>

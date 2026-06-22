@@ -3,7 +3,7 @@ import { PageLoading } from "~/components/page-loading"
 import { useT } from "~/shared/i18n/context"
 import { useEffect, useRef } from "react"
 import { useNavigate, useSearchParams } from "react-router"
-import { toastError } from "~/shared/lib/toast"
+import { toastError } from "@leadcat/ui"
 
 export default function MagicLinkVerifyPage() {
   const t = useT()

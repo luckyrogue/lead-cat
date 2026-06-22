@@ -10,6 +10,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  toastError,
+  toastSuccess,
 } from "@leadcat/ui"
 
 import { useMeSettings, useUpdateMeSettings } from "~/entities/me/queries"
@@ -17,7 +19,6 @@ import { CalendarConnectionsCard } from "~/features/calendar-connections/compone
 import { resolveLocale, useT } from "~/shared/i18n/context"
 import { writeLocalePreference } from "~/shared/i18n/locale-preference"
 import { getTimezoneOptionsWithEmpty } from "~/shared/lib/timezone-options"
-import { toastError, toastSuccess } from "~/shared/lib/toast"
 
 const DEFAULT = "__default__"
 

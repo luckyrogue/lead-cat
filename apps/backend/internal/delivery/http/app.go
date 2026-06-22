@@ -109,12 +109,6 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	web.Post("/me/join-requests", webAuth.Middleware, api.WebRequestToJoin)
 	web.Get("/me/join-requests", webAuth.Middleware, api.WebMyJoinRequests)
 
-	registerRetiredPlatformAuth(app)
-	app.All("/api/me", handlers.PlatformGone)
-	app.All("/api/me/*", handlers.PlatformGone)
-	app.All("/api/workspaces", handlers.PlatformGone)
-	app.All("/api/workspaces/*", handlers.PlatformGone)
-
 	orgs := app.Group("/api/orgs", webAuth.Middleware)
 	orgs.Post("", api.CreateOrg)
 	orgs.Get("", api.ListMyOrgs)
@@ -188,10 +182,8 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	miniapp.Delete("/calendar/connections/:provider", api.CalendarDisconnect)
 
 	miniappAdmin := miniapp.Group("/admin", middleware.RequireBotAdmin(cfg.BotAdminTelegramIDs))
-	miniappAdmin.Get("/organization", api.MiniAppAdminGetWorkspace)
-	miniappAdmin.Post("/organization", api.MiniAppAdminCreateWorkspace)
-	miniappAdmin.Get("/workspace", handlers.DeprecatedAdminWorkspace(api.MiniAppAdminGetWorkspace))
-	miniappAdmin.Post("/workspace", handlers.DeprecatedAdminWorkspace(api.MiniAppAdminCreateWorkspace))
+	miniappAdmin.Get("/organization", api.MiniAppAdminGetOrganization)
+	miniappAdmin.Post("/organization", api.MiniAppAdminCreateOrganization)
 	miniappAdmin.Get("/integrations", api.MiniAppAdminGetIntegrations)
 	miniappAdmin.Patch("/integrations", api.MiniAppAdminPatchIntegrations)
 	miniappAdmin.Post("/integrations/verify", api.MiniAppAdminVerifyIntegrations)
@@ -215,24 +207,6 @@ func NewApp(cfg config.Config, store middleware.OrgMemberResolver, cipher *crypt
 	}
 
 	return app, nil
-}
-
-func registerRetiredPlatformAuth(app *fiber.App) {
-	legacyPrefixes := []string{
-		"/api/auth/email",
-		"/api/auth/phone",
-		"/api/auth/passkey",
-		"/api/auth/oauth",
-		"/api/auth/otp",
-		"/api/auth/login",
-		"/api/auth/register",
-		"/api/auth/refresh",
-	}
-	for _, prefix := range legacyPrefixes {
-		app.All(prefix, handlers.PlatformGone)
-		app.All(prefix+"/*", handlers.PlatformGone)
-	}
-	app.All("/api/auth/*", handlers.PlatformGone)
 }
 
 func dedupeNonEmpty(in []string) []string {

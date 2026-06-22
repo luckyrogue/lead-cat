@@ -707,7 +707,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MiniAppAdminWorkspaceStatus"
+                  "$ref": "#/components/schemas/MiniAppAdminOrganizationStatus"
                 }
               }
             }
@@ -758,136 +758,6 @@
         "responses": {
           "200": {
             "description": "Organization id",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "id"
-                  ],
-                  "properties": {
-                    "id": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/miniapp/admin/workspace": {
-      "get": {
-        "operationId": "miniappAdminWorkspaceGet",
-        "tags": [
-          "miniapp-admin"
-        ],
-        "summary": "Get workspace status (deprecated \u2014 use /organization)",
-        "deprecated": true,
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Workspace status",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MiniAppAdminWorkspaceStatus"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "operationId": "miniappAdminWorkspacePost",
-        "tags": [
-          "miniapp-admin"
-        ],
-        "summary": "Ensure workspace (deprecated \u2014 use /organization)",
-        "deprecated": true,
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Created workspace",
             "content": {
               "application/json": {
                 "schema": {
@@ -1198,7 +1068,7 @@
         "tags": [
           "miniapp-admin"
         ],
-        "summary": "Link Telegram chat to workspace",
+        "summary": "Link Telegram chat to organization",
         "security": [
           {
             "bearerAuth": []
@@ -1267,7 +1137,7 @@
         "tags": [
           "miniapp-admin"
         ],
-        "summary": "List workspace members",
+        "summary": "List organization members",
         "security": [
           {
             "bearerAuth": []
@@ -5781,7 +5651,7 @@
           }
         }
       },
-      "MiniAppAdminWorkspaceStatus": {
+      "MiniAppAdminOrganizationStatus": {
         "type": "object",
         "required": [
           "id",

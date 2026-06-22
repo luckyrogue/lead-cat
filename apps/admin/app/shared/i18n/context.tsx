@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useMemo } from "react"
 import { dictionaries } from "~/shared/i18n/dictionaries"
 import { translate } from "~/shared/i18n/translate"
 import { DEFAULT_LOCALE, type Locale } from "~/shared/i18n/types"
-import { registerApiToastTranslator } from "~/shared/lib/toast"
+import { registerApiToastTranslator } from "@leadcat/ui"
 
 type TFn = (key: string, params?: Record<string, string | number>) => string
 

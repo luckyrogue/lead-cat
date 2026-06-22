@@ -1,4 +1,10 @@
-import { Button, Card, CardContent, cn } from "@leadcat/ui"
+import {
+  Button,
+  Card,
+  CardContent,
+  cn,
+  toastError,
+} from "@leadcat/ui"
 import { useEffect } from "react"
 
 import {
@@ -9,7 +15,6 @@ import {
 import type { CalendarProvider } from "~/entities/calendar-connection/types"
 import { useT } from "~/shared/i18n/context"
 import { assertAllowedOAuthUrl } from "~/shared/lib/oauth-url"
-import { toastError } from "~/shared/lib/toast"
 import { getWebApp } from "~/shared/tma/telegram-env"
 
 export function CalendarConnectionRow() {

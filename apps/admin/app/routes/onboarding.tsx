@@ -9,6 +9,7 @@ import {
   Input,
   Label,
   Loader2,
+  toastError,
 } from "@leadcat/ui"
 import { useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
@@ -32,7 +33,6 @@ import { setActiveOrgId } from "~/shared/api/active-org"
 import { toApiError } from "~/shared/api/client"
 import { useMe } from "~/shared/auth/use-me"
 import { useT } from "~/shared/i18n/context"
-import { toastError } from "~/shared/lib/toast"
 
 export default function OnboardingPage() {
   const { data: me, isPending } = useMe()

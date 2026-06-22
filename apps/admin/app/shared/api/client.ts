@@ -2,7 +2,7 @@ import { ApiError, createApiClient, toApiError } from "@leadcat/api-client"
 import { isAxiosError, type AxiosInstance } from "axios"
 
 import { getActiveOrgId } from "~/shared/api/active-org"
-import { toastApiError } from "~/shared/lib/toast"
+import { toastApiError } from "@leadcat/ui"
 
 const MUTATION_METHODS = new Set(["post", "put", "patch", "delete"])
 

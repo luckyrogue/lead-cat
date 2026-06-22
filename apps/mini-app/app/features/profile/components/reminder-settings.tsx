@@ -1,4 +1,9 @@
-import { Card, CardContent, cn } from "@leadcat/ui"
+import {
+  Card,
+  CardContent,
+  cn,
+  toastError,
+} from "@leadcat/ui"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useMemo, useState } from "react"
 
@@ -9,7 +14,6 @@ import {
   useUpdateReminderMinutes,
 } from "~/entities/settings/queries"
 import { useT } from "~/shared/i18n/context"
-import { toastError } from "~/shared/lib/toast"
 
 export function ReminderSettings() {
   const t = useT()

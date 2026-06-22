@@ -5,6 +5,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  toastError,
+  toastSuccess,
 } from "@leadcat/ui"
 
 import { PageHeader } from "~/components/page-header"
@@ -25,7 +27,6 @@ import { InvitesTable } from "~/features/invites/components/invites-table"
 import { useActiveOrg } from "~/shared/auth/use-active-org"
 import { useMe } from "~/shared/auth/use-me"
 import { useT } from "~/shared/i18n/context"
-import { toastError, toastSuccess } from "~/shared/lib/toast"
 
 export function InvitesPage() {
   const t = useT()

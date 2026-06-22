@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
   toast,
+  toastError,
 } from "@leadcat/ui"
 import { useState } from "react"
 import { Controller, useForm } from "react-hook-form"
@@ -31,7 +32,6 @@ import type { Employee } from "~/entities/employee/types"
 import type { OccurrenceConflicts } from "~/entities/meeting/types"
 import { useT, useLocale } from "~/shared/i18n/context"
 import { todayIso, addMinutesToTime } from "~/shared/lib/format"
-import { toastError } from "~/shared/lib/toast"
 
 const RECURRENCES = ["once", "daily", "weekly", "monthly", "custom"] as const
 

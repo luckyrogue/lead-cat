@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { minutesToTime, timeToMinutes } from "@leadcat/ui"
 
 import type {
   BookingEventType,
@@ -6,29 +7,6 @@ import type {
 } from "~/entities/booking-event-type/types"
 
 export const DURATION_OPTIONS = [15, 30, 45, 60] as const
-
-export const WEEKDAYS = [
-  { value: 1, key: "1" },
-  { value: 2, key: "2" },
-  { value: 3, key: "3" },
-  { value: 4, key: "4" },
-  { value: 5, key: "5" },
-  { value: 6, key: "6" },
-  { value: 7, key: "7" },
-] as const
-
-export function minutesToTime(minutes: number): string {
-  const h = Math.floor(minutes / 60)
-    .toString()
-    .padStart(2, "0")
-  const m = (minutes % 60).toString().padStart(2, "0")
-  return `${h}:${m}`
-}
-
-export function timeToMinutes(time: string): number {
-  const [h, m] = time.split(":").map(Number)
-  return (h ?? 0) * 60 + (m ?? 0)
-}
 
 export function browserTimezone(): string {
   try {
@@ -85,8 +63,4 @@ export function toInput(values: FormValues): EventTypeInput {
     active: values.active,
     survey_id: values.survey_id ?? null,
   }
-}
-
-export function toggleWeekday(days: number[], day: number): number[] {
-  return days.includes(day) ? days.filter((d) => d !== day) : [...days, day]
 }

@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   toast,
+  toastError,
 } from "@leadcat/ui"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router"
@@ -19,7 +20,6 @@ import {
 } from "~/entities/meeting/types"
 import { ScopeToggle } from "~/features/meetings/components/scope-toggle"
 import { useT } from "~/shared/i18n/context"
-import { toastError } from "~/shared/lib/toast"
 
 type Props = {
   open: boolean
