@@ -13,6 +13,8 @@ type CreateMeetingInput = command.CreateInput
 
 type UpdateMeetingInput = command.UpdateInput
 
+type SeriesUpdateInput = command.SeriesUpdateInput
+
 func (s *Services) ListEmployees(ctx context.Context, organizationID uuid.UUID) ([]model.Employee, error) {
 	return s.Store.ListEmployees(ctx, organizationID)
 }
@@ -55,6 +57,26 @@ func (s *Services) ListEditableMeetings(ctx context.Context, telegramID int64) (
 
 func (s *Services) CancelMeeting(ctx context.Context, organizationID, userID, id uuid.UUID) error {
 	return s.Commands.CancelMeeting(ctx, organizationID, userID, id)
+}
+
+func (s *Services) UpdateSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID, in SeriesUpdateInput) (int, error) {
+	return s.Commands.UpdateSeries(ctx, organizationID, userID, meetingID, in)
+}
+
+func (s *Services) CancelSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID) (int, error) {
+	return s.Commands.CancelSeries(ctx, organizationID, userID, meetingID)
+}
+
+func (s *Services) UpdateWholeSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID, in SeriesUpdateInput) (int, error) {
+	return s.Commands.UpdateWholeSeries(ctx, organizationID, userID, meetingID, in)
+}
+
+func (s *Services) CancelWholeSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID) (int, error) {
+	return s.Commands.CancelWholeSeries(ctx, organizationID, userID, meetingID)
+}
+
+func (s *Services) ChangeSeriesEnd(ctx context.Context, organizationID, userID, meetingID uuid.UUID, untilStr string) (int, int, error) {
+	return s.Commands.ChangeSeriesEnd(ctx, organizationID, userID, meetingID, untilStr)
 }
 
 func orDefault(v, def string) string {

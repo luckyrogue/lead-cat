@@ -1,4 +1,4 @@
-package application
+package command
 
 import (
 	"context"
@@ -9,7 +9,9 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/luckyrogue/lead-cat/internal/application/model"
+	docalendar "github.com/luckyrogue/lead-cat/internal/domain/calendar"
 	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
+	"github.com/luckyrogue/lead-cat/internal/platform/fanio"
 )
 
 type SeriesUpdateInput struct {
@@ -59,12 +61,26 @@ func applySeriesUpdate(cur model.Meeting, in SeriesUpdateInput, loc *time.Locati
 	return out, nil
 }
 
-func (s *Services) UpdateSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID, in SeriesUpdateInput) (int, error) {
-	picked, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
+func (c *Meetings) updateCalendarEventsBestEffort(ctx context.Context, cal docalendar.Service, rows []model.Meeting, logMsg string) {
+	fanio.AllBestEffort(ctx, fanio.CalendarLimit, len(rows), func(ctx context.Context, i int) {
+		m := rows[i]
+		if m.GoogleEventID == "" {
+			return
+		}
+		if err := cal.UpdateEvent(ctx, m.GoogleEventID, docalendar.CalendarEvent{
+			Title: m.Name, Description: m.Description, Start: m.StartsAt, End: m.EndsAt,
+		}); err != nil && c.Log != nil {
+			c.Log.Warn(logMsg, zap.String("event_id", m.GoogleEventID), zap.Error(err))
+		}
+	})
+}
+
+func (c *Meetings) UpdateSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID, in SeriesUpdateInput) (int, error) {
+	picked, err := c.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
 		return 0, err
 	}
-	w, err := s.Store.GetOrganization(ctx, organizationID)
+	w, err := c.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
 		return 0, err
 	}
@@ -78,7 +94,7 @@ func (s *Services) UpdateSeries(ctx context.Context, organizationID, userID, mee
 	if err != nil {
 		return 0, fmt.Errorf("bad timezone: %w", err)
 	}
-	occs, err := s.Store.ListSeriesOccurrences(ctx, organizationID, *picked.SeriesID, picked.StartsAt)
+	occs, err := c.Store.ListSeriesOccurrences(ctx, organizationID, *picked.SeriesID, picked.StartsAt)
 	if err != nil {
 		return 0, err
 	}
@@ -90,20 +106,20 @@ func (s *Services) UpdateSeries(ctx context.Context, organizationID, userID, mee
 		}
 		rows = append(rows, upd)
 	}
-	if err := s.Store.UpdateMeetingsTx(ctx, organizationID, rows); err != nil {
+	if err := c.Store.UpdateMeetingsTx(ctx, organizationID, rows); err != nil {
 		return 0, err
 	}
 
-	if calSvc, ferr := s.Calendar.For(ctx, organizationID, s.organizerEmail(ctx, picked.OrganizerUserID)); ferr != nil {
-		if s.Log != nil {
-			s.Log.Warn("series update calendar provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))
+	if calSvc, ferr := c.Calendar.For(ctx, organizationID, c.organizerEmail(ctx, picked.OrganizerUserID)); ferr != nil {
+		if c.Log != nil {
+			c.Log.Warn("series update calendar provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))
 		}
 	} else {
-		s.updateCalendarEventsBestEffort(ctx, calSvc, rows, "series update event")
+		c.updateCalendarEventsBestEffort(ctx, calSvc, rows, "series update event")
 	}
-	if s.Queue != nil {
-		if err := s.Queue.EnqueueMeetingUpdated(ctx, organizationID, meetingID); err != nil && s.Log != nil {
-			s.Log.Warn("enqueue meeting updated",
+	if c.Queue != nil {
+		if err := c.Queue.EnqueueMeetingUpdated(ctx, organizationID, meetingID); err != nil && c.Log != nil {
+			c.Log.Warn("enqueue meeting updated",
 				zap.String("organization_id", organizationID.String()),
 				zap.String("meeting_id", meetingID.String()),
 				zap.Error(err))
@@ -112,12 +128,12 @@ func (s *Services) UpdateSeries(ctx context.Context, organizationID, userID, mee
 	return len(rows), nil
 }
 
-func (s *Services) CancelSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID) (int, error) {
-	picked, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
+func (c *Meetings) CancelSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID) (int, error) {
+	picked, err := c.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
 		return 0, err
 	}
-	w, err := s.Store.GetOrganization(ctx, organizationID)
+	w, err := c.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
 		return 0, err
 	}
@@ -127,18 +143,18 @@ func (s *Services) CancelSeries(ctx context.Context, organizationID, userID, mee
 	if picked.SeriesID == nil {
 		return 0, fmt.Errorf("%w: not a series", ErrInvalidInput)
 	}
-	occs, err := s.Store.ListSeriesOccurrences(ctx, organizationID, *picked.SeriesID, picked.StartsAt)
+	occs, err := c.Store.ListSeriesOccurrences(ctx, organizationID, *picked.SeriesID, picked.StartsAt)
 	if err != nil {
 		return 0, err
 	}
-	n, err := s.Store.CancelSeriesOccurrences(ctx, organizationID, *picked.SeriesID, picked.StartsAt)
+	n, err := c.Store.CancelSeriesOccurrences(ctx, organizationID, *picked.SeriesID, picked.StartsAt)
 	if err != nil {
 		return 0, err
 	}
 
-	if calSvc, ferr := s.Calendar.For(ctx, organizationID, s.organizerEmail(ctx, picked.OrganizerUserID)); ferr != nil {
-		if s.Log != nil {
-			s.Log.Warn("cancel series calendar provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))
+	if calSvc, ferr := c.Calendar.For(ctx, organizationID, c.organizerEmail(ctx, picked.OrganizerUserID)); ferr != nil {
+		if c.Log != nil {
+			c.Log.Warn("cancel series calendar provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))
 		}
 	} else {
 		var ids []string
@@ -147,18 +163,18 @@ func (s *Services) CancelSeries(ctx context.Context, organizationID, userID, mee
 				ids = append(ids, oc.GoogleEventID)
 			}
 		}
-		s.deleteEventsBestEffort(ctx, calSvc, ids)
+		c.deleteEventsBestEffort(ctx, calSvc, ids)
 	}
-	s.enqueueCancelled(ctx, organizationID, meetingID)
+	c.enqueueCancelled(ctx, organizationID, meetingID)
 	return n, nil
 }
 
-func (s *Services) UpdateWholeSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID, in SeriesUpdateInput) (int, error) {
-	picked, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
+func (c *Meetings) UpdateWholeSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID, in SeriesUpdateInput) (int, error) {
+	picked, err := c.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
 		return 0, err
 	}
-	w, err := s.Store.GetOrganization(ctx, organizationID)
+	w, err := c.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
 		return 0, err
 	}
@@ -172,7 +188,7 @@ func (s *Services) UpdateWholeSeries(ctx context.Context, organizationID, userID
 	if err != nil {
 		return 0, fmt.Errorf("bad timezone: %w", err)
 	}
-	occs, err := s.Store.ListSeriesAllOccurrences(ctx, organizationID, *picked.SeriesID)
+	occs, err := c.Store.ListSeriesAllOccurrences(ctx, organizationID, *picked.SeriesID)
 	if err != nil {
 		return 0, err
 	}
@@ -184,19 +200,19 @@ func (s *Services) UpdateWholeSeries(ctx context.Context, organizationID, userID
 		}
 		rows = append(rows, upd)
 	}
-	if err := s.Store.UpdateMeetingsTx(ctx, organizationID, rows); err != nil {
+	if err := c.Store.UpdateMeetingsTx(ctx, organizationID, rows); err != nil {
 		return 0, err
 	}
-	if calSvc, ferr := s.Calendar.For(ctx, organizationID, s.organizerEmail(ctx, picked.OrganizerUserID)); ferr != nil {
-		if s.Log != nil {
-			s.Log.Warn("whole_series_update_calendar_provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))
+	if calSvc, ferr := c.Calendar.For(ctx, organizationID, c.organizerEmail(ctx, picked.OrganizerUserID)); ferr != nil {
+		if c.Log != nil {
+			c.Log.Warn("whole_series_update_calendar_provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))
 		}
 	} else {
-		s.updateCalendarEventsBestEffort(ctx, calSvc, rows, "whole_series_update_event")
+		c.updateCalendarEventsBestEffort(ctx, calSvc, rows, "whole_series_update_event")
 	}
-	if s.Queue != nil {
-		if err := s.Queue.EnqueueMeetingUpdated(ctx, organizationID, meetingID); err != nil && s.Log != nil {
-			s.Log.Warn("enqueue_meeting_updated_whole_series",
+	if c.Queue != nil {
+		if err := c.Queue.EnqueueMeetingUpdated(ctx, organizationID, meetingID); err != nil && c.Log != nil {
+			c.Log.Warn("enqueue_meeting_updated_whole_series",
 				zap.String("organization_id", organizationID.String()),
 				zap.String("meeting_id", meetingID.String()),
 				zap.Error(err))
@@ -205,12 +221,12 @@ func (s *Services) UpdateWholeSeries(ctx context.Context, organizationID, userID
 	return len(rows), nil
 }
 
-func (s *Services) CancelWholeSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID) (int, error) {
-	picked, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
+func (c *Meetings) CancelWholeSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID) (int, error) {
+	picked, err := c.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
 		return 0, err
 	}
-	w, err := s.Store.GetOrganization(ctx, organizationID)
+	w, err := c.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
 		return 0, err
 	}
@@ -220,17 +236,17 @@ func (s *Services) CancelWholeSeries(ctx context.Context, organizationID, userID
 	if picked.SeriesID == nil {
 		return 0, fmt.Errorf("%w: not a series", ErrInvalidInput)
 	}
-	occs, err := s.Store.ListSeriesAllOccurrences(ctx, organizationID, *picked.SeriesID)
+	occs, err := c.Store.ListSeriesAllOccurrences(ctx, organizationID, *picked.SeriesID)
 	if err != nil {
 		return 0, err
 	}
-	n, err := s.Store.CancelAllSeriesOccurrences(ctx, organizationID, *picked.SeriesID)
+	n, err := c.Store.CancelAllSeriesOccurrences(ctx, organizationID, *picked.SeriesID)
 	if err != nil {
 		return 0, err
 	}
-	if calSvc, ferr := s.Calendar.For(ctx, organizationID, s.organizerEmail(ctx, picked.OrganizerUserID)); ferr != nil {
-		if s.Log != nil {
-			s.Log.Warn("whole_series_cancel_calendar_provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))
+	if calSvc, ferr := c.Calendar.For(ctx, organizationID, c.organizerEmail(ctx, picked.OrganizerUserID)); ferr != nil {
+		if c.Log != nil {
+			c.Log.Warn("whole_series_cancel_calendar_provider", zap.String("organization_id", organizationID.String()), zap.Error(ferr))
 		}
 	} else {
 		var ids []string
@@ -239,18 +255,18 @@ func (s *Services) CancelWholeSeries(ctx context.Context, organizationID, userID
 				ids = append(ids, oc.GoogleEventID)
 			}
 		}
-		s.deleteEventsBestEffort(ctx, calSvc, ids)
+		c.deleteEventsBestEffort(ctx, calSvc, ids)
 	}
-	s.enqueueCancelled(ctx, organizationID, meetingID)
+	c.enqueueCancelled(ctx, organizationID, meetingID)
 	return n, nil
 }
 
-func (s *Services) ChangeSeriesEnd(ctx context.Context, organizationID, userID, meetingID uuid.UUID, untilStr string) (int, int, error) {
-	picked, err := s.Store.GetMeeting(ctx, organizationID, meetingID)
+func (c *Meetings) ChangeSeriesEnd(ctx context.Context, organizationID, userID, meetingID uuid.UUID, untilStr string) (int, int, error) {
+	picked, err := c.Store.GetMeeting(ctx, organizationID, meetingID)
 	if err != nil {
 		return 0, 0, err
 	}
-	w, err := s.Store.GetOrganization(ctx, organizationID)
+	w, err := c.Store.GetOrganization(ctx, organizationID)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -268,7 +284,7 @@ func (s *Services) ChangeSeriesEnd(ctx context.Context, organizationID, userID, 
 	if err != nil {
 		return 0, 0, fmt.Errorf("%w: bad until date", ErrInvalidInput)
 	}
-	occs, err := s.Store.ListSeriesAllOccurrences(ctx, organizationID, *picked.SeriesID)
+	occs, err := c.Store.ListSeriesAllOccurrences(ctx, organizationID, *picked.SeriesID)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -286,7 +302,7 @@ func (s *Services) ChangeSeriesEnd(ctx context.Context, organizationID, userID, 
 	if err != nil {
 		return 0, 0, fmt.Errorf("%w: %v", ErrInvalidInput, err)
 	}
-	existingStarts, err := s.Store.ListSeriesOccurrenceStarts(ctx, organizationID, *picked.SeriesID)
+	existingStarts, err := c.Store.ListSeriesOccurrenceStarts(ctx, organizationID, *picked.SeriesID)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -294,18 +310,18 @@ func (s *Services) ChangeSeriesEnd(ctx context.Context, organizationID, userID, 
 	cutoff := time.Date(newUntil.Year(), newUntil.Month(), newUntil.Day(), 0, 0, 0, 0, loc).AddDate(0, 0, 1)
 
 	var (
-		calSvc     CalendarService
+		calSvc     docalendar.Service
 		createdIDs []string
 		rows       []model.Meeting
 		parts      []model.MeetingParticipant
 	)
 	if len(plan.Create) > 0 {
 		var ferr error
-		calSvc, ferr = s.Calendar.For(ctx, organizationID, s.organizerEmail(ctx, anchor.OrganizerUserID))
+		calSvc, ferr = c.Calendar.For(ctx, organizationID, c.organizerEmail(ctx, anchor.OrganizerUserID))
 		if ferr != nil {
 			return 0, 0, ferr
 		}
-		parts, err = s.Store.ListParticipants(ctx, anchor.ID)
+		parts, err = c.Store.ListParticipants(ctx, anchor.ID)
 		if err != nil {
 			return 0, 0, err
 		}
@@ -318,11 +334,11 @@ func (s *Services) ChangeSeriesEnd(ctx context.Context, organizationID, userID, 
 		rows = make([]model.Meeting, 0, len(plan.Create))
 		for _, sp := range plan.Create {
 			name := meeting.GenerateName(anchor.Dept, anchor.Type, anchor.Host, sp.Start, rec)
-			res, cerr := calSvc.CreateEvent(ctx, CalendarEvent{
+			res, cerr := calSvc.CreateEvent(ctx, docalendar.CalendarEvent{
 				Title: name, Description: anchor.Description, Start: sp.Start, End: sp.End, AttendeeEmails: emails,
 			})
 			if cerr != nil {
-				s.deleteEventsBestEffort(ctx, calSvc, createdIDs)
+				c.deleteEventsBestEffort(ctx, calSvc, createdIDs)
 				return 0, 0, fmt.Errorf("calendar: %w", cerr)
 			}
 			createdIDs = append(createdIDs, res.EventID)
@@ -339,10 +355,10 @@ func (s *Services) ChangeSeriesEnd(ctx context.Context, organizationID, userID, 
 		}
 	}
 
-	added, removed, err := s.Store.ReshapeSeriesTx(ctx, organizationID, *picked.SeriesID, rows, parts, cutoff, newUntil)
+	added, removed, err := c.Store.ReshapeSeriesTx(ctx, organizationID, *picked.SeriesID, rows, parts, cutoff, newUntil)
 	if err != nil {
 		if len(createdIDs) > 0 && calSvc != nil {
-			s.deleteEventsBestEffort(ctx, calSvc, createdIDs)
+			c.deleteEventsBestEffort(ctx, calSvc, createdIDs)
 		}
 		return 0, 0, err
 	}
@@ -352,20 +368,20 @@ func (s *Services) ChangeSeriesEnd(ctx context.Context, organizationID, userID, 
 		for _, id := range plan.CancelIDs {
 			cancelSet[id] = true
 		}
-		if delSvc, ferr := s.Calendar.For(ctx, organizationID, s.organizerEmail(ctx, anchor.OrganizerUserID)); ferr == nil {
+		if delSvc, ferr := c.Calendar.For(ctx, organizationID, c.organizerEmail(ctx, anchor.OrganizerUserID)); ferr == nil {
 			var ids []string
 			for _, o := range occs {
 				if cancelSet[o.ID] && o.GoogleEventID != "" {
 					ids = append(ids, o.GoogleEventID)
 				}
 			}
-			s.deleteEventsBestEffort(ctx, delSvc, ids)
+			c.deleteEventsBestEffort(ctx, delSvc, ids)
 		}
 	}
 
-	if s.Queue != nil {
-		if err := s.Queue.EnqueueMeetingUpdated(ctx, organizationID, meetingID); err != nil && s.Log != nil {
-			s.Log.Warn("enqueue_series_end_changed",
+	if c.Queue != nil {
+		if err := c.Queue.EnqueueMeetingUpdated(ctx, organizationID, meetingID); err != nil && c.Log != nil {
+			c.Log.Warn("enqueue_series_end_changed",
 				zap.String("organization_id", organizationID.String()),
 				zap.String("meeting_id", meetingID.String()), zap.Error(err))
 		}
