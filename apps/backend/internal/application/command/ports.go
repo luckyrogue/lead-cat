@@ -21,6 +21,7 @@ type Store interface {
 	UpdateMeetingsTx(ctx context.Context, organizationID uuid.UUID, ms []model.Meeting) error
 	CancelMeeting(ctx context.Context, organizationID, id uuid.UUID) error
 	AddParticipants(ctx context.Context, meetingID uuid.UUID, ps []model.MeetingParticipant) error
+	RemoveParticipant(ctx context.Context, meetingID uuid.UUID, email string) error
 	ListParticipants(ctx context.Context, meetingID uuid.UUID) ([]model.MeetingParticipant, error)
 	ListSeriesOccurrences(ctx context.Context, organizationID, seriesID uuid.UUID, fromStart time.Time) ([]model.Meeting, error)
 	ListSeriesAllOccurrences(ctx context.Context, organizationID, seriesID uuid.UUID) ([]model.Meeting, error)
@@ -38,4 +39,6 @@ type JobQueue interface {
 	EnqueueMeetingCreated(ctx context.Context, organizationID, meetingID uuid.UUID) error
 	EnqueueMeetingUpdated(ctx context.Context, organizationID, meetingID uuid.UUID) error
 	EnqueueMeetingCancelled(ctx context.Context, organizationID, meetingID uuid.UUID) error
+	EnqueueParticipantAdded(ctx context.Context, organizationID, meetingID uuid.UUID, email string) error
+	EnqueueParticipantRemoved(ctx context.Context, organizationID, meetingID uuid.UUID, email string) error
 }

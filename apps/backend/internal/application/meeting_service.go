@@ -79,6 +79,14 @@ func (s *Services) ChangeSeriesEnd(ctx context.Context, organizationID, userID, 
 	return s.Commands.ChangeSeriesEnd(ctx, organizationID, userID, meetingID, untilStr)
 }
 
+func (s *Services) AddParticipant(ctx context.Context, organizationID, userID, meetingID uuid.UUID, email string) error {
+	return s.Commands.AddParticipant(ctx, organizationID, userID, meetingID, email)
+}
+
+func (s *Services) RemoveParticipant(ctx context.Context, organizationID, userID, meetingID uuid.UUID, email string) error {
+	return s.Commands.RemoveParticipant(ctx, organizationID, userID, meetingID, email)
+}
+
 func orDefault(v, def string) string {
 	if v == "" {
 		return def
