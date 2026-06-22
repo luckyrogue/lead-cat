@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/platform/boti18n"
 	"github.com/luckyrogue/lead-cat/internal/platform/meetingrecipients"
 )
@@ -50,7 +50,7 @@ func (n *Notifier) HandleCreated(ctx context.Context, organizationID, meetingID 
 		return fmt.Errorf("resolve recipients: %w", err)
 	}
 	for _, r := range recs {
-		claimed, err := n.store.TryClaimReminder(ctx, m.ID, r.TelegramID, postgres.ReminderOffsetCreated)
+		claimed, err := n.store.TryClaimReminder(ctx, m.ID, r.TelegramID, model.ReminderOffsetCreated)
 		if err != nil {
 			return fmt.Errorf("claim reminder: %w", err)
 		}
@@ -90,7 +90,7 @@ func (n *Notifier) notifyParticipant(ctx context.Context, organizationID, meetin
 		return fmt.Errorf("get organization: %w", err)
 	}
 	u, err := n.store.GetBotUserByEmail(ctx, email)
-	if postgres.IsNotFound(err) {
+	if model.IsNotFound(err) {
 		return nil
 	}
 	if err != nil {

@@ -55,6 +55,14 @@ linters:
               desc: "delivery must not import the postgres driver directly — use the application layer"
             - pkg: "github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
               desc: "delivery must not import the postgres repository directly — use the application layer and application/model"
+        platform-no-direct-db:
+          files:
+            - "**/internal/platform/**"
+          deny:
+            - pkg: "github.com/jackc/pgx"
+              desc: "platform must not import the postgres driver directly — depend on a narrow port and application/model"
+            - pkg: "github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+              desc: "platform must not import the postgres repository directly — depend on a narrow port and application/model"
   exclusions:
     generated: lax
     presets:

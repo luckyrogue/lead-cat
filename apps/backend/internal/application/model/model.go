@@ -63,6 +63,12 @@ type Employee struct {
 	HasTelegram    bool      `json:"has_telegram"`
 }
 
+type EmployeeSeed struct {
+	FullName string
+	Email    string
+	Dept     string
+}
+
 type MeetingParticipant struct {
 	EmployeeID *uuid.UUID `json:"employee_id,omitempty"`
 	Email      string     `json:"email"`
@@ -93,6 +99,8 @@ type MeetingWithTZ struct {
 	Meeting
 	TZ string
 }
+
+const ReminderOffsetCreated = -1
 
 type MeetingFilter struct {
 	Status    string

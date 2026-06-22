@@ -6,13 +6,13 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
 type Store interface {
-	ListParticipants(ctx context.Context, meetingID uuid.UUID) ([]postgres.MeetingParticipant, error)
-	GetBotUserByEmail(ctx context.Context, email string) (postgres.BotUser, error)
-	GetBotUserByTelegramID(ctx context.Context, telegramID int64) (postgres.BotUser, error)
+	ListParticipants(ctx context.Context, meetingID uuid.UUID) ([]model.MeetingParticipant, error)
+	GetBotUserByEmail(ctx context.Context, email string) (model.BotUser, error)
+	GetBotUserByTelegramID(ctx context.Context, telegramID int64) (model.BotUser, error)
 	GetUserTelegramID(ctx context.Context, userID uuid.UUID) (int64, bool, error)
 }
 
@@ -26,7 +26,7 @@ type Recipient struct {
 	Timezone        string
 }
 
-func Resolve(ctx context.Context, store Store, m postgres.Meeting) ([]Recipient, error) {
+func Resolve(ctx context.Context, store Store, m model.Meeting) ([]Recipient, error) {
 	var out []Recipient
 	seen := map[int64]bool{}
 

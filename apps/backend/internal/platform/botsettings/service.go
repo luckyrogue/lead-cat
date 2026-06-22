@@ -3,11 +3,11 @@ package botsettings
 import (
 	"context"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
 type store interface {
-	GetBotUserByTelegramID(ctx context.Context, telegramID int64) (postgres.BotUser, error)
+	GetBotUserByTelegramID(ctx context.Context, telegramID int64) (model.BotUser, error)
 	SetReminderMinutes(ctx context.Context, telegramID int64, csv string) error
 }
 

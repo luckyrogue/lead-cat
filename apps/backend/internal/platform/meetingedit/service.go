@@ -12,17 +12,17 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
 	"github.com/luckyrogue/lead-cat/internal/platform/boti18n"
 )
 
 type Backend interface {
-	ListEditableMeetings(ctx context.Context, telegramID int64) ([]postgres.MeetingWithTZ, error)
-	UpdateMeeting(ctx context.Context, organizationID, userID, meetingID uuid.UUID, in application.UpdateMeetingInput) (postgres.Meeting, error)
+	ListEditableMeetings(ctx context.Context, telegramID int64) ([]model.MeetingWithTZ, error)
+	UpdateMeeting(ctx context.Context, organizationID, userID, meetingID uuid.UUID, in application.UpdateMeetingInput) (model.Meeting, error)
 	UpdateSeries(ctx context.Context, organizationID, userID, meetingID uuid.UUID, in application.SeriesUpdateInput) (int, error)
-	ListParticipants(ctx context.Context, meetingID uuid.UUID) ([]postgres.MeetingParticipant, error)
-	SearchEmployees(ctx context.Context, organizationID uuid.UUID, query string) ([]postgres.Employee, error)
+	ListParticipants(ctx context.Context, meetingID uuid.UUID) ([]model.MeetingParticipant, error)
+	SearchEmployees(ctx context.Context, organizationID uuid.UUID, query string) ([]model.Employee, error)
 	AddParticipant(ctx context.Context, organizationID, userID, meetingID uuid.UUID, email string) error
 	RemoveParticipant(ctx context.Context, organizationID, userID, meetingID uuid.UUID, email string) error
 	CancelMeeting(ctx context.Context, organizationID, userID, meetingID uuid.UUID) error
@@ -147,7 +147,7 @@ func (s *Service) pick(ctx context.Context, telegramID int64, idStr, lang string
 	if err != nil {
 		return Reply{Text: boti18n.T(lang, "medit.get_meeting_failed")}
 	}
-	var found *postgres.MeetingWithTZ
+	var found *model.MeetingWithTZ
 	for i := range ms {
 		if ms[i].ID == mid {
 			found = &ms[i]
@@ -261,7 +261,7 @@ func (s *Service) doApply(ctx context.Context, telegramID int64, st *State, lang
 			case errors.Is(err, application.ErrForbidden):
 				_ = s.sessions.Del(ctx, telegramID)
 				return Reply{Text: boti18n.T(lang, "medit.forbidden")}
-			case errors.Is(err, postgres.ErrMeetingNotEditable):
+			case errors.Is(err, model.ErrMeetingNotEditable):
 				_ = s.sessions.Del(ctx, telegramID)
 				return Reply{Text: boti18n.T(lang, "medit.series_not_editable")}
 			default:
@@ -279,7 +279,7 @@ func (s *Service) doApply(ctx context.Context, telegramID int64, st *State, lang
 		case errors.Is(err, application.ErrForbidden):
 			_ = s.sessions.Del(ctx, telegramID)
 			return Reply{Text: boti18n.T(lang, "medit.forbidden")}
-		case errors.Is(err, postgres.ErrMeetingNotEditable):
+		case errors.Is(err, model.ErrMeetingNotEditable):
 			_ = s.sessions.Del(ctx, telegramID)
 			return Reply{Text: boti18n.T(lang, "medit.meeting_not_editable")}
 		default:
@@ -578,7 +578,7 @@ func (s *Service) deleteErrReply(ctx context.Context, telegramID int64, err erro
 	case errors.Is(err, application.ErrForbidden):
 		_ = s.sessions.Del(ctx, telegramID)
 		return Reply{Text: boti18n.T(lang, "medit.forbidden")}
-	case errors.Is(err, postgres.ErrMeetingNotEditable):
+	case errors.Is(err, model.ErrMeetingNotEditable):
 		_ = s.sessions.Del(ctx, telegramID)
 		return Reply{Text: boti18n.T(lang, "medit.meeting_unavailable")}
 	default:
@@ -668,7 +668,7 @@ func recLabel(v, lang string) string {
 	}
 }
 
-func snapshot(m postgres.Meeting, loc *time.Location) map[string]string {
+func snapshot(m model.Meeting, loc *time.Location) map[string]string {
 	s := m.StartsAt.In(loc)
 	e := m.EndsAt.In(loc)
 	return map[string]string{
@@ -714,7 +714,7 @@ func seriesInput(ov map[string]string) application.SeriesUpdateInput {
 	return in
 }
 
-func summary(m postgres.Meeting) string {
+func summary(m model.Meeting) string {
 	s := "«" + m.Name + "»"
 	if m.MeetLink != "" {
 		s += "\n🔗 " + m.MeetLink

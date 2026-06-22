@@ -4,15 +4,21 @@ import (
 	"context"
 	_ "embed"
 
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 )
 
 //go:embed employees.csv
 var csvData []byte
 
-func Seed(ctx context.Context, store *postgres.Store, log *zap.Logger) {
+type store interface {
+	DefaultOrganizationWithGoogle(ctx context.Context) (uuid.UUID, bool, error)
+	SyncEmployees(ctx context.Context, organizationID uuid.UUID, seeds []model.EmployeeSeed) (added, updated, deleted int, err error)
+}
+
+func Seed(ctx context.Context, store store, log *zap.Logger) {
 	records, err := Parse(csvData)
 	if err != nil {
 		log.Error("employee_csv_parse_failed", zap.Error(err))
@@ -22,9 +28,9 @@ func Seed(ctx context.Context, store *postgres.Store, log *zap.Logger) {
 		log.Warn("employee_csv_empty")
 		return
 	}
-	seeds := make([]postgres.EmployeeSeed, 0, len(records))
+	seeds := make([]model.EmployeeSeed, 0, len(records))
 	for _, r := range records {
-		seeds = append(seeds, postgres.EmployeeSeed{FullName: r.FullName, Email: r.Email, Dept: r.Dept})
+		seeds = append(seeds, model.EmployeeSeed{FullName: r.FullName, Email: r.Email, Dept: r.Dept})
 	}
 	orgID, ok, err := store.DefaultOrganizationWithGoogle(ctx)
 	if err != nil {

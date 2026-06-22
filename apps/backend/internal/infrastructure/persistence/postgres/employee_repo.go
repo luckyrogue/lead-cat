@@ -58,12 +58,6 @@ func (s *Store) CreateEmployee(ctx context.Context, organizationID uuid.UUID, fu
 	return e, err
 }
 
-type EmployeeSeed struct {
-	FullName string
-	Email    string
-	Dept     string
-}
-
 func (s *Store) ListOrganizationsWithGoogle(ctx context.Context) ([]uuid.UUID, error) {
 	rows, err := s.pool.Query(ctx, `SELECT id FROM organizations WHERE google_sa_json_enc IS NOT NULL ORDER BY id`)
 	if err != nil {

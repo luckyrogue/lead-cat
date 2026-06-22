@@ -357,7 +357,7 @@ func (s *Store) ListUpcomingMeetings(ctx context.Context, until time.Time) ([]Me
 		ORDER BY starts_at`, until)
 }
 
-const ReminderOffsetCreated = -1
+const ReminderOffsetCreated = model.ReminderOffsetCreated
 
 func (s *Store) TryClaimReminder(ctx context.Context, meetingID uuid.UUID, telegramID int64, offset int) (bool, error) {
 	ct, err := s.pool.Exec(ctx, `

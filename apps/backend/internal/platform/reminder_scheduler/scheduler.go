@@ -6,11 +6,12 @@ import (
 	"time"
 
 	"github.com/go-telegram/bot"
+	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/platform/botsettings"
 	"github.com/luckyrogue/lead-cat/internal/platform/emailtemplates"
 	"github.com/luckyrogue/lead-cat/internal/platform/meetingrecipients"
@@ -20,8 +21,14 @@ const lockKey = "leadcat:reminders:leader"
 
 var defaultOrganizerOffsets = []int{15}
 
+type repo interface {
+	meetingrecipients.Store
+	ListUpcomingMeetings(ctx context.Context, until time.Time) ([]model.Meeting, error)
+	TryClaimReminder(ctx context.Context, meetingID uuid.UUID, telegramID int64, offset int) (bool, error)
+}
+
 type Scheduler struct {
-	store          *postgres.Store
+	store          repo
 	bot            *bot.Bot
 	rdb            *redis.Client
 	email          application.EmailSender
@@ -30,7 +37,7 @@ type Scheduler struct {
 	log            *zap.Logger
 }
 
-func New(store *postgres.Store, b *bot.Bot, rdb *redis.Client, email application.EmailSender, emailEnabled bool, unsubscribeURL string, log *zap.Logger) *Scheduler {
+func New(store repo, b *bot.Bot, rdb *redis.Client, email application.EmailSender, emailEnabled bool, unsubscribeURL string, log *zap.Logger) *Scheduler {
 	return &Scheduler{
 		store:          store,
 		bot:            b,
@@ -101,7 +108,7 @@ type reminderTarget struct {
 	Timezone   string
 }
 
-func (s *Scheduler) recipients(ctx context.Context, m postgres.Meeting) []reminderTarget {
+func (s *Scheduler) recipients(ctx context.Context, m model.Meeting) []reminderTarget {
 	recs, err := meetingrecipients.Resolve(ctx, s.store, m)
 	if err != nil {
 		s.log.Warn("resolve recipients", zap.String("meeting_id", m.ID.String()), zap.Error(err))
@@ -125,7 +132,7 @@ func (s *Scheduler) recipients(ctx context.Context, m postgres.Meeting) []remind
 	return out
 }
 
-func (s *Scheduler) sendReminderEmail(ctx context.Context, m postgres.Meeting, t reminderTarget) {
+func (s *Scheduler) sendReminderEmail(ctx context.Context, m model.Meeting, t reminderTarget) {
 	loc, err := time.LoadLocation(t.Timezone)
 	if t.Timezone == "" || err != nil {
 		if loc, err = time.LoadLocation("Asia/Almaty"); err != nil {

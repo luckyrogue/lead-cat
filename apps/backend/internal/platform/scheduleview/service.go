@@ -8,13 +8,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/platform/boti18n"
 )
 
 type Backend interface {
-	SearchEmployeesGlobal(ctx context.Context, query string) ([]postgres.Employee, error)
-	EmployeeSchedule(ctx context.Context, email string, from, to time.Time) ([]postgres.Meeting, error)
+	SearchEmployeesGlobal(ctx context.Context, query string) ([]model.Employee, error)
+	EmployeeSchedule(ctx context.Context, email string, from, to time.Time) ([]model.Meeting, error)
 }
 
 type sessions interface {
@@ -188,7 +188,7 @@ func periodLabel(kind, lang string) string {
 	return kind
 }
 
-func scheduleText(email, period string, ms []postgres.Meeting, now time.Time, loc *time.Location, lang string) string {
+func scheduleText(email, period string, ms []model.Meeting, now time.Time, loc *time.Location, lang string) string {
 	var b strings.Builder
 	b.WriteString(boti18n.T(lang, "sched.header", email, period))
 	if len(ms) == 0 {

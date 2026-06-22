@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/luckyrogue/lead-cat/internal/application"
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/platform/boti18n"
 )
 
 type Backend interface {
-	SearchEmployeesGlobal(ctx context.Context, query string) ([]postgres.Employee, error)
+	SearchEmployeesGlobal(ctx context.Context, query string) ([]model.Employee, error)
 	FreeSlots(ctx context.Context, requesterEmail string, emails []string, from, to time.Time, durMins int) ([]application.FreeSlot, error)
 }
 

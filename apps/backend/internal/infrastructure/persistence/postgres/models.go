@@ -9,6 +9,7 @@ type (
 	Member               = model.Member
 	PendingChat          = model.PendingChat
 	Employee             = model.Employee
+	EmployeeSeed         = model.EmployeeSeed
 	MeetingParticipant   = model.MeetingParticipant
 	Meeting              = model.Meeting
 	MeetingWithTZ        = model.MeetingWithTZ

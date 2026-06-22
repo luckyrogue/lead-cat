@@ -5,7 +5,7 @@ import (
 	"net/mail"
 	"strings"
 
-	"github.com/luckyrogue/lead-cat/internal/infrastructure/persistence/postgres"
+	"github.com/luckyrogue/lead-cat/internal/application/model"
 	"github.com/luckyrogue/lead-cat/internal/platform/boti18n"
 )
 
@@ -21,9 +21,9 @@ const (
 )
 
 type userStore interface {
-	GetBotUserByTelegramID(ctx context.Context, telegramID int64) (postgres.BotUser, error)
-	GetBotUserByEmail(ctx context.Context, email string) (postgres.BotUser, error)
-	CreateBotUser(ctx context.Context, telegramID int64, fullName, email, role string) (postgres.BotUser, error)
+	GetBotUserByTelegramID(ctx context.Context, telegramID int64) (model.BotUser, error)
+	GetBotUserByEmail(ctx context.Context, email string) (model.BotUser, error)
+	CreateBotUser(ctx context.Context, telegramID int64, fullName, email, role string) (model.BotUser, error)
 }
 
 type sessions interface {
