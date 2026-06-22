@@ -1,4 +1,11 @@
-import { Button, ChevronDown, ChevronRight, cn, Plus, Repeat } from "@leadcat/ui"
+import {
+  Button,
+  ChevronDown,
+  ChevronRight,
+  cn,
+  Plus,
+  Repeat,
+} from "@leadcat/ui"
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 import { Link } from "react-router"
