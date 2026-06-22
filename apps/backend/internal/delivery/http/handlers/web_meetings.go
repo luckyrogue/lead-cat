@@ -19,6 +19,28 @@ func webUser(c *fiber.Ctx) (model.PlatformUser, bool) {
 	return u, ok
 }
 
+type webMeetingOp struct {
+	user      model.PlatformUser
+	orgID     uuid.UUID
+	meetingID uuid.UUID
+}
+
+func resolveWebMeetingOp(c *fiber.Ctx) (webMeetingOp, error) {
+	user, ok := webUser(c)
+	if !ok {
+		return webMeetingOp{}, fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
+	}
+	orgID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return webMeetingOp{}, fiber.NewError(fiber.StatusBadRequest, "invalid_org_id")
+	}
+	meetingID, err := uuid.Parse(c.Params("mid"))
+	if err != nil {
+		return webMeetingOp{}, fiber.NewError(fiber.StatusBadRequest, "invalid_meeting_id")
+	}
+	return webMeetingOp{user: user, orgID: orgID, meetingID: meetingID}, nil
+}
+
 func mapMeetingWriteError(err error) error {
 	switch {
 	case errors.Is(err, application.ErrForbidden):
@@ -41,87 +63,63 @@ type seriesEndRequest struct {
 }
 
 func (a *API) WebChangeSeriesEnd(c *fiber.Ctx) error {
-	user, ok := webUser(c)
-	if !ok {
-		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
-	}
-	orgID, err := uuid.Parse(c.Params("id"))
+	op, err := resolveWebMeetingOp(c)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid_org_id")
-	}
-	meetingID, err := uuid.Parse(c.Params("mid"))
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid_meeting_id")
+		return err
 	}
 	var req seriesEndRequest
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid_body")
 	}
-	added, removed, err := a.App.ChangeSeriesEnd(c.UserContext(), orgID, user.ID, meetingID, req.Until)
+	added, removed, err := a.App.ChangeSeriesEnd(c.UserContext(), op.orgID, op.user.ID, op.meetingID, req.Until)
 	if err != nil {
 		return mapMeetingWriteError(err)
 	}
-	m, err := a.App.GetMeeting(c.UserContext(), orgID, meetingID)
+	m, err := a.App.GetMeeting(c.UserContext(), op.orgID, op.meetingID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
-	a.Log.Info("web_series_end_changed", zap.String("org_id", orgID.String()), zap.String("meeting_id", meetingID.String()), zap.Int("added", added), zap.Int("removed", removed))
+	a.Log.Info("web_series_end_changed", zap.String("org_id", op.orgID.String()), zap.String("meeting_id", op.meetingID.String()), zap.Int("added", added), zap.Int("removed", removed))
 	return c.JSON(fiber.Map{"meeting": m, "added": added, "removed": removed})
 }
 
 func (a *API) WebAddParticipant(c *fiber.Ctx) error {
-	user, ok := webUser(c)
-	if !ok {
-		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
-	}
-	orgID, err := uuid.Parse(c.Params("id"))
+	op, err := resolveWebMeetingOp(c)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid_org_id")
-	}
-	meetingID, err := uuid.Parse(c.Params("mid"))
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid_meeting_id")
+		return err
 	}
 	var req webParticipantRequest
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid_body")
 	}
-	if err := a.App.AddParticipant(c.UserContext(), orgID, user.ID, meetingID, req.Email); err != nil {
+	if err := a.App.AddParticipant(c.UserContext(), op.orgID, op.user.ID, op.meetingID, req.Email); err != nil {
 		return mapMeetingWriteError(err)
 	}
-	m, err := a.App.GetMeeting(c.UserContext(), orgID, meetingID)
+	m, err := a.App.GetMeeting(c.UserContext(), op.orgID, op.meetingID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
-	a.Log.Info("web_participant_added", zap.String("org_id", orgID.String()), zap.String("meeting_id", meetingID.String()))
+	a.Log.Info("web_participant_added", zap.String("org_id", op.orgID.String()), zap.String("meeting_id", op.meetingID.String()))
 	return c.JSON(fiber.Map{"meeting": m})
 }
 
 func (a *API) WebRemoveParticipant(c *fiber.Ctx) error {
-	user, ok := webUser(c)
-	if !ok {
-		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
-	}
-	orgID, err := uuid.Parse(c.Params("id"))
+	op, err := resolveWebMeetingOp(c)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid_org_id")
-	}
-	meetingID, err := uuid.Parse(c.Params("mid"))
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid_meeting_id")
+		return err
 	}
 	email := c.Query("email")
 	if email == "" {
 		return fiber.NewError(fiber.StatusBadRequest, "email_required")
 	}
-	if err := a.App.RemoveParticipant(c.UserContext(), orgID, user.ID, meetingID, email); err != nil {
+	if err := a.App.RemoveParticipant(c.UserContext(), op.orgID, op.user.ID, op.meetingID, email); err != nil {
 		return mapMeetingWriteError(err)
 	}
-	m, err := a.App.GetMeeting(c.UserContext(), orgID, meetingID)
+	m, err := a.App.GetMeeting(c.UserContext(), op.orgID, op.meetingID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
-	a.Log.Info("web_participant_removed", zap.String("org_id", orgID.String()), zap.String("meeting_id", meetingID.String()))
+	a.Log.Info("web_participant_removed", zap.String("org_id", op.orgID.String()), zap.String("meeting_id", op.meetingID.String()))
 	return c.JSON(fiber.Map{"meeting": m})
 }
 
@@ -223,17 +221,9 @@ func (a *API) WebCreateMeeting(c *fiber.Ctx) error {
 }
 
 func (a *API) WebUpdateMeeting(c *fiber.Ctx) error {
-	user, ok := webUser(c)
-	if !ok {
-		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
-	}
-	orgID, err := uuid.Parse(c.Params("id"))
+	op, err := resolveWebMeetingOp(c)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid_org_id")
-	}
-	meetingID, err := uuid.Parse(c.Params("mid"))
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid_meeting_id")
+		return err
 	}
 	scope, err := parseScope(c)
 	if err != nil {
@@ -243,67 +233,59 @@ func (a *API) WebUpdateMeeting(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid_body")
 	}
-	if _, err := a.App.GetMeeting(c.UserContext(), orgID, meetingID); err != nil {
+	if _, err := a.App.GetMeeting(c.UserContext(), op.orgID, op.meetingID); err != nil {
 		return fiber.NewError(fiber.StatusNotFound, "not_found")
 	}
 	if scope == "this" {
-		m, err := a.App.UpdateMeeting(c.UserContext(), orgID, user.ID, meetingID, application.UpdateMeetingInput{
+		m, err := a.App.UpdateMeeting(c.UserContext(), op.orgID, op.user.ID, op.meetingID, application.UpdateMeetingInput{
 			Dept: req.Dept, Type: req.Type, Host: req.Host,
 			Date: req.Date, Start: req.Start, End: req.End, Description: req.Desc,
-			Timezone: user.Timezone,
+			Timezone: op.user.Timezone,
 		})
 		if err != nil {
 			return mapMeetingWriteError(err)
 		}
-		a.Log.Info("web_meeting_updated", zap.String("org_id", orgID.String()), zap.String("meeting_id", meetingID.String()))
+		a.Log.Info("web_meeting_updated", zap.String("org_id", op.orgID.String()), zap.String("meeting_id", op.meetingID.String()))
 		return c.JSON(fiber.Map{"meeting": m})
 	}
 	if req.Date != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "date_immutable_for_series")
 	}
-	n, err := a.App.UpdateWholeSeries(c.UserContext(), orgID, user.ID, meetingID, mapToSeriesUpdateInput(req))
+	n, err := a.App.UpdateWholeSeries(c.UserContext(), op.orgID, op.user.ID, op.meetingID, mapToSeriesUpdateInput(req))
 	if err != nil {
 		return mapMeetingWriteError(err)
 	}
-	m, err := a.App.GetMeeting(c.UserContext(), orgID, meetingID)
+	m, err := a.App.GetMeeting(c.UserContext(), op.orgID, op.meetingID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
-	a.Log.Info("web_meeting_series_updated", zap.String("org_id", orgID.String()), zap.String("meeting_id", meetingID.String()), zap.Int("count", n))
+	a.Log.Info("web_meeting_series_updated", zap.String("org_id", op.orgID.String()), zap.String("meeting_id", op.meetingID.String()), zap.Int("count", n))
 	return c.JSON(fiber.Map{"meeting": m})
 }
 
 func (a *API) WebDeleteMeeting(c *fiber.Ctx) error {
-	user, ok := webUser(c)
-	if !ok {
-		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
-	}
-	orgID, err := uuid.Parse(c.Params("id"))
+	op, err := resolveWebMeetingOp(c)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid_org_id")
-	}
-	meetingID, err := uuid.Parse(c.Params("mid"))
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid_meeting_id")
+		return err
 	}
 	scope, err := parseScope(c)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	if _, err := a.App.GetMeeting(c.UserContext(), orgID, meetingID); err != nil {
+	if _, err := a.App.GetMeeting(c.UserContext(), op.orgID, op.meetingID); err != nil {
 		return fiber.NewError(fiber.StatusNotFound, "not_found")
 	}
 	if scope == "this" {
-		if err := a.App.CancelMeeting(c.UserContext(), orgID, user.ID, meetingID); err != nil {
+		if err := a.App.CancelMeeting(c.UserContext(), op.orgID, op.user.ID, op.meetingID); err != nil {
 			return mapMeetingWriteError(err)
 		}
-		a.Log.Info("web_meeting_cancelled", zap.String("org_id", orgID.String()), zap.String("meeting_id", meetingID.String()))
+		a.Log.Info("web_meeting_cancelled", zap.String("org_id", op.orgID.String()), zap.String("meeting_id", op.meetingID.String()))
 		return c.SendStatus(fiber.StatusNoContent)
 	}
-	n, err := a.App.CancelWholeSeries(c.UserContext(), orgID, user.ID, meetingID)
+	n, err := a.App.CancelWholeSeries(c.UserContext(), op.orgID, op.user.ID, op.meetingID)
 	if err != nil {
 		return mapMeetingWriteError(err)
 	}
-	a.Log.Info("web_meeting_series_cancelled", zap.String("org_id", orgID.String()), zap.String("meeting_id", meetingID.String()), zap.Int("count", n))
+	a.Log.Info("web_meeting_series_cancelled", zap.String("org_id", op.orgID.String()), zap.String("meeting_id", op.meetingID.String()), zap.Int("count", n))
 	return c.SendStatus(fiber.StatusNoContent)
 }

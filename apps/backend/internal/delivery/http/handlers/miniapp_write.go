@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/luckyrogue/lead-cat/internal/application"
 	"github.com/luckyrogue/lead-cat/internal/application/model"
-	"github.com/luckyrogue/lead-cat/internal/domain/meeting"
 )
 
 func parseScope(c *fiber.Ctx) (string, error) {
@@ -22,13 +20,6 @@ func parseScope(c *fiber.Ctx) (string, error) {
 	default:
 		return "", fmt.Errorf("invalid scope %q", s)
 	}
-}
-
-func mapAvailabilityError(err error) *fiber.Error {
-	if errors.Is(err, application.ErrUnknownParticipant) {
-		return fiber.NewError(fiber.StatusBadRequest, "unknown_participant")
-	}
-	return fiber.NewError(fiber.StatusInternalServerError, "internal")
 }
 
 func mapToSeriesUpdateInput(req miniappUpdateRequest) application.SeriesUpdateInput {
@@ -125,125 +116,6 @@ func (a *API) MiniAppCreateMeeting(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m, resolveLoc(bu.Timezone))})
 }
 
-type miniappConflictDTO struct {
-	Email string `json:"email"`
-	Name  string `json:"name"`
-	Title string `json:"title"`
-	Start string `json:"start"`
-	End   string `json:"end"`
-}
-
-func toConflictDTO(c application.Conflict, loc *time.Location) miniappConflictDTO {
-	return miniappConflictDTO{
-		Email: c.Email,
-		Name:  c.PersonName,
-		Title: c.MeetingName,
-		Start: c.Start.In(loc).Format("15:04"),
-		End:   c.End.In(loc).Format("15:04"),
-	}
-}
-
-type miniappOccurrenceConflictsDTO struct {
-	Date      string               `json:"date"`
-	Start     string               `json:"start"`
-	End       string               `json:"end"`
-	Conflicts []miniappConflictDTO `json:"conflicts"`
-}
-
-func toOccurrenceConflicts(oc application.OccurrenceConflicts, loc *time.Location) miniappOccurrenceConflictsDTO {
-	startLocal := oc.Span.Start.In(loc)
-	endLocal := oc.Span.End.In(loc)
-	cs := make([]miniappConflictDTO, 0, len(oc.Conflicts))
-	for _, c := range oc.Conflicts {
-		cs = append(cs, toConflictDTO(c, loc))
-	}
-	return miniappOccurrenceConflictsDTO{
-		Date:      startLocal.Format("2006-01-02"),
-		Start:     startLocal.Format("15:04"),
-		End:       endLocal.Format("15:04"),
-		Conflicts: cs,
-	}
-}
-
-type miniappConflictRequest struct {
-	Participants    []string `json:"participants"`
-	Date            string   `json:"date"`
-	Start           string   `json:"start"`
-	End             string   `json:"end"`
-	ExcludeID       string   `json:"exclude_id"`
-	Recurrence      *string  `json:"recurrence,omitempty"`
-	RecurrenceUntil *string  `json:"recurrence_until,omitempty"`
-	RecurrenceDays  *[]int   `json:"recurrence_days,omitempty"`
-}
-
-func (a *API) MiniAppConflicts(c *fiber.Ctx) error {
-	bu, ok := botUser(c)
-	if !ok {
-		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
-	}
-	var req miniappConflictRequest
-	if err := c.BodyParser(&req); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
-	}
-	loc := resolveLoc(bu.Timezone)
-	start, err1 := time.ParseInLocation("2006-01-02 15:04", req.Date+" "+req.Start, loc)
-	end, err2 := time.ParseInLocation("2006-01-02 15:04", req.Date+" "+req.End, loc)
-	if err1 != nil || err2 != nil || !end.After(start) || len(req.Participants) == 0 {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid range/participants")
-	}
-	rec := ""
-	if req.Recurrence != nil {
-		rec = *req.Recurrence
-	}
-	if rec == "" || rec == string(meeting.Once) {
-		exclude := uuid.Nil
-		if s := strings.TrimSpace(req.ExcludeID); s != "" {
-			if id, perr := uuid.Parse(s); perr == nil {
-				exclude = id
-			}
-		}
-		conflicts, err := a.App.MeetingConflicts(c.Context(), bu.Email, req.Participants, start, end, exclude)
-		if err != nil {
-			return mapAvailabilityError(err)
-		}
-		out := make([]miniappConflictDTO, 0, len(conflicts))
-		for _, cf := range conflicts {
-			out = append(out, toConflictDTO(cf, loc))
-		}
-		return c.JSON(fiber.Map{"occurrences": []miniappOccurrenceConflictsDTO{{
-			Date:      req.Date,
-			Start:     req.Start,
-			End:       req.End,
-			Conflicts: out,
-		}}})
-	}
-
-	var until time.Time
-	if req.RecurrenceUntil != nil && strings.TrimSpace(*req.RecurrenceUntil) != "" {
-		u, uerr := time.ParseInLocation("2006-01-02", strings.TrimSpace(*req.RecurrenceUntil), loc)
-		if uerr != nil {
-			return fiber.NewError(fiber.StatusBadRequest, "invalid recurrence_until")
-		}
-		until = u
-	}
-	var days []int
-	if req.RecurrenceDays != nil {
-		days = *req.RecurrenceDays
-	}
-	ocs, err := a.App.MeetingSeriesConflicts(c.Context(), bu.Email, req.Participants, start, end, meeting.Recurrence(rec), days, until)
-	if err != nil {
-		if fe := mapAvailabilityError(err); fe.Code == fiber.StatusBadRequest {
-			return fe
-		}
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	}
-	occurrences := make([]miniappOccurrenceConflictsDTO, 0, len(ocs))
-	for _, oc := range ocs {
-		occurrences = append(occurrences, toOccurrenceConflicts(oc, loc))
-	}
-	return c.JSON(fiber.Map{"occurrences": occurrences})
-}
-
 func (a *API) miniAppMeetingOrganization(c *fiber.Ctx, meetingID uuid.UUID) (uuid.UUID, error) {
 	orgID, err := a.App.ResolveMiniAppOrganization(c.Context())
 	if err != nil {
@@ -266,13 +138,9 @@ type miniappUpdateRequest struct {
 }
 
 func (a *API) MiniAppUpdateMeeting(c *fiber.Ctx) error {
-	bu, ok := botUser(c)
-	if !ok {
-		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
-	}
-	meetingID, err := uuid.Parse(c.Params("id"))
+	bu, organizationID, organizerID, meetingID, err := a.resolveMiniAppMeetingOp(c)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid meeting id")
+		return err
 	}
 	var req miniappUpdateRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -282,20 +150,6 @@ func (a *API) MiniAppUpdateMeeting(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	organizationID, err := a.miniAppMeetingOrganization(c, meetingID)
-	if err != nil {
-		if model.IsNotFound(err) {
-			return fiber.NewError(fiber.StatusNotFound, "not_found")
-		}
-		return fiber.NewError(fiber.StatusInternalServerError, "internal")
-	}
-	organizerID, err := a.App.EnsureMiniAppOrganizer(c.Context(), bu.Email, bu.TelegramID)
-	if err != nil {
-		if errors.Is(err, application.ErrTelegramLinkedToOtherAccount) {
-			return fiber.NewError(fiber.StatusConflict, "telegram_linked_to_other_account")
-		}
-		return fiber.NewError(fiber.StatusInternalServerError, "internal")
-	}
 	if scope == "this" {
 		m, err := a.App.UpdateMeeting(c.Context(), organizationID, organizerID, meetingID, application.UpdateMeetingInput{
 			Dept: req.Dept, Type: req.Type, Host: req.Host,
@@ -303,14 +157,7 @@ func (a *API) MiniAppUpdateMeeting(c *fiber.Ctx) error {
 			Timezone: bu.Timezone,
 		})
 		if err != nil {
-			switch {
-			case errors.Is(err, application.ErrForbidden):
-				return fiber.NewError(fiber.StatusForbidden, "forbidden")
-			case errors.Is(err, application.ErrInvalidInput):
-				return fiber.NewError(fiber.StatusBadRequest, err.Error())
-			default:
-				return fiber.NewError(fiber.StatusInternalServerError, "internal")
-			}
+			return mapMeetingWriteError(err)
 		}
 		a.App.Log.Info("miniapp_meeting_updated",
 			zap.Int64("telegram_id", bu.TelegramID),
@@ -324,14 +171,7 @@ func (a *API) MiniAppUpdateMeeting(c *fiber.Ctx) error {
 	}
 	n, err := a.App.UpdateWholeSeries(c.Context(), organizationID, organizerID, meetingID, mapToSeriesUpdateInput(req))
 	if err != nil {
-		switch {
-		case errors.Is(err, application.ErrForbidden):
-			return fiber.NewError(fiber.StatusForbidden, "forbidden")
-		case errors.Is(err, application.ErrInvalidInput):
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		default:
-			return fiber.NewError(fiber.StatusInternalServerError, "internal")
-		}
+		return mapMeetingWriteError(err)
 	}
 	a.App.Log.Info("miniapp_meeting_whole_series_updated",
 		zap.Int64("telegram_id", bu.TelegramID),
@@ -347,38 +187,17 @@ func (a *API) MiniAppUpdateMeeting(c *fiber.Ctx) error {
 }
 
 func (a *API) MiniAppDeleteMeeting(c *fiber.Ctx) error {
-	bu, ok := botUser(c)
-	if !ok {
-		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
-	}
-	meetingID, err := uuid.Parse(c.Params("id"))
+	bu, organizationID, organizerID, meetingID, err := a.resolveMiniAppMeetingOp(c)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid meeting id")
+		return err
 	}
 	scope, err := parseScope(c)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	organizationID, err := a.miniAppMeetingOrganization(c, meetingID)
-	if err != nil {
-		if model.IsNotFound(err) {
-			return fiber.NewError(fiber.StatusNotFound, "not_found")
-		}
-		return fiber.NewError(fiber.StatusInternalServerError, "internal")
-	}
-	organizerID, err := a.App.EnsureMiniAppOrganizer(c.Context(), bu.Email, bu.TelegramID)
-	if err != nil {
-		if errors.Is(err, application.ErrTelegramLinkedToOtherAccount) {
-			return fiber.NewError(fiber.StatusConflict, "telegram_linked_to_other_account")
-		}
-		return fiber.NewError(fiber.StatusInternalServerError, "internal")
-	}
 	if scope == "this" {
 		if err := a.App.CancelMeeting(c.Context(), organizationID, organizerID, meetingID); err != nil {
-			if errors.Is(err, application.ErrForbidden) {
-				return fiber.NewError(fiber.StatusForbidden, "forbidden")
-			}
-			return fiber.NewError(fiber.StatusInternalServerError, "internal")
+			return mapMeetingWriteError(err)
 		}
 		a.App.Log.Info("miniapp_meeting_cancelled",
 			zap.Int64("telegram_id", bu.TelegramID),
@@ -389,14 +208,7 @@ func (a *API) MiniAppDeleteMeeting(c *fiber.Ctx) error {
 
 	n, err := a.App.CancelWholeSeries(c.Context(), organizationID, organizerID, meetingID)
 	if err != nil {
-		switch {
-		case errors.Is(err, application.ErrForbidden):
-			return fiber.NewError(fiber.StatusForbidden, "forbidden")
-		case errors.Is(err, application.ErrInvalidInput):
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		default:
-			return fiber.NewError(fiber.StatusInternalServerError, "internal")
-		}
+		return mapMeetingWriteError(err)
 	}
 	a.App.Log.Info("miniapp_meeting_cancelled_whole_series",
 		zap.Int64("telegram_id", bu.TelegramID),
@@ -410,47 +222,34 @@ type miniappParticipantRequest struct {
 	Email string `json:"email"`
 }
 
-func mapMiniAppParticipantError(err error) error {
-	switch {
-	case errors.Is(err, application.ErrForbidden):
-		return fiber.NewError(fiber.StatusForbidden, "forbidden")
-	case errors.Is(err, model.ErrMeetingNotEditable):
-		return fiber.NewError(fiber.StatusConflict, "meeting_not_editable")
-	case errors.Is(err, application.ErrInvalidInput):
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	default:
-		return fiber.NewError(fiber.StatusInternalServerError, "internal")
-	}
-}
-
-func (a *API) resolveParticipantOp(c *fiber.Ctx) (orgID, organizerID, meetingID uuid.UUID, err error) {
+func (a *API) resolveMiniAppMeetingOp(c *fiber.Ctx) (bu model.BotUser, orgID, organizerID, meetingID uuid.UUID, err error) {
 	bu, ok := botUser(c)
 	if !ok {
-		return uuid.Nil, uuid.Nil, uuid.Nil, fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
+		return bu, uuid.Nil, uuid.Nil, uuid.Nil, fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
 	}
 	meetingID, perr := uuid.Parse(c.Params("id"))
 	if perr != nil {
-		return uuid.Nil, uuid.Nil, uuid.Nil, fiber.NewError(fiber.StatusBadRequest, "invalid meeting id")
+		return bu, uuid.Nil, uuid.Nil, uuid.Nil, fiber.NewError(fiber.StatusBadRequest, "invalid meeting id")
 	}
 	orgID, err = a.miniAppMeetingOrganization(c, meetingID)
 	if err != nil {
 		if model.IsNotFound(err) {
-			return uuid.Nil, uuid.Nil, uuid.Nil, fiber.NewError(fiber.StatusNotFound, "not_found")
+			return bu, uuid.Nil, uuid.Nil, uuid.Nil, fiber.NewError(fiber.StatusNotFound, "not_found")
 		}
-		return uuid.Nil, uuid.Nil, uuid.Nil, fiber.NewError(fiber.StatusInternalServerError, "internal")
+		return bu, uuid.Nil, uuid.Nil, uuid.Nil, fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
 	organizerID, eerr := a.App.EnsureMiniAppOrganizer(c.Context(), bu.Email, bu.TelegramID)
 	if eerr != nil {
 		if errors.Is(eerr, application.ErrTelegramLinkedToOtherAccount) {
-			return uuid.Nil, uuid.Nil, uuid.Nil, fiber.NewError(fiber.StatusConflict, "telegram_linked_to_other_account")
+			return bu, uuid.Nil, uuid.Nil, uuid.Nil, fiber.NewError(fiber.StatusConflict, "telegram_linked_to_other_account")
 		}
-		return uuid.Nil, uuid.Nil, uuid.Nil, fiber.NewError(fiber.StatusInternalServerError, "internal")
+		return bu, uuid.Nil, uuid.Nil, uuid.Nil, fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
-	return orgID, organizerID, meetingID, nil
+	return bu, orgID, organizerID, meetingID, nil
 }
 
 func (a *API) MiniAppAddParticipant(c *fiber.Ctx) error {
-	orgID, organizerID, meetingID, err := a.resolveParticipantOp(c)
+	bu, orgID, organizerID, meetingID, err := a.resolveMiniAppMeetingOp(c)
 	if err != nil {
 		return err
 	}
@@ -459,24 +258,19 @@ func (a *API) MiniAppAddParticipant(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
 	}
 	if err := a.App.AddParticipant(c.Context(), orgID, organizerID, meetingID, req.Email); err != nil {
-		return mapMiniAppParticipantError(err)
+		return mapMeetingWriteError(err)
 	}
 	m, err := a.App.GetMeeting(c.Context(), orgID, meetingID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
-	bu, _ := botUser(c)
 	return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m, resolveLoc(bu.Timezone))})
 }
 
 func (a *API) MiniAppChangeSeriesEnd(c *fiber.Ctx) error {
-	bu, ok := botUser(c)
-	if !ok {
-		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
-	}
-	meetingID, err := uuid.Parse(c.Params("id"))
+	bu, organizationID, organizerID, meetingID, err := a.resolveMiniAppMeetingOp(c)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid meeting id")
+		return err
 	}
 	var req struct {
 		Until string `json:"until"`
@@ -484,29 +278,8 @@ func (a *API) MiniAppChangeSeriesEnd(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
 	}
-	organizationID, err := a.miniAppMeetingOrganization(c, meetingID)
-	if err != nil {
-		if model.IsNotFound(err) {
-			return fiber.NewError(fiber.StatusNotFound, "not_found")
-		}
-		return fiber.NewError(fiber.StatusInternalServerError, "internal")
-	}
-	organizerID, err := a.App.EnsureMiniAppOrganizer(c.Context(), bu.Email, bu.TelegramID)
-	if err != nil {
-		if errors.Is(err, application.ErrTelegramLinkedToOtherAccount) {
-			return fiber.NewError(fiber.StatusConflict, "telegram_linked_to_other_account")
-		}
-		return fiber.NewError(fiber.StatusInternalServerError, "internal")
-	}
 	if _, _, err := a.App.ChangeSeriesEnd(c.Context(), organizationID, organizerID, meetingID, req.Until); err != nil {
-		switch {
-		case errors.Is(err, application.ErrForbidden):
-			return fiber.NewError(fiber.StatusForbidden, "forbidden")
-		case errors.Is(err, application.ErrInvalidInput):
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		default:
-			return fiber.NewError(fiber.StatusInternalServerError, "internal")
-		}
+		return mapMeetingWriteError(err)
 	}
 	m, err := a.App.GetMeeting(c.Context(), organizationID, meetingID)
 	if err != nil {
@@ -516,7 +289,7 @@ func (a *API) MiniAppChangeSeriesEnd(c *fiber.Ctx) error {
 }
 
 func (a *API) MiniAppRemoveParticipant(c *fiber.Ctx) error {
-	orgID, organizerID, meetingID, err := a.resolveParticipantOp(c)
+	bu, orgID, organizerID, meetingID, err := a.resolveMiniAppMeetingOp(c)
 	if err != nil {
 		return err
 	}
@@ -525,12 +298,11 @@ func (a *API) MiniAppRemoveParticipant(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "email required")
 	}
 	if err := a.App.RemoveParticipant(c.Context(), orgID, organizerID, meetingID, email); err != nil {
-		return mapMiniAppParticipantError(err)
+		return mapMeetingWriteError(err)
 	}
 	m, err := a.App.GetMeeting(c.Context(), orgID, meetingID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal")
 	}
-	bu, _ := botUser(c)
 	return c.JSON(fiber.Map{"meeting": a.toMeetingDTO(c.Context(), m, resolveLoc(bu.Timezone))})
 }
