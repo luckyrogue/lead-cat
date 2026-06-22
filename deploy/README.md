@@ -175,7 +175,7 @@ test on staging before promoting.
 
 ## GitHub Actions (build → GHCR → Dokploy)
 
-Workflows: `.github/workflows/backend.yml` and `.github/workflows/frontend.yml`.
+Workflow: `.github/workflows/ci.yml`.
 
 On push to `main` or tag `v*.*.*`:
 
