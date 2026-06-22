@@ -16,46 +16,6 @@ func randomToken() (string, error) {
 	return base64.RawURLEncoding.EncodeToString(b), nil
 }
 
-func (s *Services) GetPublicSurvey(ctx context.Context, token string) (model.SurveyResponse, model.Survey, error) {
-	resp, err := s.Store.GetSurveyResponseByToken(ctx, token)
-	if err != nil {
-		return model.SurveyResponse{}, model.Survey{}, err
-	}
-	if resp.Status == "completed" {
-		return resp, model.Survey{}, model.ErrResponseCompleted
-	}
-	sv, err := s.Store.GetSurvey(ctx, resp.SurveyID)
-	if err != nil {
-		return model.SurveyResponse{}, model.Survey{}, err
-	}
-	if !sv.IsActive {
-		return resp, sv, model.ErrSurveyClosed
-	}
-	return resp, sv, nil
-}
-
-func (s *Services) SubmitSurvey(ctx context.Context, token string, answers []model.Answer) error {
-	resp, err := s.Store.GetSurveyResponseByToken(ctx, token)
-	if err != nil {
-		return err
-	}
-	if resp.Status == "completed" {
-		return model.ErrResponseCompleted
-	}
-	sv, err := s.Store.GetSurvey(ctx, resp.SurveyID)
-	if err != nil {
-		return err
-	}
-	if !sv.IsActive {
-		return model.ErrSurveyClosed
-	}
-	normalized, err := model.ValidateAnswers(sv.Questions, answers)
-	if err != nil {
-		return err
-	}
-	return s.Store.CompleteSurveyResponse(ctx, resp.ID, normalized)
-}
-
 func (s *Services) CreatePendingResponse(ctx context.Context, et model.BookingEventType, reason string, req BookingRequest) (string, error) {
 	if et.SurveyID == nil {
 		return "", nil
