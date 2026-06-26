@@ -23,6 +23,7 @@ import { useAuth } from "~/shared/auth/auth-context"
 import { useLocale, useT } from "~/shared/i18n/context"
 import { formatDateLong, formatTimeRange } from "~/shared/lib/format"
 import { recurrenceLabel } from "~/shared/lib/recurrence-label"
+import { getWebApp } from "~/shared/tma/telegram-env"
 
 export function MeetingDetailPage() {
   const { meetingId = "" } = useParams()
@@ -122,6 +123,13 @@ function MeetingDetail({ meeting, canManage, onEdit, onDelete }: DetailProps) {
             href={meeting.meet_link}
             target="_blank"
             rel="noreferrer"
+            onClick={(e) => {
+              const webApp = getWebApp()
+              if (webApp?.openLink) {
+                e.preventDefault()
+                webApp.openLink(meeting.meet_link)
+              }
+            }}
             className="flex items-center gap-2 text-sm font-medium text-primary"
           >
             <Link2 className="size-4" />
